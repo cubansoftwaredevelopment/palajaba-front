@@ -10,16 +10,16 @@ export const CATALOG_CATEGORY_SUGGESTIONS = [
 
 export const CATALOG_ONBOARDING_STEPS = [
   {
-    title: 'Elige la categoría',
-    description: 'Usa las categorías globales de la plataforma, inspiradas en Revolico.',
+    title: 'Crea categorías locales',
+    description: 'Agrupa tus productos como tú quieras (Despensa, Ofertas, etc.).',
   },
   {
-    title: 'Agrega el producto',
-    description: 'Foto, nombre, precio y descripción en cada ítem.',
+    title: 'Agrega cada producto',
+    description: 'Elige categoría local + global del negocio, foto, precio y descripción.',
   },
   {
     title: 'Publica tu tienda',
-    description: 'Tus clientes verán el catálogo listo para comprar.',
+    description: 'Tu catálogo público usa las categorías locales; el home usa la global.',
   },
 ]
 

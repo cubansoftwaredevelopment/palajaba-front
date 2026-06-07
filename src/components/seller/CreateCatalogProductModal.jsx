@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { createCatalogProduct, fetchCatalogCurrencies, fetchProductCategories, updateCatalogProduct } from '../../lib/api'
+import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../../lib/api'
 
 import { resolveMediaUrl } from '../../lib/media'
 
@@ -72,6 +72,12 @@ function samePrice(input, original) {
 
 export default function CreateCatalogProductModal({
 
+  localCategories = [],
+
+  businessCategoryIds = [],
+
+  initialLocalCategoryId = '',
+
   initialGlobalCategoryId = '',
 
   defaultOffersDelivery = false,
@@ -98,6 +104,12 @@ export default function CreateCatalogProductModal({
 
   const [acceptedCurrencies, setAcceptedCurrencies] = useState(product?.accepted_currencies ?? [])
 
+  const [localCategoryId, setLocalCategoryId] = useState(
+
+    product?.category_id ?? initialLocalCategoryId ?? '',
+
+  )
+
   const [globalCategoryId, setGlobalCategoryId] = useState(
 
     product?.global_category_id ?? initialGlobalCategoryId ?? '',
@@ -120,7 +132,7 @@ export default function CreateCatalogProductModal({
 
   const [currencies, setCurrencies] = useState([])
 
-  const [productCategories, setProductCategories] = useState([])
+  const [businessCategories, setBusinessCategories] = useState([])
 
   const [loading, setLoading] = useState(false)
 
@@ -164,19 +176,25 @@ export default function CreateCatalogProductModal({
 
         const token = getSellerToken()
 
-        const [currencyData, categoryData] = await Promise.all([
+        const [currencyData, allBusinessCategories] = await Promise.all([
 
           fetchCatalogCurrencies(token),
 
-          fetchProductCategories(),
+          fetchCategories(),
 
         ])
+
+        const allowedBusinessCategories = allBusinessCategories.filter((category) =>
+
+          businessCategoryIds.includes(category.id),
+
+        )
 
         if (!cancelled) {
 
           setCurrencies(currencyData)
 
-          setProductCategories(categoryData)
+          setBusinessCategories(allowedBusinessCategories)
 
           if (currencyData.length > 0) {
 
@@ -188,9 +206,15 @@ export default function CreateCatalogProductModal({
 
           }
 
-          if (!globalCategoryId && categoryData.length > 0) {
+          if (!localCategoryId && localCategories.length > 0) {
 
-            setGlobalCategoryId((current) => current || categoryData[0].id)
+            setLocalCategoryId((current) => current || localCategories[0].id)
+
+          }
+
+          if (!globalCategoryId && allowedBusinessCategories.length > 0) {
+
+            setGlobalCategoryId((current) => current || allowedBusinessCategories[0].id)
 
           }
 
@@ -202,7 +226,7 @@ export default function CreateCatalogProductModal({
 
           setCurrencies([])
 
-          setProductCategories([])
+          setBusinessCategories([])
 
         }
 
@@ -220,7 +244,7 @@ export default function CreateCatalogProductModal({
 
     }
 
-  }, [])
+  }, [businessCategoryIds, globalCategoryId, localCategories, localCategoryId])
 
 
 
@@ -290,6 +314,8 @@ export default function CreateCatalogProductModal({
 
       baseCurrency !== product.base_currency ||
 
+      localCategoryId !== product.category_id ||
+
       globalCategoryId !== product.global_category_id ||
 
       offersDelivery !== product.offers_delivery ||
@@ -317,6 +343,8 @@ export default function CreateCatalogProductModal({
     basePrice,
 
     baseCurrency,
+
+    localCategoryId,
 
     globalCategoryId,
 
@@ -372,9 +400,17 @@ export default function CreateCatalogProductModal({
 
     }
 
+    if (!localCategoryId) {
+
+      setError('Selecciona una categoría local de tu catálogo.')
+
+      return
+
+    }
+
     if (!globalCategoryId) {
 
-      setError('Selecciona una categoría.')
+      setError('Selecciona la categoría global de tu negocio.')
 
       return
 
@@ -405,6 +441,8 @@ export default function CreateCatalogProductModal({
     formData.append('base_currency', baseCurrency)
 
     formData.append('accepted_currencies', JSON.stringify(acceptedCurrencies))
+
+    formData.append('category_id', localCategoryId)
 
     formData.append('global_category_id', globalCategoryId)
 
@@ -614,9 +652,57 @@ export default function CreateCatalogProductModal({
 
 
 
-            <label htmlFor="catalog-product-category" className={`mt-4 block ${sellerLabel}`}>
+            <label htmlFor="catalog-product-local-category" className={`mt-4 block ${sellerLabel}`}>
 
-              Categoría<span className="text-brand-carmelita"> *</span>
+              Categoría local<span className="text-brand-carmelita"> *</span>
+
+            </label>
+
+            <select
+
+              id="catalog-product-local-category"
+
+              value={localCategoryId}
+
+              onChange={(event) => {
+
+                setLocalCategoryId(event.target.value)
+
+                setError('')
+
+              }}
+
+              className={`mt-1.5 ${sellerInput}`}
+
+              disabled={localCategories.length === 0}
+
+            >
+
+              <option value="">Selecciona una categoría</option>
+
+              {localCategories.map((category) => (
+
+                <option key={category.id} value={category.id}>
+
+                  {category.name}
+
+                </option>
+
+              ))}
+
+            </select>
+
+            <p className={`mt-1 ${sellerHint}`}>
+
+              Organiza tu catálogo y la vista pública de tu tienda.
+
+            </p>
+
+
+
+            <label htmlFor="catalog-product-global-category" className={`mt-4 block ${sellerLabel}`}>
+
+              Categoría global<span className="text-brand-carmelita"> *</span>
 
             </label>
 
@@ -624,9 +710,9 @@ export default function CreateCatalogProductModal({
 
               <CategoryAutocomplete
 
-                id="catalog-product-category"
+                id="catalog-product-global-category"
 
-                categories={productCategories}
+                categories={businessCategories}
 
                 value={globalCategoryId}
 
@@ -638,9 +724,9 @@ export default function CreateCatalogProductModal({
 
                 }}
 
-                placeholder="Buscar categoría (estilo Revolico)…"
+                placeholder="Categoría de tu negocio…"
 
-                disabled={productCategories.length === 0}
+                disabled={businessCategories.length === 0}
 
               />
 
@@ -648,7 +734,7 @@ export default function CreateCatalogProductModal({
 
             <p className={`mt-1 ${sellerHint}`}>
 
-              Categoría global de la plataforma. Solo una por producto.
+              Una sola por producto. Sale de las categorías que definiste en tu perfil.
 
             </p>
 

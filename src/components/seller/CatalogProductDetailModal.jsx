@@ -125,7 +125,10 @@ export default function CatalogProductDetailModal({
           )}
 
           <dl className="mt-4 rounded-2xl border border-brand-green/10 bg-brand-green/[0.02] px-4">
-            <DetailRow label="Categoría">{categoryName}</DetailRow>
+            <DetailRow label="Categoría local">{categoryName}</DetailRow>
+            <DetailRow label="Categoría global">
+              {product.global_category_name || product.global_category_id}
+            </DetailRow>
             <DetailRow label="Precio base">
               {formatPrice(product.base_price, product.base_currency)}
             </DetailRow>

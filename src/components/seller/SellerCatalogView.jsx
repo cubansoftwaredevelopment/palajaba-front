@@ -8,6 +8,8 @@ export default function SellerCatalogView({
 
   summary,
 
+  onAddCategory,
+
   onAddProduct,
 
   onViewProduct,
@@ -48,7 +50,10 @@ export default function SellerCatalogView({
 
 
 
-      <SellerCatalogFab onAddProduct={() => onAddProduct()} />
+      <SellerCatalogFab
+        onAddCategory={onAddCategory}
+        onAddProduct={() => onAddProduct()}
+      />
 
     </>
 
