@@ -1,7 +1,7 @@
 /** En dev usa rutas relativas → proxy de Vite. En prod usa VITE_API_URL. */
 function getApiBase() {
   if (import.meta.env.DEV) return ''
-  return import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8001'
+  return import.meta.env.VITE_API_URL ?? 'https://palajaba-api.onrender.com'
 }
 
 export class ApiError extends Error {
