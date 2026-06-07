@@ -3,6 +3,7 @@ services:
     name: palajaba-web
     runtime: static
     buildCommand: npm install && npm run build
+    # Tras el build, dist/404.html permite /admin, /login, etc. al recargar o abrir URL directa.
     staticPublishPath: ./dist
     routes:
       - type: rewrite

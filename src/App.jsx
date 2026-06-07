@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
 import AdminRoute from './components/AdminRoute'
 import AdminLayout from './components/admin/AdminLayout'
 import SellerRoute from './components/SellerRoute'
@@ -56,6 +56,7 @@ const router = createBrowserRouter([
   { path: '/registro/exito', element: <RegisterSuccess /> },
   {
     path: '/admin',
+    element: <Outlet />,
     children: [
       { index: true, element: <AdminLogin /> },
       {
