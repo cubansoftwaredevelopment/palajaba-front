@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
+import { createHashRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
 import AdminRoute from './components/AdminRoute'
 import AdminLayout from './components/admin/AdminLayout'
 import SellerRoute from './components/SellerRoute'
@@ -23,7 +23,7 @@ import BuyerHome from './pages/buyer/BuyerHome'
 import BuyerSelectMunicipality from './pages/buyer/BuyerSelectMunicipality'
 import BuyerSelectProvince from './pages/buyer/BuyerSelectProvince'
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   { path: '/', element: <Welcome /> },
   {
     path: '/comprar',
