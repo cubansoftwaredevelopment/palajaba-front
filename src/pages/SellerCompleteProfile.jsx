@@ -32,6 +32,7 @@ import {
   updateSellerProfile,
   uploadSellerProfilePhoto,
 } from '../lib/api'
+import { IMAGE_UPLOAD_HINT, validateImageFile } from '../lib/imageUpload'
 import { dedupeDeliveryAreas } from '../lib/businessArea'
 import { getSellerToken, updateSellerProfileCache } from '../lib/sellerAuth'
 
@@ -89,7 +90,14 @@ export default function SellerCompleteProfile() {
 
   async function handlePhotoChange(event) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
+
+    const validation = validateImageFile(file)
+    if (!validation.ok) {
+      setError(validation.message)
+      return
+    }
 
     setError('')
     setPhotoUploading(true)
@@ -205,7 +213,7 @@ export default function SellerCompleteProfile() {
                 storeName={profile?.store_name}
               />
               <p className="text-[0.65rem] leading-relaxed text-brand-carmelita/70">
-                JPG, PNG o WebP · máx. 4 MB
+                {IMAGE_UPLOAD_HINT}
               </p>
             </div>
           </SellerSection>

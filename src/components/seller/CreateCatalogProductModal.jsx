@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../../lib/api'
+import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../lib/imageUpload'
 
 import { resolveMediaUrl } from '../../lib/media'
 
@@ -363,13 +364,23 @@ export default function CreateCatalogProductModal({
 
 
   function handlePhotoChange(event) {
-
     const file = event.target.files?.[0]
+    event.target.value = ''
 
-    setPhotoFile(file || null)
+    if (!file) {
+      setPhotoFile(null)
+      return
+    }
 
+    const validation = validateImageFile(file)
+    if (!validation.ok) {
+      setPhotoFile(null)
+      setError(validation.message)
+      return
+    }
+
+    setPhotoFile(file)
     setError('')
-
   }
 
 
@@ -580,7 +591,7 @@ export default function CreateCatalogProductModal({
 
               <span className={sellerHint}>
 
-                {isEditing ? 'Opcional si mantienes la actual' : 'Obligatoria'} · JPG, PNG o WebP · máx. 4 MB
+                {isEditing ? 'Opcional si mantienes la actual' : 'Obligatoria'} · {IMAGE_UPLOAD_HINT}
 
               </span>
 

@@ -33,6 +33,7 @@ import {
   updateSellerProfile,
   uploadSellerProfilePhoto,
 } from '../../lib/api'
+import { validateImageFile } from '../../lib/imageUpload'
 import {
   dedupeDeliveryAreas,
   sameBusinessArea,
@@ -137,7 +138,14 @@ export default function SellerProfile() {
 
   async function handlePhotoChange(event) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
+
+    const validation = validateImageFile(file)
+    if (!validation.ok) {
+      setError(validation.message)
+      return
+    }
 
     setError('')
     markDirty()
