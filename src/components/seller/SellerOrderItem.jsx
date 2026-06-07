@@ -1,3 +1,4 @@
+import { formatOrderDateTime } from '../../lib/dates'
 import { formatPrice } from '../../lib/money'
 import { sellerFocusRing } from './sellerStyles'
 
@@ -8,16 +9,6 @@ function formatSubtotals(subtotals = [], paymentCurrency = null) {
   }
   if (!subtotals.length) return '—'
   return subtotals.map((entry) => formatPrice(entry.amount, entry.currency)).join(' + ')
-}
-
-function formatOrderDate(value) {
-  if (!value) return '—'
-  return new Date(value).toLocaleString('es', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
 }
 
 function ChevronIcon() {
@@ -84,8 +75,8 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
             </span>
             <span className="mt-1 block text-xs text-brand-carmelita/80">
               {isPending
-                ? `Recibido ${formatOrderDate(order.created_at)}`
-                : `Completada ${formatOrderDate(order.completed_at ?? order.updated_at)}`}
+                ? `Recibido ${formatOrderDateTime(order.created_at)}`
+                : `Completada ${formatOrderDateTime(order.completed_at ?? order.updated_at)}`}
             </span>
           </span>
 

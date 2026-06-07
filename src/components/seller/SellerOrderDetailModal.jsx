@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ORDER_STATUS_LABELS } from '../../constants/orderStatus'
+import { formatOrderDateTime } from '../../lib/dates'
 import { convertBetweenCurrencies } from '../../lib/displayPrice'
 import { formatPrice, parseCupInput } from '../../lib/money'
 import SellerModalPortal from './SellerModalPortal'
@@ -28,14 +29,6 @@ function DetailRow({ label, children }) {
       <dd className="min-w-0 text-right text-sm font-medium text-brand-green">{children}</dd>
     </div>
   )
-}
-
-function formatOrderDate(value) {
-  if (!value) return '—'
-  return new Date(value).toLocaleString('es', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  })
 }
 
 function calcPaymentTotal(order, items, paymentCurrency, deliveryPreview) {
@@ -240,7 +233,7 @@ export default function SellerOrderDetailModal({
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
           <div>
             <h2 className={sellerModalTitle}>Pedido #{order.id.slice(-6).toUpperCase()}</h2>
-            <p className="mt-0.5 text-xs text-brand-carmelita/80">{formatOrderDate(order.created_at)}</p>
+            <p className="mt-0.5 text-xs text-brand-carmelita/80">{formatOrderDateTime(order.created_at)}</p>
           </div>
           <button
             type="button"

@@ -1,5 +1,15 @@
+/** Fechas ISO del API: naive UTC sin sufijo → se tratan como UTC y se muestran en hora local. */
+export function parseApiDateTime(value) {
+  if (!value) return null
+  const text = String(value).trim()
+  if (!text) return null
+  const normalized = /[zZ]|[+-]\d{2}:?\d{2}$/.test(text) ? text : `${text}Z`
+  const date = new Date(normalized)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 export function addBillingPeriod(fromDate, billingPeriod) {
-  const date = new Date(fromDate)
+  const date = parseApiDateTime(fromDate) ?? new Date(fromDate)
   if (billingPeriod === 'yearly') {
     date.setFullYear(date.getFullYear() + 1)
   } else {
@@ -9,11 +19,23 @@ export function addBillingPeriod(fromDate, billingPeriod) {
 }
 
 export function formatDateTime(value) {
-  if (!value) return '—'
+  const date = parseApiDateTime(value)
+  if (!date) return '—'
   return new Intl.DateTimeFormat('es', {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(value))
+  }).format(date)
+}
+
+export function formatOrderDateTime(value) {
+  const date = parseApiDateTime(value)
+  if (!date) return '—'
+  return new Intl.DateTimeFormat('es', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
 }
 
 export function formatDateLabel(date) {
@@ -36,23 +58,22 @@ export function startOfDay(date) {
 }
 
 export function parseApiDate(value) {
-  if (!value) return null
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
+  const date = parseApiDateTime(value)
+  if (!date) return null
   return startOfDay(date)
 }
 
 export function daysUntil(value) {
-  if (!value) return null
-  const end = startOfDay(new Date(value))
+  const date = parseApiDateTime(value)
+  if (!date) return null
+  const end = startOfDay(date)
   const today = startOfDay(new Date())
   return Math.ceil((end - today) / (1000 * 60 * 60 * 24))
 }
 
 export function formatRelativeTime(value) {
-  if (!value) return ''
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
+  const date = parseApiDateTime(value)
+  if (!date) return ''
 
   const diffMs = Date.now() - date.getTime()
   const diffMins = Math.floor(diffMs / 60000)
@@ -69,4 +90,3 @@ export function formatRelativeTime(value) {
 
   return formatDateTime(value)
 }
-

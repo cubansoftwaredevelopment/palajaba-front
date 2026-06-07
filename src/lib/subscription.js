@@ -1,9 +1,7 @@
+import { parseApiDateTime } from './dates'
+
 function parseSubscriptionEnd(value) {
-  if (!value) return null
-  const text = String(value).trim()
-  const normalized = /[zZ]|[+-]\d{2}:\d{2}$/.test(text) ? text : `${text}Z`
-  const date = new Date(normalized)
-  return Number.isNaN(date.getTime()) ? null : date
+  return parseApiDateTime(value)
 }
 
 /** Horas restantes calculadas en el cliente (fallback si el perfil en caché no trae el campo). */
