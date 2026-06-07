@@ -1,0 +1,223 @@
+@import 'tailwindcss';
+@import 'react-day-picker/style.css';
+
+@theme {
+  /* Libre Baskerville (Google Fonts): serif similar to Utopia, self-hosted for fast load */
+  --font-sans: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  --font-display: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+
+  --color-brand-green: #59802c;
+  --color-brand-white: #fdfbf2;
+  --color-brand-yellow: #f5c71a;
+  --color-brand-carmelita: #7b4c38;
+
+  --animate-fade-in: fade-in 0.5s ease-out;
+  --animate-success-pop: success-pop 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  --animate-success-rise: success-rise 0.65s ease-out forwards;
+  --animate-float: float 5s ease-in-out infinite;
+  --animate-float-delayed: float 6s ease-in-out 1s infinite;
+  --animate-pulse-soft: pulse-soft 4s ease-in-out infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes success-pop {
+    0% {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    70% {
+      transform: scale(1.06);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes success-rise {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-14px);
+    }
+  }
+
+  @keyframes pulse-soft {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: translate(-50%, 0) scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: translate(-50%, 0) scale(1.08);
+    }
+  }
+
+  @keyframes success-check-draw {
+    from {
+      stroke-dashoffset: 24;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes success-check-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply m-0 min-h-dvh min-w-0 overflow-x-hidden bg-brand-white font-sans text-brand-green antialiased;
+    letter-spacing: 0.01em;
+  }
+
+  .admin-theme {
+    font-family: system-ui, -apple-system, sans-serif;
+    letter-spacing: normal;
+    color-scheme: dark;
+  }
+
+  /* Admin: calendario oscuro (react-day-picker) */
+  .admin-theme .rdp-root {
+    --rdp-accent-color: #59802c;
+    --rdp-accent-background-color: rgba(89, 128, 44, 0.2);
+    --rdp-day-height: 2.25rem;
+    --rdp-day-width: 2.25rem;
+    color: #e4e4e7;
+  }
+
+  #root {
+    @apply min-h-dvh;
+  }
+
+  button {
+    @apply cursor-pointer font-[inherit] [-webkit-tap-highlight-color:transparent];
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .animate-success-pop {
+    animation: var(--animate-success-pop);
+    opacity: 0;
+  }
+
+  .animate-success-rise {
+    animation: var(--animate-success-rise);
+    opacity: 0;
+  }
+
+  .animate-success-rise-delay-1 {
+    animation-delay: 0.12s;
+  }
+
+  .animate-success-rise-delay-2 {
+    animation-delay: 0.24s;
+  }
+
+  .animate-success-rise-delay-3 {
+    animation-delay: 0.36s;
+  }
+
+  .animate-success-rise-delay-4 {
+    animation-delay: 0.48s;
+  }
+
+  .animate-success-rise-delay-5 {
+    animation-delay: 0.62s;
+  }
+
+  .animate-float-delayed {
+    animation: var(--animate-float-delayed);
+  }
+
+  .success-check-mark {
+    stroke-dasharray: 24;
+    stroke-dashoffset: 24;
+    animation: success-check-draw 0.5s ease-out 0.5s forwards;
+  }
+
+  .success-check-circle {
+    opacity: 0;
+    animation: success-check-fade 0.4s ease-out 0.35s forwards;
+  }
+
+  /* Leaflet: mantener el mapa de vista previa dentro de su tarjeta al hacer scroll */
+  .seller-location-preview .leaflet-container {
+    z-index: 0;
+  }
+
+  .seller-location-preview .leaflet-pane {
+    z-index: auto;
+  }
+
+  .seller-map-pin {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .seller-shell-viewport {
+    height: 100dvh;
+    max-height: 100dvh;
+  }
+
+  @supports (-webkit-touch-callout: none) {
+    .seller-shell-viewport {
+      height: -webkit-fill-available;
+      max-height: -webkit-fill-available;
+    }
+  }
+
+  .seller-catalog-scroll,
+  .seller-scroll {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    touch-action: pan-y;
+  }
+
+  .buyer-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .auth-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
