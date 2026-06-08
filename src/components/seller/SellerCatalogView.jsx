@@ -18,6 +18,8 @@ export default function SellerCatalogView({
 
   onDeleteProduct,
 
+  onDeleteCategory,
+
 }) {
 
   return (
@@ -41,6 +43,8 @@ export default function SellerCatalogView({
             onEditProduct={onEditProduct}
 
             onDeleteProduct={onDeleteProduct}
+
+            onDeleteCategory={onDeleteCategory}
 
           />
 

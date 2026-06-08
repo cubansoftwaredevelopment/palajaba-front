@@ -3,11 +3,13 @@ import CategoryAutocomplete from './CategoryAutocomplete'
 import { CUBA_PROVINCES } from '../../constants/cubaLocations'
 import {
   areaKey,
+  buildAllMunicipalityAreasForProvince,
   buildBusinessArea,
   dedupeDeliveryAreas,
   formatAreaLabel,
+  MAX_DELIVERY_AREAS,
 } from '../../lib/businessArea'
-import { sellerBtnSecondary, sellerChip, sellerHint, sellerLabel } from './sellerStyles'
+import { sellerBtnGhost, sellerBtnSecondary, sellerChip, sellerHint, sellerLabel } from './sellerStyles'
 
 const PROVINCE_OPTIONS = CUBA_PROVINCES.map((province) => ({
   id: province.id,
@@ -35,6 +37,18 @@ export default function SellerDeliveryZonesEditor({
     return keys
   }, [zones, businessArea])
 
+  const selectedProvince = useMemo(
+    () => CUBA_PROVINCES.find((item) => item.id === provinceId),
+    [provinceId],
+  )
+
+  const addableMunicipalityCount = useMemo(() => {
+    if (!provinceId) return 0
+    return buildAllMunicipalityAreasForProvince(provinceId).filter(
+      (area) => !excludedKeys.has(areaKey(area)),
+    ).length
+  }, [provinceId, excludedKeys])
+
   function handleAddZone() {
     setLocalError('')
     const area = buildBusinessArea(provinceId, municipalityId)
@@ -49,6 +63,35 @@ export default function SellerDeliveryZonesEditor({
     }
 
     onChange(dedupeDeliveryAreas([...zones, area], businessArea))
+    setProvinceId('')
+    setMunicipalityId('')
+  }
+
+  function handleAddAllMunicipalities() {
+    setLocalError('')
+    if (!provinceId) {
+      setLocalError('Selecciona una provincia.')
+      return
+    }
+
+    const newAreas = buildAllMunicipalityAreasForProvince(provinceId).filter(
+      (area) => !excludedKeys.has(areaKey(area)),
+    )
+
+    if (newAreas.length === 0) {
+      setLocalError('Todos los municipios de esta provincia ya están incluidos.')
+      return
+    }
+
+    const merged = dedupeDeliveryAreas([...zones, ...newAreas], businessArea)
+    if (merged.length > MAX_DELIVERY_AREAS) {
+      setLocalError(
+        `Solo puedes tener hasta ${MAX_DELIVERY_AREAS} zonas de envío. Quita algunas o agrega municipios de a uno.`,
+      )
+      return
+    }
+
+    onChange(merged)
     setProvinceId('')
     setMunicipalityId('')
   }
@@ -117,9 +160,23 @@ export default function SellerDeliveryZonesEditor({
             {localError}
           </p>
         )}
-        <button type="button" onClick={handleAddZone} className={`mt-3 ${sellerBtnSecondary}`}>
-          Agregar zona
-        </button>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <button type="button" onClick={handleAddZone} className={sellerBtnSecondary}>
+            Agregar municipio
+          </button>
+          {provinceId && addableMunicipalityCount > 0 && (
+            <button
+              type="button"
+              onClick={handleAddAllMunicipalities}
+              className={sellerBtnGhost}
+            >
+              Seleccionar todos
+              {selectedProvince
+                ? ` (${addableMunicipalityCount} en ${selectedProvince.name})`
+                : ''}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

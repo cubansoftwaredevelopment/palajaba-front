@@ -6,6 +6,8 @@ import { getSellerToken } from '../../lib/sellerAuth'
 export default function DeleteCatalogCategoryModal({ category, onClose, onDeleted }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const productCount = category.product_count ?? category.products?.length ?? 0
+  const hasProducts = productCount > 0
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -48,15 +50,29 @@ export default function DeleteCatalogCategoryModal({ category, onClose, onDelete
         <h2 id="delete-category-title" className={sellerModalTitle}>
           ¿Eliminar categoría?
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-          Se eliminará <span className="font-semibold text-brand-green">«{category.name}»</span>. Solo puedes
-          hacerlo mientras no tenga productos.
-        </p>
+
+        {hasProducts ? (
+          <div className="mt-3 rounded-2xl border border-brand-carmelita/20 bg-brand-carmelita/[0.06] px-3.5 py-3">
+            <p className="text-sm font-semibold text-brand-carmelita">
+              Esta categoría tiene {productCount} producto{productCount === 1 ? '' : 's'}.
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-brand-carmelita/90">
+              Al eliminar <span className="font-semibold text-brand-green">«{category.name}»</span> también se
+              borrarán todos sus productos. Esta acción no se puede deshacer.
+            </p>
+          </div>
+        ) : (
+          <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
+            Se eliminará <span className="font-semibold text-brand-green">«{category.name}»</span> de tu catálogo.
+          </p>
+        )}
+
         {error && (
           <p className={`mt-3 ${sellerAlertError}`} role="alert">
             {error}
           </p>
         )}
+
         <div className="mt-4 grid grid-cols-2 gap-2">
           <button type="button" onClick={onClose} disabled={loading} className={sellerBtnSecondary}>
             Cancelar
@@ -67,7 +83,7 @@ export default function DeleteCatalogCategoryModal({ category, onClose, onDelete
             disabled={loading}
             className={`${sellerBtnPrimary} !bg-brand-carmelita !shadow-none`}
           >
-            {loading ? 'Eliminando…' : 'Eliminar'}
+            {loading ? 'Eliminando…' : hasProducts ? 'Eliminar todo' : 'Eliminar'}
           </button>
         </div>
       </div>

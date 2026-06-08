@@ -1,5 +1,7 @@
 import { getMunicipalityById, getProvinceById } from '../constants/cubaLocations'
 
+export const MAX_DELIVERY_AREAS = 30
+
 export function areaKey(area) {
   if (!area) return ''
   return `${area.province_id}:${area.municipality_id}`
@@ -21,6 +23,15 @@ export function buildBusinessArea(provinceId, municipalityId) {
     municipality_id: municipality.id,
     municipality_name: municipality.name,
   }
+}
+
+export function buildAllMunicipalityAreasForProvince(provinceId) {
+  const province = getProvinceById(provinceId)
+  if (!province) return []
+
+  return province.municipalities
+    .map((municipality) => buildBusinessArea(provinceId, municipality.id))
+    .filter(Boolean)
 }
 
 export function dedupeDeliveryAreas(areas = [], businessArea = null) {

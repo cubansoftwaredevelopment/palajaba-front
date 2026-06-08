@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom'
 import CatalogProductDetailModal from '../../components/seller/CatalogProductDetailModal'
 import CreateCatalogCategoryModal from '../../components/seller/CreateCatalogCategoryModal'
 import CreateCatalogProductModal from '../../components/seller/CreateCatalogProductModal'
+import DeleteCatalogCategoryModal from '../../components/seller/DeleteCatalogCategoryModal'
 import DeleteCatalogProductModal from '../../components/seller/DeleteCatalogProductModal'
 import SellerCatalogEmpty from '../../components/seller/SellerCatalogEmpty'
 import SellerCatalogView from '../../components/seller/SellerCatalogView'
@@ -30,6 +31,7 @@ export default function SellerCatalog() {
   const [productToEdit, setProductToEdit] = useState(null)
   const [productToDelete, setProductToDelete] = useState(null)
   const [productToView, setProductToView] = useState(null)
+  const [categoryToDelete, setCategoryToDelete] = useState(null)
 
   const loadCatalog = useCallback(async () => {
     setError('')
@@ -81,6 +83,17 @@ export default function SellerCatalog() {
     loadCatalog()
   }
 
+  function handleCategoryDeleted(category) {
+    setCategoryToDelete(null)
+    const productCount = category.product_count ?? category.products?.length ?? 0
+    setSuccessMessage(
+      productCount > 0
+        ? `Categoría «${category.name}» y sus ${productCount} producto${productCount === 1 ? '' : 's'} eliminados.`
+        : `Categoría «${category.name}» eliminada.`,
+    )
+    loadCatalog()
+  }
+
   const hasLocalCategories = (summary?.categories?.length ?? 0) > 0
   const showProductForm = summary && (showCreateProduct || productToEdit)
 
@@ -127,6 +140,7 @@ export default function SellerCatalog() {
             onViewProduct={setProductToView}
             onEditProduct={setProductToEdit}
             onDeleteProduct={setProductToDelete}
+            onDeleteCategory={setCategoryToDelete}
           />
         )}
 
@@ -173,6 +187,14 @@ export default function SellerCatalog() {
             product={productToDelete}
             onClose={() => setProductToDelete(null)}
             onDeleted={handleProductDeleted}
+          />
+        )}
+
+        {categoryToDelete && (
+          <DeleteCatalogCategoryModal
+            category={categoryToDelete}
+            onClose={() => setCategoryToDelete(null)}
+            onDeleted={handleCategoryDeleted}
           />
         )}
       </div>
