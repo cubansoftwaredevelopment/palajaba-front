@@ -68,7 +68,13 @@ async function request(path, options = {}) {
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
     const parsed = parseApiErrorDetail(data.detail)
-    throw new ApiError(parsed.message, { code: parsed.code, data: parsed.data })
+    const fallback =
+      response.status === 404
+        ? 'Recurso no encontrado. Si acabas de actualizar la app, espera a que el servidor termine de desplegarse.'
+        : response.statusText || 'Error de servidor'
+    const message =
+      parsed.message === 'Ocurrió un error. Intenta de nuevo.' ? fallback : parsed.message
+    throw new ApiError(message, { code: parsed.code, data: parsed.data })
   }
 
   if (response.status === 204) {
@@ -345,8 +351,41 @@ export function fetchMarketplaceFeed({ provinceId, municipalityId, limitPerCateg
   return request(`/api/marketplace/feed?${params}`)
 }
 
-export function fetchMarketplaceStore(storeId) {
-  return request(`/api/marketplace/stores/${encodeURIComponent(storeId)}`)
+export function fetchMarketplaceStore(storeRef) {
+  return request(`/api/marketplace/stores/${encodeURIComponent(storeRef)}`)
+}
+
+export function fetchMarketplaceStoreCatalog({
+  storeSlug,
+  provinceId,
+  municipalityId,
+  limitPerCategory = 20,
+}) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+    municipality_id: municipalityId,
+    limit_per_category: String(limitPerCategory),
+  })
+  return request(`/api/marketplace/stores/${encodeURIComponent(storeSlug)}/catalog?${params}`)
+}
+
+export function fetchMarketplaceStoreCategoryProducts({
+  storeSlug,
+  localCategoryId,
+  provinceId,
+  municipalityId,
+  limit = 20,
+  offset = 0,
+}) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+    municipality_id: municipalityId,
+    limit: String(limit),
+    offset: String(offset),
+  })
+  return request(
+    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
+  )
 }
 
 export function createMarketplaceOrder(payload) {

@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { fetchMarketplaceCategoryProducts } from '../../lib/api'
 import { animateScrollLeft } from '../../lib/smoothScroll'
 import BuyerProductCard from './BuyerProductCard'
 import {
@@ -23,7 +22,7 @@ function getScrollStep(container) {
   return firstItem.offsetWidth + (Number.isFinite(gap) ? gap : 12)
 }
 
-export default function BuyerCategoryProductRow({ section, location }) {
+export default function BuyerCategoryProductRow({ section, loadMore }) {
   const scrollRef = useRef(null)
   const sentinelRef = useRef(null)
   const loadingRef = useRef(false)
@@ -67,21 +66,15 @@ export default function BuyerCategoryProductRow({ section, location }) {
     }
   }, [products.length, updateScrollState])
 
-  const loadMore = useCallback(async () => {
-    if (loadingRef.current || !hasMore) return
+  const loadMoreProducts = useCallback(async () => {
+    if (loadingRef.current || !hasMore || !loadMore) return
 
     loadingRef.current = true
     setLoadingMore(true)
     setError('')
 
     try {
-      const data = await fetchMarketplaceCategoryProducts({
-        provinceId: location.province.id,
-        municipalityId: location.municipality.id,
-        globalCategoryId: section.category_id,
-        limit: PAGE_SIZE,
-        offset: products.length,
-      })
+      const data = await loadMore(products.length)
 
       setProducts((current) => {
         const seen = new Set(current.map((item) => item.id))
@@ -95,7 +88,7 @@ export default function BuyerCategoryProductRow({ section, location }) {
       loadingRef.current = false
       setLoadingMore(false)
     }
-  }, [hasMore, location.municipality.id, location.province.id, products.length, section.category_id])
+  }, [hasMore, loadMore, products.length])
 
   useEffect(() => {
     const root = scrollRef.current
@@ -105,7 +98,7 @@ export default function BuyerCategoryProductRow({ section, location }) {
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          loadMore()
+          loadMoreProducts()
         }
       },
       { root, rootMargin: '120px', threshold: 0.1 },
@@ -113,7 +106,7 @@ export default function BuyerCategoryProductRow({ section, location }) {
 
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [hasMore, loadMore, products.length])
+  }, [hasMore, loadMoreProducts, products.length])
 
   const animateRow = useCallback(
     (direction) => {
@@ -134,19 +127,19 @@ export default function BuyerCategoryProductRow({ section, location }) {
           updateScrollState()
 
           if (direction === 'next' && el.scrollLeft >= maxScroll - SCROLL_EDGE_THRESHOLD && hasMore) {
-            loadMore()
+            loadMoreProducts()
           }
         },
       })
     },
-    [hasMore, loadMore, updateScrollState],
+    [hasMore, loadMoreProducts, updateScrollState],
   )
 
   const showScrollRight = canScrollRight || hasMore
   const showScrollLeft = canScrollLeft
 
   return (
-    <section aria-labelledby={`buyer-category-${section.category_id}`}>
+    <section className="min-w-0" aria-labelledby={`buyer-category-${section.category_id}`}>
       <h2 id={`buyer-category-${section.category_id}`} className={`mb-3 ${buyerCategorySectionTitle}`}>
         {section.category_name}
       </h2>
@@ -213,7 +206,7 @@ export default function BuyerCategoryProductRow({ section, location }) {
           <p className="text-xs text-brand-carmelita/85">{error}</p>
           <button
             type="button"
-            onClick={loadMore}
+            onClick={loadMoreProducts}
             className="text-xs font-semibold text-brand-green underline-offset-2 hover:underline"
           >
             Reintentar

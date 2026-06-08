@@ -6,7 +6,7 @@ import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import Button from '../../components/Button'
-import { fetchMarketplaceFeed } from '../../lib/api'
+import { fetchMarketplaceCategoryProducts, fetchMarketplaceFeed } from '../../lib/api'
 import { getBuyerLocation, hasCompleteBuyerLocation } from '../../lib/buyerLocation'
 
 const PAGE_SIZE = 20
@@ -111,7 +111,18 @@ function BuyerHomeContent() {
             <BuyerCategoryProductRow
               key={section.category_id}
               section={section}
-              location={location}
+              loadMore={(offset) =>
+                fetchMarketplaceCategoryProducts({
+                  provinceId: location.province.id,
+                  municipalityId: location.municipality.id,
+                  globalCategoryId: section.category_id,
+                  limit: PAGE_SIZE,
+                  offset,
+                }).then((data) => ({
+                  products: data.products,
+                  has_more: data.has_more,
+                }))
+              }
             />
           ))}
         </div>

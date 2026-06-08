@@ -62,12 +62,12 @@ export const buyerCapitalBadge =
 export const buyerProductGrid =
   'grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5 xl:grid-cols-4'
 
-export const buyerHomeSections = 'flex flex-col gap-7 sm:gap-8'
+export const buyerHomeSections = 'flex min-w-0 flex-col gap-7 sm:gap-8'
 
 export const buyerCategorySectionTitle =
   'font-display text-lg font-bold text-brand-green sm:text-xl'
 
-export const buyerProductRowWrap = 'relative overflow-hidden'
+export const buyerProductRowWrap = 'relative min-w-0 overflow-hidden'
 
 export const buyerProductRow =
   'flex gap-3 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
@@ -236,6 +236,48 @@ export const buyerProductDetailStickyPrice =
 
 export const buyerStoreStrip =
   'flex items-center gap-3 rounded-2xl border border-brand-green/12 bg-gradient-to-r from-brand-yellow/12 via-brand-white to-brand-green/[0.04] px-3 py-2.5 shadow-[0_2px_10px_rgba(89,128,44,0.05)]'
+
+export const buyerStoreStripLink =
+  `${buyerStoreStrip} transition-colors touch-manipulation active:border-brand-green/25 active:bg-brand-yellow/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 lg:hover:border-brand-green/22 lg:hover:bg-brand-yellow/8`
+
+export const buyerStorePageHeader =
+  'min-w-0 rounded-3xl border border-brand-green/12 bg-gradient-to-br from-brand-yellow/15 via-brand-white to-brand-green/[0.04] px-5 py-5 shadow-[0_4px_20px_rgba(89,128,44,0.07)]'
+
+export const buyerStorePageAvatar =
+  'flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-yellow/15 font-display text-lg font-bold text-brand-carmelita/75 ring-2 ring-brand-green/15 sm:h-20 sm:w-20'
+
+export const buyerStorePageName =
+  'font-display text-xl font-bold text-brand-green sm:text-2xl'
+
+export const buyerStorePageBio =
+  'mt-4 text-sm leading-relaxed text-brand-carmelita/90'
+
+export const buyerStorePageSectionTitle =
+  'text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-brand-carmelita/70'
+
+export const buyerStorePageMeta =
+  'rounded-2xl border border-brand-green/10 bg-brand-white/70 px-3.5 py-3'
+
+export const buyerStorePageMetaLabel =
+  'text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-brand-carmelita/70'
+
+export const buyerStorePageMetaValue =
+  'mt-1 text-sm font-semibold leading-snug text-brand-green'
+
+export const buyerStorePageMapBtn =
+  'inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-brand-green/20 bg-brand-green/[0.06] px-4 text-sm font-bold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:w-auto sm:shrink-0 lg:hover:bg-brand-green/[0.1]'
+
+export const buyerStoreMapOverlay =
+  'fixed inset-0 z-[70] bg-brand-green/25 backdrop-blur-[2px]'
+
+export const buyerStoreMapModal =
+  'fixed inset-x-4 top-[12dvh] z-[80] flex max-h-[min(76dvh,28rem)] flex-col overflow-hidden rounded-3xl border border-brand-green/10 bg-brand-white shadow-[0_16px_48px_rgba(89,128,44,0.2)] sm:inset-x-auto sm:left-1/2 sm:w-[min(24rem,calc(100vw-2rem))] sm:-translate-x-1/2'
+
+export const buyerStoreMapModalHeader =
+  'flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-5 py-4'
+
+export const buyerStorePageSocialLink =
+  'inline-flex min-h-9 items-center rounded-full border border-brand-green/15 bg-brand-white px-3.5 text-xs font-bold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/15 lg:hover:bg-brand-green/[0.04]'
 
 export const buyerStoreStripAvatar =
   'flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-yellow/15 font-display text-sm font-bold text-brand-carmelita/75 ring-2 ring-brand-green/15'

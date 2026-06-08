@@ -22,6 +22,8 @@ import BuyerJabaLayout from './layouts/BuyerJabaLayout'
 import BuyerHome from './pages/buyer/BuyerHome'
 import BuyerSelectMunicipality from './pages/buyer/BuyerSelectMunicipality'
 import BuyerSelectProvince from './pages/buyer/BuyerSelectProvince'
+import PublicStoreRoute from './components/buyer/PublicStoreRoute'
+import RedirectLegacyStoreRoute from './components/buyer/RedirectLegacyStoreRoute'
 
 const router = createBrowserRouter([
   { path: '/', element: <Welcome /> },
@@ -32,6 +34,7 @@ const router = createBrowserRouter([
       { index: true, element: <BuyerHome /> },
       { path: 'provincia', element: <BuyerSelectProvince /> },
       { path: 'municipio', element: <BuyerSelectMunicipality /> },
+      { path: 'tienda/:storeSlug', element: <RedirectLegacyStoreRoute /> },
     ],
   },
   { path: '/login', element: <Login /> },
@@ -74,6 +77,11 @@ const router = createBrowserRouter([
     ],
   },
   { path: '/admin/inicio', element: <Navigate to="/admin/estadisticas" replace /> },
+  {
+    path: '/:storeSlug',
+    element: <BuyerJabaLayout />,
+    children: [{ index: true, element: <PublicStoreRoute /> }],
+  },
 ])
 
 function App() {

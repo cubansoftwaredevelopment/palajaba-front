@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { storeNameToSlug, storePublicPath } from '../../lib/storeSlug'
 
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 
@@ -45,11 +47,11 @@ import {
 
   buyerProductDetailStickyBar,
 
-  buyerStoreStrip,
-
   buyerStoreStripAvatar,
 
   buyerStoreStripLabel,
+
+  buyerStoreStripLink,
 
   buyerStoreStripName,
 
@@ -66,12 +68,17 @@ function StoreStrip({ store }) {
   const photoSrc = resolveMediaUrl(store.profile_photo_url)
 
   const initials = store.store_name?.trim().slice(0, 2).toUpperCase() || '?'
+  const storeSlug = store.store_slug || storeNameToSlug(store.store_name)
 
 
 
   return (
 
-    <div className={buyerStoreStrip}>
+    <Link
+      to={storePublicPath(storeSlug)}
+      className={buyerStoreStripLink}
+      aria-label={`Ver tienda ${store.store_name}`}
+    >
 
       <div className={buyerStoreStripAvatar}>
 
@@ -95,7 +102,20 @@ function StoreStrip({ store }) {
 
       </div>
 
-    </div>
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        className="shrink-0 text-brand-carmelita/60"
+        aria-hidden="true"
+      >
+        <path d="M9 18l6-6-6-6" />
+      </svg>
+
+    </Link>
 
   )
 
