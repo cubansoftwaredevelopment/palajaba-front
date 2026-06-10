@@ -1,15 +1,73 @@
-export const PLAN_FEATURES = [
-  'Catálogos a tu medida',
-  'Estadísticas de tus ventas',
-  'Pedidos directos a Whatsapp',
-  'Control total de tus ganancias',
-  'Impresión de tickets para mensajeros',
-]
-
-export const PLAN_PRICES = {
-  monthly: { amount: 1000, label: 'mes', period: 'monthly' },
-  yearly: { amount: 10000, label: 'año', period: 'yearly' },
-}
+export const PLAN_CURRENCY = 'USD'
 
 export const PLAN_TAGLINE =
-  'Registra tus productos y pagos de forma fácil y empieza a vender sin complicaciones.'
+  'Elige el plan que mejor se adapte a tu negocio y empieza a vender sin complicaciones.'
+
+export const PLAN_TIERS = {
+  standard: {
+    id: 'standard',
+    name: 'Básico',
+    description: 'Todo lo esencial para publicar tu catálogo y recibir pedidos.',
+    features: [
+      'Catálogos a tu medida',
+      'Pedidos directos a Whatsapp',
+      'Control total de tus ganancias',
+      'Impresión de tickets para mensajeros',
+    ],
+    prices: {
+      monthly: { amount: 2, label: 'mes', period: 'monthly', currency: PLAN_CURRENCY },
+      yearly: { amount: 20, label: 'año', period: 'yearly', currency: PLAN_CURRENCY },
+    },
+    yearlySavings: 4,
+  },
+  premium: {
+    id: 'premium',
+    name: 'Premium',
+    description: 'Estadísticas de tu tienda y más visibilidad en el marketplace.',
+    features: [
+      'Todo lo del plan Básico',
+      'Estadísticas de tu tienda',
+      'Boost en recomendaciones (×2 visibilidad)',
+    ],
+    prices: {
+      monthly: { amount: 4, label: 'mes', period: 'monthly', currency: PLAN_CURRENCY },
+      yearly: { amount: 30, label: 'año', period: 'yearly', currency: PLAN_CURRENCY },
+    },
+    yearlySavings: 18,
+  },
+}
+
+export const PLAN_TIER_ORDER = ['standard', 'premium']
+
+export function normalizePlanTier(tier) {
+  return tier === 'premium' ? 'premium' : 'standard'
+}
+
+export function getPlanTier(tierId) {
+  return PLAN_TIERS[normalizePlanTier(tierId)]
+}
+
+export function getPlanPrice(tier, billing) {
+  const period = billing === 'yearly' ? 'yearly' : 'monthly'
+  return getPlanTier(tier).prices[period]
+}
+
+export function formatPlanAmount(amount, currency = PLAN_CURRENCY) {
+  return `${Number(amount).toLocaleString('es')} ${currency}`
+}
+
+export function sellerHasStatistics(profile) {
+  return Boolean(profile?.has_statistics ?? normalizePlanTier(profile?.plan_tier) === 'premium')
+}
+
+export function sellerHasRecommendationBoost(profile) {
+  return Boolean(
+    profile?.has_recommendation_boost ?? normalizePlanTier(profile?.plan_tier) === 'premium',
+  )
+}
+
+/** @deprecated Use getPlanPrice(planTier, billing) */
+export const PLAN_PRICES = PLAN_TIERS.standard.prices
+
+/** @deprecated Use getPlanTier(planTier).features */
+export const PLAN_FEATURES = PLAN_TIERS.standard.features

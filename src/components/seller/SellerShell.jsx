@@ -78,6 +78,7 @@ export default function SellerShell({
   notificationCount = 0,
   showBottomNav = false,
   catalogLayout = false,
+  navItems,
   children,
   footer,
 }) {
@@ -114,7 +115,7 @@ export default function SellerShell({
             <div className={sellerSidebarLogoWrap}>
               <Logo className="h-20 w-20 shrink-0 xl:h-24 xl:w-24" priority />
             </div>
-            <SellerSidebarNav />
+            <SellerSidebarNav items={navItems} />
           </aside>
         )}
 
@@ -152,7 +153,7 @@ export default function SellerShell({
         </div>
       </div>
 
-      {showBottomNav && <SellerBottomNav />}
+      {showBottomNav && <SellerBottomNav items={navItems} />}
     </>
   )
 }

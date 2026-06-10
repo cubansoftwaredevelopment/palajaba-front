@@ -42,7 +42,7 @@ function sideLinkClass(isActive) {
   }`
 }
 
-export function SellerBottomNav() {
+export function SellerBottomNav({ items = SELLER_NAV }) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 w-full max-w-[100dvw] border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md lg:hidden"
@@ -50,7 +50,7 @@ export function SellerBottomNav() {
       aria-label="Secciones de tu tienda"
     >
       <div className="mx-auto flex w-full min-w-0 max-w-md items-stretch px-0.5 sm:px-1">
-        {SELLER_NAV.map((item) => (
+        {items.map((item) => (
           <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => bottomLinkClass(isActive)}>
             {({ isActive }) => (
               <>
@@ -71,10 +71,10 @@ export function SellerBottomNav() {
   )
 }
 
-export function SellerSidebarNav() {
+export function SellerSidebarNav({ items = SELLER_NAV }) {
   return (
     <nav className="hidden lg:flex lg:flex-col lg:gap-1" aria-label="Secciones de tu tienda">
-      {SELLER_NAV.map((item) => (
+      {items.map((item) => (
         <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => sideLinkClass(isActive)}>
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-current/10">
             {SELLER_NAV_ICONS[item.id]}

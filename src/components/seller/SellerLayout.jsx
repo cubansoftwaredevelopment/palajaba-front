@@ -11,6 +11,7 @@ import {
   getSellerToken,
   setSellerSession,
 } from '../../lib/sellerAuth'
+import { getSellerDefaultPath, getSellerNavItems } from '../../lib/planAccess'
 import { requestSellerOrdersRefresh } from '../../lib/sellerOrdersRefresh'
 
 export default function SellerLayout() {
@@ -194,7 +195,14 @@ export default function SellerLayout() {
   }
 
   if (profile?.profile_completed && onCompletePage) {
-    return <Navigate to="/tienda" replace />
+    return <Navigate to={getSellerDefaultPath(profile)} replace />
+  }
+
+  const sellerNavItems = getSellerNavItems(profile)
+  const isGeneralPage = location.pathname === '/tienda' || location.pathname === '/tienda/'
+
+  if (profile?.profile_completed && isGeneralPage && !sellerNavItems.some((item) => item.id === 'general')) {
+    return <Navigate to="/tienda/catalogo" replace />
   }
 
   return (
@@ -206,6 +214,7 @@ export default function SellerLayout() {
         notificationCount={notificationCount}
         showBottomNav={showBottomNav}
         catalogLayout={isCatalogPage}
+        navItems={sellerNavItems}
       >
         <Outlet context={{ profile, refreshProfile }} />
       </SellerShell>

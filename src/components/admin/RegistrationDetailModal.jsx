@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
-import { BILLING_LABELS, REJECTION_REASON, STATUS_LABELS } from '../../constants/admin'
+import { BILLING_LABELS, PLAN_TIER_LABELS, REJECTION_REASON, STATUS_LABELS } from '../../constants/admin'
+import { normalizePlanTier } from '../../constants/plan'
 import { daysUntil, formatDateTime } from '../../lib/dates'
-import { formatCup } from '../../lib/money'
+import { formatPrice } from '../../lib/money'
 import { adminMuted, adminSubtle } from './adminStyles'
 
 const STATUS_STYLES = {
@@ -68,6 +69,8 @@ export default function RegistrationDetailModal({
             {STATUS_LABELS[item.status]}
           </span>
           <span>·</span>
+          <span>{PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}</span>
+          <span>·</span>
           <span>{BILLING_LABELS[item.billing_period]}</span>
         </span>
       }
@@ -80,14 +83,16 @@ export default function RegistrationDetailModal({
           <CopyButton value={item.transfer_id} label="ID" />
         </DetailRow>
         <DetailRow label="Teléfono">{item.phone}</DetailRow>
-        <DetailRow label="Plan contratado">{BILLING_LABELS[item.billing_period]}</DetailRow>
+        <DetailRow label="Plan contratado">
+          {PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]} · {BILLING_LABELS[item.billing_period]}
+        </DetailRow>
         <DetailRow label="Fecha de solicitud">
           {formatDateTime(item.created_at)}
         </DetailRow>
         {item.status === 'approved' && (
           <DetailRow label="Monto registrado">
             {item.payment_amount_cup != null ? (
-              <span className="text-white">{formatCup(item.payment_amount_cup)}</span>
+              <span className="text-white">{formatPrice(item.payment_amount_cup, 'USD')}</span>
             ) : (
               <span className="text-amber-400/90">Sin registrar — no aparece en pagos del mes</span>
             )}

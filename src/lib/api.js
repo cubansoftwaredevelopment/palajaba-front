@@ -289,6 +289,16 @@ export function deleteCatalogCategory(token, categoryId) {
   })
 }
 
+export function reorderCatalogCategories(token, categoryIds) {
+  return request('/api/auth/me/catalog/categories/order', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ category_ids: categoryIds }),
+  })
+}
+
 export function fetchCatalogCurrencies(token) {
   return request('/api/auth/me/catalog/currencies', {
     headers: {

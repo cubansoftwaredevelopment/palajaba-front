@@ -1,37 +1,28 @@
-import { useOutletContext } from 'react-router-dom'
+import { Navigate, useOutletContext } from 'react-router-dom'
 
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
-
 import SellerSection from '../../components/seller/SellerSection'
-
 import SellerStatGrid from '../../components/seller/SellerStatGrid'
-
 import SellerSubscriptionAlert from '../../components/seller/SellerSubscriptionAlert'
-
+import { sellerHasStatistics } from '../../constants/plan'
 import { sellerComingSoon, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
-
 import { formatDateTime } from '../../lib/dates'
-
 import { resolveMediaUrl } from '../../lib/media'
 
-
-
 export default function SellerGeneral() {
-
   const { profile: seller } = useOutletContext()
 
-
-
   if (!seller) return null
+
+  if (!sellerHasStatistics(seller)) {
+    return <Navigate to="/tienda/catalogo" replace />
+  }
 
 
 
   const photoSrc = resolveMediaUrl(seller.profile_photo_url)
 
-
-
   return (
-
     <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
 
       <SellerPageHeader

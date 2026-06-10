@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { adminAlertError, adminCard, adminCardHighlight, adminFocusRing, adminMuted, adminSubtle } from '../components/admin/adminStyles'
 import { fetchAdminStats } from '../lib/api'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
-import { formatCup } from '../lib/money'
+import { formatPrice } from '../lib/money'
 
 const MONTH_NAMES = [
   'enero',
@@ -143,7 +143,7 @@ export default function AdminStats() {
           accent="payments"
           label="Pagos del mes"
           hint="Monto total registrado al aprobar tiendas este mes"
-          value={loading ? '…' : formatCup(stats?.payments_total_cup ?? 0)}
+          value={loading ? '…' : formatPrice(stats?.payments_total_cup ?? 0, 'USD')}
           subvalue={
             !loading && stats
               ? `${stats.payments_count} aprobación${stats.payments_count === 1 ? '' : 'es'}`

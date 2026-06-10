@@ -14,6 +14,7 @@ import {
   labelClass,
 } from '../components/auth/formStyles'
 import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../lib/phone'
+import { normalizePlanTier } from '../constants/plan'
 import { registerSeller } from '../lib/api'
 
 function RequiredLabel({ htmlFor, children }) {
@@ -42,6 +43,7 @@ export default function RegisterForm() {
   const navigate = useNavigate()
   const location = useLocation()
   const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
+  const planTier = normalizePlanTier(location.state?.planTier)
 
   const [transferId, setTransferId] = useState('')
   const [storeName, setStoreName] = useState('')
@@ -77,6 +79,7 @@ export default function RegisterForm() {
         phone: phoneDigits,
         password,
         billing_period: billing,
+        plan_tier: planTier,
       })
       navigate('/registro/exito')
     } catch (err) {

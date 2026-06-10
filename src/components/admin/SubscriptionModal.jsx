@@ -3,8 +3,8 @@ import AdminButton from './AdminButton'
 import AdminDatePicker from './AdminDatePicker'
 import AdminModal from './AdminModal'
 import { adminAlertError, adminLabel } from './adminStyles'
-import { BILLING_LABELS } from '../../constants/admin'
-import { PLAN_PRICES } from '../../constants/plan'
+import { BILLING_LABELS, PLAN_TIER_LABELS } from '../../constants/admin'
+import { getPlanPrice, normalizePlanTier } from '../../constants/plan'
 import { parseCupInput } from '../../lib/money'
 import {
   addBillingPeriod,
@@ -22,12 +22,13 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
     : startOfDay(addBillingPeriod(new Date(), registration.billing_period))
 
   const [endsAt, setEndsAt] = useState(initialDate ?? startOfDay(new Date()))
+  const planTier = normalizePlanTier(registration.plan_tier)
   const [paymentAmount, setPaymentAmount] = useState(
-    () => String(PLAN_PRICES[registration.billing_period]?.amount ?? ''),
+    () => String(getPlanPrice(planTier, registration.billing_period)?.amount ?? ''),
   )
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const suggestedAmount = PLAN_PRICES[registration.billing_period]?.amount
+  const suggestedAmount = getPlanPrice(planTier, registration.billing_period)?.amount
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -44,7 +45,7 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
 
     const amountCup = isEdit ? null : parseCupInput(paymentAmount)
     if (!isEdit && amountCup == null) {
-      setError('Indica el monto real que pagó la tienda (en CUP).')
+      setError('Indica el monto real que pagó la tienda (en USD).')
       return
     }
 
@@ -68,14 +69,14 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
   return (
     <AdminModal
       title={isEdit ? 'Editar suscripción' : 'Aprobar solicitud'}
-      subtitle={`${registration.store_name} · ${BILLING_LABELS[registration.billing_period]}`}
+      subtitle={`${registration.store_name} · ${PLAN_TIER_LABELS[planTier]} · ${BILLING_LABELS[registration.billing_period]}`}
       onClose={onClose}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         {!isEdit && (
           <div>
             <label htmlFor="payment-amount-cup" className={adminLabel}>
-              Monto pagado (CUP)
+              Monto pagado (USD)
             </label>
             <input
               id="payment-amount-cup"
@@ -83,14 +84,14 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
               inputMode="numeric"
               value={paymentAmount}
               onChange={(e) => setPaymentAmount(e.target.value)}
-              placeholder={suggestedAmount ? String(suggestedAmount) : '1000'}
+              placeholder={suggestedAmount ? String(suggestedAmount) : '2'}
               className="w-full min-h-12 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 text-base text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
               required
             />
             <p className="mt-2 text-xs text-zinc-500">
               Importe real de la transferencia. Si pagó varios meses por adelantado,
               registra el total (p. ej. 3 meses = {suggestedAmount ? suggestedAmount * 3 : '3× el plan'}).
-              Referencia del plan: {suggestedAmount?.toLocaleString('es')} CUP.
+              Referencia del plan: {suggestedAmount?.toLocaleString('es')} USD.
             </p>
           </div>
         )}

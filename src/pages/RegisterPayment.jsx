@@ -6,7 +6,7 @@ import AuthShell from '../components/auth/AuthShell'
 import { authPageIntro, authPaymentGrid } from '../components/auth/authStyles'
 import RegisterProgress from '../components/auth/RegisterProgress'
 import Button from '../components/Button'
-import { PLAN_PRICES } from '../constants/plan'
+import { formatPlanAmount, getPlanPrice, getPlanTier, normalizePlanTier } from '../constants/plan'
 import {
   PAYMENT_CARD_NUMBER,
   PAYMENT_PHONE,
@@ -17,7 +17,9 @@ export default function RegisterPayment() {
   const navigate = useNavigate()
   const location = useLocation()
   const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
-  const price = PLAN_PRICES[billing]
+  const planTier = normalizePlanTier(location.state?.planTier)
+  const price = getPlanPrice(planTier, billing)
+  const tier = getPlanTier(planTier)
   const [copied, setCopied] = useState(null)
 
   async function copyText(text, key) {
@@ -41,9 +43,9 @@ export default function RegisterPayment() {
               <>
                 Transfiere{' '}
                 <strong className="text-brand-green">
-                  {price.amount.toLocaleString('es')} CUP
+                  {formatPlanAmount(price.amount)}
                 </strong>{' '}
-                para activar tu solicitud.
+                por el plan {tier.name} ({billing === 'yearly' ? 'anual' : 'mensual'}) para activar tu solicitud.
               </>
             }
             layout="desktop-left"
@@ -107,7 +109,9 @@ export default function RegisterPayment() {
             </p>
 
             <Button
-              onClick={() => navigate('/registro/verificacion', { state: { billing } })}
+              onClick={() =>
+                navigate('/registro/verificacion', { state: { billing, planTier } })
+              }
             >
               Ya transferí
             </Button>

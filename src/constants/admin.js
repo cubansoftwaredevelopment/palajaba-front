@@ -6,6 +6,11 @@ export const BILLING_LABELS = {
   yearly: 'Anual',
 }
 
+export const PLAN_TIER_LABELS = {
+  standard: 'Básico',
+  premium: 'Premium',
+}
+
 export const STATUS_LABELS = {
   pending: 'Pendiente',
   approved: 'Aprobada',

@@ -2,13 +2,16 @@ import { useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
 import { adminAlertError, adminLabel } from './adminStyles'
-import { PLAN_PRICES } from '../../constants/plan'
+import { getPlanPrice, normalizePlanTier } from '../../constants/plan'
 import { parseCupInput } from '../../lib/money'
 import { updateRegistrationPayment } from '../../lib/api'
 import { getAdminToken } from '../../lib/adminAuth'
 
 export default function PaymentModal({ registration, onClose, onSuccess }) {
-  const suggested = PLAN_PRICES[registration.billing_period]?.amount
+  const suggested = getPlanPrice(
+    normalizePlanTier(registration.plan_tier),
+    registration.billing_period,
+  )?.amount
   const [paymentAmount, setPaymentAmount] = useState(
     () => String(registration.payment_amount_cup ?? suggested ?? ''),
   )
@@ -19,7 +22,7 @@ export default function PaymentModal({ registration, onClose, onSuccess }) {
     e.preventDefault()
     const amountCup = parseCupInput(paymentAmount)
     if (amountCup == null) {
-      setError('Indica un monto válido en CUP.')
+      setError('Indica un monto válido en USD.')
       return
     }
 
@@ -46,7 +49,7 @@ export default function PaymentModal({ registration, onClose, onSuccess }) {
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="edit-payment-amount" className={adminLabel}>
-            Monto pagado (CUP)
+            Monto pagado (USD)
           </label>
           <input
             id="edit-payment-amount"

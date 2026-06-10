@@ -1,4 +1,5 @@
-import { BILLING_LABELS, STATUS_LABELS } from '../../constants/admin'
+import { BILLING_LABELS, PLAN_TIER_LABELS, STATUS_LABELS } from '../../constants/admin'
+import { normalizePlanTier } from '../../constants/plan'
 import {
   adminBadgeApproved,
   adminBadgePending,
@@ -26,6 +27,8 @@ export default function RegistrationRow({ item, onViewDetails }) {
         </div>
         <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${adminSubtle}`}>
           <span className="font-mono text-zinc-400">{item.transfer_id}</span>
+          <span className={adminMuted}>·</span>
+          <span>{PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}</span>
           <span className={adminMuted}>·</span>
           <span>{BILLING_LABELS[item.billing_period]}</span>
         </div>

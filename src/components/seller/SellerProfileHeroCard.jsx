@@ -1,7 +1,11 @@
+import { BILLING_LABELS } from '../../constants/admin'
+import { getPlanTier } from '../../constants/plan'
 import { sellerProfileHero, sellerProfileHeroPattern } from './sellerStyles'
 import SellerProfileAvatarUpload from './SellerProfileAvatarUpload'
 
 export default function SellerProfileHeroCard({ profile, photoUrl, photoUploading, onPhotoClick }) {
+  const tier = getPlanTier(profile?.plan_tier)
+
   return (
     <div className={sellerProfileHero}>
       <div className={sellerProfileHeroPattern} aria-hidden />
@@ -22,6 +26,9 @@ export default function SellerProfileHeroCard({ profile, photoUrl, photoUploadin
           {profile.phone && (
             <p className="mt-0.5 text-xs text-brand-carmelita/85">{profile.phone}</p>
           )}
+          <p className="mt-2 text-xs font-semibold text-brand-green">
+            Plan {tier.name} · {BILLING_LABELS[profile?.billing_period === 'yearly' ? 'yearly' : 'monthly']}
+          </p>
         </div>
       </div>
     </div>
