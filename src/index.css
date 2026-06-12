@@ -16,6 +16,7 @@
   --animate-success-rise: success-rise 0.65s ease-out forwards;
   --animate-float: float 5s ease-in-out infinite;
   --animate-float-delayed: float 6s ease-in-out 1s infinite;
+  --animate-levitate: levitate 2.8s ease-in-out infinite;
   --animate-pulse-soft: pulse-soft 4s ease-in-out infinite;
 
   @keyframes fade-in {
@@ -61,6 +62,16 @@
     }
     50% {
       transform: translateY(-14px);
+    }
+  }
+
+  @keyframes levitate {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-12px);
     }
   }
 

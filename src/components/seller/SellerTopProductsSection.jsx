@@ -1,5 +1,6 @@
 import { resolveMediaUrl } from '../../lib/media'
 import StatePanel from '../ui/StatePanel'
+import LoadingState from '../ui/LoadingState'
 import { sellerHint, sellerSection } from './sellerStyles'
 
 function ProductRankList({ title, hint, items, metricLabel, emptyMessage }) {
@@ -65,9 +66,7 @@ export default function SellerTopProductsSection({ loading, error, data }) {
             Ranking actual de tu catálogo: los que más interés generan y los que más se venden.
           </p>
         </div>
-        <p className="rounded-2xl border border-brand-green/10 bg-brand-white px-4 py-8 text-center text-sm text-brand-carmelita/80">
-          Cargando productos…
-        </p>
+        <LoadingState variant="panel" message="Cargando productos…" />
       </section>
     )
   }

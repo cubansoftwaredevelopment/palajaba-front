@@ -5,6 +5,7 @@ import { fetchAdminStats } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatPrice } from '../lib/money'
+import LoadingState from '../components/ui/LoadingState'
 
 const MONTH_NAMES = [
   'enero',
@@ -139,6 +140,9 @@ export default function AdminStats() {
         </p>
       )}
 
+      {loading && !stats ? (
+        <LoadingState variant="admin" message="Cargando estadísticas…" />
+      ) : (
       <div className="grid gap-3 sm:grid-cols-2">
         <MetricCard
           accent="payments"
@@ -171,6 +175,7 @@ export default function AdminStats() {
           comingSoon
         />
       </div>
+      )}
     </main>
   )
 }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { LOADING_MASCOT } from '../../constants/branding'
 import { animateScrollLeft } from '../../lib/smoothScroll'
 import BuyerProductCard from './BuyerProductCard'
 import {
@@ -163,7 +164,14 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
               aria-hidden={!loadingMore}
             >
               {loadingMore ? (
-                <span className="text-xs font-semibold text-brand-carmelita/70">…</span>
+                <img
+                  src={LOADING_MASCOT.src}
+                  alt=""
+                  className="h-8 w-8 animate-levitate object-contain"
+                  width={32}
+                  height={32}
+                  decoding="async"
+                />
               ) : null}
             </div>
           ) : null}

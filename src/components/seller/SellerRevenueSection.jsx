@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 
 import StatePanel from '../ui/StatePanel'
+import LoadingState from '../ui/LoadingState'
 import {
   sellerHint,
   sellerSection,
@@ -149,9 +150,7 @@ export default function SellerRevenueSection({
       />
 
       {loading ? (
-        <p className="rounded-2xl border border-brand-green/10 bg-brand-white px-4 py-8 text-center text-sm text-brand-carmelita/80">
-          Cargando gráficos…
-        </p>
+        <LoadingState variant="panel" message="Cargando gráficos…" />
       ) : null}
 
       {!loading && error ? (

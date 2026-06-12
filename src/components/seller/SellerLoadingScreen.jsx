@@ -1,8 +1,8 @@
-import Logo from '../Logo'
+import LoadingState from '../ui/LoadingState'
 
 export default function SellerLoadingScreen({ message = 'Cargando tu tienda…' }) {
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-brand-white px-6">
+    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-brand-white">
       <div
         className="pointer-events-none absolute -right-16 top-12 h-48 w-48 rounded-full bg-brand-yellow/15 blur-3xl"
         aria-hidden="true"
@@ -11,15 +11,12 @@ export default function SellerLoadingScreen({ message = 'Cargando tu tienda…' 
         className="pointer-events-none absolute -left-20 bottom-16 h-56 w-56 rounded-full bg-brand-green/10 blur-3xl"
         aria-hidden="true"
       />
-      <div className="relative flex flex-col items-center gap-4 animate-fade-in">
-        <Logo className="h-14 w-14" priority />
-        <div
-          className="h-8 w-8 animate-spin rounded-full border-2 border-brand-green/15 border-t-brand-green"
-          role="status"
-          aria-label={message}
-        />
-        <p className="text-sm font-medium text-brand-carmelita/85">{message}</p>
-      </div>
+      <LoadingState
+        variant="fullscreen"
+        size="lg"
+        message={message}
+        className="flex-1 animate-fade-in !min-h-0"
+      />
     </main>
   )
 }

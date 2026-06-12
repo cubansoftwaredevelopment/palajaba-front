@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { formatRelativeTime } from '../../lib/dates'
 import RenewPlanButton from './RenewPlanButton'
 import SellerModalPortal from './SellerModalPortal'
+import LoadingState from '../ui/LoadingState'
 import {
   sellerBtnPrimary,
   sellerBtnSecondary,
@@ -242,10 +243,7 @@ export default function SellerNotificationsPanel({
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
             {loading ? (
-              <div className="flex flex-col items-center py-14">
-                <div className="h-9 w-9 animate-pulse rounded-full bg-brand-green/10" />
-                <p className="mt-3 text-sm text-brand-carmelita/80">Cargando avisos…</p>
-              </div>
+              <LoadingState variant="compact" message="Cargando avisos…" className="py-14" />
             ) : null}
 
             {!loading && notifications.length === 0 ? (

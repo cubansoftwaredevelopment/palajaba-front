@@ -8,6 +8,7 @@ import { fetchAdminNotifications, sendAdminNotification } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatDateTime } from '../lib/dates'
+import LoadingState from '../components/ui/LoadingState'
 
 export default function AdminNotifications() {
   const navigate = useNavigate()
@@ -73,9 +74,9 @@ export default function AdminNotifications() {
         </p>
       )}
 
-      {loading && (
-        <p className={`text-sm ${adminMuted}`}>Cargando historial…</p>
-      )}
+      {loading ? (
+        <LoadingState variant="admin" message="Cargando historial…" />
+      ) : null}
 
       {!loading && !error && items.length === 0 && (
         <article className={`${adminCard} text-center`}>

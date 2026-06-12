@@ -1,6 +1,7 @@
 import { useEffect, useId } from 'react'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
+import LoadingState from '../ui/LoadingState'
 import { allItemsOfferDelivery, resolveStorePhone } from '../../lib/buyerJaba'
 import { resolveDisplayPrice } from '../../lib/displayPrice'
 import BuyerCurrencySelector from './BuyerCurrencySelector'
@@ -161,9 +162,12 @@ function StoreGroup({
       )}
 
       {syncingContacts ? (
-        <p className="mt-2 text-center text-[0.65rem] text-brand-carmelita/75">
-          Buscando teléfono de la tienda…
-        </p>
+        <LoadingState
+          variant="compact"
+          size="xs"
+          message="Buscando teléfono de la tienda…"
+          className="mt-2 !py-0"
+        />
       ) : null}
 
       {!syncingContacts && !canCheckout ? (

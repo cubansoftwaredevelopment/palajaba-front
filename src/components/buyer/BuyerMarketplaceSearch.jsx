@@ -1,4 +1,5 @@
 import StatePanel from '../ui/StatePanel'
+import LoadingState from '../ui/LoadingState'
 import BuyerProductCard from './BuyerProductCard'
 import { buyerProductGrid, buyerSearchInput } from './buyerStyles'
 
@@ -76,7 +77,7 @@ export function BuyerSearchResults({
   const hasMore = results?.has_more ?? false
 
   if (loading) {
-    return <p className="text-center text-sm text-brand-carmelita/80 lg:text-left">Buscando productos…</p>
+    return <LoadingState message="Buscando productos…" className="lg:items-start lg:text-left" />
   }
 
   if (error) {

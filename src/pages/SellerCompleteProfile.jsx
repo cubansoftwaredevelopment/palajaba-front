@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import CategoryAutocomplete from '../components/seller/CategoryAutocomplete'
+import LoadingState from '../components/ui/LoadingState'
 import LocationMapModal from '../components/seller/LocationMapModal'
 import SellerBusinessAreaFields, {
   getBusinessAreaFromSelection,
@@ -286,9 +287,9 @@ export default function SellerCompleteProfile() {
           </SellerSection>
 
           <SellerSection label="Categorías" required hint="Puedes elegir más de una." className={sellerFormFull}>
-            {categoriesLoading && (
-              <p className="text-xs text-brand-carmelita/80">Cargando categorías…</p>
-            )}
+            {categoriesLoading ? (
+              <LoadingState variant="compact" size="sm" message="Cargando categorías…" className="!py-2" />
+            ) : null}
             {categoriesError && (
               <p className={sellerAlertError} role="alert">
                 {categoriesError}

@@ -6,6 +6,7 @@ import SellerOrdersGroup from '../../components/seller/SellerOrdersGroup'
 import SellerOrdersTabs from '../../components/seller/SellerOrdersTabs'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import StatePanel from '../../components/ui/StatePanel'
+import LoadingState from '../../components/ui/LoadingState'
 import { sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
 import {
   deleteSellerOrder,
@@ -185,7 +186,7 @@ export default function SellerOrders() {
       />
 
       {loading ? (
-        <p className="py-8 text-center text-sm text-brand-carmelita/80">Cargando pedidos…</p>
+        <LoadingState message="Cargando pedidos…" />
       ) : null}
 
       {!loading && error ? (

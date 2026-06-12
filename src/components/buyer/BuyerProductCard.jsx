@@ -5,7 +5,6 @@ import { JABA_CHANGE_EVENT, isInJaba } from '../../lib/buyerJaba'
 import { resolveDisplayPrice } from '../../lib/displayPrice'
 import { resolveMediaUrl } from '../../lib/media'
 import BuyerProductDetailModal from './BuyerProductDetailModal'
-import JabaBagIcon from './JabaBagIcon'
 import {
   buyerProductActions,
   buyerProductBody,

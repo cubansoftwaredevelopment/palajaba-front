@@ -14,6 +14,7 @@ import { fetchAdminSettings, updateAdminSettings } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { PHONE_PREFIX, formatPhoneDigits, getPhoneDigits } from '../lib/phone'
+import LoadingState from '../components/ui/LoadingState'
 
 export default function AdminSettings() {
   const navigate = useNavigate()
@@ -90,7 +91,7 @@ export default function AdminSettings() {
       )}
 
       {loading ? (
-        <p className={`text-sm ${adminMuted}`}>Cargando configuración…</p>
+        <LoadingState variant="admin" message="Cargando configuración…" />
       ) : (
         <form onSubmit={handleSubmit} className={adminCard}>
           <div>

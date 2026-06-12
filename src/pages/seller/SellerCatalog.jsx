@@ -13,6 +13,7 @@ import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import ShareCatalogModal from '../../components/seller/ShareCatalogModal'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
 import StatePanel from '../../components/ui/StatePanel'
+import LoadingState from '../../components/ui/LoadingState'
 import {
   sellerAlertError,
   sellerCatalogSection,
@@ -193,11 +194,9 @@ export default function SellerCatalog() {
           />
         ) : null}
 
-        {loading && (
-          <p className="rounded-2xl border border-brand-green/10 bg-brand-white px-4 py-6 text-center text-sm text-brand-carmelita/85">
-            Cargando tu catálogo…
-          </p>
-        )}
+        {loading ? (
+          <LoadingState variant="panel" message="Cargando tu catálogo…" />
+        ) : null}
 
         {!loading && !error && !hasLocalCategories && (
           <SellerCatalogEmpty

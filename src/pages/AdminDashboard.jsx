@@ -16,21 +16,7 @@ import { FILTER_TABS, REJECTION_REASON } from '../constants/admin'
 import { fetchRegistrations, rejectRegistration } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
-
-function SkeletonRow() {
-  return (
-    <div
-      className="flex animate-pulse items-center gap-3 rounded-xl border border-brand-green/8 bg-zinc-900/30 px-4 py-3"
-      aria-hidden="true"
-    >
-      <div className="flex-1 space-y-2">
-        <div className="h-4 w-1/3 rounded bg-zinc-800" />
-        <div className="h-3 w-1/2 rounded bg-zinc-800/80" />
-      </div>
-      <div className="h-8 w-20 rounded-lg bg-zinc-800" />
-    </div>
-  )
-}
+import LoadingState from '../components/ui/LoadingState'
 
 function StatCard({ label, value, active, onClick }) {
   return (
@@ -235,7 +221,9 @@ export default function AdminDashboard() {
         )}
 
         <div className="flex flex-col gap-2">
-          {loading && Array.from({ length: 5 }, (_, i) => <SkeletonRow key={i} />)}
+          {loading ? (
+            <LoadingState variant="admin" message="Cargando solicitudes…" className="rounded-2xl border border-brand-green/8 bg-zinc-900/30 py-14" />
+          ) : null}
 
           {!loading && filteredRegistrations.length === 0 && (
             <div className="rounded-2xl border border-dashed border-brand-green/15 bg-zinc-900/30 px-6 py-14 text-center">

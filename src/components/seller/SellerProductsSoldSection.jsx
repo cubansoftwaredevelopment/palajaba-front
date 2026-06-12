@@ -9,6 +9,7 @@ import {
 } from 'recharts'
 
 import StatePanel from '../ui/StatePanel'
+import LoadingState from '../ui/LoadingState'
 import { sellerHint, sellerSection, sellerSectionGap } from './sellerStyles'
 import SellerChartGranularity from './SellerChartGranularity'
 
@@ -57,9 +58,7 @@ export default function SellerProductsSoldSection({
       />
 
       {loading ? (
-        <p className="rounded-2xl border border-brand-green/10 bg-brand-white px-4 py-8 text-center text-sm text-brand-carmelita/80">
-          Cargando gráfico…
-        </p>
+        <LoadingState variant="panel" message="Cargando gráfico…" />
       ) : null}
 
       {!loading && error ? (

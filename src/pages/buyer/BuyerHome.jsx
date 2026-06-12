@@ -9,6 +9,7 @@ import BuyerMarketplaceSearch, {
 } from '../../components/buyer/BuyerMarketplaceSearch'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import StatePanel from '../../components/ui/StatePanel'
+import LoadingState from '../../components/ui/LoadingState'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import Button from '../../components/Button'
 import {
@@ -211,7 +212,7 @@ function BuyerHomeContent() {
       ) : null}
 
       {!searchActive && loading ? (
-        <p className="text-center text-sm text-brand-carmelita/80 lg:text-left">Cargando productos…</p>
+        <LoadingState message="Cargando productos…" className="lg:items-start lg:text-left" />
       ) : null}
 
       {!searchActive && !loading && loadError ? (
