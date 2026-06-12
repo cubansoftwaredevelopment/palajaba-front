@@ -1,0 +1,32 @@
+export const WELCOME_ONBOARDING_SLIDES = [
+  {
+    id: 'papi',
+    name: 'Papi',
+    image: '/images/welcome/papi.png',
+    imageAlt: 'Papi, mascota de bienvenida de Pa\' La Jaba',
+    accent: 'carmelita',
+    eyebrow: 'Hola, soy Papi',
+    title: 'Bienvenido a Pa\' La Jaba',
+    body: 'El marketplace cubano para descubrir tiendas cerca de ti, comprar con confianza y conectar con lo mejor de lo local.',
+  },
+  {
+    id: 'lali',
+    name: 'Lali',
+    image: '/images/welcome/lali.png',
+    imageAlt: 'Lali, mascota del marketplace de Pa\' La Jaba',
+    accent: 'green',
+    eyebrow: 'Hola, soy Lali',
+    title: 'Compra en tu zona',
+    body: 'Elige provincia y municipio, explora categorías y encuentra productos con entrega o recogida — incluso en municipios vecinos si puedes trasladarte.',
+  },
+  {
+    id: 'jabi',
+    name: 'Jabi',
+    image: '/images/welcome/jabi.png',
+    imageAlt: 'Jabi, mascota de la jaba de compras de Pa\' La Jaba',
+    accent: 'yellow',
+    eyebrow: 'Hola, soy Jabi',
+    title: 'Tu jaba, a tu ritmo',
+    body: 'Guarda productos de varias tiendas en tu jaba, revisa precios y cierra el pedido por WhatsApp cuando estés listo.',
+  },
+]

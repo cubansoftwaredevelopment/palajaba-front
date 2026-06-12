@@ -9,9 +9,11 @@ import { resolveDisplayPrice } from '../../lib/displayPrice'
 import { formatPrice } from '../../lib/money'
 
 import { resolveMediaUrl } from '../../lib/media'
+import { isProductPurchasable, isProductSoldOut, getProductPickupDisplay } from '../../lib/marketplaceProduct'
 import { recordProductPopularity } from '../../lib/productPopularity'
 
 import BuyerModalPortal from './BuyerModalPortal'
+import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
 
 import {
 
@@ -46,6 +48,10 @@ import {
   buyerProductDetailSpecValue,
 
   buyerProductDetailStickyBar,
+
+  buyerProductPickupHint,
+
+  buyerProductPickupRibbon,
 
   buyerStoreStripAvatar,
 
@@ -181,7 +187,9 @@ export default function BuyerProductDetailModal({
 
 
 
-  const canPurchase = !product.view_only
+  const canPurchase = isProductPurchasable(product)
+  const soldOut = isProductSoldOut(product)
+  const pickup = getProductPickupDisplay(product)
 
   const description = product.description?.trim() ?? ''
 
@@ -288,7 +296,11 @@ export default function BuyerProductDetailModal({
 
                 {imageSrc ? (
 
-                  <img src={imageSrc} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={imageSrc}
+                    alt=""
+                    className={`h-full w-full object-cover ${soldOut ? 'grayscale' : ''}`}
+                  />
 
                 ) : (
 
@@ -299,6 +311,14 @@ export default function BuyerProductDetailModal({
                   </div>
 
                 )}
+
+                {pickup.requiresPickup ? (
+                  <span className={buyerProductPickupRibbon}>
+                    Sin domicilio a tu municipio
+                  </span>
+                ) : null}
+
+                {soldOut ? <BuyerProductSoldOutOverlay /> : null}
 
               </div>
 
@@ -328,6 +348,14 @@ export default function BuyerProductDetailModal({
 
               </h2>
 
+              {pickup.requiresPickup ? (
+                <p className={`${buyerProductPickupHint} mt-2 text-sm`}>
+                  {pickup.municipalityName
+                    ? `Debes recogerlo en ${pickup.municipalityName}. No hay domicilio a tu municipio.`
+                    : 'Debes recogerlo en tienda. No hay domicilio a tu municipio.'}
+                </p>
+              ) : null}
+
 
 
               {product.view_only ? (
@@ -335,6 +363,14 @@ export default function BuyerProductDetailModal({
                 <p className="mt-2 inline-flex rounded-full bg-brand-yellow/18 px-2.5 py-1 text-[0.65rem] font-bold text-brand-carmelita">
 
                   Solo consulta — sin compra directa
+
+                </p>
+
+              ) : soldOut ? (
+
+                <p className="mt-2 inline-flex rounded-full bg-brand-carmelita/12 px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.06em] text-brand-carmelita">
+
+                  Agotado — lo vendemos pero no lo tenemos ahora
 
                 </p>
 
@@ -359,9 +395,11 @@ export default function BuyerProductDetailModal({
               <div className={buyerProductDetailSpecGrid}>
 
                 <SpecCard label="Entrega">
-
-                  {product.offers_delivery ? 'A domicilio disponible' : 'Recogida en tienda'}
-
+                  {pickup.detailNotice
+                    ? pickup.detailNotice
+                    : product.offers_delivery
+                      ? 'A domicilio disponible'
+                      : 'Recogida en tienda'}
                 </SpecCard>
 
                 <SpecCard label="Monedas">{acceptedCurrencies.join(' · ')}</SpecCard>
@@ -449,6 +487,18 @@ export default function BuyerProductDetailModal({
                 </button>
 
               </div>
+
+            </div>
+
+          ) : soldOut ? (
+
+            <div className="shrink-0 border-t border-brand-green/8 bg-brand-white/95 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+
+              <p className="rounded-xl border border-brand-carmelita/20 bg-brand-carmelita/8 px-3 py-2.5 text-center text-sm font-medium text-brand-green">
+
+                Este producto está agotado. Escríbele a la tienda por WhatsApp si quieres consultar cuándo vuelve.
+
+              </p>
 
             </div>
 

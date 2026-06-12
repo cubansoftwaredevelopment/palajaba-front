@@ -3,7 +3,7 @@ import AdminAuthenticatedLayout from './components/admin/AdminAuthenticatedLayou
 import RouteError from './components/RouteError'
 import SellerRoute from './components/SellerRoute'
 import SellerLayout from './components/seller/SellerLayout'
-import Welcome from './pages/Welcome'
+import WelcomeGate from './pages/WelcomeGate'
 import Login from './pages/Login'
 import SellerGeneral from './pages/seller/SellerGeneral'
 import SellerCatalog from './pages/seller/SellerCatalog'
@@ -32,7 +32,7 @@ const router = createBrowserRouter([
     element: <Outlet />,
     errorElement: <RouteError />,
     children: [
-      { index: true, element: <Welcome /> },
+      { index: true, element: <WelcomeGate /> },
       {
         path: 'comprar',
         element: <BuyerJabaLayout />,

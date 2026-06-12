@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import BuyerAdditionalMunicipalitiesFilter from '../../components/buyer/BuyerAdditionalMunicipalitiesFilter'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
@@ -18,7 +19,7 @@ import {
   fetchMarketplaceSearch,
   fetchCategories,
 } from '../../lib/api'
-import { getBuyerLocation, hasCompleteBuyerLocation } from '../../lib/buyerLocation'
+import { getBuyerLocation, getAdditionalMunicipalities, hasCompleteBuyerLocation, setAdditionalMunicipalities } from '../../lib/buyerLocation'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 import { MARKETPLACE_LABEL } from '../../constants/branding'
 
@@ -47,6 +48,17 @@ function BuyerHomeContent() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState(null)
   const [searchLoadingMore, setSearchLoadingMore] = useState(false)
+  const [additionalMunicipalityIds, setAdditionalMunicipalityIdsState] = useState(
+    () => getAdditionalMunicipalities(location.province.id),
+  )
+
+  const setAdditionalMunicipalityIds = useCallback(
+    (nextIds) => {
+      setAdditionalMunicipalityIdsState(nextIds)
+      setAdditionalMunicipalities(location.province.id, nextIds)
+    },
+    [location.province.id],
+  )
 
   const searchActive = useMarketplaceSearchActive(debouncedQuery, searchCategoryId)
 
@@ -58,6 +70,7 @@ function BuyerHomeContent() {
       const data = await fetchMarketplaceFeed({
         provinceId: location.province.id,
         municipalityId: location.municipality.id,
+        additionalMunicipalityIds,
         limitPerCategory: PAGE_SIZE,
       })
       setFeed(data)
@@ -72,7 +85,7 @@ function BuyerHomeContent() {
     } finally {
       setLoading(false)
     }
-  }, [location.municipality.id, location.province.id])
+  }, [additionalMunicipalityIds, location.municipality.id, location.province.id])
 
   useEffect(() => {
     loadFeed()
@@ -129,6 +142,7 @@ function BuyerHomeContent() {
         const data = await fetchMarketplaceSearch({
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
+          additionalMunicipalityIds,
           query: debouncedQuery,
           globalCategoryId: searchCategoryId || undefined,
           limit: PAGE_SIZE,
@@ -160,6 +174,7 @@ function BuyerHomeContent() {
       }
     },
     [
+      additionalMunicipalityIds,
       debouncedQuery,
       location.municipality.id,
       location.province.id,
@@ -184,7 +199,7 @@ function BuyerHomeContent() {
       }
       headerEnd={<BuyerCurrencySelector />}
     >
-      <div className="mb-5 lg:mb-6">
+      <div className="mb-4 flex flex-col gap-2 lg:mb-6 lg:gap-3">
         <BuyerMarketplaceSearch
           categories={categories}
           categoriesLoading={categoriesLoading}
@@ -192,6 +207,12 @@ function BuyerHomeContent() {
           categoryId={searchCategoryId}
           onQueryChange={setSearchQuery}
           onCategoryChange={setSearchCategoryId}
+        />
+        <BuyerAdditionalMunicipalitiesFilter
+          provinceId={location.province.id}
+          baseMunicipalityId={location.municipality.id}
+          selectedIds={additionalMunicipalityIds}
+          onChange={setAdditionalMunicipalityIds}
         />
       </div>
 
@@ -259,6 +280,7 @@ function BuyerHomeContent() {
                 fetchMarketplaceCategoryProducts({
                   provinceId: location.province.id,
                   municipalityId: location.municipality.id,
+                  additionalMunicipalityIds,
                   globalCategoryId: section.category_id,
                   limit: PAGE_SIZE,
                   offset,

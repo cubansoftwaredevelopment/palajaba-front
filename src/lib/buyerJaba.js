@@ -124,6 +124,8 @@ function normalizeProduct(product) {
 
 /** Checkout directo desde «Comprar»: solo este producto, sin usar el resto de la jaba. */
 export function buildDirectBuyCheckoutPayload(product) {
+  if (product?.is_available === false) return null
+
   const storeId = product.store?.id
   if (!storeId) return null
 
@@ -138,6 +140,8 @@ export function buildDirectBuyCheckoutPayload(product) {
 }
 
 export function addToJaba(product) {
+  if (product?.is_available === false) return getJabaCount()
+
   const items = readJaba()
   const existing = items.find((item) => item.id === product.id)
 
@@ -189,6 +193,11 @@ export function clearJabaStore(storeId) {
 export function clearJaba() {
   writeJaba([])
   return 0
+}
+
+export function replaceJabaItems(items) {
+  writeJaba(Array.isArray(items) ? items : [])
+  return getJabaCount()
 }
 
 export function getJabaStoreItems(storeId) {

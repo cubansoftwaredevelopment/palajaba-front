@@ -4,7 +4,9 @@ import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyConte
 import { JABA_CHANGE_EVENT, isInJaba } from '../../lib/buyerJaba'
 import { resolveDisplayPrice } from '../../lib/displayPrice'
 import { resolveMediaUrl } from '../../lib/media'
+import { isProductPurchasable, isProductSoldOut, getProductPickupDisplay } from '../../lib/marketplaceProduct'
 import BuyerProductDetailModal from './BuyerProductDetailModal'
+import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
 import {
   buyerProductActions,
   buyerProductBody,
@@ -15,6 +17,8 @@ import {
   buyerProductCardCompact,
   buyerProductImageWrap,
   buyerProductName,
+  buyerProductPickupHint,
+  buyerProductPickupRibbon,
   buyerProductPrice,
   buyerProductStore,
 } from './buyerStyles'
@@ -61,30 +65,59 @@ export default function BuyerProductCard({ product, compact = false }) {
     setDetailOpen(true)
   }
 
-  const canPurchase = !product.view_only
+  const canPurchase = isProductPurchasable(product)
+  const soldOut = isProductSoldOut(product)
+  const pickup = getProductPickupDisplay(product)
 
   return (
     <>
       <article className={compact ? buyerProductCardCompact : buyerProductCard}>
+        <div className={soldOut ? 'flex min-h-0 flex-1 flex-col grayscale' : 'flex min-h-0 flex-1 flex-col'}>
         <button
           type="button"
           onClick={openDetail}
           className="flex min-h-0 w-full flex-1 flex-col text-left touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/25"
-          aria-label={`Ver detalles de ${product.name}`}
+          aria-label={`Ver detalles de ${product.name}${soldOut ? ' (agotado)' : ''}`}
         >
           <div className={buyerProductImageWrap}>
             {imageSrc ? (
-              <img src={imageSrc} alt="" className="h-full w-full object-cover" loading="lazy" />
+              <img
+                src={imageSrc}
+                alt=""
+                className="h-full w-full object-cover"
+                loading="lazy"
+              />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-[0.65rem] font-semibold text-brand-carmelita/45">
                 Sin foto
               </div>
             )}
+            {pickup.requiresPickup ? (
+              <span className={buyerProductPickupRibbon}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
+                  <path d="M12 21s7-4.35 7-10a7 7 0 10-14 0c0 5.65 7 10 7 10z" />
+                  <path d="M12 11v4" />
+                  <circle cx="12" cy="8.5" r="0.75" fill="currentColor" stroke="none" />
+                </svg>
+                Sin domicilio
+              </span>
+            ) : null}
           </div>
 
           <div className={buyerProductBody}>
             <p className={buyerProductPrice}>{displayPrice.label}</p>
             <h3 className={buyerProductName}>{product.name}</h3>
+            {pickup.requiresPickup ? (
+              <p className={buyerProductPickupHint}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="shrink-0" aria-hidden="true">
+                  <path d="M5 12h14" />
+                  <path d="M12 5l7 7-7 7" />
+                </svg>
+                {pickup.municipalityName
+                  ? `Recoger en ${pickup.municipalityName}`
+                  : 'Recogida en tienda'}
+              </p>
+            ) : null}
             <p className={buyerProductStore}>{product.store.store_name}</p>
           </div>
         </button>
@@ -108,6 +141,9 @@ export default function BuyerProductCard({ product, compact = false }) {
             </button>
           </div>
         ) : null}
+        </div>
+
+        {soldOut ? <BuyerProductSoldOutOverlay fullCard /> : null}
       </article>
 
       {detailOpen ? (

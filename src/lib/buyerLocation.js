@@ -1,6 +1,7 @@
 import { getMunicipalityById, getProvinceById } from '../constants/cubaLocations'
 
 const STORAGE_KEY = 'pala-jaba-buyer-location'
+const ADDITIONAL_MUNICIPALITIES_KEY = 'pala-jaba-buyer-additional-municipalities'
 
 function normalizeStoredLocation(raw) {
   if (!raw?.province?.id) return null
@@ -86,4 +87,50 @@ export function resolveBuyerEntryPath() {
   if (location?.province?.id && location?.municipality?.id) return '/comprar'
   if (location?.province?.id) return '/comprar/municipio'
   return '/comprar/provincia'
+}
+
+function readAdditionalMunicipalitiesStore() {
+  const raw = localStorage.getItem(ADDITIONAL_MUNICIPALITIES_KEY)
+  if (!raw) return {}
+
+  try {
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+export function getAdditionalMunicipalities(provinceId) {
+  if (!provinceId) return []
+
+  const store = readAdditionalMunicipalitiesStore()
+  const ids = store[provinceId]
+  if (!Array.isArray(ids)) return []
+
+  return ids.filter((id) => typeof id === 'string' && id.trim()).map((id) => id.trim())
+}
+
+export function setAdditionalMunicipalities(provinceId, municipalityIds) {
+  if (!provinceId) return
+
+  const store = readAdditionalMunicipalitiesStore()
+  const normalized = [...new Set(
+    (municipalityIds ?? [])
+      .filter((id) => typeof id === 'string' && id.trim())
+      .map((id) => id.trim()),
+  )]
+
+  if (normalized.length === 0) {
+    delete store[provinceId]
+  } else {
+    store[provinceId] = normalized
+  }
+
+  if (Object.keys(store).length === 0) {
+    localStorage.removeItem(ADDITIONAL_MUNICIPALITIES_KEY)
+    return
+  }
+
+  localStorage.setItem(ADDITIONAL_MUNICIPALITIES_KEY, JSON.stringify(store))
 }

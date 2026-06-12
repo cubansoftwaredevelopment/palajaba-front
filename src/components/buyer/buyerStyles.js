@@ -88,12 +88,47 @@ export const buyerProductRowItem =
   'w-[11rem] shrink-0 snap-start sm:w-[11.5rem]'
 
 export const buyerProductCard =
-  'group flex h-full flex-col overflow-hidden rounded-2xl border border-brand-green/10 bg-brand-white shadow-[0_3px_16px_rgba(89,128,44,0.07)] transition-shadow touch-manipulation sm:hover:shadow-[0_6px_22px_rgba(89,128,44,0.11)]'
+  'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-brand-green/10 bg-brand-white shadow-[0_3px_16px_rgba(89,128,44,0.07)] transition-shadow touch-manipulation sm:hover:shadow-[0_6px_22px_rgba(89,128,44,0.11)]'
 
 export const buyerProductCardCompact = `${buyerProductCard} w-full`
 
 export const buyerProductImageWrap =
   'relative aspect-[5/6] w-full overflow-hidden bg-gradient-to-b from-brand-green/[0.03] to-brand-green/[0.07]'
+
+export const buyerProductPickupRibbon =
+  'absolute left-0 top-0 z-[1] flex max-w-[85%] items-center gap-1 rounded-br-xl bg-brand-carmelita px-2 py-1 text-[0.58rem] font-bold leading-none text-brand-white shadow-[0_2px_8px_rgba(123,76,56,0.35)] sm:text-[0.62rem]'
+
+export const buyerProductPickupHint =
+  'mt-1 flex items-center gap-1 text-[0.58rem] font-semibold leading-tight text-brand-carmelita sm:text-[0.62rem]'
+
+export const buyerExpandSearchRoot =
+  'min-w-0'
+
+export const buyerExpandSearchTrigger = (active) =>
+  `flex w-full min-h-8 items-center gap-2 rounded-full border px-2.5 py-1 text-left transition-[background-color,border-color,box-shadow] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/20 sm:min-h-9 sm:gap-2.5 sm:px-3.5 ${
+    active
+      ? 'border-brand-green/28 bg-brand-yellow/12 shadow-[0_1px_6px_rgba(89,128,44,0.08)]'
+      : 'border-dashed border-brand-green/18 bg-brand-green/[0.02] active:bg-brand-yellow/8 lg:hover:border-brand-green/26 lg:hover:bg-brand-green/[0.04]'
+  }`
+
+export const buyerExpandSearchTriggerIcon =
+  'flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-yellow/22 text-brand-green sm:h-7 sm:w-7'
+
+export const buyerExpandSearchTriggerTitle =
+  'min-w-0 flex-1 truncate text-[0.72rem] font-semibold text-brand-green sm:text-xs'
+
+export const buyerExpandSearchTriggerMeta =
+  'shrink-0 rounded-full bg-brand-green px-1.5 py-0.5 text-[0.58rem] font-bold leading-none text-brand-white'
+
+export const buyerExpandSearchPanel =
+  'mt-2 rounded-2xl border border-brand-green/10 bg-brand-white px-3 py-3 shadow-[0_4px_16px_rgba(89,128,44,0.06)] sm:px-3.5'
+
+export const buyerExpandSearchChip = (active) =>
+  `min-h-8 rounded-full border px-2.5 py-1 text-[0.68rem] font-semibold transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:min-h-9 sm:px-3 sm:text-xs ${
+    active
+      ? 'border-brand-green bg-brand-green text-brand-white shadow-[0_2px_8px_rgba(89,128,44,0.18)]'
+      : 'border-brand-green/16 bg-brand-white text-brand-green active:bg-brand-yellow/10 lg:hover:border-brand-green/24 lg:hover:bg-brand-green/[0.03]'
+  }`
 
 export const buyerProductBody = 'flex min-h-0 flex-1 flex-col px-2 pb-2 pt-1.5'
 
@@ -120,6 +155,15 @@ export const buyerProductBtnJabaActive =
 
 export const buyerProductBadge =
   'mt-2 inline-flex w-fit rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[0.6rem] font-bold text-brand-green'
+
+export const buyerProductSoldOutVeil =
+  'pointer-events-none absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-brand-carmelita/55'
+
+export const buyerProductSoldOutImageVeil =
+  'pointer-events-none absolute inset-0 flex items-center justify-center bg-brand-carmelita/35'
+
+export const buyerProductSoldOutBadge =
+  'rounded-xl border-2 border-brand-white/90 bg-brand-carmelita px-3.5 py-2 text-center font-display text-xs font-bold uppercase leading-none tracking-[0.16em] text-brand-white shadow-[0_8px_24px_rgba(123,76,56,0.45)] sm:px-4 sm:py-2.5 sm:text-sm'
 
 export const buyerJabaTrigger =
   'relative inline-flex shrink-0 items-center justify-center rounded-2xl transition-transform touch-manipulation active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25'
@@ -164,6 +208,49 @@ export const buyerJabaDeliveryBtn =
   'flex w-full min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-green/20 bg-brand-green/[0.06] px-4 text-sm font-bold text-brand-green transition-transform touch-manipulation active:scale-[0.98] active:bg-brand-yellow/15 lg:hover:bg-brand-green/[0.1]'
 
 export const buyerJabaCheckoutActions = 'mt-3 grid gap-2'
+
+export const buyerJabaSyncOverlay =
+  'fixed inset-0 z-[95] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'
+
+export const buyerJabaSyncModal =
+  'relative flex w-full max-w-md min-h-0 max-h-[min(92dvh,44rem)] animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:max-h-[min(88dvh,40rem)] sm:rounded-3xl lg:max-w-lg'
+
+export const buyerJabaSyncHeader = 'shrink-0 px-5 pt-3'
+
+export const buyerJabaSyncBody = 'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 pb-2'
+
+export const buyerJabaSyncHero = 'text-center'
+
+export const buyerJabaSyncHeroImage =
+  'relative mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-yellow/18 ring-1 ring-brand-yellow/30'
+
+export const buyerJabaSyncCountBadge =
+  'absolute -right-1 -top-1 flex h-7 min-w-7 items-center justify-center rounded-full bg-brand-carmelita px-1.5 text-[0.68rem] font-bold leading-none text-brand-white shadow-[0_4px_12px_rgba(123,76,56,0.35)]'
+
+export const buyerJabaSyncTitle = 'mt-2 font-display text-xl font-bold leading-snug text-brand-green sm:text-[1.35rem]'
+
+export const buyerJabaSyncSubtitle = 'mt-2 text-sm leading-relaxed text-brand-carmelita/90'
+
+export const buyerJabaSyncSummary =
+  'mt-3 rounded-2xl border border-brand-green/10 bg-brand-green/[0.04] px-3.5 py-2.5 text-sm font-medium text-brand-green'
+
+export const buyerJabaSyncList = 'mt-5 space-y-2.5'
+
+export const buyerJabaSyncItem =
+  'flex items-start gap-3 rounded-2xl border border-brand-green/10 bg-brand-white px-3.5 py-3 shadow-[0_2px_10px_rgba(89,128,44,0.05)]'
+
+export const buyerJabaSyncItemIcon =
+  'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl'
+
+export const buyerJabaSyncItemName = 'font-display text-sm font-bold leading-snug text-brand-green'
+
+export const buyerJabaSyncItemBadge =
+  'mt-1 inline-flex rounded-full px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.06em]'
+
+export const buyerJabaSyncItemMessage = 'mt-1.5 text-sm leading-snug text-brand-carmelita/85'
+
+export const buyerJabaSyncFooter =
+  'shrink-0 flex flex-col gap-2 border-t border-brand-green/8 bg-brand-white/95 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm'
 
 export const buyerDeliveryOverlay =
   'fixed inset-0 z-[90] bg-brand-green/25 backdrop-blur-[2px]'

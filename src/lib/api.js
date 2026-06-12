@@ -479,18 +479,32 @@ export function deleteCatalogProduct(token, productId) {
   })
 }
 
-export function fetchMarketplaceFeed({ provinceId, municipalityId, limitPerCategory = 20 }) {
+function appendAdditionalMunicipalities(params, additionalMunicipalityIds) {
+  if (!additionalMunicipalityIds?.length) return
+  for (const municipalityId of additionalMunicipalityIds) {
+    params.append('municipios_adicionales', municipalityId)
+  }
+}
+
+export function fetchMarketplaceFeed({
+  provinceId,
+  municipalityId,
+  additionalMunicipalityIds,
+  limitPerCategory = 20,
+}) {
   const params = new URLSearchParams({
     province_id: provinceId,
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
   })
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   return request(`/api/marketplace/feed?${params}`)
 }
 
 export function fetchMarketplaceSearch({
   provinceId,
   municipalityId,
+  additionalMunicipalityIds,
   query = '',
   globalCategoryId,
   limit = 20,
@@ -506,6 +520,7 @@ export function fetchMarketplaceSearch({
   if (globalCategoryId) {
     params.set('global_category_id', globalCategoryId)
   }
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   return request(`/api/marketplace/search?${params}`)
 }
 
@@ -612,6 +627,7 @@ export async function downloadSellerOrderInvoice(token, orderId, type = 'store')
 export function fetchMarketplaceCategoryProducts({
   provinceId,
   municipalityId,
+  additionalMunicipalityIds,
   globalCategoryId,
   limit = 20,
   offset = 0,
@@ -623,5 +639,21 @@ export function fetchMarketplaceCategoryProducts({
     limit: String(limit),
     offset: String(offset),
   })
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   return request(`/api/marketplace/products?${params}`)
+}
+
+export function syncBuyerJaba({ items, provinceId, municipalityId, additionalMunicipalityIds }) {
+  const body = {
+    items,
+    province_id: provinceId ?? undefined,
+    municipality_id: municipalityId ?? undefined,
+  }
+  if (additionalMunicipalityIds?.length) {
+    body.municipios_adicionales = additionalMunicipalityIds
+  }
+  return request('/api/marketplace/jaba/sync', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
 }
