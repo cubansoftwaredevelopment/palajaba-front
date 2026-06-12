@@ -10,6 +10,7 @@ import {
   buyerPageIntro,
   buyerSearchInput,
 } from '../../components/buyer/buyerStyles'
+import { MARKETPLACE_LABEL } from '../../constants/branding'
 import { getProvinceById } from '../../constants/cubaLocations'
 import { getBuyerLocation, setBuyerMunicipality } from '../../lib/buyerLocation'
 import { municipalityMatchesQuery } from '../../lib/municipalityDisplay'
@@ -46,7 +47,7 @@ export default function BuyerSelectMunicipality() {
     <BuyerShell backTo="/comprar/provincia" backLabel="Provincia">
       <div className={buyerPageIntro}>
         <div>
-          <AuthHeader eyebrow="Comprar" title="Tu municipio" layout="desktop-left" />
+          <AuthHeader eyebrow={MARKETPLACE_LABEL} title="Tu municipio" layout="desktop-left" />
           <div className="mt-3 flex justify-center lg:justify-start">
             <span className={buyerContextChip}>
               <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

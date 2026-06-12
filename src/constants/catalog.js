@@ -19,7 +19,7 @@ export const CATALOG_ONBOARDING_STEPS = [
   },
   {
     title: 'Publica tu tienda',
-    description: 'Tu catálogo público usa las categorías locales; el home usa la global.',
+    description: 'Tu catálogo público usa las categorías locales; el marketplace usa la global.',
   },
 ]
 

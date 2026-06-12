@@ -20,6 +20,7 @@ import {
 } from '../../lib/api'
 import { getBuyerLocation, hasCompleteBuyerLocation } from '../../lib/buyerLocation'
 import { resolveUserFacingError } from '../../lib/userFacingError'
+import { MARKETPLACE_LABEL } from '../../constants/branding'
 
 const PAGE_SIZE = 20
 const SEARCH_DEBOUNCE_MS = 300
@@ -63,7 +64,7 @@ function BuyerHomeContent() {
     } catch (err) {
       setLoadError(
         resolveUserFacingError(err, {
-          contextTitle: 'No se pudo cargar el catálogo',
+          contextTitle: `No se pudo cargar el ${MARKETPLACE_LABEL.toLowerCase()}`,
           fallbackMessage: 'No pudimos mostrar los productos de tu zona. Inténtalo de nuevo.',
         }),
       )

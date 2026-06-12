@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Logo from '../components/Logo'
-import { LOGO_HERO_CLASS } from '../constants/branding'
+import { LOGO_HERO_CLASS, MARKETPLACE_LABEL } from '../constants/branding'
 import { resolveBuyerEntryPath } from '../lib/buyerLocation'
 
 export default function Welcome() {
@@ -47,7 +47,7 @@ export default function Welcome() {
             Crear cuenta
           </Button>
           <Button variant="ghost" onClick={goToBuy}>
-            Continuar a comprar
+            Ir al {MARKETPLACE_LABEL.toLowerCase()}
           </Button>
         </nav>
       </section>

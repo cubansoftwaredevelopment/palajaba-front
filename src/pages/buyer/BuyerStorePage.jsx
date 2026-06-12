@@ -7,6 +7,7 @@ import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHea
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import DeadState from '../../components/ui/DeadState'
+import { MARKETPLACE_LABEL } from '../../constants/branding'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import Button from '../../components/Button'
 import {
@@ -89,7 +90,7 @@ function BuyerStorePageContent() {
   const hasProducts = (catalog?.total_products ?? 0) > 0
 
   return (
-    <BuyerShell backTo="/comprar" backLabel="Catálogo" headerEnd={<BuyerCurrencySelector />}>
+    <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL} headerEnd={<BuyerCurrencySelector />}>
       {loading ? (
         <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
       ) : null}
@@ -106,7 +107,7 @@ function BuyerStorePageContent() {
           >
             <Link to="/comprar">
               <Button variant="ghost" className="w-full sm:w-auto">
-                Volver al catálogo
+                Volver al {MARKETPLACE_LABEL.toLowerCase()}
               </Button>
             </Link>
           </DeadState>
@@ -121,7 +122,7 @@ function BuyerStorePageContent() {
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center lg:justify-start">
               <Link to="/comprar">
                 <Button variant="ghost" className="w-full sm:w-auto">
-                  Volver al catálogo
+                  Volver al {MARKETPLACE_LABEL.toLowerCase()}
                 </Button>
               </Link>
             </div>

@@ -1,4 +1,4 @@
-/** Estilos del área comprador (onboarding de ubicación y home público) */
+/** Estilos del área comprador (onboarding de ubicación y marketplace) */
 
 export const buyerPageIntro =
   'mb-6 lg:mb-8 lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:items-end lg:gap-10'

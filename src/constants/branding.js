@@ -9,6 +9,9 @@
  */
 export const BRAND_NAME = "Pa' La Jaba"
 
+/** Nombre del home de compradores (feed de tiendas por municipio). */
+export const MARKETPLACE_LABEL = 'Marketplace'
+
 export const LOGO = {
   png: '/logo.png',
   black: '/logo-black.png',

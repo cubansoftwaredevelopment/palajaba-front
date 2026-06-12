@@ -4,6 +4,7 @@ import BuyerLocationProgress from '../../components/buyer/BuyerLocationProgress'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import ProvincePickerRow from '../../components/buyer/ProvincePickerRow'
 import { buyerList, buyerPageIntro } from '../../components/buyer/buyerStyles'
+import { MARKETPLACE_LABEL } from '../../constants/branding'
 import { CUBA_PROVINCES } from '../../constants/cubaLocations'
 import { hasCompleteBuyerLocation, setBuyerProvince } from '../../lib/buyerLocation'
 
@@ -20,9 +21,9 @@ export default function BuyerSelectProvince() {
   }
 
   return (
-    <BuyerShell backTo={isChangingLocation ? '/comprar' : '/'} backLabel={isChangingLocation ? 'Comprar' : 'Inicio'}>
+    <BuyerShell backTo={isChangingLocation ? '/comprar' : '/'} backLabel={isChangingLocation ? MARKETPLACE_LABEL : 'Inicio'}>
       <div className={buyerPageIntro}>
-        <AuthHeader eyebrow="Comprar" title="¿Dónde estás?" layout="desktop-left" />
+        <AuthHeader eyebrow={MARKETPLACE_LABEL} title="¿Dónde estás?" layout="desktop-left" />
         <BuyerLocationProgress currentStep={1} />
       </div>
       <div className={`animate-fade-in ${buyerList}`}>
