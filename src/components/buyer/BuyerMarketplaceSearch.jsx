@@ -1,5 +1,6 @@
 import StatePanel from '../ui/StatePanel'
 import LoadingState from '../ui/LoadingState'
+import DeadState from '../ui/DeadState'
 import BuyerProductCard from './BuyerProductCard'
 import { buyerProductGrid, buyerSearchInput } from './buyerStyles'
 
@@ -86,6 +87,7 @@ export function BuyerSearchResults({
         variant="buyer"
         title={error.title}
         message={error.message}
+        serviceError={error.isServiceError}
         onRetry={error.canRetry !== false ? onRetry : undefined}
         retrying={retrying}
       />
@@ -94,12 +96,12 @@ export function BuyerSearchResults({
 
   if (!products.length) {
     return (
-      <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
-        <p className="font-display text-lg font-bold text-brand-green">Sin resultados</p>
-        <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-          Prueba con otra palabra o cambia la categoría.
-        </p>
-      </div>
+      <DeadState
+        variant="panel"
+        title="Sin resultados"
+        message="Prueba con otra palabra o cambia la categoría."
+        className="lg:items-start lg:text-left"
+      />
     )
   }
 

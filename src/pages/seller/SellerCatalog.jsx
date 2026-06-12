@@ -189,6 +189,7 @@ export default function SellerCatalog() {
             variant="seller"
             title="No se pudo cargar el catálogo"
             message={error}
+            serviceError
             onRetry={loadCatalog}
             retrying={loading}
           />

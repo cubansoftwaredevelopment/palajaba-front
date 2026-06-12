@@ -79,7 +79,7 @@ export default function SellerTopProductsSection({ loading, error, data }) {
             Productos destacados
           </h3>
         </div>
-        <StatePanel variant="compact" title="No se pudo cargar" message={error} />
+        <StatePanel variant="compact" title="No se pudo cargar" message={error} serviceError />
       </section>
     )
   }

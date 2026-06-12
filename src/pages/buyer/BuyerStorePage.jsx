@@ -116,6 +116,7 @@ function BuyerStorePageContent() {
             variant="buyer"
             title={loadError.title}
             message={loadError.message}
+            serviceError={loadError.isServiceError}
             onRetry={loadError.canRetry ? loadCatalog : undefined}
             retrying={loading}
           >

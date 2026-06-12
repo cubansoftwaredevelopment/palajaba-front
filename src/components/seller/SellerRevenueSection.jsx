@@ -154,7 +154,7 @@ export default function SellerRevenueSection({
       ) : null}
 
       {!loading && error ? (
-        <StatePanel variant="compact" title="No se pudo cargar" message={error} />
+        <StatePanel variant="compact" title="No se pudo cargar" message={error} serviceError />
       ) : null}
 
       {!loading && !error && chart?.series?.length === 0 ? (

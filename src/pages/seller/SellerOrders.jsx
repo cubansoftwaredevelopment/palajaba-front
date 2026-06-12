@@ -194,6 +194,7 @@ export default function SellerOrders() {
           variant="seller"
           title="No se pudieron cargar los pedidos"
           message={error}
+          serviceError
           onRetry={loadOrders}
           retrying={loading}
         />

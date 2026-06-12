@@ -1,4 +1,7 @@
 import Button from '../Button'
+import { ETECSA_ERROR_MASCOT } from '../../constants/branding'
+import { resolveStateMascotSize } from './stateIllustrationSizes'
+import StateMascotImage from './StateMascotImage'
 
 const shellByVariant = {
   buyer:
@@ -29,6 +32,14 @@ const messageByVariant = {
   fullscreen: 'mt-2 max-w-sm text-sm leading-relaxed text-brand-carmelita/90',
 }
 
+const mascotSizeByVariant = {
+  buyer: 'md',
+  seller: 'md',
+  admin: 'md',
+  compact: 'sm',
+  fullscreen: 'lg',
+}
+
 function StateIcon() {
   return (
     <div
@@ -52,15 +63,30 @@ export default function StatePanel({
   onRetry,
   retryLabel = 'Volver a intentar',
   retrying = false,
+  serviceError = false,
   children,
   className = '',
 }) {
   const shell = variant === 'fullscreen' ? shellByVariant.fullscreen : shellByVariant[variant] || shellByVariant.buyer
+  const mascotSize = resolveStateMascotSize(mascotSizeByVariant[variant] || 'md')
+  const showMascot = serviceError
 
   return (
     <div className={`${shell} ${className}`.trim()} role="alert">
-      {variant !== 'compact' ? <StateIcon /> : null}
-      {title ? <p className={titleByVariant[variant] || titleByVariant.buyer}>{title}</p> : null}
+      {showMascot ? (
+        <StateMascotImage
+          src={ETECSA_ERROR_MASCOT.src}
+          size={mascotSize}
+          className={`mx-auto ${variant !== 'compact' ? 'mb-1' : 'mb-2'} lg:mx-0`}
+        />
+      ) : variant !== 'compact' ? (
+        <StateIcon />
+      ) : null}
+      {title ? (
+        <p className={`${titleByVariant[variant] || titleByVariant.buyer} ${showMascot ? 'mt-4' : ''}`}>
+          {title}
+        </p>
+      ) : null}
       {message ? <p className={messageByVariant[variant] || messageByVariant.buyer}>{message}</p> : null}
       {children}
       {onRetry ? (

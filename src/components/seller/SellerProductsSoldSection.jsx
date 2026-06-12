@@ -62,7 +62,7 @@ export default function SellerProductsSoldSection({
       ) : null}
 
       {!loading && error ? (
-        <StatePanel variant="compact" title="No se pudo cargar" message={error} />
+        <StatePanel variant="compact" title="No se pudo cargar" message={error} serviceError />
       ) : null}
 
       {!loading && !error && !hasData ? (

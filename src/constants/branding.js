@@ -33,6 +33,11 @@ export const DEAD_MASCOT = {
   alt: 'No disponible',
 }
 
+export const ETECSA_ERROR_MASCOT = {
+  src: '/images/states/etecsa-error.png',
+  alt: 'Error de conexión',
+}
+
 /** Mismo tamaño hero que en Welcome */
 export const LOGO_HERO_CLASS =
   'h-auto w-full max-w-[min(100%,20rem)] sm:max-w-[22rem] md:max-w-[26rem]'

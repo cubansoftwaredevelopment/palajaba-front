@@ -197,6 +197,7 @@ export default function SellerLayout() {
           variant="fullscreen"
           title={loadError.title}
           message={loadError.message}
+          serviceError={loadError.isServiceError}
           onRetry={loadError.canRetry ? () => window.location.reload() : undefined}
         />
       </main>

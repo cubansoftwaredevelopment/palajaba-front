@@ -221,6 +221,7 @@ function BuyerHomeContent() {
           variant="buyer"
           title={loadError.title}
           message={loadError.message}
+          serviceError={loadError.isServiceError}
           onRetry={loadError.canRetry ? loadFeed : undefined}
           retrying={loading}
         />

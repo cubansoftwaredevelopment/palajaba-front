@@ -63,6 +63,14 @@ export function isNotFoundError(err) {
   )
 }
 
+export function isServerError(err) {
+  return typeof err?.status === 'number' && err.status >= 500
+}
+
+export function isServiceError(err) {
+  return isNetworkError(err) || isServerError(err)
+}
+
 /**
  * Para pantallas y bloques con título, mensaje y opción de reintentar.
  */
@@ -80,6 +88,7 @@ export function resolveUserFacingError(err, options = {}) {
         'No pudimos comunicarnos con el servidor. Revisa tu internet e inténtalo de nuevo.',
       canRetry: true,
       isNotFound: false,
+      isServiceError: true,
     }
   }
 
@@ -89,6 +98,7 @@ export function resolveUserFacingError(err, options = {}) {
       message: 'Tu sesión ya no es válida. Vuelve a iniciar sesión para continuar.',
       canRetry: false,
       isNotFound: false,
+      isServiceError: false,
     }
   }
 
@@ -103,6 +113,17 @@ export function resolveUserFacingError(err, options = {}) {
           : 'No encontramos lo que buscabas.',
       canRetry: false,
       isNotFound: true,
+      isServiceError: false,
+    }
+  }
+
+  if (isServerError(err)) {
+    return {
+      title: 'Servicio no disponible',
+      message: 'El servidor no respondió correctamente. Inténtalo de nuevo en un momento.',
+      canRetry: true,
+      isNotFound: false,
+      isServiceError: true,
     }
   }
 
@@ -112,6 +133,7 @@ export function resolveUserFacingError(err, options = {}) {
       message: fallbackMessage,
       canRetry: true,
       isNotFound: false,
+      isServiceError: isServerError(err),
     }
   }
 
@@ -120,6 +142,7 @@ export function resolveUserFacingError(err, options = {}) {
     message: rawMessage,
     canRetry: false,
     isNotFound: false,
+    isServiceError: false,
   }
 }
 
