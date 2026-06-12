@@ -7,11 +7,12 @@ function getApiBase() {
 export const NETWORK_ERROR_CODE = 'network_error'
 
 export class ApiError extends Error {
-  constructor(message, { code = null, data = null } = {}) {
+  constructor(message, { code = null, data = null, status = null } = {}) {
     super(message)
     this.name = 'ApiError'
     this.code = code
     this.data = data
+    this.status = status
   }
 }
 
@@ -83,7 +84,7 @@ async function request(path, options = {}) {
           : 'Ocurrió un error. Intenta de nuevo.'
     const message =
       parsed.message === 'Ocurrió un error. Intenta de nuevo.' ? fallback : parsed.message
-    throw new ApiError(message, { code: parsed.code, data: parsed.data })
+    throw new ApiError(message, { code: parsed.code, data: parsed.data, status: response.status })
   }
 
   if (response.status === 204) {

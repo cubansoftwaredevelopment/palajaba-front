@@ -52,6 +52,17 @@ export function isSessionError(err) {
   )
 }
 
+export function isNotFoundError(err) {
+  if (err?.status === 404) return true
+  const msg = (err?.message || '').trim().toLowerCase()
+  return (
+    msg.includes('no encontr') ||
+    msg.includes('not found') ||
+    msg.includes('no disponible') ||
+    msg.includes('no válida')
+  )
+}
+
 /**
  * Para pantallas y bloques con título, mensaje y opción de reintentar.
  */
@@ -68,6 +79,7 @@ export function resolveUserFacingError(err, options = {}) {
       message:
         'No pudimos comunicarnos con el servidor. Revisa tu internet e inténtalo de nuevo.',
       canRetry: true,
+      isNotFound: false,
     }
   }
 
@@ -76,16 +88,30 @@ export function resolveUserFacingError(err, options = {}) {
       title: 'Sesión expirada',
       message: 'Tu sesión ya no es válida. Vuelve a iniciar sesión para continuar.',
       canRetry: false,
+      isNotFound: false,
     }
   }
 
   const rawMessage = (err?.message || '').trim()
+
+  if (isNotFoundError(err)) {
+    return {
+      title: contextTitle || 'No encontrado',
+      message:
+        rawMessage && !isTechnicalMessage(rawMessage)
+          ? rawMessage
+          : 'No encontramos lo que buscabas.',
+      canRetry: false,
+      isNotFound: true,
+    }
+  }
 
   if (!rawMessage || isTechnicalMessage(rawMessage)) {
     return {
       title: contextTitle || fallbackTitle,
       message: fallbackMessage,
       canRetry: true,
+      isNotFound: false,
     }
   }
 
@@ -93,6 +119,7 @@ export function resolveUserFacingError(err, options = {}) {
     title: contextTitle || null,
     message: rawMessage,
     canRetry: false,
+    isNotFound: false,
   }
 }
 

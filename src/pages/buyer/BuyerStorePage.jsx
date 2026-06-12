@@ -6,6 +6,7 @@ import BuyerShell from '../../components/buyer/BuyerShell'
 import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHeader'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
+import DeadState from '../../components/ui/DeadState'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import Button from '../../components/Button'
 import {
@@ -94,21 +95,38 @@ function BuyerStorePageContent() {
       ) : null}
 
       {!loading && loadError ? (
-        <StatePanel
-          variant="buyer"
-          title={loadError.title}
-          message={loadError.message}
-          onRetry={loadError.canRetry ? loadCatalog : undefined}
-          retrying={loading}
-        >
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center lg:justify-start">
+        loadError.isNotFound ? (
+          <DeadState
+            variant="panel"
+            title="Tienda no disponible"
+            message={
+              loadError.message ||
+              'Esta tienda no existe o ya no está activa en Pa\' La Jaba.'
+            }
+          >
             <Link to="/comprar">
               <Button variant="ghost" className="w-full sm:w-auto">
                 Volver al catálogo
               </Button>
             </Link>
-          </div>
-        </StatePanel>
+          </DeadState>
+        ) : (
+          <StatePanel
+            variant="buyer"
+            title={loadError.title}
+            message={loadError.message}
+            onRetry={loadError.canRetry ? loadCatalog : undefined}
+            retrying={loading}
+          >
+            <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center lg:justify-start">
+              <Link to="/comprar">
+                <Button variant="ghost" className="w-full sm:w-auto">
+                  Volver al catálogo
+                </Button>
+              </Link>
+            </div>
+          </StatePanel>
+        )
       ) : null}
 
       {!loading && !loadError && catalog ? (

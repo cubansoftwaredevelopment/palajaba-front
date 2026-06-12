@@ -25,6 +25,11 @@ export const LOADING_MASCOT = {
   alt: 'Cargando',
 }
 
+export const DEAD_MASCOT = {
+  src: '/images/states/dead.png',
+  alt: 'No disponible',
+}
+
 /** Mismo tamaño hero que en Welcome */
 export const LOGO_HERO_CLASS =
   'h-auto w-full max-w-[min(100%,20rem)] sm:max-w-[22rem] md:max-w-[26rem]'
