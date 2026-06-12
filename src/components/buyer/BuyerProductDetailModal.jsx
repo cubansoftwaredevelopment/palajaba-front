@@ -12,7 +12,6 @@ import { resolveMediaUrl } from '../../lib/media'
 import { recordProductPopularity } from '../../lib/productPopularity'
 
 import BuyerModalPortal from './BuyerModalPortal'
-import JabaBagIcon from './JabaBagIcon'
 
 import {
 
@@ -444,8 +443,6 @@ export default function BuyerProductDetailModal({
                   className={`${inJaba ? buyerProductBtnJabaActive : buyerProductBtnJaba} !min-h-11 !text-sm`}
 
                 >
-
-                  {!inJaba ? <JabaBagIcon className="h-3.5 w-3.5" alt="" /> : null}
 
                   <span>{inJaba ? 'En Tu Jaba' : "Pa' La Jaba"}</span>
 

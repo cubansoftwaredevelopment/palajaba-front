@@ -1,10 +1,17 @@
 import { LOADING_MASCOT } from '../../constants/branding'
 
 const SIZE_CLASS = {
-  xs: 'h-8 w-8',
-  sm: 'h-14 w-14',
-  md: 'h-24 w-24',
-  lg: 'h-32 w-32',
+  xs: 'h-14 w-14 sm:h-10 sm:w-10',
+  sm: 'h-24 w-24 sm:h-16 sm:w-16',
+  md: 'h-44 w-44 sm:h-32 sm:w-32',
+  lg: 'h-52 w-52 sm:h-40 sm:w-40',
+}
+
+const SIZE_PX = {
+  xs: 56,
+  sm: 96,
+  md: 176,
+  lg: 208,
 }
 
 const VARIANT_CLASS = {
@@ -38,15 +45,17 @@ export default function LoadingState({
   showMessage = true,
 }) {
   const styles = VARIANT_CLASS[variant] || VARIANT_CLASS.inline
+  const sizeKey = SIZE_CLASS[size] ? size : 'md'
+  const pixelSize = SIZE_PX[sizeKey] || SIZE_PX.md
 
   return (
     <div className={`${styles.wrap} ${className}`.trim()} role="status" aria-live="polite">
       <img
         src={LOADING_MASCOT.src}
         alt=""
-        width={128}
-        height={128}
-        className={`${SIZE_CLASS[size] || SIZE_CLASS.md} animate-levitate object-contain`}
+        width={pixelSize}
+        height={pixelSize}
+        className={`${SIZE_CLASS[sizeKey]} animate-levitate object-contain`}
         decoding="async"
       />
       {showMessage && message ? (

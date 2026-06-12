@@ -167,9 +167,9 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
                 <img
                   src={LOADING_MASCOT.src}
                   alt=""
-                  className="h-8 w-8 animate-levitate object-contain"
-                  width={32}
-                  height={32}
+                  className="h-14 w-14 animate-levitate object-contain sm:h-10 sm:w-10"
+                  width={56}
+                  height={56}
                   decoding="async"
                 />
               ) : null}

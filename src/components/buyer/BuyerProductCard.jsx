@@ -104,7 +104,6 @@ export default function BuyerProductCard({ product, compact = false }) {
               className={`${inJaba ? buyerProductBtnJabaActive : buyerProductBtnJaba} ${jabaPulse ? 'animate-[pulse_0.45s_ease-out]' : ''}`}
               aria-label={inJaba ? `${product.name} en tu jaba` : `Agregar ${product.name} a la jaba`}
             >
-              {!inJaba ? <JabaBagIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" alt="" /> : null}
               <span>{inJaba ? 'En Tu Jaba' : "Pa' La Jaba"}</span>
             </button>
           </div>
