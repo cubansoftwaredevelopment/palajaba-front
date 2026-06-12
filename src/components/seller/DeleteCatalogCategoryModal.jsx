@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerModalTitle } from './sellerStyles'
 import { deleteCatalogCategory } from '../../lib/api'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 
 export default function DeleteCatalogCategoryModal({ category, onClose, onDeleted }) {
@@ -29,7 +30,7 @@ export default function DeleteCatalogCategoryModal({ category, onClose, onDelete
       await deleteCatalogCategory(token, category.id)
       onDeleted(category)
     } catch (err) {
-      setError(err.message || 'No se pudo eliminar la categoría.')
+      setError(getUserFacingMessage(err, 'No se pudo eliminar la categoría.'))
     } finally {
       setLoading(false)
     }

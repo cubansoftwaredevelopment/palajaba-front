@@ -1,37 +1,74 @@
+import { getMunicipalityById, getProvinceById } from '../constants/cubaLocations'
+
 const STORAGE_KEY = 'pala-jaba-buyer-location'
+
+function normalizeStoredLocation(raw) {
+  if (!raw?.province?.id) return null
+
+  const province = getProvinceById(raw.province.id)
+  if (!province) return null
+
+  const provincePayload = {
+    id: province.id,
+    name: province.name,
+  }
+
+  if (!raw.municipality?.id) {
+    return { province: provincePayload, municipality: null }
+  }
+
+  const municipality = getMunicipalityById(province.id, raw.municipality.id)
+  if (!municipality) {
+    return { province: provincePayload, municipality: null }
+  }
+
+  return {
+    province: provincePayload,
+    municipality: {
+      id: municipality.id,
+      name: municipality.name,
+    },
+  }
+}
+
+function persistBuyerLocation(province, municipality = null) {
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      province: {
+        id: province.id,
+        name: province.name,
+      },
+      municipality: municipality
+        ? {
+            id: municipality.id,
+            name: municipality.name,
+          }
+        : null,
+    }),
+  )
+}
 
 export function getBuyerLocation() {
   const raw = localStorage.getItem(STORAGE_KEY)
   if (!raw) return null
 
   try {
-    return JSON.parse(raw)
+    return normalizeStoredLocation(JSON.parse(raw))
   } catch {
     return null
   }
 }
 
 export function setBuyerProvince(province) {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      province,
-      municipality: null,
-    }),
-  )
+  persistBuyerLocation(province, null)
 }
 
 export function setBuyerMunicipality(municipality) {
   const current = getBuyerLocation()
   if (!current?.province) return
 
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      ...current,
-      municipality,
-    }),
-  )
+  persistBuyerLocation(current.province, municipality)
 }
 
 export function clearBuyerLocation() {
@@ -41,4 +78,12 @@ export function clearBuyerLocation() {
 export function hasCompleteBuyerLocation() {
   const location = getBuyerLocation()
   return Boolean(location?.province?.id && location?.municipality?.id)
+}
+
+/** Ruta inicial al entrar a comprar según lo guardado en localStorage. */
+export function resolveBuyerEntryPath() {
+  const location = getBuyerLocation()
+  if (location?.province?.id && location?.municipality?.id) return '/comprar'
+  if (location?.province?.id) return '/comprar/municipio'
+  return '/comprar/provincia'
 }

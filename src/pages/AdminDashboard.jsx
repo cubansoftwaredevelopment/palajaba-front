@@ -14,6 +14,7 @@ import {
 } from '../components/admin/adminStyles'
 import { FILTER_TABS, REJECTION_REASON } from '../constants/admin'
 import { fetchRegistrations, rejectRegistration } from '../lib/api'
+import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 
 function SkeletonRow() {
@@ -88,7 +89,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const [filter, setFilter] = useState('pending')
   const [registrations, setRegistrations] = useState([])
-  const [counts, setCounts] = useState({ pending: 0, approved: 0, rejected: 0, all: 0 })
+  const [counts, setCounts] = useState({ pending: 0, approved: 0, expired: 0, rejected: 0, all: 0 })
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
@@ -100,15 +101,17 @@ export default function AdminDashboard() {
   const [paymentModal, setPaymentModal] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
   const loadCounts = useCallback(async (token) => {
-    const [pending, approved, rejected, all] = await Promise.all([
+    const [pending, approved, expired, rejected, all] = await Promise.all([
       fetchRegistrations(token, 'pending'),
       fetchRegistrations(token, 'approved'),
+      fetchRegistrations(token, 'expired'),
       fetchRegistrations(token, 'rejected'),
       fetchRegistrations(token, 'all'),
     ])
     setCounts({
       pending: pending.length,
       approved: approved.length,
+      expired: expired.length,
       rejected: rejected.length,
       all: all.length,
     })
@@ -128,12 +131,12 @@ export default function AdminDashboard() {
         ])
         setRegistrations(data)
       } catch (err) {
-        if (err.message.includes('autenticado') || err.message.includes('Token')) {
+        if (isSessionError(err)) {
           clearAdminToken()
           navigate('/admin', { replace: true })
           return
         }
-        setError(err.message)
+        setError(getUserFacingMessage(err, 'No pudimos cargar las solicitudes. Inténtalo de nuevo.'))
       } finally {
         setLoading(false)
         setRefreshing(false)
@@ -161,7 +164,7 @@ export default function AdminDashboard() {
       setRejectTarget(null)
       handleMutationSuccess('Solicitud rechazada.')
     } catch (err) {
-      setError(err.message)
+      setError(getUserFacingMessage(err, 'No pudimos completar la acción. Inténtalo de nuevo.'))
     } finally {
       setActionId(null)
     }
@@ -181,7 +184,7 @@ export default function AdminDashboard() {
   return (
     <>
       <main className="mx-auto max-w-3xl px-4 pb-6 pt-6 sm:px-6">
-        <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
           {FILTER_TABS.map((tab) => (
             <StatCard
               key={tab.id}
@@ -282,6 +285,10 @@ export default function AdminDashboard() {
             setDetailTarget(null)
             setPaymentModal(reg)
           }}
+          onRenew={(reg) => {
+            setDetailTarget(null)
+            setSubscriptionModal({ registration: reg, mode: 'renew' })
+          }}
         />
       )}
 
@@ -300,9 +307,11 @@ export default function AdminDashboard() {
           onClose={() => setSubscriptionModal(null)}
           onSuccess={() =>
             handleMutationSuccess(
-              subscriptionModal.mode === 'edit'
-                ? 'Suscripción actualizada.'
-                : 'Tienda aprobada.',
+              subscriptionModal.mode === 'renew'
+                ? 'Suscripción renovada. La tienda vuelve a Aprobadas.'
+                : subscriptionModal.mode === 'edit'
+                  ? 'Suscripción actualizada.'
+                  : 'Tienda aprobada.',
             )
           }
         />

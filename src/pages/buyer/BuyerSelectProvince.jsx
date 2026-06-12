@@ -5,10 +5,11 @@ import BuyerShell from '../../components/buyer/BuyerShell'
 import ProvincePickerRow from '../../components/buyer/ProvincePickerRow'
 import { buyerList, buyerPageIntro } from '../../components/buyer/buyerStyles'
 import { CUBA_PROVINCES } from '../../constants/cubaLocations'
-import { setBuyerProvince } from '../../lib/buyerLocation'
+import { hasCompleteBuyerLocation, setBuyerProvince } from '../../lib/buyerLocation'
 
 export default function BuyerSelectProvince() {
   const navigate = useNavigate()
+  const isChangingLocation = hasCompleteBuyerLocation()
 
   function handleSelect(province) {
     setBuyerProvince({
@@ -19,7 +20,7 @@ export default function BuyerSelectProvince() {
   }
 
   return (
-    <BuyerShell backTo="/" backLabel="Inicio">
+    <BuyerShell backTo={isChangingLocation ? '/comprar' : '/'} backLabel={isChangingLocation ? 'Comprar' : 'Inicio'}>
       <div className={buyerPageIntro}>
         <AuthHeader eyebrow="Comprar" title="¿Dónde estás?" layout="desktop-left" />
         <BuyerLocationProgress currentStep={1} />

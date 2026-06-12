@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AdminButton from '../components/admin/AdminButton'
 import SendNotificationModal from '../components/admin/SendNotificationModal'
+import { NOTIFICATION_AUDIENCE_LABELS } from '../constants/admin'
 import { adminAlertError, adminAlertSuccess, adminCard, adminMuted, adminSubtle } from '../components/admin/adminStyles'
 import { fetchAdminNotifications, sendAdminNotification } from '../lib/api'
+import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatDateTime } from '../lib/dates'
 
@@ -23,12 +25,12 @@ export default function AdminNotifications() {
       const data = await fetchAdminNotifications(token)
       setItems(data)
     } catch (err) {
-      if (err.message.includes('autenticado') || err.message.includes('Token')) {
+      if (isSessionError(err)) {
         clearAdminToken()
         navigate('/admin', { replace: true })
         return
       }
-      setError(err.message)
+      setError(getUserFacingMessage(err, 'No pudimos cargar las notificaciones.'))
     } finally {
       setLoading(false)
     }
@@ -43,7 +45,7 @@ export default function AdminNotifications() {
     const token = getAdminToken()
     const result = await sendAdminNotification(token, payload)
     setSuccess(
-      `Notificación enviada a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'}.`,
+      `Notificación enviada a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${NOTIFICATION_AUDIENCE_LABELS[result.audience] ?? 'Todos'}).`,
     )
     await loadNotifications()
   }
@@ -52,7 +54,7 @@ export default function AdminNotifications() {
     <div className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
-          Envía avisos a todos los vendedores activos: pedidos, cambios de plataforma, etc.
+          Envía avisos por plan y facturación: Premium o Básico, mensual o anual, o a todos.
         </p>
         <AdminButton type="button" className="sm:w-auto" onClick={() => setShowModal(true)}>
           Nueva notificación
@@ -93,9 +95,14 @@ export default function AdminNotifications() {
                   <h2 className="truncate text-base font-semibold text-white">{item.title}</h2>
                   <p className={`mt-1 text-xs ${adminMuted}`}>{formatDateTime(item.created_at)}</p>
                 </div>
-                <span className="shrink-0 rounded-md border border-brand-green/25 bg-brand-green/10 px-2 py-1 text-[0.65rem] font-semibold text-emerald-200/90">
-                  {item.recipient_count} vendedor{item.recipient_count === 1 ? '' : 'es'}
-                </span>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="rounded-md border border-brand-green/25 bg-brand-green/10 px-2 py-1 text-[0.65rem] font-semibold text-emerald-200/90">
+                    {item.recipient_count} vendedor{item.recipient_count === 1 ? '' : 'es'}
+                  </span>
+                  <span className="text-[0.65rem] text-zinc-500">
+                    {NOTIFICATION_AUDIENCE_LABELS[item.audience] ?? NOTIFICATION_AUDIENCE_LABELS.all}
+                  </span>
+                </div>
               </div>
               <p className={`mt-3 whitespace-pre-wrap text-sm leading-relaxed ${adminSubtle}`}>
                 {item.content}

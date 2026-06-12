@@ -33,6 +33,7 @@ import {
   updateSellerProfile,
   uploadSellerProfilePhoto,
 } from '../../lib/api'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import { validateImageFile } from '../../lib/imageUpload'
 import {
   dedupeDeliveryAreas,
@@ -121,7 +122,7 @@ export default function SellerProfile() {
         if (!cancelled) setCategories(data)
       })
       .catch((err) => {
-        if (!cancelled) setCategoriesError(err.message || 'No se pudieron cargar las categorías.')
+        if (!cancelled) setCategoriesError(getUserFacingMessage(err, 'No pudimos cargar las categorías.'))
       })
       .finally(() => {
         if (!cancelled) setCategoriesLoading(false)
@@ -157,7 +158,7 @@ export default function SellerProfile() {
       updateSellerProfileCache(updated)
       await refreshProfile()
     } catch (err) {
-      setError(err.message)
+      setError(getUserFacingMessage(err))
     } finally {
       setPhotoUploading(false)
       event.target.value = ''
@@ -205,7 +206,7 @@ export default function SellerProfile() {
       setSaved(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
-      setError(err.message)
+      setError(getUserFacingMessage(err))
     } finally {
       setLoading(false)
     }

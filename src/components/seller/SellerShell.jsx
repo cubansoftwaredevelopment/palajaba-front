@@ -139,14 +139,12 @@ export default function SellerShell({
 
           {catalogLayout ? (
             <main className={mainClassName}>{children}</main>
-          ) : useFixedViewport ? (
+          ) : (
             <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <div className={sellerScrollArea}>
                 <div className={mainClassName}>{children}</div>
               </div>
             </main>
-          ) : (
-            <main className={mainClassName}>{children}</main>
           )}
 
           {footer && <div className="sm:hidden">{footer}</div>}

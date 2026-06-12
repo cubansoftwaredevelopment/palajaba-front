@@ -5,6 +5,7 @@ import SellerOrderItem from '../../components/seller/SellerOrderItem'
 import SellerOrdersGroup from '../../components/seller/SellerOrdersGroup'
 import SellerOrdersTabs from '../../components/seller/SellerOrdersTabs'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
+import StatePanel from '../../components/ui/StatePanel'
 import { sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
 import {
   deleteSellerOrder,
@@ -14,6 +15,7 @@ import {
 } from '../../lib/api'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 
 const PendingIcon = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
@@ -60,7 +62,7 @@ export default function SellerOrders() {
     } catch (err) {
       if (!silent) {
         setOrders([])
-        setError(err.message || 'No se pudieron cargar los pedidos.')
+        setError(getUserFacingMessage(err, 'No pudimos cargar los pedidos. Inténtalo de nuevo.'))
       }
     } finally {
       if (!silent) {
@@ -128,7 +130,7 @@ export default function SellerOrders() {
       const token = getSellerToken()
       await downloadSellerOrderInvoice(token, selectedOrder.id, type)
     } catch (err) {
-      setSaveError(err.message || 'No se pudo generar la factura.')
+      setSaveError(getUserFacingMessage(err, 'No pudimos generar la factura. Inténtalo de nuevo.'))
     } finally {
       setDownloading(null)
     }
@@ -146,7 +148,7 @@ export default function SellerOrders() {
       setOrders((current) => current.filter((item) => item.id !== selectedOrder.id))
       setSelectedOrder(null)
     } catch (err) {
-      setSaveError(err.message || 'No se pudo cancelar el pedido.')
+      setSaveError(getUserFacingMessage(err, 'No pudimos cancelar el pedido. Inténtalo de nuevo.'))
     } finally {
       setCancelling(false)
     }
@@ -168,7 +170,7 @@ export default function SellerOrders() {
         setActiveTab('completed')
       }
     } catch (err) {
-      setSaveError(err.message || 'No se pudo actualizar el pedido.')
+      setSaveError(getUserFacingMessage(err, 'No pudimos actualizar el pedido. Inténtalo de nuevo.'))
     } finally {
       setSaving(false)
     }
@@ -187,16 +189,13 @@ export default function SellerOrders() {
       ) : null}
 
       {!loading && error ? (
-        <div className="rounded-2xl border border-brand-carmelita/20 bg-brand-carmelita/10 px-4 py-5 text-center">
-          <p className="text-sm text-brand-carmelita">{error}</p>
-          <button
-            type="button"
-            onClick={() => loadOrders()}
-            className="mt-3 text-sm font-semibold text-brand-green underline-offset-2 hover:underline"
-          >
-            Reintentar
-          </button>
-        </div>
+        <StatePanel
+          variant="seller"
+          title="No se pudieron cargar los pedidos"
+          message={error}
+          onRetry={loadOrders}
+          retrying={loading}
+        />
       ) : null}
 
       {!loading && !error && orders.length === 0 ? (

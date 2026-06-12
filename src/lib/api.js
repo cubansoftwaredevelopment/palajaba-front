@@ -4,6 +4,8 @@ function getApiBase() {
   return import.meta.env.VITE_API_URL ?? 'https://palajaba-api.onrender.com'
 }
 
+export const NETWORK_ERROR_CODE = 'network_error'
+
 export class ApiError extends Error {
   constructor(message, { code = null, data = null } = {}) {
     super(message)
@@ -60,18 +62,25 @@ async function request(path, options = {}) {
     headers['Content-Type'] = 'application/json'
   }
 
-  const response = await fetch(`${getApiBase()}${path}`, {
-    ...options,
-    headers,
-  })
+  let response
+  try {
+    response = await fetch(`${getApiBase()}${path}`, {
+      ...options,
+      headers,
+    })
+  } catch {
+    throw new ApiError('Error de conexión', { code: NETWORK_ERROR_CODE })
+  }
 
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
     const parsed = parseApiErrorDetail(data.detail)
     const fallback =
       response.status === 404
-        ? 'Recurso no encontrado. Si acabas de actualizar la app, espera a que el servidor termine de desplegarse.'
-        : response.statusText || 'Error de servidor'
+        ? 'No encontramos lo que buscabas.'
+        : response.status >= 500
+          ? 'El servicio no está disponible en este momento.'
+          : 'Ocurrió un error. Intenta de nuevo.'
     const message =
       parsed.message === 'Ocurrió un error. Intenta de nuevo.' ? fallback : parsed.message
     throw new ApiError(message, { code: parsed.code, data: parsed.data })
@@ -84,11 +93,20 @@ async function request(path, options = {}) {
   return response.json()
 }
 
-export function sellerLogin(payload) {
-  return request('/api/auth/login', {
+export async function sellerLogin(payload) {
+  const data = await request('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+
+  if (data?.subscription_expired) {
+    throw new ApiError(data.subscription_expired.message, {
+      code: 'subscription_expired',
+      data: data.subscription_expired,
+    })
+  }
+
+  return data
 }
 
 export function fetchSellerProfile(token) {
@@ -209,10 +227,42 @@ export function updateRegistrationPayment(token, id, paymentAmountCup) {
   })
 }
 
-export function updateSubscriptionEnd(token, id, subscriptionEndsAt) {
-  const params = `?subscription_ends_at=${encodeURIComponent(subscriptionEndsAt)}`
-  return request(`/api/admin/registrations/${id}/subscription${params}`, {
+export function updateRegistrationSubscription(
+  token,
+  id,
+  { subscriptionEndsAt, planTier, billingPeriod } = {},
+) {
+  const params = new URLSearchParams()
+  params.set('subscription_ends_at', subscriptionEndsAt)
+  if (planTier) params.set('plan_tier', planTier)
+  if (billingPeriod) params.set('billing_period', billingPeriod)
+
+  return request(`/api/admin/registrations/${id}/subscription?${params.toString()}`, {
     method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+/** @deprecated Use updateRegistrationSubscription */
+export function updateSubscriptionEnd(token, id, subscriptionEndsAt) {
+  return updateRegistrationSubscription(token, id, { subscriptionEndsAt })
+}
+
+export function renewRegistration(
+  token,
+  id,
+  { subscriptionEndsAt, paymentAmountCup, planTier, billingPeriod } = {},
+) {
+  const params = new URLSearchParams()
+  params.set('payment_amount_cup', String(paymentAmountCup))
+  if (subscriptionEndsAt) params.set('subscription_ends_at', subscriptionEndsAt)
+  if (planTier) params.set('plan_tier', planTier)
+  if (billingPeriod) params.set('billing_period', billingPeriod)
+
+  return request(`/api/admin/registrations/${id}/renew?${params.toString()}`, {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -235,6 +285,28 @@ export function sendAdminNotification(token, payload) {
     },
     body: JSON.stringify(payload),
   })
+}
+
+export function fetchAdminSettings(token) {
+  return request('/api/admin/settings', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function updateAdminSettings(token, payload) {
+  return request('/api/admin/settings', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function fetchRenewalContactPhone() {
+  return request('/api/platform/renewal-contact')
 }
 
 export function fetchSellerNotifications(token) {
@@ -262,8 +334,62 @@ export function markSellerNotificationRead(token, notificationId) {
   })
 }
 
+export function markSellerSystemNotificationsRead(token) {
+  return request('/api/auth/me/notifications/read-system', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function fetchSellerCatalog(token) {
   return request('/api/auth/me/catalog', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function fetchSellerStatsSummary(token, { year, month } = {}) {
+  const params = new URLSearchParams()
+  if (year != null) params.set('year', String(year))
+  if (month != null) params.set('month', String(month))
+  const query = params.toString() ? `?${params.toString()}` : ''
+
+  return request(`/api/auth/me/stats/summary${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function fetchSellerRevenueChart(token, { granularity, year, month } = {}) {
+  const params = new URLSearchParams({ granularity })
+  if (year != null) params.set('year', String(year))
+  if (month != null) params.set('month', String(month))
+
+  return request(`/api/auth/me/stats/revenue?${params}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function fetchSellerProductsSoldChart(token, { granularity, year, month } = {}) {
+  const params = new URLSearchParams({ granularity })
+  if (year != null) params.set('year', String(year))
+  if (month != null) params.set('month', String(month))
+
+  return request(`/api/auth/me/stats/products-sold?${params}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function fetchSellerTopProducts(token) {
+  return request('/api/auth/me/stats/top-products', {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -359,6 +485,27 @@ export function fetchMarketplaceFeed({ provinceId, municipalityId, limitPerCateg
     limit_per_category: String(limitPerCategory),
   })
   return request(`/api/marketplace/feed?${params}`)
+}
+
+export function fetchMarketplaceSearch({
+  provinceId,
+  municipalityId,
+  query = '',
+  globalCategoryId,
+  limit = 20,
+  offset = 0,
+}) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+    municipality_id: municipalityId,
+    q: query,
+    limit: String(limit),
+    offset: String(offset),
+  })
+  if (globalCategoryId) {
+    params.set('global_category_id', globalCategoryId)
+  }
+  return request(`/api/marketplace/search?${params}`)
 }
 
 export function fetchMarketplaceStore(storeRef) {

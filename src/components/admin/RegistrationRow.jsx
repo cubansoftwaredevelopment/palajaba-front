@@ -2,6 +2,7 @@ import { BILLING_LABELS, PLAN_TIER_LABELS, STATUS_LABELS } from '../../constants
 import { normalizePlanTier } from '../../constants/plan'
 import {
   adminBadgeApproved,
+  adminBadgeExpired,
   adminBadgePending,
   adminBadgeRejected,
   adminFocusRing,
@@ -13,6 +14,7 @@ const STATUS_BADGES = {
   pending: adminBadgePending,
   approved: adminBadgeApproved,
   rejected: adminBadgeRejected,
+  expired: adminBadgeExpired,
 }
 
 export default function RegistrationRow({ item, onViewDetails }) {

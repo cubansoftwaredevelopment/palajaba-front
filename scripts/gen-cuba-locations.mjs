@@ -2,12 +2,14 @@ import { writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
+import { PROVINCE_LANDMARKS, provinceImageFilename } from './province-landmarks.mjs'
+
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 const data = {
   'pinar-del-rio': {
     name: 'Pinar del Río',
-    landmark: 'Valle de Viñales',
+    landmark: PROVINCE_LANDMARKS['pinar-del-rio'].landmark,
     municipalities: [
       'Consolación del Sur',
       'Guane',
@@ -24,7 +26,7 @@ const data = {
   },
   artemisa: {
     name: 'Artemisa',
-    landmark: 'Sierra del Rosario',
+    landmark: PROVINCE_LANDMARKS.artemisa.landmark,
     municipalities: [
       'Alquízar',
       'Artemisa',
@@ -41,7 +43,7 @@ const data = {
   },
   'la-habana': {
     name: 'La Habana',
-    landmark: 'El Malecón',
+    landmark: PROVINCE_LANDMARKS['la-habana'].landmark,
     municipalities: [
       'Arroyo Naranjo',
       'Boyeros',
@@ -62,7 +64,7 @@ const data = {
   },
   mayabeque: {
     name: 'Mayabeque',
-    landmark: 'San José de las Lajas',
+    landmark: PROVINCE_LANDMARKS.mayabeque.landmark,
     municipalities: [
       'Batabanó',
       'Bejucal',
@@ -79,7 +81,7 @@ const data = {
   },
   matanzas: {
     name: 'Matanzas',
-    landmark: 'Varadero',
+    landmark: PROVINCE_LANDMARKS.matanzas.landmark,
     municipalities: [
       'Calimete',
       'Cárdenas',
@@ -98,7 +100,7 @@ const data = {
   },
   cienfuegos: {
     name: 'Cienfuegos',
-    landmark: 'Centro histórico',
+    landmark: PROVINCE_LANDMARKS.cienfuegos.landmark,
     municipalities: [
       'Abreus',
       'Aguada de Pasajeros',
@@ -112,7 +114,7 @@ const data = {
   },
   'villa-clara': {
     name: 'Villa Clara',
-    landmark: 'Santa Clara',
+    landmark: PROVINCE_LANDMARKS['villa-clara'].landmark,
     municipalities: [
       'Caibarién',
       'Camajuaní',
@@ -131,7 +133,7 @@ const data = {
   },
   'sancti-spiritus': {
     name: 'Sancti Spíritus',
-    landmark: 'Trinidad',
+    landmark: PROVINCE_LANDMARKS['sancti-spiritus'].landmark,
     municipalities: [
       'Cabaiguán',
       'Fomento',
@@ -145,7 +147,7 @@ const data = {
   },
   'ciego-de-avila': {
     name: 'Ciego de Ávila',
-    landmark: 'Cayo Coco',
+    landmark: PROVINCE_LANDMARKS['ciego-de-avila'].landmark,
     municipalities: [
       'Baraguá',
       'Bolivia',
@@ -161,7 +163,7 @@ const data = {
   },
   camaguey: {
     name: 'Camagüey',
-    landmark: 'Centro histórico',
+    landmark: PROVINCE_LANDMARKS.camaguey.landmark,
     municipalities: [
       'Camagüey',
       'Carlos M. de Céspedes',
@@ -180,7 +182,7 @@ const data = {
   },
   'las-tunas': {
     name: 'Las Tunas',
-    landmark: 'Victoria de Las Tunas',
+    landmark: PROVINCE_LANDMARKS['las-tunas'].landmark,
     municipalities: [
       'Amancio',
       'Colombia',
@@ -194,7 +196,7 @@ const data = {
   },
   holguin: {
     name: 'Holguín',
-    landmark: 'Guardalavaca',
+    landmark: PROVINCE_LANDMARKS.holguin.landmark,
     municipalities: [
       'Antilla',
       'Báguanos',
@@ -214,7 +216,7 @@ const data = {
   },
   granma: {
     name: 'Granma',
-    landmark: 'Bayamo',
+    landmark: PROVINCE_LANDMARKS.granma.landmark,
     municipalities: [
       'Bartolomé Masó',
       'Bayamo',
@@ -233,7 +235,7 @@ const data = {
   },
   'santiago-de-cuba': {
     name: 'Santiago de Cuba',
-    landmark: 'Castillo del Morro',
+    landmark: PROVINCE_LANDMARKS['santiago-de-cuba'].landmark,
     municipalities: [
       'Contramaestre',
       'Guamá',
@@ -248,7 +250,7 @@ const data = {
   },
   guantanamo: {
     name: 'Guantánamo',
-    landmark: 'Baracoa',
+    landmark: PROVINCE_LANDMARKS.guantanamo.landmark,
     municipalities: [
       'Baracoa',
       'Caimanera',
@@ -264,7 +266,7 @@ const data = {
   },
   'isla-de-la-juventud': {
     name: 'Isla de la Juventud',
-    landmark: 'Nueva Gerona',
+    landmark: PROVINCE_LANDMARKS['isla-de-la-juventud'].landmark,
     municipalities: ['Isla de la Juventud'],
   },
 }
@@ -297,18 +299,21 @@ function slug(name) {
     .replace(/^-|-$/g, '')
 }
 
-const provinces = Object.entries(data).map(([id, province]) => ({
-  id,
-  name: province.name,
-  landmark: province.landmark,
-  imageUrl: `https://picsum.photos/seed/cuba-${id}/400/400`,
-  imageAlt: `${province.landmark}, ${province.name}`,
-  municipalities: province.municipalities.map((name) => ({
-    id: slug(name),
-    name,
-    isCapital: name === capitals[id],
-  })),
-}))
+const provinces = Object.entries(data).map(([id, province]) => {
+  const landmarkMeta = PROVINCE_LANDMARKS[id]
+  return {
+    id,
+    name: province.name,
+    landmark: province.landmark,
+    imageUrl: `/images/provinces/${provinceImageFilename(id)}`,
+    imageAlt: landmarkMeta?.imageAlt ?? `${province.landmark}, ${province.name}`,
+    municipalities: province.municipalities.map((name) => ({
+      id: slug(name),
+      name,
+      isCapital: name === capitals[id],
+    })),
+  }
+})
 
 const output = `/** Provincias y municipios de Cuba (división territorial 2011). Generado por scripts/gen-cuba-locations.mjs */
 

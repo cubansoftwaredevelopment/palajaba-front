@@ -5,8 +5,8 @@ export const CUBA_PROVINCES = [
     "id": "pinar-del-rio",
     "name": "Pinar del Río",
     "landmark": "Valle de Viñales",
-    "imageUrl": "https://picsum.photos/seed/cuba-pinar-del-rio/400/400",
-    "imageAlt": "Valle de Viñales, Pinar del Río",
+    "imageUrl": "/images/provinces/pinar.jpg",
+    "imageAlt": "Mogotes del Valle de Viñales, Pinar del Río",
     "municipalities": [
       {
         "id": "consolacion-del-sur",
@@ -68,9 +68,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "artemisa",
     "name": "Artemisa",
-    "landmark": "Sierra del Rosario",
-    "imageUrl": "https://picsum.photos/seed/cuba-artemisa/400/400",
-    "imageAlt": "Sierra del Rosario, Artemisa",
+    "landmark": "Las Terrazas",
+    "imageUrl": "/images/provinces/artemisa.jpg",
+    "imageAlt": "Comunidad ecológica Las Terrazas, Artemisa",
     "municipalities": [
       {
         "id": "alquizar",
@@ -132,9 +132,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "la-habana",
     "name": "La Habana",
-    "landmark": "El Malecón",
-    "imageUrl": "https://picsum.photos/seed/cuba-la-habana/400/400",
-    "imageAlt": "El Malecón, La Habana",
+    "landmark": "Castillo del Morro",
+    "imageUrl": "/images/provinces/la-habana.jpg",
+    "imageAlt": "Castillo del Morro, La Habana",
     "municipalities": [
       {
         "id": "arroyo-naranjo",
@@ -216,9 +216,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "mayabeque",
     "name": "Mayabeque",
-    "landmark": "San José de las Lajas",
-    "imageUrl": "https://picsum.photos/seed/cuba-mayabeque/400/400",
-    "imageAlt": "San José de las Lajas, Mayabeque",
+    "landmark": "Viaducto de Bacunayagua",
+    "imageUrl": "/images/provinces/mayabeque.jpg",
+    "imageAlt": "Viaducto de Bacunayagua, Mayabeque",
     "municipalities": [
       {
         "id": "batabano",
@@ -280,9 +280,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "matanzas",
     "name": "Matanzas",
-    "landmark": "Varadero",
-    "imageUrl": "https://picsum.photos/seed/cuba-matanzas/400/400",
-    "imageAlt": "Varadero, Matanzas",
+    "landmark": "Puente de la Concordia",
+    "imageUrl": "/images/provinces/matanzas.jpg",
+    "imageAlt": "Puente de la Concordia sobre el Yumurí, Matanzas",
     "municipalities": [
       {
         "id": "calimete",
@@ -354,9 +354,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "cienfuegos",
     "name": "Cienfuegos",
-    "landmark": "Centro histórico",
-    "imageUrl": "https://picsum.photos/seed/cuba-cienfuegos/400/400",
-    "imageAlt": "Centro histórico, Cienfuegos",
+    "landmark": "Estatua de Benny Moré",
+    "imageUrl": "/images/provinces/cienfuegos.jpg",
+    "imageAlt": "Estatua de Benny Moré en el Paseo del Prado, Cienfuegos",
     "municipalities": [
       {
         "id": "abreus",
@@ -403,9 +403,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "villa-clara",
     "name": "Villa Clara",
-    "landmark": "Santa Clara",
-    "imageUrl": "https://picsum.photos/seed/cuba-villa-clara/400/400",
-    "imageAlt": "Santa Clara, Villa Clara",
+    "landmark": "Monumento al Che Guevara",
+    "imageUrl": "/images/provinces/santa-clara.jpg",
+    "imageAlt": "Monumento a Ernesto Che Guevara, Santa Clara",
     "municipalities": [
       {
         "id": "caibarien",
@@ -478,8 +478,8 @@ export const CUBA_PROVINCES = [
     "id": "sancti-spiritus",
     "name": "Sancti Spíritus",
     "landmark": "Trinidad",
-    "imageUrl": "https://picsum.photos/seed/cuba-sancti-spiritus/400/400",
-    "imageAlt": "Trinidad, Sancti Spíritus",
+    "imageUrl": "/images/provinces/santi-spiritu.jpg",
+    "imageAlt": "Centro histórico de Trinidad, Sancti Spíritus",
     "municipalities": [
       {
         "id": "cabaiguan",
@@ -527,8 +527,8 @@ export const CUBA_PROVINCES = [
     "id": "ciego-de-avila",
     "name": "Ciego de Ávila",
     "landmark": "Cayo Coco",
-    "imageUrl": "https://picsum.photos/seed/cuba-ciego-de-avila/400/400",
-    "imageAlt": "Cayo Coco, Ciego de Ávila",
+    "imageUrl": "/images/provinces/ciego-de-avila.jpg",
+    "imageAlt": "Playa de Cayo Coco, Ciego de Ávila",
     "municipalities": [
       {
         "id": "baragua",
@@ -585,9 +585,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "camaguey",
     "name": "Camagüey",
-    "landmark": "Centro histórico",
-    "imageUrl": "https://picsum.photos/seed/cuba-camaguey/400/400",
-    "imageAlt": "Centro histórico, Camagüey",
+    "landmark": "Centro histórico de Camagüey",
+    "imageUrl": "/images/provinces/camaguey.jpg",
+    "imageAlt": "Iglesia del Sagrado Corazón de Jesús, Camagüey",
     "municipalities": [
       {
         "id": "camaguey",
@@ -659,9 +659,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "las-tunas",
     "name": "Las Tunas",
-    "landmark": "Victoria de Las Tunas",
-    "imageUrl": "https://picsum.photos/seed/cuba-las-tunas/400/400",
-    "imageAlt": "Victoria de Las Tunas, Las Tunas",
+    "landmark": "Plaza Martiana",
+    "imageUrl": "/images/provinces/las-tunas.jpg",
+    "imageAlt": "Plaza Martiana, Las Tunas",
     "municipalities": [
       {
         "id": "amancio",
@@ -708,9 +708,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "holguin",
     "name": "Holguín",
-    "landmark": "Guardalavaca",
-    "imageUrl": "https://picsum.photos/seed/cuba-holguin/400/400",
-    "imageAlt": "Guardalavaca, Holguín",
+    "landmark": "Loma de la Cruz",
+    "imageUrl": "/images/provinces/holguin.jpg",
+    "imageAlt": "Loma de la Cruz, Holguín",
     "municipalities": [
       {
         "id": "antilla",
@@ -787,9 +787,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "granma",
     "name": "Granma",
-    "landmark": "Bayamo",
-    "imageUrl": "https://picsum.photos/seed/cuba-granma/400/400",
-    "imageAlt": "Bayamo, Granma",
+    "landmark": "Plaza de la Patria, Bayamo",
+    "imageUrl": "/images/provinces/granma.jpg",
+    "imageAlt": "Catedral de Bayamo, Granma",
     "municipalities": [
       {
         "id": "bartolome-maso",
@@ -861,9 +861,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "santiago-de-cuba",
     "name": "Santiago de Cuba",
-    "landmark": "Castillo del Morro",
-    "imageUrl": "https://picsum.photos/seed/cuba-santiago-de-cuba/400/400",
-    "imageAlt": "Castillo del Morro, Santiago de Cuba",
+    "landmark": "Castillo San Pedro de la Roca",
+    "imageUrl": "/images/provinces/santiago-de-cuba.jpg",
+    "imageAlt": "Castillo San Pedro de la Roca, Santiago de Cuba",
     "municipalities": [
       {
         "id": "contramaestre",
@@ -915,9 +915,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "guantanamo",
     "name": "Guantánamo",
-    "landmark": "Baracoa",
-    "imageUrl": "https://picsum.photos/seed/cuba-guantanamo/400/400",
-    "imageAlt": "Baracoa, Guantánamo",
+    "landmark": "El Yunque de Baracoa",
+    "imageUrl": "/images/provinces/guantanamo.jpg",
+    "imageAlt": "El Yunque de Baracoa, Guantánamo",
     "municipalities": [
       {
         "id": "baracoa",
@@ -974,9 +974,9 @@ export const CUBA_PROVINCES = [
   {
     "id": "isla-de-la-juventud",
     "name": "Isla de la Juventud",
-    "landmark": "Nueva Gerona",
-    "imageUrl": "https://picsum.photos/seed/cuba-isla-de-la-juventud/400/400",
-    "imageAlt": "Nueva Gerona, Isla de la Juventud",
+    "landmark": "Presidio Modelo",
+    "imageUrl": "/images/provinces/isla-de-la-juventud.jpg",
+    "imageAlt": "Presidio Modelo, Isla de la Juventud",
     "municipalities": [
       {
         "id": "isla-de-la-juventud",

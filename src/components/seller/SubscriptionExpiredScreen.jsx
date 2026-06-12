@@ -6,10 +6,11 @@ import { formatDateTime } from '../../lib/dates'
 export default function SubscriptionExpiredScreen({
   storeName,
   subscriptionEndsAt,
+  renewalContactPhone,
   onBack,
 }) {
   return (
-    <AuthShell backTo="/" backLabel="Inicio" centered>
+    <AuthShell centered hideHeader>
       <section
         className="animate-fade-in mx-auto w-full max-w-lg text-center"
         aria-labelledby="subscription-expired-title"
@@ -58,7 +59,11 @@ export default function SubscriptionExpiredScreen({
           )}
 
           <div className="mt-6 flex flex-col gap-3">
-            <RenewPlanButton className="w-full" />
+            <RenewPlanButton
+              className="w-full"
+              storeName={storeName}
+              renewalPhone={renewalContactPhone}
+            />
             {onBack && (
               <button
                 type="button"

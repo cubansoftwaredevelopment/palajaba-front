@@ -11,6 +11,7 @@ import {
   sellerModalTitle,
 } from './sellerStyles'
 import { createCatalogCategory } from '../../lib/api'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 
 export default function CreateCatalogCategoryModal({ initialName = '', onClose, onCreated }) {
@@ -46,7 +47,7 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose, 
       const category = await createCatalogCategory(token, { name: trimmed })
       onCreated(category)
     } catch (err) {
-      setError(err.message || 'No se pudo crear la categoría.')
+      setError(getUserFacingMessage(err, 'No se pudo crear la categoría.'))
     } finally {
       setLoading(false)
     }

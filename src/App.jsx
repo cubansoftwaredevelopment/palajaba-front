@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
-import AdminRoute from './components/AdminRoute'
-import AdminLayout from './components/admin/AdminLayout'
+import AdminAuthenticatedLayout from './components/admin/AdminAuthenticatedLayout'
+import RouteError from './components/RouteError'
 import SellerRoute from './components/SellerRoute'
 import SellerLayout from './components/seller/SellerLayout'
 import Welcome from './pages/Welcome'
@@ -18,6 +18,7 @@ import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminStats from './pages/AdminStats'
 import AdminNotifications from './pages/AdminNotifications'
+import AdminSettings from './pages/AdminSettings'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
 import BuyerHome from './pages/buyer/BuyerHome'
 import BuyerSelectMunicipality from './pages/buyer/BuyerSelectMunicipality'
@@ -26,61 +27,65 @@ import PublicStoreRoute from './components/buyer/PublicStoreRoute'
 import RedirectLegacyStoreRoute from './components/buyer/RedirectLegacyStoreRoute'
 
 const router = createBrowserRouter([
-  { path: '/', element: <Welcome /> },
   {
-    path: '/comprar',
-    element: <BuyerJabaLayout />,
-    children: [
-      { index: true, element: <BuyerHome /> },
-      { path: 'provincia', element: <BuyerSelectProvince /> },
-      { path: 'municipio', element: <BuyerSelectMunicipality /> },
-      { path: 'tienda/:storeSlug', element: <RedirectLegacyStoreRoute /> },
-    ],
-  },
-  { path: '/login', element: <Login /> },
-  {
-    path: '/tienda',
-    element: (
-      <SellerRoute>
-        <SellerLayout />
-      </SellerRoute>
-    ),
-    children: [
-      { index: true, element: <SellerGeneral /> },
-      { path: 'catalogo', element: <SellerCatalog /> },
-      { path: 'pedidos', element: <SellerOrders /> },
-      { path: 'perfil', element: <SellerProfile /> },
-      { path: 'completar-perfil', element: <SellerCompleteProfile /> },
-    ],
-  },
-  { path: '/registro', element: <RegisterPlan /> },
-  { path: '/registro/pago', element: <RegisterPayment /> },
-  { path: '/registro/verificacion', element: <RegisterForm /> },
-  { path: '/registro/exito', element: <RegisterSuccess /> },
-  {
-    path: '/admin',
+    path: '/',
     element: <Outlet />,
+    errorElement: <RouteError />,
     children: [
-      { index: true, element: <AdminLogin /> },
+      { index: true, element: <Welcome /> },
       {
-        element: (
-          <AdminRoute>
-            <AdminLayout />
-          </AdminRoute>
-        ),
+        path: 'comprar',
+        element: <BuyerJabaLayout />,
         children: [
-          { path: 'estadisticas', element: <AdminStats /> },
-          { path: 'solicitudes', element: <AdminDashboard /> },
-          { path: 'notificaciones', element: <AdminNotifications /> },
+          { index: true, element: <BuyerHome /> },
+          { path: 'provincia', element: <BuyerSelectProvince /> },
+          { path: 'municipio', element: <BuyerSelectMunicipality /> },
+          { path: 'tienda/:storeSlug', element: <RedirectLegacyStoreRoute /> },
         ],
       },
+      { path: 'login', element: <Login /> },
+      {
+        path: 'tienda',
+        element: (
+          <SellerRoute>
+            <SellerLayout />
+          </SellerRoute>
+        ),
+        children: [
+          { index: true, element: <SellerGeneral /> },
+          { path: 'catalogo', element: <SellerCatalog /> },
+          { path: 'pedidos', element: <SellerOrders /> },
+          { path: 'perfil', element: <SellerProfile /> },
+          { path: 'completar-perfil', element: <SellerCompleteProfile /> },
+        ],
+      },
+      { path: 'registro', element: <RegisterPlan /> },
+      { path: 'registro/pago', element: <RegisterPayment /> },
+      { path: 'registro/verificacion', element: <RegisterForm /> },
+      { path: 'registro/exito', element: <RegisterSuccess /> },
+      {
+        path: 'admin',
+        element: <Outlet />,
+        children: [
+          { index: true, element: <AdminLogin /> },
+          {
+            element: <AdminAuthenticatedLayout />,
+            children: [
+              { path: 'estadisticas', element: <AdminStats /> },
+              { path: 'solicitudes', element: <AdminDashboard /> },
+              { path: 'notificaciones', element: <AdminNotifications /> },
+              { path: 'configuracion', element: <AdminSettings /> },
+            ],
+          },
+        ],
+      },
+      { path: 'admin/inicio', element: <Navigate to="/admin/estadisticas" replace /> },
+      {
+        path: ':storeSlug',
+        element: <BuyerJabaLayout />,
+        children: [{ index: true, element: <PublicStoreRoute /> }],
+      },
     ],
-  },
-  { path: '/admin/inicio', element: <Navigate to="/admin/estadisticas" replace /> },
-  {
-    path: '/:storeSlug',
-    element: <BuyerJabaLayout />,
-    children: [{ index: true, element: <PublicStoreRoute /> }],
   },
 ])
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { formatRelativeTime } from '../../lib/dates'
 import RenewPlanButton from './RenewPlanButton'
@@ -114,7 +114,11 @@ function NotificationCard({ notification, onClose, onMarkRead }) {
                 </Link>
               ) : null}
               {hasRenewAction ? (
-                <RenewPlanButton className="!min-h-9 !px-4 !py-2 !text-xs" size="compact" />
+                <RenewPlanButton
+                  className="!min-h-9 !px-4 !py-2 !text-xs"
+                  size="compact"
+                  storeName={storeName}
+                />
               ) : null}
             </div>
           )}
@@ -139,11 +143,28 @@ export default function SellerNotificationsPanel({
   loading,
   onClose,
   onMarkRead,
+  onMarkAllSystemRead,
+  storeName = '',
 }) {
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.read_at).length,
     [notifications],
   )
+  const unreadSystemCount = useMemo(
+    () => notifications.filter((item) => !item.read_at && !item.from_admin).length,
+    [notifications],
+  )
+  const [markingAll, setMarkingAll] = useState(false)
+
+  async function handleMarkAllSystemRead() {
+    if (unreadSystemCount === 0 || markingAll) return
+    setMarkingAll(true)
+    try {
+      await onMarkAllSystemRead()
+    } finally {
+      setMarkingAll(false)
+    }
+  }
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -190,6 +211,21 @@ export default function SellerNotificationsPanel({
                 <p className="mt-1 text-xs text-brand-carmelita/80">
                   Pedidos nuevos, pagos y avisos de tu tienda.
                 </p>
+                {!loading && unreadSystemCount > 0 ? (
+                  <button
+                    type="button"
+                    onClick={handleMarkAllSystemRead}
+                    disabled={markingAll}
+                    className={`mt-3 ${sellerBtnSecondary} !min-h-9 !px-3 !py-2 !text-xs`}
+                  >
+                    {markingAll ? 'Marcando…' : 'Marcar todas como leídas'}
+                  </button>
+                ) : null}
+                {!loading && unreadCount > unreadSystemCount ? (
+                  <p className="mt-2 text-[0.65rem] text-brand-carmelita/65">
+                    Los avisos del administrador debes marcarlos uno a uno.
+                  </p>
+                ) : null}
               </div>
               <button
                 type="button"

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../../lib/api'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../lib/imageUpload'
 
 import { resolveMediaUrl } from '../../lib/media'
@@ -487,7 +488,7 @@ export default function CreateCatalogProductModal({
 
     } catch (err) {
 
-      setError(err.message || `No se pudo ${isEditing ? 'actualizar' : 'crear'} el producto.`)
+      setError(getUserFacingMessage(err, `No se pudo ${isEditing ? 'actualizar' : 'crear'} el producto.`))
 
     } finally {
 

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { adminAlertError, adminCard, adminCardHighlight, adminFocusRing, adminMuted, adminSubtle } from '../components/admin/adminStyles'
 import { fetchAdminStats } from '../lib/api'
+import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatPrice } from '../lib/money'
 
@@ -64,12 +65,12 @@ export default function AdminStats() {
       const data = await fetchAdminStats(token)
       setStats(data)
     } catch (err) {
-      if (err.message.includes('autenticado') || err.message.includes('Token')) {
+      if (isSessionError(err)) {
         clearAdminToken()
         navigate('/admin', { replace: true })
         return
       }
-      setError(err.message)
+      setError(getUserFacingMessage(err, 'No pudimos cargar las estadísticas.'))
     } finally {
       setLoading(false)
     }

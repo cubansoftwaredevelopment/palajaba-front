@@ -11,6 +11,7 @@ import SubscriptionExpiredScreen from '../components/seller/SubscriptionExpiredS
 import { alertErrorClass, inputClass, labelClass } from '../components/auth/formStyles'
 import { ApiError, sellerLogin } from '../lib/api'
 import { setSellerSession } from '../lib/sellerAuth'
+import { getUserFacingMessage } from '../lib/userFacingError'
 const LOGIN_METHODS = [
   { id: 'phone', label: 'Teléfono' },
   { id: 'store_name', label: 'Tienda' },
@@ -50,11 +51,12 @@ export default function Login() {
         setExpiredInfo(err.data)
         return
       }
-      const message =
-        err.message === 'Failed to fetch'
-          ? 'No se pudo conectar con el servidor. Comprueba que el backend esté en marcha.'
-          : err.message
-      setError(message)
+      setError(
+        getUserFacingMessage(
+          err,
+          'No pudimos iniciar sesión. Revisa tus datos e inténtalo de nuevo.',
+        ),
+      )
     } finally {
       setLoading(false)
     }
@@ -65,6 +67,7 @@ export default function Login() {
       <SubscriptionExpiredScreen
         storeName={expiredInfo.store_name}
         subscriptionEndsAt={expiredInfo.subscription_ends_at}
+        renewalContactPhone={expiredInfo.renewal_contact_phone}
         onBack={() => setExpiredInfo(null)}
       />
     )

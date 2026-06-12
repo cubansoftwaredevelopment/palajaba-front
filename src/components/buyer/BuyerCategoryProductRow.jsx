@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { animateScrollLeft } from '../../lib/smoothScroll'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import BuyerProductCard from './BuyerProductCard'
 import {
   buyerCategorySectionTitle,
@@ -83,7 +83,7 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
       })
       setHasMore(data.has_more)
     } catch (err) {
-      setError(err.message || 'No se pudieron cargar más productos.')
+      setError(getUserFacingMessage(err, 'No pudimos cargar más productos. Inténtalo de nuevo.'))
     } finally {
       loadingRef.current = false
       setLoadingMore(false)

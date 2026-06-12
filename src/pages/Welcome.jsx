@@ -2,9 +2,14 @@ import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Logo from '../components/Logo'
 import { LOGO_HERO_CLASS } from '../constants/branding'
+import { resolveBuyerEntryPath } from '../lib/buyerLocation'
 
 export default function Welcome() {
   const navigate = useNavigate()
+
+  function goToBuy() {
+    navigate(resolveBuyerEntryPath())
+  }
 
   return (
     <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-brand-white px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8">
@@ -41,7 +46,7 @@ export default function Welcome() {
           <Button variant="secondary" onClick={() => navigate('/registro')}>
             Crear cuenta
           </Button>
-          <Button variant="ghost" onClick={() => navigate('/comprar/provincia')}>
+          <Button variant="ghost" onClick={goToBuy}>
             Continuar a comprar
           </Button>
         </nav>

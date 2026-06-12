@@ -5,6 +5,7 @@ import { adminAlertError, adminLabel } from './adminStyles'
 import { getPlanPrice, normalizePlanTier } from '../../constants/plan'
 import { parseCupInput } from '../../lib/money'
 import { updateRegistrationPayment } from '../../lib/api'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getAdminToken } from '../../lib/adminAuth'
 
 export default function PaymentModal({ registration, onClose, onSuccess }) {
@@ -34,7 +35,7 @@ export default function PaymentModal({ registration, onClose, onSuccess }) {
       onSuccess(updated)
       onClose()
     } catch (err) {
-      setError(err.message)
+      setError(getUserFacingMessage(err, 'No pudimos registrar el pago.'))
     } finally {
       setLoading(false)
     }

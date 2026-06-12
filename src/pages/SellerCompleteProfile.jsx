@@ -32,6 +32,7 @@ import {
   updateSellerProfile,
   uploadSellerProfilePhoto,
 } from '../lib/api'
+import { getUserFacingMessage } from '../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../lib/imageUpload'
 import { dedupeDeliveryAreas } from '../lib/businessArea'
 import { getSellerToken, updateSellerProfileCache } from '../lib/sellerAuth'
@@ -77,7 +78,7 @@ export default function SellerCompleteProfile() {
         if (!cancelled) setCategories(data)
       })
       .catch((err) => {
-        if (!cancelled) setCategoriesError(err.message || 'No se pudieron cargar las categorías.')
+        if (!cancelled) setCategoriesError(getUserFacingMessage(err, 'No pudimos cargar las categorías.'))
       })
       .finally(() => {
         if (!cancelled) setCategoriesLoading(false)
@@ -107,7 +108,7 @@ export default function SellerCompleteProfile() {
       setPhotoUrl(updated.profile_photo_url)
       updateSellerProfileCache(updated)
     } catch (err) {
-      setError(err.message)
+      setError(getUserFacingMessage(err))
     } finally {
       setPhotoUploading(false)
       event.target.value = ''
@@ -158,7 +159,7 @@ export default function SellerCompleteProfile() {
       await refreshProfile()
       navigate('/tienda', { replace: true })
     } catch (err) {
-      setError(err.message)
+      setError(getUserFacingMessage(err))
     } finally {
       setLoading(false)
     }

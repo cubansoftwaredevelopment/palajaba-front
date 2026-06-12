@@ -4,6 +4,7 @@ const RESERVED_STORE_SLUGS = new Set([
   'login',
   'registro',
   'tienda',
+  'configuracion',
 ])
 
 export function storeNameToSlug(storeName) {

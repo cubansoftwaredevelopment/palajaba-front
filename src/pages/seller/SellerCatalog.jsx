@@ -12,6 +12,7 @@ import SellerCatalogView from '../../components/seller/SellerCatalogView'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import ShareCatalogModal from '../../components/seller/ShareCatalogModal'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
+import StatePanel from '../../components/ui/StatePanel'
 import {
   sellerAlertError,
   sellerCatalogSection,
@@ -21,6 +22,7 @@ import {
 } from '../../components/seller/sellerStyles'
 import { fetchSellerCatalog } from '../../lib/api'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 
 export default function SellerCatalog() {
   const { profile } = useOutletContext()
@@ -46,7 +48,7 @@ export default function SellerCatalog() {
       const data = await fetchSellerCatalog(token)
       setSummary(data)
     } catch (err) {
-      setError(err.message || 'No se pudo cargar tu catálogo.')
+      setError(getUserFacingMessage(err, 'No pudimos cargar tu catálogo. Inténtalo de nuevo.'))
     } finally {
       setLoading(false)
     }
@@ -175,11 +177,21 @@ export default function SellerCatalog() {
 
         <SellerSuccessAlert message={successMessage} onDismiss={() => setSuccessMessage('')} />
 
-        {error && (
+        {error && summary ? (
           <p className={sellerAlertError} role="alert">
             {error}
           </p>
-        )}
+        ) : null}
+
+        {!loading && error && !summary ? (
+          <StatePanel
+            variant="seller"
+            title="No se pudo cargar el catálogo"
+            message={error}
+            onRetry={loadCatalog}
+            retrying={loading}
+          />
+        ) : null}
 
         {loading && (
           <p className="rounded-2xl border border-brand-green/10 bg-brand-white px-4 py-6 text-center text-sm text-brand-carmelita/85">

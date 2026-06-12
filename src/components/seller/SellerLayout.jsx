@@ -4,8 +4,9 @@ import SellerLoadingScreen from './SellerLoadingScreen'
 import SellerLogoutModal from './SellerLogoutModal'
 import SellerNotificationsPanel from './SellerNotificationsPanel'
 import SellerShell from './SellerShell'
+import StatePanel from '../ui/StatePanel'
 import SubscriptionExpiredScreen from './SubscriptionExpiredScreen'
-import { ApiError, fetchSellerProfile, fetchSellerNotifications, fetchSellerUnreadNotificationCount, markSellerNotificationRead } from '../../lib/api'
+import { ApiError, fetchSellerProfile, fetchSellerNotifications, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
 import {
   clearSellerSession,
   getSellerToken,
@@ -13,13 +14,14 @@ import {
 } from '../../lib/sellerAuth'
 import { getSellerDefaultPath, getSellerNavItems } from '../../lib/planAccess'
 import { requestSellerOrdersRefresh } from '../../lib/sellerOrdersRefresh'
+import { isSessionError, resolveUserFacingError } from '../../lib/userFacingError'
 
 export default function SellerLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [notifications, setNotifications] = useState([])
@@ -89,6 +91,19 @@ export default function SellerLayout() {
     }
   }
 
+  async function handleMarkAllSystemNotificationsRead() {
+    const token = getSellerToken()
+    if (!token) return
+    try {
+      await markSellerSystemNotificationsRead(token)
+      const data = await fetchSellerNotifications(token)
+      setNotifications(data)
+      await refreshUnreadCount()
+    } catch {
+      await refreshUnreadCount()
+    }
+  }
+
   async function openNotifications() {
     setShowNotifications(true)
     await loadNotifications()
@@ -103,7 +118,7 @@ export default function SellerLayout() {
     let cancelled = false
 
     async function load() {
-      setError('')
+      setLoadError(null)
       setLoading(true)
       try {
         const data = await refreshProfile()
@@ -118,10 +133,15 @@ export default function SellerLayout() {
             setExpiredInfo(err.data)
             return
           }
-          if (err.message.includes('autenticado') || err.message.includes('Token')) {
+          if (isSessionError(err)) {
             clearSellerSession()
           }
-          setError(err.message)
+          setLoadError(
+            resolveUserFacingError(err, {
+              contextTitle: 'No se pudo cargar tu tienda',
+              fallbackMessage: 'No pudimos conectar con tu cuenta. Inténtalo de nuevo.',
+            }),
+          )
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -161,6 +181,7 @@ export default function SellerLayout() {
       <SubscriptionExpiredScreen
         storeName={expiredInfo.store_name}
         subscriptionEndsAt={expiredInfo.subscription_ends_at}
+        renewalContactPhone={expiredInfo.renewal_contact_phone}
         onBack={() => {
           setExpiredInfo(null)
           navigate('/login', { replace: true })
@@ -169,19 +190,15 @@ export default function SellerLayout() {
     )
   }
 
-  if (error) {
+  if (loadError) {
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-brand-white px-6 text-center">
-        <p className="max-w-xs text-sm leading-relaxed text-brand-carmelita" role="alert">
-          {error}
-        </p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="rounded-full border border-brand-green/22 px-5 py-2.5 text-sm font-semibold text-brand-green touch-manipulation active:bg-brand-yellow/10"
-        >
-          Reintentar
-        </button>
+      <main className="flex min-h-dvh flex-col bg-brand-white">
+        <StatePanel
+          variant="fullscreen"
+          title={loadError.title}
+          message={loadError.message}
+          onRetry={loadError.canRetry ? () => window.location.reload() : undefined}
+        />
       </main>
     )
   }
@@ -199,11 +216,6 @@ export default function SellerLayout() {
   }
 
   const sellerNavItems = getSellerNavItems(profile)
-  const isGeneralPage = location.pathname === '/tienda' || location.pathname === '/tienda/'
-
-  if (profile?.profile_completed && isGeneralPage && !sellerNavItems.some((item) => item.id === 'general')) {
-    return <Navigate to="/tienda/catalogo" replace />
-  }
 
   return (
     <>
@@ -225,6 +237,8 @@ export default function SellerLayout() {
           loading={notificationsLoading}
           onClose={closeNotifications}
           onMarkRead={handleMarkNotificationRead}
+          onMarkAllSystemRead={handleMarkAllSystemNotificationsRead}
+          storeName={profile?.store_name}
         />
       )}
 

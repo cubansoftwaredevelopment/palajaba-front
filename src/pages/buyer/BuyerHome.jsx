@@ -1,15 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
+import BuyerMarketplaceSearch, {
+  BuyerSearchResults,
+  useMarketplaceSearchActive,
+} from '../../components/buyer/BuyerMarketplaceSearch'
 import BuyerShell from '../../components/buyer/BuyerShell'
+import StatePanel from '../../components/ui/StatePanel'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import Button from '../../components/Button'
-import { fetchMarketplaceCategoryProducts, fetchMarketplaceFeed } from '../../lib/api'
+import {
+  fetchMarketplaceCategoryProducts,
+  fetchMarketplaceFeed,
+  fetchMarketplaceSearch,
+  fetchCategories,
+} from '../../lib/api'
 import { getBuyerLocation, hasCompleteBuyerLocation } from '../../lib/buyerLocation'
+import { resolveUserFacingError } from '../../lib/userFacingError'
 
 const PAGE_SIZE = 20
+const SEARCH_DEBOUNCE_MS = 300
 
 export default function BuyerHome() {
   if (!hasCompleteBuyerLocation()) {
@@ -23,41 +35,139 @@ function BuyerHomeContent() {
   const location = getBuyerLocation()
   const [feed, setFeed] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState(null)
+  const [categories, setCategories] = useState([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchCategoryId, setSearchCategoryId] = useState('')
+  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [searchResults, setSearchResults] = useState(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [searchError, setSearchError] = useState(null)
+  const [searchLoadingMore, setSearchLoadingMore] = useState(false)
+
+  const searchActive = useMarketplaceSearchActive(debouncedQuery, searchCategoryId)
+
+  const loadFeed = useCallback(async () => {
+    setLoading(true)
+    setLoadError(null)
+
+    try {
+      const data = await fetchMarketplaceFeed({
+        provinceId: location.province.id,
+        municipalityId: location.municipality.id,
+        limitPerCategory: PAGE_SIZE,
+      })
+      setFeed(data)
+    } catch (err) {
+      setLoadError(
+        resolveUserFacingError(err, {
+          contextTitle: 'No se pudo cargar el catálogo',
+          fallbackMessage: 'No pudimos mostrar los productos de tu zona. Inténtalo de nuevo.',
+        }),
+      )
+      setFeed(null)
+    } finally {
+      setLoading(false)
+    }
+  }, [location.municipality.id, location.province.id])
+
+  useEffect(() => {
+    loadFeed()
+  }, [loadFeed])
 
   useEffect(() => {
     let cancelled = false
+    setCategoriesLoading(true)
 
-    async function loadFeed() {
-      setLoading(true)
-      setError('')
+    fetchCategories()
+      .then((data) => {
+        if (!cancelled) setCategories(data)
+      })
+      .catch(() => {
+        if (!cancelled) setCategories([])
+      })
+      .finally(() => {
+        if (!cancelled) setCategoriesLoading(false)
+      })
 
-      try {
-        const data = await fetchMarketplaceFeed({
-          provinceId: location.province.id,
-          municipalityId: location.municipality.id,
-          limitPerCategory: PAGE_SIZE,
-        })
-        if (!cancelled) {
-          setFeed(data)
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err.message || 'No se pudieron cargar los productos.')
-          setFeed(null)
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false)
-        }
-      }
-    }
-
-    loadFeed()
     return () => {
       cancelled = true
     }
-  }, [location.province.id, location.municipality.id])
+  }, [])
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedQuery(searchQuery)
+    }, SEARCH_DEBOUNCE_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [searchQuery])
+
+  const runSearch = useCallback(
+    async ({ offset = 0, append = false } = {}) => {
+      const isActive =
+        debouncedQuery.trim().length >= 2 || Boolean(searchCategoryId)
+
+      if (!isActive) {
+        setSearchResults(null)
+        setSearchError(null)
+        setSearchLoading(false)
+        return
+      }
+
+      if (append) {
+        setSearchLoadingMore(true)
+      } else {
+        setSearchLoading(true)
+        setSearchError(null)
+      }
+
+      try {
+        const data = await fetchMarketplaceSearch({
+          provinceId: location.province.id,
+          municipalityId: location.municipality.id,
+          query: debouncedQuery,
+          globalCategoryId: searchCategoryId || undefined,
+          limit: PAGE_SIZE,
+          offset,
+        })
+
+        setSearchResults((current) => {
+          if (!append || !current) return data
+          const seen = new Set(current.products.map((item) => item.id))
+          const nextProducts = data.products.filter((item) => !seen.has(item.id))
+          return {
+            ...data,
+            products: [...current.products, ...nextProducts],
+          }
+        })
+      } catch (err) {
+        if (!append) {
+          setSearchResults(null)
+          setSearchError(
+            resolveUserFacingError(err, {
+              contextTitle: 'No se pudo completar la búsqueda',
+              fallbackMessage: 'No pudimos buscar productos en este momento. Inténtalo de nuevo.',
+            }),
+          )
+        }
+      } finally {
+        setSearchLoading(false)
+        setSearchLoadingMore(false)
+      }
+    },
+    [
+      debouncedQuery,
+      location.municipality.id,
+      location.province.id,
+      searchCategoryId,
+    ],
+  )
+
+  useEffect(() => {
+    runSearch()
+  }, [runSearch])
 
   const sections = feed?.sections ?? []
   const hasProducts = (feed?.total_products ?? 0) > 0
@@ -72,23 +182,54 @@ function BuyerHomeContent() {
       }
       headerEnd={<BuyerCurrencySelector />}
     >
-      {loading ? (
+      <div className="mb-5 lg:mb-6">
+        <BuyerMarketplaceSearch
+          categories={categories}
+          categoriesLoading={categoriesLoading}
+          query={searchQuery}
+          categoryId={searchCategoryId}
+          onQueryChange={setSearchQuery}
+          onCategoryChange={setSearchCategoryId}
+        />
+      </div>
+
+      {searchActive ? (
+        <BuyerSearchResults
+          loading={searchLoading}
+          error={searchError}
+          results={searchResults}
+          loadingMore={searchLoadingMore}
+          onRetry={() => runSearch()}
+          retrying={searchLoading}
+          onLoadMore={() =>
+            runSearch({
+              offset: searchResults?.products?.length ?? 0,
+              append: true,
+            })
+          }
+        />
+      ) : null}
+
+      {!searchActive && loading ? (
         <p className="text-center text-sm text-brand-carmelita/80 lg:text-left">Cargando productos…</p>
       ) : null}
 
-      {!loading && error ? (
-        <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-6 text-center lg:text-left">
-          <p className="font-display text-base font-bold text-brand-green">No se pudo cargar el catálogo</p>
-          <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">{error}</p>
-        </div>
+      {!searchActive && !loading && loadError ? (
+        <StatePanel
+          variant="buyer"
+          title={loadError.title}
+          message={loadError.message}
+          onRetry={loadError.canRetry ? loadFeed : undefined}
+          retrying={loading}
+        />
       ) : null}
 
-      {!loading && !error && !hasProducts ? (
+      {!searchActive && !loading && !loadError && !hasProducts ? (
         <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
           <p className="font-display text-lg font-bold text-brand-green">Aún no hay productos aquí</p>
           <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
             No encontramos tiendas con productos disponibles en {location.municipality.name}. Prueba con otra
-            zona.
+            zona o usa el buscador cuando haya más tiendas.
           </p>
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center lg:justify-start">
             <Link to="/comprar/provincia">
@@ -105,7 +246,7 @@ function BuyerHomeContent() {
         </div>
       ) : null}
 
-      {!loading && !error && hasProducts ? (
+      {!searchActive && !loading && !loadError && hasProducts ? (
         <div className={buyerHomeSections}>
           {sections.map((section) => (
             <BuyerCategoryProductRow

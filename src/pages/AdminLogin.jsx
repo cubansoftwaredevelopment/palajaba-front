@@ -10,6 +10,7 @@ import {
 import Logo from '../components/Logo'
 import { LOGO_HERO_CLASS } from '../constants/branding'
 import { adminLogin } from '../lib/api'
+import { getUserFacingMessage } from '../lib/userFacingError'
 import { setAdminToken } from '../lib/adminAuth'
 
 export default function AdminLogin() {
@@ -32,7 +33,7 @@ export default function AdminLogin() {
       setAdminToken(data.access_token)
       navigate(redirectTo, { replace: true })
     } catch (err) {
-      setError(err.message)
+      setError(getUserFacingMessage(err, 'No pudimos iniciar sesión. Revisa tus datos.'))
     } finally {
       setLoading(false)
     }

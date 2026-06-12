@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { getCategoryInitial } from '../../constants/catalog'
 import { reorderCatalogCategories } from '../../lib/api'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from './SellerModalPortal'
 import {
@@ -79,7 +80,7 @@ export default function ReorderCatalogCategoriesModal({ categories, onClose, onS
       )
       onSaved(summary)
     } catch (err) {
-      setError(err.message || 'No se pudo guardar el orden de las categorías.')
+      setError(getUserFacingMessage(err, 'No se pudo guardar el orden de las categorías.'))
     } finally {
       setLoading(false)
     }

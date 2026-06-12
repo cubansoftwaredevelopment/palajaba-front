@@ -39,6 +39,9 @@ export const adminBadgeApproved =
 export const adminBadgeRejected =
   'rounded-md border border-brand-carmelita/30 bg-brand-carmelita/12 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-orange-200/90'
 
+export const adminBadgeExpired =
+  'rounded-md border border-orange-400/35 bg-orange-400/12 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-orange-300'
+
 export const adminIconButton =
   `inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-zinc-400 transition-colors hover:bg-zinc-800/80 hover:text-zinc-100 ${adminFocusRing}`
 

@@ -16,6 +16,7 @@ import {
 import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../lib/phone'
 import { normalizePlanTier } from '../constants/plan'
 import { registerSeller } from '../lib/api'
+import { getUserFacingMessage } from '../lib/userFacingError'
 
 function RequiredLabel({ htmlFor, children }) {
   return (
@@ -83,11 +84,12 @@ export default function RegisterForm() {
       })
       navigate('/registro/exito')
     } catch (err) {
-      const message =
-        err.message === 'Failed to fetch'
-          ? 'No se pudo conectar con el servidor. Comprueba que el backend esté en marcha.'
-          : err.message
-      setError(message)
+      setError(
+        getUserFacingMessage(
+          err,
+          'No pudimos completar el registro. Revisa tus datos e inténtalo de nuevo.',
+        ),
+      )
     } finally {
       setLoading(false)
     }

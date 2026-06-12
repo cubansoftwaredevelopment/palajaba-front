@@ -46,7 +46,11 @@ export default function SellerSubscriptionAlert({ profile }) {
         </div>
       </div>
 
-      <RenewPlanButton className="shrink-0 sm:!w-auto sm:min-w-[8.5rem]" size="compact" />
+      <RenewPlanButton
+        className="shrink-0 sm:!w-auto sm:min-w-[8.5rem]"
+        size="compact"
+        storeName={profile?.store_name}
+      />
     </div>
   )
 }
