@@ -15,6 +15,11 @@ export const LOGO = {
   alt: `Logo de ${BRAND_NAME}`,
 }
 
+export const JABA_BAG = {
+  src: '/images/buy-bag.png',
+  alt: 'Jaba de compras',
+}
+
 /** Mismo tamaño hero que en Welcome */
 export const LOGO_HERO_CLASS =
   'h-auto w-full max-w-[min(100%,20rem)] sm:max-w-[22rem] md:max-w-[26rem]'

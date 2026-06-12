@@ -12,6 +12,7 @@ import { resolveMediaUrl } from '../../lib/media'
 import { recordProductPopularity } from '../../lib/productPopularity'
 
 import BuyerModalPortal from './BuyerModalPortal'
+import JabaBagIcon from './JabaBagIcon'
 
 import {
 
@@ -134,24 +135,6 @@ function SpecCard({ label, children }) {
       <p className={buyerProductDetailSpecValue}>{children}</p>
 
     </div>
-
-  )
-
-}
-
-
-
-function JabaIcon() {
-
-  return (
-
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-
-      <path d="M6 8h15l-1.5 9H7.5L6 8Z" />
-
-      <path d="M9 8V6a3 3 0 0 1 6 0v2" />
-
-    </svg>
 
   )
 
@@ -462,7 +445,7 @@ export default function BuyerProductDetailModal({
 
                 >
 
-                  {!inJaba ? <JabaIcon /> : null}
+                  {!inJaba ? <JabaBagIcon className="h-3.5 w-3.5" alt="" /> : null}
 
                   <span>{inJaba ? 'En Tu Jaba' : "Pa' La Jaba"}</span>
 

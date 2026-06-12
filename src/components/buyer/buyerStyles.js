@@ -70,19 +70,19 @@ export const buyerCategorySectionTitle =
 export const buyerProductRowWrap = 'relative min-w-0 overflow-hidden'
 
 export const buyerProductRow =
-  'flex gap-3 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+  'flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
 export const buyerProductRowFade =
   'pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-brand-white via-brand-white/95 to-transparent sm:w-20'
 
 export const buyerProductRowFadeLeft =
-  'pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-20 bg-gradient-to-r from-brand-white via-brand-white/95 to-transparent lg:block'
+  'pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-brand-white via-brand-white/95 to-transparent sm:w-20'
 
 export const buyerProductRowArrow =
   'absolute right-0 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-brand-green/15 bg-brand-white text-brand-green shadow-[0_4px_14px_rgba(89,128,44,0.14)] transition-[transform,background-color,box-shadow] duration-200 touch-manipulation active:scale-95 active:bg-brand-yellow/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:h-10 sm:w-10 lg:hover:-translate-y-1/2 lg:hover:scale-105 lg:hover:shadow-[0_6px_18px_rgba(89,128,44,0.18)]'
 
 export const buyerProductRowArrowLeft =
-  'absolute left-0 top-1/2 z-20 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-brand-green/15 bg-brand-white text-brand-green shadow-[0_4px_14px_rgba(89,128,44,0.14)] transition-[transform,background-color,box-shadow] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 lg:flex lg:hover:-translate-y-1/2 lg:hover:scale-105 lg:hover:shadow-[0_6px_18px_rgba(89,128,44,0.18)] lg:active:scale-95 lg:active:bg-brand-yellow/20'
+  'absolute left-0 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-brand-green/15 bg-brand-white text-brand-green shadow-[0_4px_14px_rgba(89,128,44,0.14)] transition-[transform,background-color,box-shadow] duration-200 touch-manipulation active:scale-95 active:bg-brand-yellow/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:h-10 sm:w-10 lg:hover:-translate-y-1/2 lg:hover:scale-105 lg:hover:shadow-[0_6px_18px_rgba(89,128,44,0.18)]'
 
 export const buyerProductRowItem =
   'w-[11rem] shrink-0 snap-start sm:w-[11.5rem]'

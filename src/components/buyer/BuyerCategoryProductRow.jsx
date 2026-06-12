@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { animateScrollLeft } from '../../lib/smoothScroll'
 import BuyerProductCard from './BuyerProductCard'
 import {
   buyerCategorySectionTitle,
@@ -147,7 +148,7 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
       <div className={buyerProductRowWrap}>
         <div
           ref={scrollRef}
-          className={`${buyerProductRow} ${showScrollLeft ? 'lg:pl-12' : ''} ${showScrollRight ? 'pr-12' : ''}`}
+          className={`${buyerProductRow} ${showScrollLeft ? 'pl-12' : ''} ${showScrollRight ? 'pr-12' : ''}`}
         >
           {products.map((product) => (
             <div key={product.id} data-product-item className={buyerProductRowItem}>
