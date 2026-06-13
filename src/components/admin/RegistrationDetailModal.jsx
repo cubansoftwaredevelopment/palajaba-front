@@ -80,9 +80,15 @@ export default function RegistrationDetailModal({
     >
       <dl className="mb-6">
         <DetailRow label="ID transferencia">
-          <span className="font-mono">{item.transfer_id}</span>
-          <span className="mx-2 text-zinc-600">·</span>
-          <CopyButton value={item.transfer_id} label="ID" />
+          {item.is_launch_promo ? (
+            <span className="font-medium text-emerald-300">Promoción de lanzamiento (Premium 1 mes)</span>
+          ) : (
+            <>
+              <span className="font-mono">{item.transfer_id}</span>
+              <span className="mx-2 text-zinc-600">·</span>
+              <CopyButton value={item.transfer_id} label="ID" />
+            </>
+          )}
         </DetailRow>
         <DetailRow label="Teléfono">{item.phone}</DetailRow>
         <DetailRow label="Plan contratado">
@@ -94,7 +100,7 @@ export default function RegistrationDetailModal({
         {(item.status === 'approved' || item.status === 'expired') && (
           <DetailRow label="Monto registrado">
             {item.payment_amount_cup != null ? (
-              <span className="text-white">{formatPrice(item.payment_amount_cup, 'USD')}</span>
+              <span className="text-white">{formatPrice(item.payment_amount_cup, 'CUP')}</span>
             ) : (
               <span className="text-amber-400/90">Sin registrar — no aparece en pagos del mes</span>
             )}

@@ -10,9 +10,10 @@ import { adminAlertError, adminInput, adminLabel } from './adminStyles'
 
 import { BILLING_LABELS, PLAN_TIER_LABELS } from '../../constants/admin'
 
-import { getPlanPrice, normalizePlanTier, PLAN_TIER_ORDER } from '../../constants/plan'
+import { normalizePlanTier, PLAN_TIER_ORDER } from '../../constants/plan'
 
 import { parseCupInput } from '../../lib/money'
+import { usePlanPricing } from '../../lib/usePlanPricing'
 
 import {
 
@@ -124,7 +125,7 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
 
   const isRenew = mode === 'renew'
 
-
+  const { getPlanPrice } = usePlanPricing()
 
   const [planTier, setPlanTier] = useState(() => normalizePlanTier(registration.plan_tier))
 
@@ -227,7 +228,7 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
 
     if (!isEdit && amountCup == null) {
 
-      setError('Indica el monto real que pagó la tienda (en USD).')
+      setError('Indica el monto real que pagó la tienda (en CUP).')
 
       return
 
@@ -353,7 +354,7 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
 
             <label htmlFor="payment-amount-cup" className={adminLabel}>
 
-              Monto pagado (USD)
+              Monto pagado (CUP)
 
             </label>
 
@@ -381,7 +382,7 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
 
               Importe real de la transferencia. Referencia del plan:{' '}
 
-              {suggestedAmount?.toLocaleString('es')} USD ({PLAN_TIER_LABELS[planTier]} ·{' '}
+              {suggestedAmount?.toLocaleString('es')} CUP ({PLAN_TIER_LABELS[planTier]} ·{' '}
 
               {BILLING_LABELS[billingPeriod]}).
 

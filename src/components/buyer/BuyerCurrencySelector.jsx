@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { DISPLAY_CURRENCIES } from '../../constants/currencies'
+import { DISPLAY_CURRENCIES, EXCHANGE_RATES_ATTRIBUTION } from '../../constants/currencies'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { buyerCurrencyOption, buyerCurrencyPanel, buyerCurrencyTrigger } from './buyerStyles'
 
@@ -7,7 +7,7 @@ export default function BuyerCurrencySelector({ panelZIndex = 60 }) {
   const listId = useId()
   const rootRef = useRef(null)
   const triggerRef = useRef(null)
-  const { currency, setCurrency } = useBuyerDisplayCurrency()
+  const { currency, setCurrency, ratesMeta } = useBuyerDisplayCurrency()
   const [open, setOpen] = useState(false)
   const [panelStyle, setPanelStyle] = useState(null)
 
@@ -116,6 +116,15 @@ export default function BuyerCurrencySelector({ panelZIndex = 60 }) {
               </li>
             )
           })}
+          {ratesMeta?.attribution ? (
+            <li className="border-t border-brand-green/10 px-3.5 py-2 text-[0.58rem] leading-snug text-brand-carmelita/65">
+              {ratesMeta.attribution}
+            </li>
+          ) : (
+            <li className="border-t border-brand-green/10 px-3.5 py-2 text-[0.58rem] leading-snug text-brand-carmelita/65">
+              {EXCHANGE_RATES_ATTRIBUTION}
+            </li>
+          )}
         </ul>
       ) : null}
     </div>

@@ -1,4 +1,5 @@
 import { PHONE_PREFIX } from './phone'
+import { getCupPerUnit } from './exchangeRates'
 import { resolveDisplayPrice } from './displayPrice'
 import { formatPrice } from './money'
 
@@ -39,10 +40,16 @@ function buildDeliverySection(delivery) {
   return lines.join('\n')
 }
 
-export function buildStoreOrderMessage({ storeName, items, delivery = null, displayCurrency = 'CUP' }) {
+export function buildStoreOrderMessage({
+  storeName,
+  items,
+  delivery = null,
+  displayCurrency = 'CUP',
+  cupPerUnit = getCupPerUnit(),
+}) {
   const lines = items.map((item) => {
     const qty = item.quantity ?? 1
-    const price = resolveDisplayPrice(item, displayCurrency)
+    const price = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
     const unitPrice = formatPrice(price.amount, price.currency)
     const line =
       qty > 1
@@ -53,7 +60,7 @@ export function buildStoreOrderMessage({ storeName, items, delivery = null, disp
 
   const totalsByCurrency = {}
   for (const item of items) {
-    const price = resolveDisplayPrice(item, displayCurrency)
+    const price = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
     const amount = Number(price.amount) * (item.quantity ?? 1)
     totalsByCurrency[price.currency] = (totalsByCurrency[price.currency] ?? 0) + amount
   }
@@ -79,10 +86,23 @@ export function buildWhatsAppUrl(phone, message) {
   return `https://wa.me/${id}?text=${encodeURIComponent(message)}`
 }
 
-export function openWhatsAppCheckout({ storeName, storePhone, items, delivery = null, displayCurrency = 'CUP' }) {
+export function openWhatsAppCheckout({
+  storeName,
+  storePhone,
+  items,
+  delivery = null,
+  displayCurrency = 'CUP',
+  cupPerUnit = getCupPerUnit(),
+}) {
   if (!items?.length) return false
 
-  const message = buildStoreOrderMessage({ storeName, items, delivery, displayCurrency })
+  const message = buildStoreOrderMessage({
+    storeName,
+    items,
+    delivery,
+    displayCurrency,
+    cupPerUnit,
+  })
   const url = buildWhatsAppUrl(storePhone, message)
   if (!url) return false
 

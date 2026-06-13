@@ -24,10 +24,10 @@ import {
 } from './buyerStyles'
 
 export default function BuyerProductCard({ product, compact = false }) {
-  const { currency: displayCurrency } = useBuyerDisplayCurrency()
+  const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
   const { isInJaba: checkInJaba, addProduct, buyProduct } = useBuyerJaba()
   const imageSrc = resolveMediaUrl(product.image_url)
-  const displayPrice = resolveDisplayPrice(product, displayCurrency)
+  const displayPrice = resolveDisplayPrice(product, displayCurrency, cupPerUnit)
   const [buyPulse, setBuyPulse] = useState(false)
   const [jabaPulse, setJabaPulse] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)

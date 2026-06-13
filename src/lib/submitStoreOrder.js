@@ -26,10 +26,16 @@ function buildDeliveryPayload(delivery) {
   }
 }
 
-export async function submitStoreOrder({ storeId, items, delivery = null, displayCurrency = 'CUP' }) {
+export async function submitStoreOrder({
+  storeId,
+  items,
+  delivery = null,
+  displayCurrency = 'CUP',
+  cupPerUnit,
+}) {
   if (!storeId || !items?.length) return null
 
-  const lineItems = resolveOrderLineItems(items, displayCurrency)
+  const lineItems = resolveOrderLineItems(items, displayCurrency, cupPerUnit)
   const paymentCurrency = inferOrderPaymentCurrency(lineItems)
 
   return createMarketplaceOrder({

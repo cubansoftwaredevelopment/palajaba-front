@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { ORDER_STATUS_LABELS } from '../../constants/orderStatus'
 import { formatOrderDateTime } from '../../lib/dates'
 import { convertBetweenCurrencies } from '../../lib/displayPrice'
+import { loadExchangeRates, getCupPerUnit } from '../../lib/exchangeRates'
 import { formatPrice, parseCupInput } from '../../lib/money'
 import SellerModalPortal from './SellerModalPortal'
 import {
@@ -20,7 +21,7 @@ import {
   sellerModalTitle,
 } from './sellerStyles'
 
-const PAYMENT_CURRENCIES = ['CUP', 'USD', 'MLC']
+const PAYMENT_CURRENCIES = ['CUP', 'USD', 'EUR', 'MLC']
 
 function DetailRow({ label, children }) {
   return (
@@ -31,7 +32,7 @@ function DetailRow({ label, children }) {
   )
 }
 
-function calcPaymentTotal(order, items, paymentCurrency, deliveryPreview) {
+function calcPaymentTotal(order, items, paymentCurrency, deliveryPreview, cupPerUnit) {
   if (!paymentCurrency) return null
 
   let total = 0
@@ -40,6 +41,7 @@ function calcPaymentTotal(order, items, paymentCurrency, deliveryPreview) {
       item.unit_price * item.quantity,
       item.currency,
       paymentCurrency,
+      cupPerUnit,
     )
   }
 
@@ -47,7 +49,7 @@ function calcPaymentTotal(order, items, paymentCurrency, deliveryPreview) {
   const deliveryCurrency = deliveryPreview?.currency ?? order.delivery_currency ?? 'CUP'
 
   if (order.delivery_requested && deliveryPrice != null) {
-    total += convertBetweenCurrencies(deliveryPrice, deliveryCurrency, paymentCurrency)
+    total += convertBetweenCurrencies(deliveryPrice, deliveryCurrency, paymentCurrency, cupPerUnit)
   }
 
   return total
@@ -72,6 +74,13 @@ export default function SellerOrderDetailModal({
   const [paymentCurrency, setPaymentCurrency] = useState(order.payment_currency ?? '')
   const [localError, setLocalError] = useState('')
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
+
+  useEffect(() => {
+    loadExchangeRates()
+      .then(() => setCupPerUnit(getCupPerUnit()))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     setEditableItems(order.items)
@@ -121,8 +130,8 @@ export default function SellerOrderDetailModal({
   }, [order.delivery_requested, isPending, deliveryPrice, deliveryCurrency])
 
   const paymentTotal = useMemo(
-    () => calcPaymentTotal(order, editableItems, resolvedPaymentCurrency, deliveryPreview),
-    [order, editableItems, resolvedPaymentCurrency, deliveryPreview],
+    () => calcPaymentTotal(order, editableItems, resolvedPaymentCurrency, deliveryPreview, cupPerUnit),
+    [order, editableItems, resolvedPaymentCurrency, deliveryPreview, cupPerUnit],
   )
 
   function updateItemQuantity(productId, delta) {
@@ -266,7 +275,12 @@ export default function SellerOrderDetailModal({
                         {resolvedPaymentCurrency && resolvedPaymentCurrency !== item.currency ? (
                           <p className="mt-0.5 text-xs text-brand-carmelita/70">
                             ≈ {formatPrice(
-                              convertBetweenCurrencies(item.unit_price * item.quantity, item.currency, resolvedPaymentCurrency),
+                              convertBetweenCurrencies(
+                                item.unit_price * item.quantity,
+                                item.currency,
+                                resolvedPaymentCurrency,
+                                cupPerUnit,
+                              ),
                               resolvedPaymentCurrency,
                             )}
                           </p>

@@ -1,8 +1,9 @@
+import { getCupPerUnit } from './exchangeRates'
 import { resolveDisplayPrice } from './displayPrice'
 
-export function resolveOrderLineItems(items, displayCurrency) {
+export function resolveOrderLineItems(items, displayCurrency, cupPerUnit = getCupPerUnit()) {
   return items.map((item) => {
-    const price = resolveDisplayPrice(item, displayCurrency)
+    const price = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
     return {
       product_id: item.id,
       name: item.name,

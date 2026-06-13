@@ -1,25 +1,21 @@
 import { formatPrice } from './money'
-
-/**
- * Tasas de referencia temporales hasta integrar El Toque.
- * Valor: cuántos CUP equivalen a 1 unidad de la moneda.
- */
-const STUB_CUP_PER_UNIT = {
-  CUP: 1,
-  USD: 250,
-  MLC: 250,
-}
+import { FALLBACK_CUP_PER_UNIT, getCupPerUnit } from './exchangeRates'
 
 function productAcceptsCurrency(product, currencyCode) {
   if (product.base_currency === currencyCode) return true
   return (product.accepted_currencies ?? []).includes(currencyCode)
 }
 
-export function convertBetweenCurrencies(amount, fromCurrency, toCurrency) {
+export function convertBetweenCurrencies(
+  amount,
+  fromCurrency,
+  toCurrency,
+  cupPerUnit = getCupPerUnit(),
+) {
   if (fromCurrency === toCurrency) return amount
 
-  const fromRate = STUB_CUP_PER_UNIT[fromCurrency]
-  const toRate = STUB_CUP_PER_UNIT[toCurrency]
+  const fromRate = cupPerUnit[fromCurrency] ?? FALLBACK_CUP_PER_UNIT[fromCurrency]
+  const toRate = cupPerUnit[toCurrency] ?? FALLBACK_CUP_PER_UNIT[toCurrency]
   if (!fromRate || !toRate) return amount
 
   const inCup = amount * fromRate
@@ -36,7 +32,7 @@ export function convertBetweenCurrencies(amount, fromCurrency, toCurrency) {
  * Resuelve el precio a mostrar según la moneda elegida por el comprador.
  * Solo convierte si la tienda acepta esa moneda; si no, mantiene el precio base.
  */
-export function resolveDisplayPrice(product, displayCurrency) {
+export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCupPerUnit()) {
   const baseAmount = Number(product.base_price)
   const baseCurrency = product.base_currency
 
@@ -58,7 +54,7 @@ export function resolveDisplayPrice(product, displayCurrency) {
     }
   }
 
-  const amount = convertBetweenCurrencies(baseAmount, baseCurrency, displayCurrency)
+  const amount = convertBetweenCurrencies(baseAmount, baseCurrency, displayCurrency, cupPerUnit)
   return {
     amount,
     currency: displayCurrency,

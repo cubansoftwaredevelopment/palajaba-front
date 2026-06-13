@@ -6,7 +6,8 @@ import AuthShell from '../components/auth/AuthShell'
 import { authPageIntro, authPaymentGrid } from '../components/auth/authStyles'
 import RegisterProgress from '../components/auth/RegisterProgress'
 import Button from '../components/Button'
-import { formatPlanAmount, getPlanPrice, getPlanTier, normalizePlanTier } from '../constants/plan'
+import { getPlanTier, normalizePlanTier } from '../constants/plan'
+import { usePlanPricing } from '../lib/usePlanPricing'
 import {
   PAYMENT_CARD_NUMBER,
   PAYMENT_PHONE,
@@ -18,6 +19,7 @@ export default function RegisterPayment() {
   const location = useLocation()
   const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
   const planTier = normalizePlanTier(location.state?.planTier)
+  const { getPlanPrice, formatPlanAmount } = usePlanPricing()
   const price = getPlanPrice(planTier, billing)
   const tier = getPlanTier(planTier)
   const [copied, setCopied] = useState(null)

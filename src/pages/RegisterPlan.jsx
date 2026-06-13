@@ -14,10 +14,9 @@ import {
   PLAN_TAGLINE,
   PLAN_TIER_ORDER,
   PLAN_TIERS,
-  formatPlanAmount,
-  getPlanPrice,
   normalizePlanTier,
 } from '../constants/plan'
+import { usePlanPricing } from '../lib/usePlanPricing'
 
 function CheckIcon() {
   return (
@@ -64,7 +63,7 @@ function BillingToggle({ billing, onChange }) {
   )
 }
 
-function PlanCard({ tier, billing, selected, onSelect }) {
+function PlanCard({ tier, billing, selected, onSelect, getPlanPrice, getPlanYearlySavings, formatPlanAmount }) {
   const price = getPlanPrice(tier.id, billing)
 
   return (
@@ -102,7 +101,7 @@ function PlanCard({ tier, billing, selected, onSelect }) {
 
       {billing === 'yearly' ? (
         <p className="mt-2 text-xs font-medium text-brand-green">
-          Ahorra {formatPlanAmount(tier.yearlySavings)} al año.
+          Ahorra {formatPlanAmount(getPlanYearlySavings(tier.id))} al año.
         </p>
       ) : null}
 
@@ -120,11 +119,13 @@ function PlanCard({ tier, billing, selected, onSelect }) {
   )
 }
 
-export default function RegisterPlan() {
+export default function RegisterPlan({ promoUnavailableMessage = '' }) {
   const navigate = useNavigate()
   const [billing, setBilling] = useState('monthly')
   const [planTier, setPlanTier] = useState('standard')
+  const { getPlanPrice, getPlanYearlySavings, formatPlanAmount } = usePlanPricing()
   const selectedTier = PLAN_TIERS[normalizePlanTier(planTier)]
+  const selectedPrice = getPlanPrice(planTier, billing)
 
   return (
     <AuthShell backTo="/" backLabel="Inicio">
@@ -136,6 +137,9 @@ export default function RegisterPlan() {
             description={PLAN_TAGLINE}
             layout="desktop-left"
           />
+          {promoUnavailableMessage ? (
+            <p className="mt-2 text-xs text-brand-carmelita/80">{promoUnavailableMessage}</p>
+          ) : null}
           <RegisterProgress currentStep={1} />
         </div>
 
@@ -151,6 +155,9 @@ export default function RegisterPlan() {
                   billing={billing}
                   selected={planTier === tierId}
                   onSelect={setPlanTier}
+                  getPlanPrice={getPlanPrice}
+                  getPlanYearlySavings={getPlanYearlySavings}
+                  formatPlanAmount={formatPlanAmount}
                 />
               ))}
             </div>
@@ -169,9 +176,9 @@ export default function RegisterPlan() {
                   Facturación {billing === 'yearly' ? 'anual' : 'mensual'}
                 </p>
                 <p className="mt-3 text-3xl font-bold text-brand-green">
-                  {formatPlanAmount(getPlanPrice(planTier, billing).amount)}
+                  {formatPlanAmount(selectedPrice.amount)}
                   <span className="ml-1 text-base font-semibold text-brand-carmelita/80">
-                    /{getPlanPrice(planTier, billing).label}
+                    /{selectedPrice.label}
                   </span>
                 </p>
               </div>

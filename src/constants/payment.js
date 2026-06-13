@@ -1,4 +1,4 @@
-export const PAYMENT_CARD_NUMBER = '9234 5678 9012 3456'
+export const PAYMENT_CARD_NUMBER = '9205 0699 9375 9850'
 export const PAYMENT_PHONE = '+53 63287864'
 
 /** Ruta de la imagen del QR en /public (reemplaza payment-qr.png con tu imagen) */

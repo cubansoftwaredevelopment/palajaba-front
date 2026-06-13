@@ -42,7 +42,7 @@ function buildCheckoutPayload(group, storeItems) {
 }
 
 export function BuyerJabaProvider({ children }) {
-  const { currency: displayCurrency } = useBuyerDisplayCurrency()
+  const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
   const [items, setItems] = useState(getJabaItems)
   const [open, setOpen] = useState(false)
   const [syncingContacts, setSyncingContacts] = useState(false)
@@ -130,6 +130,7 @@ export function BuyerJabaProvider({ children }) {
       items: payload.items,
       delivery,
       displayCurrency,
+      cupPerUnit,
     })
 
     if (!opened) return false
@@ -139,12 +140,13 @@ export function BuyerJabaProvider({ children }) {
       items: payload.items,
       delivery,
       displayCurrency,
+      cupPerUnit,
     }).catch((err) => {
       console.error('No se pudo registrar el pedido en Pa\' La Jaba:', err)
     })
 
     return true
-  }, [displayCurrency])
+  }, [cupPerUnit, displayCurrency])
 
   const addProduct = useCallback((product) => {
     addToJaba(product)

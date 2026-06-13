@@ -1,4 +1,8 @@
-export const PLAN_CURRENCY = 'USD'
+import { convertBetweenCurrencies } from '../lib/displayPrice'
+import { getCupPerUnit } from '../lib/exchangeRates'
+
+export const PLAN_SOURCE_CURRENCY = 'USD'
+export const PLAN_DISPLAY_CURRENCY = 'CUP'
 
 export const PLAN_TAGLINE =
   'Elige el plan que mejor se adapte a tu negocio y empieza a vender sin complicaciones.'
@@ -15,10 +19,10 @@ export const PLAN_TIERS = {
       'Impresión de tickets para mensajeros',
     ],
     prices: {
-      monthly: { amount: 2, label: 'mes', period: 'monthly', currency: PLAN_CURRENCY },
-      yearly: { amount: 20, label: 'año', period: 'yearly', currency: PLAN_CURRENCY },
+      monthly: { amountUsd: 2, label: 'mes', period: 'monthly' },
+      yearly: { amountUsd: 20, label: 'año', period: 'yearly' },
     },
-    yearlySavings: 4,
+    yearlySavingsUsd: 4,
   },
   premium: {
     id: 'premium',
@@ -30,10 +34,10 @@ export const PLAN_TIERS = {
       'Boost en recomendaciones (×2 visibilidad)',
     ],
     prices: {
-      monthly: { amount: 4, label: 'mes', period: 'monthly', currency: PLAN_CURRENCY },
-      yearly: { amount: 30, label: 'año', period: 'yearly', currency: PLAN_CURRENCY },
+      monthly: { amountUsd: 4, label: 'mes', period: 'monthly' },
+      yearly: { amountUsd: 30, label: 'año', period: 'yearly' },
     },
-    yearlySavings: 18,
+    yearlySavingsUsd: 18,
   },
 }
 
@@ -47,12 +51,27 @@ export function getPlanTier(tierId) {
   return PLAN_TIERS[normalizePlanTier(tierId)]
 }
 
-export function getPlanPrice(tier, billing) {
+export function getPlanPriceUsd(tier, billing) {
   const period = billing === 'yearly' ? 'yearly' : 'monthly'
   return getPlanTier(tier).prices[period]
 }
 
-export function formatPlanAmount(amount, currency = PLAN_CURRENCY) {
+export function getPlanPrice(tier, billing, cupPerUnit = getCupPerUnit()) {
+  const usdPrice = getPlanPriceUsd(tier, billing)
+  return {
+    ...usdPrice,
+    amountUsd: usdPrice.amountUsd,
+    amount: convertBetweenCurrencies(usdPrice.amountUsd, PLAN_SOURCE_CURRENCY, PLAN_DISPLAY_CURRENCY, cupPerUnit),
+    currency: PLAN_DISPLAY_CURRENCY,
+  }
+}
+
+export function getPlanYearlySavings(tier, cupPerUnit = getCupPerUnit()) {
+  const savingsUsd = getPlanTier(tier).yearlySavingsUsd
+  return convertBetweenCurrencies(savingsUsd, PLAN_SOURCE_CURRENCY, PLAN_DISPLAY_CURRENCY, cupPerUnit)
+}
+
+export function formatPlanAmount(amount, currency = PLAN_DISPLAY_CURRENCY) {
   return `${Number(amount).toLocaleString('es')} ${currency}`
 }
 

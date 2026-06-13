@@ -34,6 +34,7 @@ function WhatsAppIcon() {
 function StoreGroup({
   group,
   displayCurrency,
+  cupPerUnit,
   syncingContacts,
   onCheckout,
   onRequestDelivery,
@@ -44,7 +45,7 @@ function StoreGroup({
   const subtotalByCurrency = {}
 
   for (const item of group.items) {
-    const display = resolveDisplayPrice(item, displayCurrency)
+    const display = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
     const key = display.currency
     subtotalByCurrency[key] = (subtotalByCurrency[key] ?? 0) + display.amount * (item.quantity ?? 1)
   }
@@ -78,7 +79,7 @@ function StoreGroup({
       <ul className="mt-2">
         {group.items.map((item) => {
           const imageSrc = resolveMediaUrl(item.image_url)
-          const display = resolveDisplayPrice(item, displayCurrency)
+          const display = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
           const qty = item.quantity ?? 1
 
           return (
@@ -193,7 +194,7 @@ export default function BuyerJabaPanel() {
     removeProduct,
     setQuantity,
   } = useBuyerJaba()
-  const { currency: displayCurrency } = useBuyerDisplayCurrency()
+  const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
 
   useEffect(() => {
     if (!open) return undefined
@@ -262,6 +263,7 @@ export default function BuyerJabaPanel() {
                   key={group.store_id}
                   group={group}
                   displayCurrency={displayCurrency}
+                  cupPerUnit={cupPerUnit}
                   syncingContacts={syncingContacts}
                   onCheckout={checkoutStore}
                   onRequestDelivery={requestDeliveryCheckout}
