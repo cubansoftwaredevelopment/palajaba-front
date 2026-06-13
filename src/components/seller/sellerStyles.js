@@ -88,7 +88,13 @@ export const sellerFocusRing =
 export const sellerInput =
   'w-full min-h-10 rounded-xl border border-brand-green/15 bg-brand-white px-3 py-2.5 text-sm text-brand-green placeholder:text-brand-carmelita/45 focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/10'
 
+/** Inputs dentro de modales: 16px en móvil evita zoom de Safari iOS */
+export const sellerModalInput =
+  'w-full min-h-10 rounded-xl border border-brand-green/15 bg-brand-white px-3 py-2.5 text-base text-brand-green placeholder:text-brand-carmelita/45 focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/10 sm:text-sm'
+
 export const sellerTextarea = `${sellerInput} min-h-[5.5rem] resize-y py-2.5`
+
+export const sellerModalTextarea = `${sellerModalInput} min-h-[5.5rem] resize-y py-2.5`
 
 export const sellerChip = (active) =>
   `rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors touch-manipulation ${
@@ -213,7 +219,13 @@ export const sellerModalOverlay =
   'fixed inset-0 z-[200] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'
 
 export const sellerModalSheet =
-  'relative flex w-full max-w-md min-h-0 animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:max-h-[min(92dvh,760px)] sm:rounded-3xl'
+  'relative flex w-full max-w-md max-h-[min(92dvh,760px)] min-h-0 animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:rounded-3xl'
+
+export const sellerModalBody =
+  'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4'
+
+export const sellerModalFooter =
+  'shrink-0 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]'
 
 export const sellerNotificationsOverlay =
   'fixed inset-0 z-[200] flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'

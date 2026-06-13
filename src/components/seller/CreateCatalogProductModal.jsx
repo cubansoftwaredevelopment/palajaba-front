@@ -9,6 +9,7 @@ import { resolveMediaUrl } from '../../lib/media'
 import { getSellerToken } from '../../lib/sellerAuth'
 
 import CategoryAutocomplete from './CategoryAutocomplete'
+import SellerModalPortal from './SellerModalPortal'
 
 import {
 
@@ -28,13 +29,21 @@ import {
 
   sellerHint,
 
-  sellerInput,
-
   sellerLabel,
 
-  sellerModalTitle,
+  sellerModalBody,
 
-  sellerTextarea,
+  sellerModalFooter,
+
+  sellerModalInput,
+
+  sellerModalOverlay,
+
+  sellerModalSheet,
+
+  sellerModalTextarea,
+
+  sellerModalTitle,
 
 } from './sellerStyles'
 
@@ -502,43 +511,45 @@ export default function CreateCatalogProductModal({
 
   return (
 
-    <div
-
-      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-
-      role="dialog"
-
-      aria-modal="true"
-
-      aria-labelledby="catalog-product-form-title"
-
-      onClick={onClose}
-
-    >
+    <SellerModalPortal>
 
       <div
 
-        className="flex max-h-[92dvh] w-full max-w-md animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.2)] sm:max-h-[90vh] sm:rounded-3xl"
+        className={sellerModalOverlay}
 
-        onClick={(event) => event.stopPropagation()}
+        role="dialog"
+
+        aria-modal="true"
+
+        aria-labelledby="catalog-product-form-title"
+
+        onClick={onClose}
 
       >
 
-        <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
+        <div
 
-          <h2 id="catalog-product-form-title" className={sellerModalTitle}>
+          className={sellerModalSheet}
 
-            {isEditing ? 'Editar producto' : 'Nuevo producto'}
+          onClick={(event) => event.stopPropagation()}
 
-          </h2>
+        >
 
-        </div>
+          <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
+
+            <h2 id="catalog-product-form-title" className={sellerModalTitle}>
+
+              {isEditing ? 'Editar producto' : 'Nuevo producto'}
+
+            </h2>
+
+          </div>
 
 
 
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
 
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+            <div className={sellerModalBody}>
 
             <input
 
@@ -626,9 +637,9 @@ export default function CreateCatalogProductModal({
 
               placeholder="Ej.: Arroz 1 kg"
 
-              className={`mt-1.5 ${sellerInput}`}
+              className={`mt-1.5 ${sellerModalInput}`}
 
-              autoFocus
+              autoComplete="off"
 
             />
 
@@ -654,7 +665,7 @@ export default function CreateCatalogProductModal({
 
               placeholder="Ingredientes, tallas, detalles…"
 
-              className={`mt-1.5 ${sellerTextarea}`}
+              className={`mt-1.5 ${sellerModalTextarea}`}
 
               rows={3}
 
@@ -684,7 +695,7 @@ export default function CreateCatalogProductModal({
 
               }}
 
-              className={`mt-1.5 ${sellerInput}`}
+              className={`mt-1.5 ${sellerModalInput}`}
 
               disabled={localCategories.length === 0}
 
@@ -740,6 +751,10 @@ export default function CreateCatalogProductModal({
 
                 disabled={businessCategories.length === 0}
 
+                dropdownZIndex={210}
+
+                useModalInput
+
               />
 
             </div>
@@ -780,7 +795,7 @@ export default function CreateCatalogProductModal({
 
                   placeholder="0.00"
 
-                  className={`mt-1.5 ${sellerInput}`}
+                  className={`mt-1.5 ${sellerModalInput}`}
 
                 />
 
@@ -802,7 +817,7 @@ export default function CreateCatalogProductModal({
 
                   onChange={(event) => setBaseCurrency(event.target.value)}
 
-                  className={`mt-1.5 ${sellerInput}`}
+                  className={`mt-1.5 ${sellerModalInput}`}
 
                 >
 
@@ -962,7 +977,7 @@ export default function CreateCatalogProductModal({
 
 
 
-          <div className="shrink-0 grid grid-cols-2 gap-2 border-t border-brand-green/8 px-5 py-4">
+          <div className={`${sellerModalFooter} grid grid-cols-2 gap-2`}>
 
             <button type="button" onClick={onClose} disabled={loading} className={sellerBtnSecondary}>
 
@@ -988,9 +1003,11 @@ export default function CreateCatalogProductModal({
 
         </form>
 
+        </div>
+
       </div>
 
-    </div>
+    </SellerModalPortal>
 
   )
 

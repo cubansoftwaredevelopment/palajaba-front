@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { sellerChip, sellerFocusRing, sellerInput } from './sellerStyles'
+import { sellerChip, sellerFocusRing, sellerInput, sellerModalInput } from './sellerStyles'
 
 function normalizeQuery(value) {
   return value.trim().toLowerCase()
@@ -14,6 +14,8 @@ export default function CategoryAutocomplete({
   placeholder = 'Buscar categoría…',
   disabled = false,
   emptyLabel = 'Sin coincidencias',
+  dropdownZIndex = 60,
+  useModalInput = false,
 }) {
   const listId = useId()
   const rootRef = useRef(null)
@@ -22,6 +24,8 @@ export default function CategoryAutocomplete({
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const [dropdownStyle, setDropdownStyle] = useState(null)
+
+  const inputClassName = useModalInput ? sellerModalInput : sellerInput
 
   const selectedIds = useMemo(() => {
     if (multiple) return Array.isArray(value) ? value : []
@@ -59,7 +63,7 @@ export default function CategoryAutocomplete({
         top: rect.bottom + 4,
         left: rect.left,
         width: rect.width,
-        zIndex: 60,
+        zIndex: dropdownZIndex,
       })
     }
 
@@ -71,7 +75,7 @@ export default function CategoryAutocomplete({
       window.removeEventListener('resize', updatePosition)
       window.removeEventListener('scroll', updatePosition, true)
     }
-  }, [open])
+  }, [open, dropdownZIndex])
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -200,7 +204,7 @@ export default function CategoryAutocomplete({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled || categories.length === 0}
-          className={`${sellerInput} pr-9 ${sellerFocusRing}`}
+          className={`${inputClassName} pr-9 ${sellerFocusRing}`}
           autoComplete="off"
         />
         <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-brand-carmelita/70">
