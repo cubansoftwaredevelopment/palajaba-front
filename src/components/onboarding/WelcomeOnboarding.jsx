@@ -61,7 +61,7 @@ export default function WelcomeOnboarding({ onComplete }) {
         aria-hidden="true"
       />
 
-      <header className="relative z-10 flex items-center justify-between gap-4 px-5 pt-[max(1rem,env(safe-area-inset-top))] sm:px-8">
+      <header className="relative z-10 flex items-center justify-between gap-4 px-5 pt-[max(1rem,var(--safe-top))] sm:px-8">
         <div className="flex items-center gap-1.5" aria-label={`Paso ${step + 1} de ${WELCOME_ONBOARDING_SLIDES.length}`}>
           {WELCOME_ONBOARDING_SLIDES.map((item, index) => (
             <span
@@ -124,7 +124,7 @@ export default function WelcomeOnboarding({ onComplete }) {
         </div>
       </section>
 
-      <footer className="relative z-10 px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-2 sm:px-8">
+      <footer className="relative z-10 px-5 pb-[max(1.25rem,var(--safe-bottom))] pt-2 sm:px-8">
         <Button variant={accent.buttonVariant} onClick={goNext}>
           {isLast ? 'Empezar' : 'Siguiente'}
         </Button>

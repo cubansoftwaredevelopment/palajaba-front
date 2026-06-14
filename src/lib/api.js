@@ -1,3 +1,5 @@
+import { downloadBlob } from './downloadFile'
+
 /** En dev usa rutas relativas → proxy de Vite. En prod usa VITE_API_URL. */
 function getApiBase() {
   if (import.meta.env.DEV) return ''
@@ -631,12 +633,7 @@ export async function downloadSellerOrderInvoice(token, orderId, type = 'store')
   const match = disposition.match(/filename="([^"]+)"/)
   const filename = match?.[1] ?? `pedido-${orderId.slice(-6).toUpperCase()}-${type}.pdf`
 
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = filename
-  link.click()
-  URL.revokeObjectURL(url)
+  await downloadBlob(blob, filename, 'application/pdf')
 }
 
 export function fetchMarketplaceCategoryProducts({

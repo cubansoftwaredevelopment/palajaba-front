@@ -41,7 +41,7 @@ export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart =
       </header>
 
       <div className="buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
-        <div className="mx-auto w-full max-w-md px-5 pb-[max(2rem,env(safe-area-inset-bottom))] pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pb-10 lg:pt-8">
+        <div className="mx-auto w-full max-w-md px-5 pb-[max(2rem,var(--safe-bottom))] pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pb-10 lg:pt-8">
           {children}
         </div>
       </div>

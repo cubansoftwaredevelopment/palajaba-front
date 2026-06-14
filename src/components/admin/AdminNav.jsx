@@ -48,7 +48,7 @@ export default function AdminNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-20 w-full max-w-[100dvw] border-t border-brand-green/10 bg-[#0b0e0a]/92 shadow-[0_-8px_32px_rgba(0,0,0,0.35)] backdrop-blur-md"
-      style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+      style={{ paddingBottom: 'max(0.375rem, var(--safe-bottom))' }}
       aria-label="Secciones del panel"
     >
       <div className="mx-auto flex w-full min-w-0 max-w-3xl px-0.5">

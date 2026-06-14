@@ -54,9 +54,9 @@ export default function AuthShell({
 
       <div className="auth-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
         <div
-          className={`mx-auto flex w-full flex-col px-5 pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-6 lg:px-10 lg:pb-10 ${
+          className={`mx-auto flex w-full flex-col px-5 pb-[max(2rem,var(--safe-bottom))] sm:px-6 lg:px-10 lg:pb-10 ${
             hideHeader
-              ? 'min-h-full justify-center pt-[max(1.5rem,env(safe-area-inset-top))]'
+              ? 'min-h-full justify-center pt-[max(1.5rem,var(--safe-top))]'
               : 'pt-4 lg:pt-6'
           } ${widthClass}`}
         >

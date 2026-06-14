@@ -54,7 +54,7 @@ export default function Welcome() {
   }
 
   return (
-    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-brand-white px-5 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8">
+    <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-brand-white px-5 pt-[max(1.5rem,var(--safe-top))] pb-[max(1.5rem,var(--safe-bottom))] sm:px-8">
       <div
         className="pointer-events-none absolute -right-20 top-10 h-64 w-64 rounded-full bg-brand-yellow/15 blur-3xl"
         aria-hidden="true"

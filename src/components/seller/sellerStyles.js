@@ -26,7 +26,7 @@ export const sellerMain =
   'mx-auto w-full max-w-md px-4 pb-28 pt-4 sm:px-5 sm:pb-8 lg:mx-0 lg:max-w-none lg:px-8 lg:py-8 lg:pb-8'
 
 export const sellerMainWithNav =
-  'mx-auto w-full max-w-md px-4 pb-[calc(4.75rem+env(safe-area-inset-bottom))] pt-4 sm:px-5 lg:mx-0 lg:max-w-none lg:px-8 lg:py-8 lg:pb-8'
+  'mx-auto w-full max-w-md px-4 pb-[calc(4.75rem+var(--safe-bottom))] pt-4 sm:px-5 lg:mx-0 lg:max-w-none lg:px-8 lg:py-8 lg:pb-8'
 
 /** Main del catálogo: fondo verde a altura del área visible; el scroll va en sellerCatalogSection */
 export const sellerMainCatalog =
@@ -59,7 +59,7 @@ export const sellerSubtitleOnDark =
 
 /** Contenido scrolleable del catálogo (el verde lo pone sellerMainCatalog) */
 export const sellerCatalogSection =
-  'seller-catalog-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain touch-pan-y px-4 pt-4 pb-[calc(4.75rem+env(safe-area-inset-bottom))] sm:px-5 lg:overflow-y-auto lg:px-8 lg:pb-8 lg:pt-8'
+  'seller-catalog-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain touch-pan-y px-4 pt-4 pb-[calc(4.75rem+var(--safe-bottom))] sm:px-5 lg:overflow-y-auto lg:px-8 lg:pb-8 lg:pt-8'
 
 export const sellerSection =
   'rounded-2xl border border-brand-green/12 bg-brand-white p-3.5 shadow-[0_2px_12px_rgba(89,128,44,0.06)] sm:p-4'
@@ -111,7 +111,7 @@ export const sellerChoice = (active) =>
   }`
 
 export const sellerStickyBar =
-  'fixed inset-x-0 bottom-0 z-30 border-t border-brand-green/10 bg-brand-white/95 px-4 py-3 backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none'
+  'fixed inset-x-0 bottom-0 z-30 border-t border-brand-green/10 bg-brand-white/95 px-4 py-3 backdrop-blur-md pb-[max(0.75rem,var(--safe-bottom))] sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none'
 
 export const sellerAlertError =
   'rounded-xl border border-brand-carmelita/15 bg-brand-carmelita/8 px-3 py-2.5 text-center text-xs text-brand-carmelita sm:text-sm'
@@ -225,7 +225,7 @@ export const sellerModalBody =
   'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4'
 
 export const sellerModalFooter =
-  'shrink-0 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]'
+  'shrink-0 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]'
 
 export const sellerNotificationsOverlay =
   'fixed inset-0 z-[200] flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'

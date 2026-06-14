@@ -250,7 +250,7 @@ export const buyerJabaSyncItemBadge =
 export const buyerJabaSyncItemMessage = 'mt-1.5 text-sm leading-snug text-brand-carmelita/85'
 
 export const buyerJabaSyncFooter =
-  'shrink-0 flex flex-col gap-2 border-t border-brand-green/8 bg-brand-white/95 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm'
+  'shrink-0 flex flex-col gap-2 border-t border-brand-green/8 bg-brand-white/95 px-5 py-4 pb-[max(1rem,var(--safe-bottom))] backdrop-blur-sm'
 
 export const buyerDeliveryOverlay =
   'fixed inset-0 z-[90] bg-brand-green/25 backdrop-blur-[2px]'
@@ -313,7 +313,7 @@ export const buyerProductDetailSpecValue =
   'mt-1 text-sm font-semibold leading-snug text-brand-green'
 
 export const buyerProductDetailStickyBar =
-  'shrink-0 border-t border-brand-green/10 bg-brand-white/95 px-5 py-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(89,128,44,0.08)] backdrop-blur-md'
+  'shrink-0 border-t border-brand-green/10 bg-brand-white/95 px-5 py-3 pb-[max(0.85rem,var(--safe-bottom))] shadow-[0_-8px_24px_rgba(89,128,44,0.08)] backdrop-blur-md'
 
 export const buyerProductDetailStickyPriceLabel =
   'text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70'

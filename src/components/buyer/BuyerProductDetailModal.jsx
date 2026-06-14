@@ -492,7 +492,7 @@ export default function BuyerProductDetailModal({
 
           ) : soldOut ? (
 
-            <div className="shrink-0 border-t border-brand-green/8 bg-brand-white/95 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+            <div className="shrink-0 border-t border-brand-green/8 bg-brand-white/95 px-5 py-4 pb-[max(1rem,var(--safe-bottom))] backdrop-blur-sm">
 
               <p className="rounded-xl border border-brand-carmelita/20 bg-brand-carmelita/8 px-3 py-2.5 text-center text-sm font-medium text-brand-green">
 
@@ -504,7 +504,7 @@ export default function BuyerProductDetailModal({
 
           ) : (
 
-            <div className="shrink-0 border-t border-brand-green/8 bg-brand-white/95 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+            <div className="shrink-0 border-t border-brand-green/8 bg-brand-white/95 px-5 py-4 pb-[max(1rem,var(--safe-bottom))] backdrop-blur-sm">
 
               <p className="rounded-xl border border-brand-yellow/25 bg-brand-yellow/12 px-3 py-2.5 text-center text-sm font-medium text-brand-green">
 

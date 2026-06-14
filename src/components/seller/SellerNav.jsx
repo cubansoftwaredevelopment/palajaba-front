@@ -46,7 +46,7 @@ export function SellerBottomNav({ items = SELLER_NAV }) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 w-full max-w-[100dvw] border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md lg:hidden"
-      style={{ paddingBottom: 'max(0.375rem, env(safe-area-inset-bottom))' }}
+      style={{ paddingBottom: 'max(0.375rem, var(--safe-bottom))' }}
       aria-label="Secciones de tu tienda"
     >
       <div className="mx-auto flex w-full min-w-0 max-w-md items-stretch px-0.5 sm:px-1">

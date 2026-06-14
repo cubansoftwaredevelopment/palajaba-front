@@ -508,7 +508,7 @@ export default function SellerOrderDetailModal({
           ) : null}
         </div>
 
-        <div className="shrink-0 flex flex-col gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="shrink-0 flex flex-col gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
           {isPending && hasPendingChanges ? (
             <button
               type="button"

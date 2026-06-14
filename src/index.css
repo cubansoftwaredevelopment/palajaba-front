@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @import 'react-day-picker/style.css';
 
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 @theme {
   /* Libre Baskerville (Google Fonts): serif similar to Utopia, self-hosted for fast load */
   --font-sans: 'Libre Baskerville', Georgia, 'Times New Roman', serif;

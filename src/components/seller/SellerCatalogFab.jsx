@@ -28,7 +28,7 @@ export default function SellerCatalogFab({ onAddCategory, onAddProduct }) {
   }, [open])
 
   return (
-    <div ref={rootRef} className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom)+0.75rem)] right-4 z-40 flex flex-col items-end gap-2 lg:bottom-8 lg:right-8">
+    <div ref={rootRef} className="fixed bottom-[calc(4.75rem+var(--safe-bottom)+0.75rem)] right-4 z-40 flex flex-col items-end gap-2 lg:bottom-8 lg:right-8">
       {open && (
         <div className="flex flex-col items-end gap-2 animate-fade-in">
           <button
