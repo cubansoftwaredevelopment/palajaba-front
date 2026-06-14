@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthCard from '../components/auth/AuthCard'
 import AuthHeader from '../components/auth/AuthHeader'
@@ -10,7 +10,7 @@ import Button from '../components/Button'
 import SubscriptionExpiredScreen from '../components/seller/SubscriptionExpiredScreen'
 import { alertErrorClass, inputClass, labelClass } from '../components/auth/formStyles'
 import { ApiError, sellerLogin } from '../lib/api'
-import { setSellerSession } from '../lib/sellerAuth'
+import { isSellerAuthenticated, setSellerSession } from '../lib/sellerAuth'
 import { getUserFacingMessage } from '../lib/userFacingError'
 const LOGIN_METHODS = [
   { id: 'phone', label: 'Teléfono' },
@@ -28,6 +28,12 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [expiredInfo, setExpiredInfo] = useState(null)
+
+  useEffect(() => {
+    if (isSellerAuthenticated()) {
+      navigate(redirectTo, { replace: true })
+    }
+  }, [navigate, redirectTo])
 
   async function handleSubmit(e) {
     e.preventDefault()
