@@ -26,7 +26,8 @@ const METRIC_ACCENTS = {
   payments: 'border-t-brand-green',
   stores: 'border-t-emerald-400/70',
   pending: 'border-t-brand-yellow',
-  orders: 'border-t-zinc-600',
+  products: 'border-t-sky-400/70',
+  orders: 'border-t-violet-400/70',
 }
 
 function MetricCard({ label, hint, value, subvalue, comingSoon, accent = 'payments' }) {
@@ -127,8 +128,8 @@ export default function AdminStats() {
           <div>
             <h2 className="font-medium text-zinc-50">Resumen de la plataforma</h2>
             <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
-              Los pagos de suscripción se registran al aprobar cada tienda. El total del mes
-              suma los montos aprobados en {periodLabel || 'este mes'}.
+              Pagos de suscripción, tiendas activas, catálogo y pedidos en toda la plataforma.
+              Los pagos del mes suman los montos aprobados en {periodLabel || 'este mes'}.
             </p>
           </div>
         </div>
@@ -168,11 +169,16 @@ export default function AdminStats() {
           value={loading ? '…' : String(stats?.pending_registrations ?? 0)}
         />
         <MetricCard
+          accent="products"
+          label="Productos publicados"
+          hint="Total en catálogos de todas las tiendas"
+          value={loading ? '…' : String(stats?.published_products ?? 0)}
+        />
+        <MetricCard
           accent="orders"
-          label="Pedidos del mes"
-          hint="Compras en la plataforma"
-          value="—"
-          comingSoon
+          label="Pedidos realizados"
+          hint="Compras registradas en la plataforma"
+          value={loading ? '…' : String(stats?.orders_total ?? 0)}
         />
       </div>
       )}
