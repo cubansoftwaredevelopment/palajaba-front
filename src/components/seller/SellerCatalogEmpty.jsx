@@ -1,5 +1,5 @@
 import { CATALOG_ONBOARDING_STEPS } from '../../constants/catalog'
-import { sellerBtnPrimary, sellerBtnSecondary, sellerComingSoon } from './sellerStyles'
+import { sellerBtnPrimary, sellerComingSoon } from './sellerStyles'
 
 function CatalogIllustration() {
   return (
@@ -26,7 +26,7 @@ function CatalogIllustration() {
   )
 }
 
-export default function SellerCatalogEmpty({ onCreateCategory, onCreateProduct }) {
+export default function SellerCatalogEmpty({ onCreateCategory }) {
   return (
     <div className="overflow-hidden rounded-3xl border border-brand-white/25 bg-brand-white shadow-[0_8px_32px_rgba(0,0,0,0.14)] sm:shadow-[0_12px_40px_rgba(0,0,0,0.16)]">
       <div className="bg-gradient-to-b from-brand-yellow/22 via-brand-white to-brand-white px-5 pb-1 pt-5 sm:px-6 sm:pt-6">
@@ -63,9 +63,6 @@ export default function SellerCatalogEmpty({ onCreateCategory, onCreateProduct }
         <div className="mt-5 flex flex-col gap-2">
           <button type="button" onClick={onCreateCategory} className={sellerBtnPrimary}>
             Crear primera categoría
-          </button>
-          <button type="button" onClick={onCreateProduct} className={sellerBtnSecondary}>
-            Agregar producto
           </button>
           <p className={`text-center ${sellerComingSoon}`}>
             La categoría local organiza tu tienda; la global clasifica el producto en el marketplace.

@@ -8,6 +8,7 @@ import DeleteCatalogCategoryModal from '../../components/seller/DeleteCatalogCat
 import DeleteCatalogProductModal from '../../components/seller/DeleteCatalogProductModal'
 import ReorderCatalogCategoriesModal from '../../components/seller/ReorderCatalogCategoriesModal'
 import SellerCatalogEmpty from '../../components/seller/SellerCatalogEmpty'
+import SellerCatalogFab from '../../components/seller/SellerCatalogFab'
 import SellerCatalogView from '../../components/seller/SellerCatalogView'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import ShareCatalogModal from '../../components/seller/ShareCatalogModal'
@@ -200,22 +201,24 @@ export default function SellerCatalog() {
         ) : null}
 
         {!loading && !error && !hasLocalCategories && (
-          <SellerCatalogEmpty
-            onCreateCategory={() => setShowCreateCategory(true)}
-            onCreateProduct={() => openCreateProduct()}
-          />
+          <SellerCatalogEmpty onCreateCategory={() => setShowCreateCategory(true)} />
         )}
 
         {!loading && !error && hasLocalCategories && (
-          <SellerCatalogView
-            summary={summary}
-            onAddCategory={() => setShowCreateCategory(true)}
-            onAddProduct={openCreateProduct}
-            onViewProduct={setProductToView}
-            onEditProduct={setProductToEdit}
-            onDeleteProduct={setProductToDelete}
-            onDeleteCategory={setCategoryToDelete}
-          />
+          <>
+            <SellerCatalogView
+              summary={summary}
+              onAddProduct={openCreateProduct}
+              onViewProduct={setProductToView}
+              onEditProduct={setProductToEdit}
+              onDeleteProduct={setProductToDelete}
+              onDeleteCategory={setCategoryToDelete}
+            />
+            <SellerCatalogFab
+              onAddCategory={() => setShowCreateCategory(true)}
+              onAddProduct={() => openCreateProduct()}
+            />
+          </>
         )}
 
         {productToView && (
