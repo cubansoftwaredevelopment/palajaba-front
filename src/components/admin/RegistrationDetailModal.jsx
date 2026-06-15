@@ -5,7 +5,7 @@ import { BILLING_LABELS, PLAN_TIER_LABELS, REJECTION_REASON, STATUS_LABELS } fro
 import { normalizePlanTier } from '../../constants/plan'
 import { daysUntil, formatDateTime } from '../../lib/dates'
 import { formatPrice } from '../../lib/money'
-import { storeNameToSlug, storePublicPath } from '../../lib/storeSlug'
+import { storePublicPath } from '../../lib/storeSlug'
 import { adminMuted, adminSubtle } from './adminStyles'
 
 const STATUS_STYLES = {
@@ -63,7 +63,9 @@ export default function RegistrationDetailModal({
   const statusClass = STATUS_STYLES[item.status] ?? STATUS_STYLES.pending
   const days = item.subscription_ends_at ? daysUntil(item.subscription_ends_at) : null
   const publicCatalogPath =
-    item.status === 'approved' ? storePublicPath(storeNameToSlug(item.store_name)) : null
+    item.status === 'approved' && item.profile_completed
+      ? storePublicPath(item.store_slug)
+      : null
 
   function openPublicCatalog() {
     if (!publicCatalogPath) return
@@ -99,6 +101,20 @@ export default function RegistrationDetailModal({
           )}
         </DetailRow>
         <DetailRow label="Teléfono">{item.phone}</DetailRow>
+        {(item.status === 'approved' || item.status === 'expired') && (
+          <DetailRow label="Perfil público">
+            {item.profile_completed ? (
+              <span className="text-emerald-300">Completado</span>
+            ) : (
+              <span className="text-amber-300">
+                Incompleto — el catálogo público no se muestra hasta que el vendedor termine su perfil.
+              </span>
+            )}
+            {item.store_slug ? (
+              <span className={`mt-1 block font-mono text-xs ${adminSubtle}`}>/{item.store_slug}</span>
+            ) : null}
+          </DetailRow>
+        )}
         <DetailRow label="Plan contratado">
           {PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]} · {BILLING_LABELS[item.billing_period]}
         </DetailRow>
@@ -156,9 +172,15 @@ export default function RegistrationDetailModal({
 
       {item.status === 'approved' && (
         <div className="flex flex-col gap-2">
-          <AdminButton variant="secondary" onClick={openPublicCatalog}>
-            Ver catálogo público
-          </AdminButton>
+          {publicCatalogPath ? (
+            <AdminButton variant="secondary" onClick={openPublicCatalog}>
+              Ver catálogo público
+            </AdminButton>
+          ) : (
+            <p className={`rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2.5 text-center text-xs ${adminSubtle}`}>
+              El catálogo público estará disponible cuando el vendedor complete su perfil.
+            </p>
+          )}
           <AdminButton variant="secondary" onClick={() => onEditPayment(item)}>
             {item.payment_amount_cup != null ? 'Editar monto pagado' : 'Registrar monto pagado'}
           </AdminButton>

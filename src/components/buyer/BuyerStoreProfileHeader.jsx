@@ -42,7 +42,6 @@ export default function BuyerStoreProfileHeader({ catalog }) {
   const businessArea = formatArea(catalog.business_area)
   const instagram = socialUrl(catalog.social_instagram, 'instagram')
   const facebook = socialUrl(catalog.social_facebook, 'facebook')
-  const deliveryAreas = catalog.delivery_areas ?? []
   const hasMap = Boolean(catalog.business_location)
   const [mapOpen, setMapOpen] = useState(false)
 
@@ -113,15 +112,6 @@ export default function BuyerStoreProfileHeader({ catalog }) {
                   </button>
                 ) : null}
               </div>
-            </div>
-          ) : null}
-
-          {catalog.offers_delivery && deliveryAreas.length > 0 ? (
-            <div className={buyerStorePageMeta}>
-              <p className={buyerStorePageMetaLabel}>Zonas de entrega</p>
-              <p className={buyerStorePageMetaValue}>
-                {deliveryAreas.map((area) => formatArea(area)).filter(Boolean).join(' · ')}
-              </p>
             </div>
           ) : null}
         </div>
