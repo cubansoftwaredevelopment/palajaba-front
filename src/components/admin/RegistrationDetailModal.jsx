@@ -5,6 +5,7 @@ import { BILLING_LABELS, PLAN_TIER_LABELS, REJECTION_REASON, STATUS_LABELS } fro
 import { normalizePlanTier } from '../../constants/plan'
 import { daysUntil, formatDateTime } from '../../lib/dates'
 import { formatPrice } from '../../lib/money'
+import { storeNameToSlug, storePublicPath } from '../../lib/storeSlug'
 import { adminMuted, adminSubtle } from './adminStyles'
 
 const STATUS_STYLES = {
@@ -61,6 +62,13 @@ export default function RegistrationDetailModal({
 }) {
   const statusClass = STATUS_STYLES[item.status] ?? STATUS_STYLES.pending
   const days = item.subscription_ends_at ? daysUntil(item.subscription_ends_at) : null
+  const publicCatalogPath =
+    item.status === 'approved' ? storePublicPath(storeNameToSlug(item.store_name)) : null
+
+  function openPublicCatalog() {
+    if (!publicCatalogPath) return
+    window.open(publicCatalogPath, '_blank', 'noopener,noreferrer')
+  }
 
   return (
     <AdminModal
@@ -148,6 +156,9 @@ export default function RegistrationDetailModal({
 
       {item.status === 'approved' && (
         <div className="flex flex-col gap-2">
+          <AdminButton variant="secondary" onClick={openPublicCatalog}>
+            Ver catálogo público
+          </AdminButton>
           <AdminButton variant="secondary" onClick={() => onEditPayment(item)}>
             {item.payment_amount_cup != null ? 'Editar monto pagado' : 'Registrar monto pagado'}
           </AdminButton>
