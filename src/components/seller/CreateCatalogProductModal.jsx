@@ -81,6 +81,20 @@ function samePrice(input, original) {
 
 
 
+function buildBusinessCategories(allCategories, businessCategoryIds) {
+
+  return businessCategoryIds.map((id) => {
+
+    const match = allCategories.find((category) => category.id === id)
+
+    return match ?? { id, name: id }
+
+  })
+
+}
+
+
+
 export default function CreateCatalogProductModal({
 
   localCategories = [],
@@ -195,10 +209,9 @@ export default function CreateCatalogProductModal({
 
         ])
 
-        const allowedBusinessCategories = allBusinessCategories.filter((category) =>
-
-          businessCategoryIds.includes(category.id),
-
+        const allowedBusinessCategories = buildBusinessCategories(
+          allBusinessCategories,
+          businessCategoryIds,
         )
 
         if (!cancelled) {
@@ -746,6 +759,8 @@ export default function CreateCatalogProductModal({
                   setError('')
 
                 }}
+
+                multiple={false}
 
                 placeholder="Categoría de tu negocio…"
 
