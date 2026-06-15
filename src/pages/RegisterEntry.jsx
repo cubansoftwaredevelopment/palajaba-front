@@ -11,7 +11,6 @@ export default function RegisterEntry() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [promoAvailable, setPromoAvailable] = useState(false)
-  const [promoStatus, setPromoStatus] = useState(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -20,7 +19,6 @@ export default function RegisterEntry() {
     fetchLaunchPromoStatus()
       .then((data) => {
         if (!mounted) return
-        setPromoStatus(data)
         setPromoAvailable(Boolean(data?.available))
       })
       .catch(() => {
@@ -49,10 +47,7 @@ export default function RegisterEntry() {
 
   if (promoAvailable) {
     return (
-      <RegisterPromoWelcome
-        status={promoStatus}
-        onContinue={() => navigate('/registro/promo/datos')}
-      />
+      <RegisterPromoWelcome onContinue={() => navigate('/registro/promo/datos')} />
     )
   }
 

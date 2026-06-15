@@ -10,9 +10,7 @@ const PROMO_MASCOT = {
   name: 'Jabi',
 }
 
-export default function RegisterPromoWelcome({ status, onContinue }) {
-  const slotsRemaining = status?.slots_remaining ?? 0
-
+export default function RegisterPromoWelcome({ onContinue }) {
   return (
     <AuthShell backTo="/" backLabel="Inicio" contentWidth="narrow">
       <section className="animate-fade-in" aria-labelledby="promo-title">
@@ -53,11 +51,6 @@ export default function RegisterPromoWelcome({ status, onContinue }) {
               Te has ganado acceso inmediato al plan <strong className="text-brand-green">Premium</strong>{' '}
               durante 30 días, sin transferencia ni espera de aprobación.
             </p>
-            {slotsRemaining > 0 ? (
-              <p className="mt-3 text-xs font-semibold text-brand-green">
-                Quedan {slotsRemaining} de {status?.limit ?? 30} cupos de lanzamiento.
-              </p>
-            ) : null}
           </AuthCard>
 
           <div className="flex w-full flex-col gap-2.5">
