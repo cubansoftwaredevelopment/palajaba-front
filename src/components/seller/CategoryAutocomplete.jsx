@@ -22,6 +22,7 @@ export default function CategoryAutocomplete({
   const inputRef = useRef(null)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [queryTouched, setQueryTouched] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [dropdownStyle, setDropdownStyle] = useState(null)
 
@@ -38,14 +39,16 @@ export default function CategoryAutocomplete({
   )
 
   const filteredCategories = useMemo(() => {
-    const normalized = normalizeQuery(query)
     const pool = multiple
       ? categories.filter((category) => !selectedIds.includes(category.id))
       : categories
 
+    const shouldFilter = multiple || queryTouched
+    const normalized = shouldFilter ? normalizeQuery(query) : ''
+
     if (!normalized) return pool
     return pool.filter((category) => category.name.toLowerCase().includes(normalized))
-  }, [categories, multiple, query, selectedIds])
+  }, [categories, multiple, query, queryTouched, selectedIds])
 
   useEffect(() => {
     setActiveIndex(0)
@@ -82,6 +85,7 @@ export default function CategoryAutocomplete({
       if (!rootRef.current?.contains(event.target)) {
         setOpen(false)
         setQuery('')
+        setQueryTouched(false)
       }
     }
 
@@ -93,7 +97,8 @@ export default function CategoryAutocomplete({
     if (disabled || categories.length === 0) return
     setOpen(true)
     if (!multiple) {
-      setQuery(selectedCategories[0]?.name ?? '')
+      setQuery('')
+      setQueryTouched(false)
     }
   }
 
@@ -107,6 +112,7 @@ export default function CategoryAutocomplete({
 
     onChange(category.id)
     setQuery('')
+    setQueryTouched(false)
     setOpen(false)
     inputRef.current?.blur()
   }
@@ -117,6 +123,7 @@ export default function CategoryAutocomplete({
   }
 
   function handleInputChange(event) {
+    setQueryTouched(true)
     setQuery(event.target.value)
     if (!open) setOpen(true)
   }
@@ -134,6 +141,7 @@ export default function CategoryAutocomplete({
       event.preventDefault()
       setOpen(false)
       setQuery('')
+      setQueryTouched(false)
       return
     }
 
@@ -155,7 +163,13 @@ export default function CategoryAutocomplete({
     }
   }
 
-  const inputValue = multiple ? query : open ? query : selectedCategories[0]?.name ?? ''
+  const inputValue = multiple
+    ? query
+    : open
+      ? queryTouched
+        ? query
+        : selectedCategories[0]?.name ?? ''
+      : selectedCategories[0]?.name ?? ''
 
   return (
     <div ref={rootRef} className="relative">
