@@ -241,7 +241,6 @@ export default function SellerCatalog() {
         {showProductForm && summary && (
           <CreateCatalogProductModal
             localCategories={summary.categories}
-            businessCategoryIds={profile?.category_ids ?? []}
             initialLocalCategoryId={
               createProductLocalCategoryId || productToEdit?.category_id || ''
             }

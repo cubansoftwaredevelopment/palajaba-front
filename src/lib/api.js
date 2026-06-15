@@ -120,6 +120,14 @@ export function fetchSellerProfile(token) {
   })
 }
 
+export function fetchSellerBusinessCategories(token) {
+  return request('/api/auth/me/business-categories', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function fetchCategories() {
   return request('/api/categories/')
 }

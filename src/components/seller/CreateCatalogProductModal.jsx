@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../../lib/api'
+import { createCatalogProduct, fetchCatalogCurrencies, fetchSellerBusinessCategories, updateCatalogProduct } from '../../lib/api'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../lib/imageUpload'
 
@@ -80,26 +80,9 @@ function samePrice(input, original) {
 }
 
 
-
-function buildBusinessCategories(allCategories, businessCategoryIds) {
-
-  return businessCategoryIds.map((id) => {
-
-    const match = allCategories.find((category) => category.id === id)
-
-    return match ?? { id, name: id }
-
-  })
-
-}
-
-
-
 export default function CreateCatalogProductModal({
 
   localCategories = [],
-
-  businessCategoryIds = [],
 
   initialLocalCategoryId = '',
 
@@ -201,18 +184,13 @@ export default function CreateCatalogProductModal({
 
         const token = getSellerToken()
 
-        const [currencyData, allBusinessCategories] = await Promise.all([
+        const [currencyData, allowedBusinessCategories] = await Promise.all([
 
           fetchCatalogCurrencies(token),
 
-          fetchCategories(),
+          fetchSellerBusinessCategories(token),
 
         ])
-
-        const allowedBusinessCategories = buildBusinessCategories(
-          allBusinessCategories,
-          businessCategoryIds,
-        )
 
         if (!cancelled) {
 
@@ -230,15 +208,9 @@ export default function CreateCatalogProductModal({
 
           }
 
-          if (!localCategoryId && localCategories.length > 0) {
+          if (localCategories.length > 0) {
 
-            setLocalCategoryId((current) => current || localCategories[0].id)
-
-          }
-
-          if (!globalCategoryId && allowedBusinessCategories.length > 0) {
-
-            setGlobalCategoryId((current) => current || allowedBusinessCategories[0].id)
+            setLocalCategoryId((current) => current || initialLocalCategoryId || localCategories[0].id)
 
           }
 
@@ -268,7 +240,25 @@ export default function CreateCatalogProductModal({
 
     }
 
-  }, [businessCategoryIds, globalCategoryId, localCategories, localCategoryId])
+  }, [initialLocalCategoryId, localCategories])
+
+
+
+  useEffect(() => {
+
+    if (businessCategories.length === 0) return
+
+    const allowedIds = new Set(businessCategories.map((category) => category.id))
+
+    setGlobalCategoryId((current) => {
+
+      if (current && allowedIds.has(current)) return current
+
+      return businessCategories[0]?.id ?? ''
+
+    })
+
+  }, [businessCategories])
 
 
 
