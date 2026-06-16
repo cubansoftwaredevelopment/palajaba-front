@@ -9,6 +9,7 @@ import SellerBusinessAreaFields, {
 import SellerDeliveryZonesEditor from '../../components/seller/SellerDeliveryZonesEditor'
 import SellerLocationPreview from '../../components/seller/SellerLocationPreview'
 import SellerAdvancedProfileSettings from '../../components/seller/SellerAdvancedProfileSettings'
+import SellerMarketplaceCard from '../../components/seller/SellerMarketplaceCard'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import SellerProfileFieldGroup from '../../components/seller/SellerProfileFieldGroup'
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
@@ -277,6 +278,8 @@ export default function SellerProfile() {
           photoUploading={photoUploading}
           onPhotoClick={() => fileInputRef.current?.click()}
         />
+
+        <SellerMarketplaceCard profile={profile} />
 
         <input
           ref={fileInputRef}

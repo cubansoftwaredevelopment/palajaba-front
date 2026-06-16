@@ -12,6 +12,7 @@ import {
   getSellerToken,
   setSellerSession,
 } from '../../lib/sellerAuth'
+import { clearSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
 import { getSellerDefaultPath, getSellerNavItems } from '../../lib/planAccess'
 import { requestSellerOrdersRefresh } from '../../lib/sellerOrdersRefresh'
 import { isSessionError, resolveUserFacingError } from '../../lib/userFacingError'
@@ -40,6 +41,7 @@ export default function SellerLayout() {
   }, [])
 
   function confirmLogout() {
+    clearSellerMarketplaceVisit()
     clearSellerSession()
     setShowLogoutConfirm(false)
     navigate('/login', { replace: true })

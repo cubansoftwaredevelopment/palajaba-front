@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
 import BuyerJabaButton from './BuyerJabaButton'
 import BuyerJabaPanel from './BuyerJabaPanel'
+import {
+  BuyerSellerReturnFooter,
+  BuyerSellerReturnHeaderLink,
+} from './BuyerSellerReturnLink'
 
 export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart = null, headerEnd = null, children }) {
   const showBackLink = Boolean(backTo) && !headerStart
@@ -33,8 +37,9 @@ export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart =
           ) : (
             <span className="w-10" aria-hidden="true" />
           )}
-          <div className="flex shrink-0 items-center gap-2.5">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             {headerEnd}
+            <BuyerSellerReturnHeaderLink />
             <BuyerJabaButton />
           </div>
         </div>
@@ -45,6 +50,8 @@ export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart =
           {children}
         </div>
       </div>
+
+      <BuyerSellerReturnFooter />
 
       <BuyerJabaPanel />
     </main>
