@@ -149,7 +149,7 @@ export default function AdminStats() {
           accent="payments"
           label="Pagos del mes"
           hint="Monto total registrado al aprobar tiendas este mes"
-          value={loading ? '…' : formatPrice(stats?.payments_total_cup ?? 0, 'USD')}
+          value={loading ? '…' : formatPrice(stats?.payments_total_cup ?? 0, 'CUP')}
           subvalue={
             !loading && stats
               ? `${stats.payments_count} aprobación${stats.payments_count === 1 ? '' : 'es'}`
