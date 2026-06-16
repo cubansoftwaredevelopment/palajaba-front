@@ -119,7 +119,7 @@ function PlanCard({ tier, billing, selected, onSelect, getPlanPrice, getPlanYear
   )
 }
 
-export default function RegisterPlan({ promoUnavailableMessage = '' }) {
+export default function RegisterPlan() {
   const navigate = useNavigate()
   const [billing, setBilling] = useState('monthly')
   const [planTier, setPlanTier] = useState('standard')
@@ -137,9 +137,6 @@ export default function RegisterPlan({ promoUnavailableMessage = '' }) {
             description={PLAN_TAGLINE}
             layout="desktop-left"
           />
-          {promoUnavailableMessage ? (
-            <p className="mt-2 text-xs text-brand-carmelita/80">{promoUnavailableMessage}</p>
-          ) : null}
           <RegisterProgress currentStep={1} />
         </div>
 

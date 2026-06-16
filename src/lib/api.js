@@ -343,17 +343,6 @@ export function fetchExchangeRates() {
   return request('/api/platform/exchange-rates')
 }
 
-export function fetchLaunchPromoStatus() {
-  return request('/api/platform/launch-promo')
-}
-
-export function registerLaunchPromo(payload) {
-  return request('/api/register/launch-promo', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  })
-}
-
 export function fetchSellerNotifications(token) {
   return request('/api/auth/me/notifications', {
     headers: {
