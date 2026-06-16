@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Logo from '../components/Logo'
 import SellerLoadingScreen from '../components/seller/SellerLoadingScreen'
-import { LOGO_HERO_CLASS, MARKETPLACE_LABEL } from '../constants/branding'
+import { BUY_ENTRY_LABEL, LOGO_HERO_CLASS } from '../constants/branding'
 import { ApiError, fetchSellerProfile } from '../lib/api'
 import { resolveBuyerEntryPath } from '../lib/buyerLocation'
 import { clearSellerSession, getSellerToken, setSellerSession } from '../lib/sellerAuth'
@@ -88,8 +88,8 @@ export default function Welcome() {
           <Button variant="secondary" onClick={() => navigate('/registro')}>
             Crear cuenta
           </Button>
-          <Button variant="ghost" onClick={goToBuy}>
-            Ir al {MARKETPLACE_LABEL.toLowerCase()}
+          <Button variant="tertiary" onClick={goToBuy}>
+            {BUY_ENTRY_LABEL}
           </Button>
         </nav>
       </section>

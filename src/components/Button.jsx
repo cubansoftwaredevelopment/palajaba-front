@@ -6,6 +6,8 @@ const variantClass = {
     'bg-brand-green text-brand-white shadow-[0_6px_20px_rgba(89,128,44,0.3)] sm:hover:-translate-y-px sm:hover:bg-[#4d7026] sm:active:translate-y-0',
   secondary:
     'border-2 border-brand-green/25 bg-brand-white text-brand-green sm:hover:border-brand-green/45 sm:hover:bg-brand-yellow/15',
+  tertiary:
+    'border border-brand-carmelita/22 bg-brand-carmelita/[0.07] text-brand-carmelita shadow-[0_3px_14px_rgba(123,76,56,0.1)] focus-visible:ring-brand-carmelita/25 sm:hover:border-brand-carmelita/32 sm:hover:bg-brand-carmelita/[0.11]',
   ghost:
     'bg-transparent text-brand-carmelita/80 sm:hover:text-brand-carmelita',
 }
