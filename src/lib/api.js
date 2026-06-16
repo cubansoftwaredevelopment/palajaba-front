@@ -146,6 +146,16 @@ export function updateSellerProfile(token, payload) {
   })
 }
 
+export function updateSellerPhone(token, phone) {
+  return request('/api/auth/me/phone', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ phone }),
+  })
+}
+
 export async function uploadSellerProfilePhoto(token, file) {
   const formData = new FormData()
   formData.append('photo', file)

@@ -8,5 +8,13 @@ export function formatPhoneDigits(digits) {
 }
 
 export function getPhoneDigits(value) {
-  return value.replace(/\D/g, '').slice(0, PHONE_DIGITS_LENGTH)
+  let digits = String(value ?? '').replace(/\D/g, '')
+  if (digits.startsWith('53') && digits.length > PHONE_DIGITS_LENGTH) {
+    digits = digits.slice(2)
+  }
+  return digits.slice(0, PHONE_DIGITS_LENGTH)
+}
+
+export function phoneDigitsFromStored(phone) {
+  return getPhoneDigits(phone)
 }
