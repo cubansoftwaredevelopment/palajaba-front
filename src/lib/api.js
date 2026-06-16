@@ -223,6 +223,15 @@ export function rejectRegistration(token, id) {
   })
 }
 
+export function deleteRegistration(token, id) {
+  return request(`/api/admin/registrations/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function fetchAdminStats(token, { year, month } = {}) {
   const params = new URLSearchParams()
   if (year != null) params.set('year', String(year))

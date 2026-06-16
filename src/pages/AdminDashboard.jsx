@@ -13,7 +13,7 @@ import {
   adminSubtle,
 } from '../components/admin/adminStyles'
 import { FILTER_TABS, REJECTION_REASON } from '../constants/admin'
-import { fetchRegistrations, rejectRegistration } from '../lib/api'
+import { fetchRegistrations, rejectRegistration, deleteRegistration } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import LoadingState from '../components/ui/LoadingState'
@@ -86,6 +86,7 @@ export default function AdminDashboard() {
   const [subscriptionModal, setSubscriptionModal] = useState(null)
   const [paymentModal, setPaymentModal] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
   const loadCounts = useCallback(async (token) => {
     const [pending, approved, expired, rejected, all] = await Promise.all([
       fetchRegistrations(token, 'pending'),
@@ -151,6 +152,23 @@ export default function AdminDashboard() {
       handleMutationSuccess('Solicitud rechazada.')
     } catch (err) {
       setError(getUserFacingMessage(err, 'No pudimos completar la acción. Inténtalo de nuevo.'))
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return
+    setActionId(deleteTarget.id)
+
+    try {
+      const token = getAdminToken()
+      const result = await deleteRegistration(token, deleteTarget.id)
+      setDeleteTarget(null)
+      setDetailTarget(null)
+      handleMutationSuccess(result?.message ?? 'Tienda eliminada.')
+    } catch (err) {
+      setError(getUserFacingMessage(err, 'No pudimos eliminar la tienda. Inténtalo de nuevo.'))
     } finally {
       setActionId(null)
     }
@@ -277,6 +295,10 @@ export default function AdminDashboard() {
             setDetailTarget(null)
             setSubscriptionModal({ registration: reg, mode: 'renew' })
           }}
+          onDelete={(reg) => {
+            setDetailTarget(null)
+            setDeleteTarget(reg)
+          }}
         />
       )}
 
@@ -318,6 +340,32 @@ export default function AdminDashboard() {
           <p className={`text-sm ${adminSubtle}`}>Motivo que recibirá la tienda:</p>
           <p className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm text-zinc-300">
             {REJECTION_REASON}
+          </p>
+        </ConfirmDialog>
+      )}
+
+      {deleteTarget && (
+        <ConfirmDialog
+          title="Eliminar tienda"
+          subtitle={deleteTarget.store_name}
+          confirmLabel="Eliminar definitivamente"
+          confirmVariant="danger"
+          loading={actionId === deleteTarget.id}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={confirmDelete}
+        >
+          <p className={`text-sm ${adminSubtle}`}>
+            Se borrará la cuenta de <span className="font-medium text-zinc-200">{deleteTarget.store_name}</span>{' '}
+            y todos sus datos:
+          </p>
+          <ul className={`mt-3 list-inside list-disc space-y-1 text-sm ${adminSubtle}`}>
+            <li>Catálogo y productos</li>
+            <li>Pedidos registrados</li>
+            <li>Notificaciones del vendedor</li>
+            <li>Estadísticas de visitas al perfil</li>
+          </ul>
+          <p className="mt-3 text-sm font-medium text-orange-200">
+            Esta acción no se puede deshacer.
           </p>
         </ConfirmDialog>
       )}

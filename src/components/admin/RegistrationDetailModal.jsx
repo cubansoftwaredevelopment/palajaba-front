@@ -59,6 +59,7 @@ export default function RegistrationDetailModal({
   onEditSubscription,
   onEditPayment,
   onRenew,
+  onDelete,
 }) {
   const statusClass = STATUS_STYLES[item.status] ?? STATUS_STYLES.pending
   const days = item.subscription_ends_at ? daysUntil(item.subscription_ends_at) : null
@@ -198,6 +199,22 @@ export default function RegistrationDetailModal({
           </p>
         </div>
       )}
+
+      <div className="mt-6 border-t border-zinc-800 pt-5">
+        <p className={`mb-3 text-xs font-medium uppercase tracking-wide ${adminMuted}`}>
+          Zona de peligro
+        </p>
+        <AdminButton
+          variant="danger"
+          disabled={actionId === item.id}
+          onClick={() => onDelete(item)}
+        >
+          {actionId === item.id ? 'Eliminando…' : 'Eliminar tienda'}
+        </AdminButton>
+        <p className={`mt-2 text-center text-xs ${adminSubtle}`}>
+          Borra la cuenta, catálogo, pedidos y notificaciones. No se puede deshacer.
+        </p>
+      </div>
     </AdminModal>
   )
 }
