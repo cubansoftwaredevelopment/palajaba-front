@@ -245,6 +245,14 @@ export function fetchAdminStats(token, { year, month } = {}) {
   })
 }
 
+export function fetchAdminBusinessesByProvince(token) {
+  return request('/api/admin/stats/businesses-by-province', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function updateRegistrationPayment(token, id, paymentAmountCup) {
   const params = new URLSearchParams()
   params.set('payment_amount_cup', String(paymentAmountCup))

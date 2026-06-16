@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import AdminBusinessesByProvinceChart from '../components/admin/AdminBusinessesByProvinceChart'
 import { adminAlertError, adminCard, adminCardHighlight, adminFocusRing, adminMuted, adminSubtle } from '../components/admin/adminStyles'
-import { fetchAdminStats } from '../lib/api'
+import { fetchAdminBusinessesByProvince, fetchAdminStats } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatPrice } from '../lib/money'
@@ -56,6 +57,7 @@ export default function AdminStats() {
   const navigate = useNavigate()
   const location = useLocation()
   const [stats, setStats] = useState(null)
+  const [provinceStats, setProvinceStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -64,8 +66,12 @@ export default function AdminStats() {
     setLoading(true)
     try {
       const token = getAdminToken()
-      const data = await fetchAdminStats(token)
-      setStats(data)
+      const [summary, byProvince] = await Promise.all([
+        fetchAdminStats(token),
+        fetchAdminBusinessesByProvince(token),
+      ])
+      setStats(summary)
+      setProvinceStats(byProvince)
     } catch (err) {
       if (isSessionError(err)) {
         clearAdminToken()
@@ -144,6 +150,7 @@ export default function AdminStats() {
       {loading && !stats ? (
         <LoadingState variant="admin" message="Cargando estadísticas…" />
       ) : (
+      <>
       <div className="grid gap-3 sm:grid-cols-2">
         <MetricCard
           accent="payments"
@@ -181,6 +188,11 @@ export default function AdminStats() {
           value={loading ? '…' : String(stats?.orders_total ?? 0)}
         />
       </div>
+
+      <div className="mt-4">
+        <AdminBusinessesByProvinceChart data={provinceStats} loading={loading} />
+      </div>
+      </>
       )}
     </main>
   )
