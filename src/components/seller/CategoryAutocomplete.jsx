@@ -1,4 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { resolveSelectedBusinessCategories } from '../../constants/businessCategories'
 import { sellerChip, sellerFocusRing, sellerInput, sellerModalInput } from './sellerStyles'
 
 function normalizeQuery(value) {
@@ -34,7 +35,7 @@ export default function CategoryAutocomplete({
   }, [multiple, value])
 
   const selectedCategories = useMemo(
-    () => categories.filter((category) => selectedIds.includes(category.id)),
+    () => resolveSelectedBusinessCategories(categories, selectedIds),
     [categories, selectedIds],
   )
 

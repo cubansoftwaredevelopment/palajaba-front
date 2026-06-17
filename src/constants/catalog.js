@@ -1,10 +1,14 @@
-/** Sugerencias variadas (restaurante, ferretería, ropa, etc.) */
+/** Sugerencias para nombres de categorías locales del catálogo (menú de la tienda).
+ *  Las categorías globales de negocio vienen del API: GET /api/categories
+ *  (fuente: backend/app/services/categories.py). */
 export const CATALOG_CATEGORY_SUGGESTIONS = [
   'Entrantes',
   'Ferretería',
   'Electrodomésticos',
   'Ropa de hombre',
   'Repuestos',
+  'Bicicletas',
+  'Motos',
   'Panadería',
 ]
 
