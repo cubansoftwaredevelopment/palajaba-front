@@ -149,7 +149,7 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
       <div className={buyerProductRowWrap}>
         <div
           ref={scrollRef}
-          className={`${buyerProductRow} ${showScrollLeft ? 'pl-12' : ''} ${showScrollRight ? 'pr-12' : ''}`}
+          className={`${buyerProductRow} ${showScrollLeft ? 'lg:pl-12' : ''} ${showScrollRight ? 'pr-12' : ''}`}
         >
           {products.map((product) => (
             <div key={product.id} data-product-item className={buyerProductRowItem}>
@@ -179,11 +179,11 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
 
         {showScrollLeft ? (
           <>
-            <div className={buyerProductRowFadeLeft} aria-hidden="true" />
+            <div className={`${buyerProductRowFadeLeft} hidden lg:block`} aria-hidden="true" />
             <button
               type="button"
               onClick={() => animateRow('prev')}
-              className={buyerProductRowArrowLeft}
+              className={`${buyerProductRowArrowLeft} hidden lg:flex`}
               aria-label={`Ver anteriores en ${section.category_name}`}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
@@ -195,7 +195,7 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
 
         {showScrollRight ? (
           <>
-            <div className={buyerProductRowFade} aria-hidden="true" />
+            <div className={`${buyerProductRowFade} hidden lg:block`} aria-hidden="true" />
             <button
               type="button"
               onClick={() => animateRow('next')}
