@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
-import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerModalTitle } from './sellerStyles'
+import {
+  sellerAlertError,
+  sellerBtnPrimary,
+  sellerBtnSecondary,
+  sellerModalBody,
+  sellerModalFooter,
+  sellerModalOverlay,
+  sellerModalSheet,
+  sellerModalTitle,
+} from './sellerStyles'
 import { deleteCatalogCategory } from '../../lib/api'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
+import SellerModalPortal from './SellerModalPortal'
 
 export default function DeleteCatalogCategoryModal({ category, onClose, onDeleted }) {
   const [loading, setLoading] = useState(false)
@@ -37,57 +47,60 @@ export default function DeleteCatalogCategoryModal({ category, onClose, onDelete
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-green/20 p-4 backdrop-blur-sm sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-category-title"
-      onClick={onClose}
-    >
+    <SellerModalPortal>
       <div
-        className="w-full max-w-sm animate-fade-in rounded-3xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_20px_50px_rgba(89,128,44,0.18)]"
-        onClick={(e) => e.stopPropagation()}
+        className={sellerModalOverlay}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-category-title"
+        onClick={onClose}
       >
-        <h2 id="delete-category-title" className={sellerModalTitle}>
-          ¿Eliminar categoría?
-        </h2>
-
-        {hasProducts ? (
-          <div className="mt-3 rounded-2xl border border-brand-carmelita/20 bg-brand-carmelita/[0.06] px-3.5 py-3">
-            <p className="text-sm font-semibold text-brand-carmelita">
-              Esta categoría tiene {productCount} producto{productCount === 1 ? '' : 's'}.
-            </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-brand-carmelita/90">
-              Al eliminar <span className="font-semibold text-brand-green">«{category.name}»</span> también se
-              borrarán todos sus productos. Esta acción no se puede deshacer.
-            </p>
+        <div className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
+          <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
+            <h2 id="delete-category-title" className={sellerModalTitle}>
+              ¿Eliminar categoría?
+            </h2>
           </div>
-        ) : (
-          <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-            Se eliminará <span className="font-semibold text-brand-green">«{category.name}»</span> de tu catálogo.
-          </p>
-        )}
 
-        {error && (
-          <p className={`mt-3 ${sellerAlertError}`} role="alert">
-            {error}
-          </p>
-        )}
+          <div className={sellerModalBody}>
+            {hasProducts ? (
+              <div className="rounded-2xl border border-brand-carmelita/20 bg-brand-carmelita/[0.06] px-3.5 py-3">
+                <p className="text-sm font-semibold text-brand-carmelita">
+                  Esta categoría tiene {productCount} producto{productCount === 1 ? '' : 's'}.
+                </p>
+                <p className="mt-1.5 text-sm leading-relaxed text-brand-carmelita/90">
+                  Al eliminar <span className="font-semibold text-brand-green">«{category.name}»</span> también se
+                  borrarán todos sus productos. Esta acción no se puede deshacer.
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm leading-relaxed text-brand-carmelita/90">
+                Se eliminará <span className="font-semibold text-brand-green">«{category.name}»</span> de tu catálogo.
+              </p>
+            )}
 
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button type="button" onClick={onClose} disabled={loading} className={sellerBtnSecondary}>
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={loading}
-            className={`${sellerBtnPrimary} !bg-brand-carmelita !shadow-none`}
-          >
-            {loading ? 'Eliminando…' : hasProducts ? 'Eliminar todo' : 'Eliminar'}
-          </button>
+            {error ? (
+              <p className={`mt-3 ${sellerAlertError}`} role="alert">
+                {error}
+              </p>
+            ) : null}
+          </div>
+
+          <div className={`${sellerModalFooter} grid grid-cols-2 gap-2`}>
+            <button type="button" onClick={onClose} disabled={loading} className={sellerBtnSecondary}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={loading}
+              className={`${sellerBtnPrimary} !bg-brand-carmelita !shadow-none`}
+            >
+              {loading ? 'Eliminando…' : hasProducts ? 'Eliminar todo' : 'Eliminar'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </SellerModalPortal>
   )
 }

@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
-import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerModalTitle } from './sellerStyles'
+import {
+  sellerAlertError,
+  sellerBtnPrimary,
+  sellerBtnSecondary,
+  sellerModalBody,
+  sellerModalFooter,
+  sellerModalOverlay,
+  sellerModalSheet,
+  sellerModalTitle,
+} from './sellerStyles'
 import { deleteCatalogProduct } from '../../lib/api'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
+import SellerModalPortal from './SellerModalPortal'
 
 export default function DeleteCatalogProductModal({ product, onClose, onDeleted }) {
   const [loading, setLoading] = useState(false)
@@ -35,43 +45,49 @@ export default function DeleteCatalogProductModal({ product, onClose, onDeleted 
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-green/20 p-4 backdrop-blur-sm sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="delete-product-title"
-      onClick={onClose}
-    >
+    <SellerModalPortal>
       <div
-        className="w-full max-w-sm animate-fade-in rounded-3xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_20px_50px_rgba(89,128,44,0.18)]"
-        onClick={(e) => e.stopPropagation()}
+        className={sellerModalOverlay}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="delete-product-title"
+        onClick={onClose}
       >
-        <h2 id="delete-product-title" className={sellerModalTitle}>
-          ¿Eliminar producto?
-        </h2>
-        <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-          Se eliminará <span className="font-semibold text-brand-green">«{product.name}»</span> de tu catálogo. Esta
-          acción no se puede deshacer.
-        </p>
-        {error && (
-          <p className={`mt-3 ${sellerAlertError}`} role="alert">
-            {error}
-          </p>
-        )}
-        <div className="mt-4 grid grid-cols-2 gap-2">
-          <button type="button" onClick={onClose} disabled={loading} className={sellerBtnSecondary}>
-            Cancelar
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={loading}
-            className={`${sellerBtnPrimary} !bg-brand-carmelita !shadow-none`}
-          >
-            {loading ? 'Eliminando…' : 'Eliminar'}
-          </button>
+        <div className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
+          <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
+            <h2 id="delete-product-title" className={sellerModalTitle}>
+              ¿Eliminar producto?
+            </h2>
+          </div>
+
+          <div className={sellerModalBody}>
+            <p className="text-sm leading-relaxed text-brand-carmelita/90">
+              Se eliminará <span className="font-semibold text-brand-green">«{product.name}»</span> de tu catálogo.
+              Esta acción no se puede deshacer.
+            </p>
+
+            {error ? (
+              <p className={`mt-3 ${sellerAlertError}`} role="alert">
+                {error}
+              </p>
+            ) : null}
+          </div>
+
+          <div className={`${sellerModalFooter} grid grid-cols-2 gap-2`}>
+            <button type="button" onClick={onClose} disabled={loading} className={sellerBtnSecondary}>
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={loading}
+              className={`${sellerBtnPrimary} !bg-brand-carmelita !shadow-none`}
+            >
+              {loading ? 'Eliminando…' : 'Eliminar'}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </SellerModalPortal>
   )
 }

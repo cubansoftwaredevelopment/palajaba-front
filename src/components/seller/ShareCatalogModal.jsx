@@ -2,6 +2,8 @@ import QRCode from 'qrcode'
 import { useEffect, useMemo, useState } from 'react'
 
 import { BRAND_NAME } from '../../constants/branding'
+import { downloadBlob } from '../../lib/downloadFile'
+import { isNativeAppShell, openExternalUrl } from '../../lib/nativeApp'
 import {
   buildTelegramShareUrl,
   buildWhatsAppShareUrl,
@@ -120,11 +122,32 @@ export default function ShareCatalogModal({ profile, onClose }) {
   }
 
   function handleWhatsAppShare() {
-    window.open(buildWhatsAppShareUrl(shareMessage), '_blank', 'noopener,noreferrer')
+    openExternalUrl(buildWhatsAppShareUrl(shareMessage))
   }
 
   function handleTelegramShare() {
-    window.open(buildTelegramShareUrl(catalogUrl, telegramText), '_blank', 'noopener,noreferrer')
+    openExternalUrl(buildTelegramShareUrl(catalogUrl, telegramText))
+  }
+
+  async function handleDownloadQr() {
+    if (!qrDataUrl) return
+
+    const filename = `catalogo-${profile?.store_name?.trim() || 'tienda'}.png`
+
+    if (isNativeAppShell()) {
+      const response = await fetch(qrDataUrl)
+      const blob = await response.blob()
+      await downloadBlob(blob, filename, 'image/png')
+      return
+    }
+
+    const link = document.createElement('a')
+    link.href = qrDataUrl
+    link.download = filename
+    link.rel = 'noopener'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
   }
 
   return (
@@ -240,13 +263,13 @@ export default function ShareCatalogModal({ profile, onClose }) {
 
                 <div className="mt-5 flex w-full flex-col gap-2">
                   {qrDataUrl ? (
-                    <a
-                      href={qrDataUrl}
-                      download={`catalogo-${profile?.store_name?.trim() || 'tienda'}.png`}
+                    <button
+                      type="button"
+                      onClick={handleDownloadQr}
                       className={`${sellerBtnSecondary} !w-full`}
                     >
                       Descargar QR
-                    </a>
+                    </button>
                   ) : null}
 
                   <button
