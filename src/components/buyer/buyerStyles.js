@@ -95,6 +95,12 @@ export const buyerProductCardCompact = `${buyerProductCard} w-full`
 export const buyerProductImageWrap =
   'relative aspect-[5/6] w-full overflow-hidden bg-gradient-to-b from-brand-green/[0.03] to-brand-green/[0.07]'
 
+export const buyerProductImageSpinner =
+  'h-8 w-8 animate-spin rounded-full border-2 border-brand-green/20 border-t-brand-green'
+
+export const buyerProductImagePlaceholder =
+  'flex h-full w-full items-center justify-center text-[0.65rem] font-semibold text-brand-carmelita/45'
+
 export const buyerProductPickupRibbon =
   'absolute left-0 top-0 z-[1] flex max-w-[85%] items-center gap-1 rounded-br-xl bg-brand-carmelita px-2 py-1 text-[0.58rem] font-bold leading-none text-brand-white shadow-[0_2px_8px_rgba(123,76,56,0.35)] sm:text-[0.62rem]'
 

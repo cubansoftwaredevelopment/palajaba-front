@@ -6,6 +6,7 @@ import { resolveDisplayPrice } from '../../lib/displayPrice'
 import { resolveMediaUrl } from '../../lib/media'
 import { isProductPurchasable, isProductSoldOut, getProductPickupDisplay } from '../../lib/marketplaceProduct'
 import BuyerProductDetailModal from './BuyerProductDetailModal'
+import BuyerProductImage from './BuyerProductImage'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
 import {
   buyerProductActions,
@@ -80,18 +81,7 @@ export default function BuyerProductCard({ product, compact = false }) {
           aria-label={`Ver detalles de ${product.name}${soldOut ? ' (agotado)' : ''}`}
         >
           <div className={buyerProductImageWrap}>
-            {imageSrc ? (
-              <img
-                src={imageSrc}
-                alt=""
-                className="h-full w-full object-cover"
-                loading="lazy"
-              />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-[0.65rem] font-semibold text-brand-carmelita/45">
-                Sin foto
-              </div>
-            )}
+            <BuyerProductImage src={imageSrc} />
             {pickup.requiresPickup ? (
               <span className={buyerProductPickupRibbon}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true">
