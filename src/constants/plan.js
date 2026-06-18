@@ -1,5 +1,5 @@
 import { convertBetweenCurrencies } from '../lib/displayPrice'
-import { getCupPerUnit } from '../lib/exchangeRates'
+import { areExchangeRatesAvailable, getCupPerUnit } from '../lib/exchangeRates'
 
 export const PLAN_SOURCE_CURRENCY = 'USD'
 export const PLAN_DISPLAY_CURRENCY = 'CUP'
@@ -58,6 +58,14 @@ export function getPlanPriceUsd(tier, billing) {
 
 export function getPlanPrice(tier, billing, cupPerUnit = getCupPerUnit()) {
   const usdPrice = getPlanPriceUsd(tier, billing)
+  if (!areExchangeRatesAvailable()) {
+    return {
+      ...usdPrice,
+      amountUsd: usdPrice.amountUsd,
+      amount: null,
+      currency: PLAN_DISPLAY_CURRENCY,
+    }
+  }
   return {
     ...usdPrice,
     amountUsd: usdPrice.amountUsd,
@@ -68,7 +76,15 @@ export function getPlanPrice(tier, billing, cupPerUnit = getCupPerUnit()) {
 
 export function getPlanYearlySavings(tier, cupPerUnit = getCupPerUnit()) {
   const savingsUsd = getPlanTier(tier).yearlySavingsUsd
+  if (!areExchangeRatesAvailable()) return null
   return convertBetweenCurrencies(savingsUsd, PLAN_SOURCE_CURRENCY, PLAN_DISPLAY_CURRENCY, cupPerUnit)
+}
+
+export function formatPlanPriceLabel(price, formatter = formatPlanAmount) {
+  if (price.amount != null && areExchangeRatesAvailable()) {
+    return formatter(price.amount, price.currency)
+  }
+  return formatter(price.amountUsd, PLAN_SOURCE_CURRENCY)
 }
 
 export function formatPlanAmount(amount, currency = PLAN_DISPLAY_CURRENCY) {

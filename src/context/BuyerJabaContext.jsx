@@ -22,7 +22,8 @@ import { fetchMarketplaceStore } from '../lib/api'
 import { getBuyerLocation } from '../lib/buyerLocation'
 import { syncJabaWithBackend } from '../lib/syncBuyerJaba'
 
-import { useBuyerDisplayCurrency } from './BuyerDisplayCurrencyContext'
+import { needsExchangeRatesForDisplay } from '../lib/displayPrice'
+import { areExchangeRatesAvailable } from '../lib/exchangeRates'
 import { recordProductPopularity } from '../lib/productPopularity'
 import { submitStoreOrder } from '../lib/submitStoreOrder'
 import { openWhatsAppCheckout } from '../lib/whatsappOrder'
@@ -42,7 +43,7 @@ function buildCheckoutPayload(group, storeItems) {
 }
 
 export function BuyerJabaProvider({ children }) {
-  const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
+  const { currency: displayCurrency, cupPerUnit, ratesReady } = useBuyerDisplayCurrency()
   const [items, setItems] = useState(getJabaItems)
   const [open, setOpen] = useState(false)
   const [syncingContacts, setSyncingContacts] = useState(false)
@@ -124,6 +125,14 @@ export function BuyerJabaProvider({ children }) {
   const runWhatsAppCheckout = useCallback((payload, delivery = null) => {
     if (!payload?.items?.length || !payload.storePhone) return false
 
+    const needsRates = payload.items.some((item) =>
+      needsExchangeRatesForDisplay(item, displayCurrency),
+    )
+    if (needsRates && !ratesReady && !areExchangeRatesAvailable()) {
+      window.alert('Espera a que carguen las tasas de cambio antes de confirmar el pedido.')
+      return false
+    }
+
     const opened = openWhatsAppCheckout({
       storeName: payload.storeName,
       storePhone: payload.storePhone,
@@ -146,7 +155,7 @@ export function BuyerJabaProvider({ children }) {
     })
 
     return true
-  }, [cupPerUnit, displayCurrency])
+  }, [cupPerUnit, displayCurrency, ratesReady])
 
   const addProduct = useCallback((product) => {
     addToJaba(product)

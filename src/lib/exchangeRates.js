@@ -1,17 +1,23 @@
 import { fetchExchangeRates as fetchExchangeRatesApi } from './api'
 
-export const FALLBACK_CUP_PER_UNIT = {
-  CUP: 1,
-  USD: 250,
-  EUR: 275,
-  MLC: 250,
-}
-
-let cupPerUnit = { ...FALLBACK_CUP_PER_UNIT }
+let cupPerUnit = null
+let ratesAvailable = false
 let cachePromise = null
 let lastMeta = null
 
+function hasValidRates(nextRates) {
+  if (!nextRates || typeof nextRates !== 'object') return false
+  return ['USD', 'EUR', 'MLC'].every((code) => Number.isFinite(Number(nextRates[code])))
+}
+
+export function areExchangeRatesAvailable() {
+  return ratesAvailable
+}
+
 export function getCupPerUnit() {
+  if (!ratesAvailable || !cupPerUnit) {
+    return { CUP: 1 }
+  }
   return cupPerUnit
 }
 
@@ -19,13 +25,19 @@ export function getExchangeRatesMeta() {
   return lastMeta
 }
 
-export function setCupPerUnit(nextRates) {
-  if (!nextRates || typeof nextRates !== 'object') return
+export function setCupPerUnit(nextRates, { available = true } = {}) {
+  if (!available || !hasValidRates(nextRates)) {
+    ratesAvailable = false
+    cupPerUnit = null
+    return
+  }
+
+  ratesAvailable = true
   cupPerUnit = {
     CUP: 1,
-    USD: Number(nextRates.USD) || FALLBACK_CUP_PER_UNIT.USD,
-    EUR: Number(nextRates.EUR) || FALLBACK_CUP_PER_UNIT.EUR,
-    MLC: Number(nextRates.MLC) || FALLBACK_CUP_PER_UNIT.MLC,
+    USD: Number(nextRates.USD),
+    EUR: Number(nextRates.EUR),
+    MLC: Number(nextRates.MLC),
   }
 }
 
@@ -36,8 +48,11 @@ export function loadExchangeRates({ force = false } = {}) {
 
   cachePromise = fetchExchangeRatesApi()
     .then((data) => {
-      if (data?.cup_per_unit) {
-        setCupPerUnit(data.cup_per_unit)
+      const available = Boolean(data?.rates_available)
+      if (available && data?.cup_per_unit) {
+        setCupPerUnit(data.cup_per_unit, { available: true })
+      } else {
+        setCupPerUnit(null, { available: false })
       }
       lastMeta = {
         updatedAt: data?.updated_at ?? null,
@@ -46,11 +61,13 @@ export function loadExchangeRates({ force = false } = {}) {
         referenceDate: data?.reference_date ?? null,
         referenceTime: data?.reference_time ?? null,
         stale: Boolean(data?.stale),
+        available,
       }
       return data
     })
     .catch((error) => {
       cachePromise = null
+      setCupPerUnit(null, { available: false })
       throw error
     })
 

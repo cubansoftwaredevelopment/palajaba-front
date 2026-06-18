@@ -6,7 +6,7 @@ import AuthShell from '../components/auth/AuthShell'
 import { authPageIntro, authPaymentGrid } from '../components/auth/authStyles'
 import RegisterProgress from '../components/auth/RegisterProgress'
 import Button from '../components/Button'
-import { getPlanTier, normalizePlanTier } from '../constants/plan'
+import { getPlanTier, normalizePlanTier, formatPlanPriceLabel } from '../constants/plan'
 import { usePlanPricing } from '../lib/usePlanPricing'
 import {
   PAYMENT_CARD_NUMBER,
@@ -45,7 +45,7 @@ export default function RegisterPayment() {
               <>
                 Transfiere{' '}
                 <strong className="text-brand-green">
-                  {formatPlanAmount(price.amount)}
+                  {formatPlanPriceLabel(price, formatPlanAmount)}
                 </strong>{' '}
                 por el plan {tier.name} ({billing === 'yearly' ? 'anual' : 'mensual'}) para activar tu solicitud.
               </>

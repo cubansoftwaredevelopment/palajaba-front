@@ -14,6 +14,7 @@ import {
   PLAN_TAGLINE,
   PLAN_TIER_ORDER,
   PLAN_TIERS,
+  formatPlanPriceLabel,
   normalizePlanTier,
 } from '../constants/plan'
 import { usePlanPricing } from '../lib/usePlanPricing'
@@ -65,6 +66,7 @@ function BillingToggle({ billing, onChange }) {
 
 function PlanCard({ tier, billing, selected, onSelect, getPlanPrice, getPlanYearlySavings, formatPlanAmount }) {
   const price = getPlanPrice(tier.id, billing)
+  const yearlySavings = getPlanYearlySavings(tier.id)
 
   return (
     <button
@@ -83,7 +85,7 @@ function PlanCard({ tier, billing, selected, onSelect, getPlanPrice, getPlanYear
             Plan {tier.name}
           </p>
           <p className="mt-1 font-display text-xl font-bold text-brand-green sm:text-2xl">
-            {formatPlanAmount(price.amount)}
+            {formatPlanPriceLabel(price, formatPlanAmount)}
             <span className="ml-1 text-sm font-semibold text-brand-carmelita/80">/{price.label}</span>
           </p>
         </div>
@@ -99,9 +101,9 @@ function PlanCard({ tier, billing, selected, onSelect, getPlanPrice, getPlanYear
 
       <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">{tier.description}</p>
 
-      {billing === 'yearly' ? (
+      {billing === 'yearly' && yearlySavings != null ? (
         <p className="mt-2 text-xs font-medium text-brand-green">
-          Ahorra {formatPlanAmount(getPlanYearlySavings(tier.id))} al año.
+          Ahorra {formatPlanAmount(yearlySavings)} al año.
         </p>
       ) : null}
 
@@ -173,7 +175,7 @@ export default function RegisterPlan() {
                   Facturación {billing === 'yearly' ? 'anual' : 'mensual'}
                 </p>
                 <p className="mt-3 text-3xl font-bold text-brand-green">
-                  {formatPlanAmount(selectedPrice.amount)}
+                  {formatPlanPriceLabel(selectedPrice, formatPlanAmount)}
                   <span className="ml-1 text-base font-semibold text-brand-carmelita/80">
                     /{selectedPrice.label}
                   </span>

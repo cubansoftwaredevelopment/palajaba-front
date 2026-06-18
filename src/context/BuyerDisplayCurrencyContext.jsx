@@ -1,39 +1,35 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import { getBuyerDisplayCurrency, setBuyerDisplayCurrency } from '../lib/buyerDisplayCurrency'
-import { loadExchangeRates, getCupPerUnit } from '../lib/exchangeRates'
+import {
+  areExchangeRatesAvailable,
+  getCupPerUnit,
+  getExchangeRatesMeta,
+  loadExchangeRates,
+} from '../lib/exchangeRates'
 
 const BuyerDisplayCurrencyContext = createContext(null)
 
 export function BuyerDisplayCurrencyProvider({ children }) {
   const [currency, setCurrencyState] = useState(getBuyerDisplayCurrency)
   const [cupPerUnit, setCupPerUnitState] = useState(getCupPerUnit)
-  const [ratesReady, setRatesReady] = useState(false)
-  const [ratesMeta, setRatesMeta] = useState(null)
+  const [ratesReady, setRatesReady] = useState(areExchangeRatesAvailable)
+  const [ratesMeta, setRatesMeta] = useState(getExchangeRatesMeta)
 
   useEffect(() => {
     let cancelled = false
 
     loadExchangeRates()
-      .then((data) => {
+      .then(() => {
         if (cancelled) return
         setCupPerUnitState(getCupPerUnit())
-        setRatesMeta({
-          updatedAt: data?.updated_at ?? null,
-          source: data?.source ?? 'elTOQUE',
-          attribution: data?.attribution ?? null,
-          referenceDate: data?.reference_date ?? null,
-          referenceTime: data?.reference_time ?? null,
-          stale: Boolean(data?.stale),
-        })
+        setRatesMeta(getExchangeRatesMeta())
+        setRatesReady(areExchangeRatesAvailable())
       })
       .catch(() => {
         if (!cancelled) {
           setCupPerUnitState(getCupPerUnit())
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setRatesReady(true)
+          setRatesMeta(getExchangeRatesMeta())
+          setRatesReady(false)
         }
       })
 

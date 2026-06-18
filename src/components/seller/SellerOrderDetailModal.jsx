@@ -37,19 +37,28 @@ function calcPaymentTotal(order, items, paymentCurrency, deliveryPreview, cupPer
 
   let total = 0
   for (const item of items) {
-    total += convertBetweenCurrencies(
+    const converted = convertBetweenCurrencies(
       item.unit_price * item.quantity,
       item.currency,
       paymentCurrency,
       cupPerUnit,
     )
+    if (converted === null) return null
+    total += converted
   }
 
   const deliveryPrice = deliveryPreview?.price ?? order.delivery_price
   const deliveryCurrency = deliveryPreview?.currency ?? order.delivery_currency ?? 'CUP'
 
   if (order.delivery_requested && deliveryPrice != null) {
-    total += convertBetweenCurrencies(deliveryPrice, deliveryCurrency, paymentCurrency, cupPerUnit)
+    const convertedDelivery = convertBetweenCurrencies(
+      deliveryPrice,
+      deliveryCurrency,
+      paymentCurrency,
+      cupPerUnit,
+    )
+    if (convertedDelivery === null) return null
+    total += convertedDelivery
   }
 
   return total
