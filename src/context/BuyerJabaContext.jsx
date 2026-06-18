@@ -24,6 +24,7 @@ import { syncJabaWithBackend } from '../lib/syncBuyerJaba'
 
 import { needsExchangeRatesForDisplay } from '../lib/displayPrice'
 import { areExchangeRatesAvailable } from '../lib/exchangeRates'
+import { useBuyerDisplayCurrency } from './BuyerDisplayCurrencyContext'
 import { recordProductPopularity } from '../lib/productPopularity'
 import { submitStoreOrder } from '../lib/submitStoreOrder'
 import { openWhatsAppCheckout } from '../lib/whatsappOrder'
