@@ -103,6 +103,47 @@ export default function RegistrationDetailModal({
         </DetailRow>
         <DetailRow label="Teléfono">{item.phone}</DetailRow>
         {(item.status === 'approved' || item.status === 'expired') && (
+          <DetailRow label="Productos">
+            <span className="text-white">
+              {item.published_product_count} publicado
+              {item.published_product_count === 1 ? '' : 's'}
+              {item.total_product_count > 0 ? ` · ${item.total_product_count} en catálogo` : ''}
+            </span>
+            {(item.view_only_product_count > 0 || item.unavailable_product_count > 0) && (
+              <span className={`mt-1 block text-xs ${adminSubtle}`}>
+                {item.view_only_product_count > 0
+                  ? `${item.view_only_product_count} solo vista`
+                  : null}
+                {item.view_only_product_count > 0 && item.unavailable_product_count > 0
+                  ? ' · '
+                  : null}
+                {item.unavailable_product_count > 0
+                  ? `${item.unavailable_product_count} no disponible${item.unavailable_product_count === 1 ? '' : 's'}`
+                  : null}
+              </span>
+            )}
+          </DetailRow>
+        )}
+        {(item.status === 'approved' || item.status === 'expired') &&
+          item.marketplace_visibility_notes?.length > 0 && (
+            <DetailRow label="Visibilidad en marketplace">
+              <ul className="space-y-1.5 text-xs leading-relaxed">
+                {item.marketplace_visibility_notes.map((note) => (
+                  <li
+                    key={note}
+                    className={
+                      note.startsWith('Ubicación de la tienda')
+                        ? 'rounded-lg border border-amber-500/20 bg-amber-500/10 px-2.5 py-2 text-amber-100/90'
+                        : 'text-zinc-400'
+                    }
+                  >
+                    {note}
+                  </li>
+                ))}
+              </ul>
+            </DetailRow>
+          )}
+        {(item.status === 'approved' || item.status === 'expired') && (
           <DetailRow label="Perfil público">
             {item.profile_completed ? (
               <span className="text-emerald-300">Completado</span>

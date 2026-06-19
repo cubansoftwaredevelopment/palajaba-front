@@ -33,6 +33,23 @@ export default function RegistrationRow({ item, onViewDetails }) {
           <span>{PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}</span>
           <span className={adminMuted}>·</span>
           <span>{BILLING_LABELS[item.billing_period]}</span>
+          {(item.status === 'approved' || item.status === 'expired') && (
+            <>
+              <span className={adminMuted}>·</span>
+              <span
+                className={
+                  item.published_product_count > 0 ? 'text-emerald-300/90' : 'text-zinc-500'
+                }
+                title="Productos publicados en marketplace (disponibles, no solo vista)"
+              >
+                {item.published_product_count} publicado
+                {item.published_product_count === 1 ? '' : 's'}
+                {item.total_product_count > item.published_product_count
+                  ? ` / ${item.total_product_count} total`
+                  : ''}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
