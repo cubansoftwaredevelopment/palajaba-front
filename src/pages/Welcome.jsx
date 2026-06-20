@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Logo from '../components/Logo'
 import SellerLoadingScreen from '../components/seller/SellerLoadingScreen'
@@ -91,6 +91,15 @@ export default function Welcome() {
           <Button variant="tertiary" onClick={goToBuy}>
             {BUY_ENTRY_LABEL}
           </Button>
+          <Link
+            to="/aplicacion"
+            className="mt-1 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full border border-brand-green/15 bg-brand-green/[0.04] px-5 py-2.5 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/15 sm:hover:bg-brand-green/[0.08]"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M17.6 9.5 14 13.1V4h-4v9.1L6.4 9.5 4 11.9l8 8 8-8-2.4-2.4zM4 19v2h16v-2H4z" />
+            </svg>
+            Descargar app Android
+          </Link>
         </nav>
       </section>
     </main>

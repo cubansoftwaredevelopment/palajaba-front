@@ -25,6 +25,7 @@ import BuyerSelectMunicipality from './pages/buyer/BuyerSelectMunicipality'
 import BuyerSelectProvince from './pages/buyer/BuyerSelectProvince'
 import PublicStoreRoute from './components/buyer/PublicStoreRoute'
 import RedirectLegacyStoreRoute from './components/buyer/RedirectLegacyStoreRoute'
+import DownloadAppPage from './pages/DownloadAppPage'
 
 const router = createBrowserRouter([
   {
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
       { path: 'registro/pago', element: <RegisterPayment /> },
       { path: 'registro/verificacion', element: <RegisterForm /> },
       { path: 'registro/exito', element: <RegisterSuccess /> },
+      { path: 'aplicacion', element: <DownloadAppPage /> },
       {
         path: 'admin',
         element: <Outlet />,
