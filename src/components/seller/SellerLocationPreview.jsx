@@ -1,9 +1,13 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { addSellerMapTiles, sellerMapMarkerIcon, SELLER_MAP_PREVIEW_ZOOM } from '../../lib/sellerMap'
+import { addSellerMapTiles, sellerMapMarkerIcon, SELLER_MAP_LOCATION_ZOOM, SELLER_MAP_PREVIEW_ZOOM } from '../../lib/sellerMap'
 
-export default function SellerLocationPreview({ location }) {
+export default function SellerLocationPreview({
+  location,
+  interactive = false,
+  mapClassName = '',
+}) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
 
@@ -17,37 +21,48 @@ export default function SellerLocationPreview({ location }) {
 
     const center = [location.lat, location.lng]
     const map = L.map(mapRef.current, {
-      zoomControl: false,
-      attributionControl: false,
-      scrollWheelZoom: false,
-      doubleClickZoom: false,
-      dragging: false,
-      touchZoom: false,
-      boxZoom: false,
-      keyboard: false,
-    }).setView(center, SELLER_MAP_PREVIEW_ZOOM)
+      zoomControl: interactive,
+      attributionControl: interactive,
+      scrollWheelZoom: interactive,
+      doubleClickZoom: interactive,
+      dragging: interactive,
+      touchZoom: interactive,
+      boxZoom: interactive,
+      keyboard: interactive,
+    }).setView(
+      center,
+      interactive ? SELLER_MAP_LOCATION_ZOOM : SELLER_MAP_PREVIEW_ZOOM,
+    )
 
     addSellerMapTiles(map)
     L.marker(center, { icon: sellerMapMarkerIcon }).addTo(map)
 
     mapInstanceRef.current = map
-    const timer = setTimeout(() => map.invalidateSize(), 80)
+    const timer = setTimeout(() => map.invalidateSize(), interactive ? 150 : 80)
 
     return () => {
       clearTimeout(timer)
       map.remove()
       mapInstanceRef.current = null
     }
-  }, [location?.lat, location?.lng])
+  }, [interactive, location?.lat, location?.lng])
 
   if (!location) return null
 
+  const mapHeightClass = interactive
+    ? mapClassName || 'h-full min-h-[52dvh]'
+    : mapClassName || 'h-44 w-full sm:h-52'
+
   return (
-    <div className="seller-location-preview relative isolate z-0 overflow-hidden rounded-2xl border border-brand-green/12 bg-brand-green/[0.03] shadow-[0_4px_20px_rgba(89,128,44,0.1)]">
-      <div className="relative overflow-hidden">
+    <div
+      className={`seller-location-preview relative isolate z-0 overflow-hidden rounded-2xl border border-brand-green/12 bg-brand-green/[0.03] shadow-[0_4px_20px_rgba(89,128,44,0.1)] ${
+        interactive ? 'seller-location-preview--interactive flex min-h-0 flex-1 flex-col' : ''
+      }`}
+    >
+      <div className={`relative overflow-hidden ${interactive ? 'min-h-0 flex-1' : ''}`}>
         <div
           ref={mapRef}
-          className="relative z-0 h-44 w-full sm:h-52"
+          className={`relative z-0 w-full ${mapHeightClass}`}
           role="img"
           aria-label={
             location.label
@@ -55,7 +70,9 @@ export default function SellerLocationPreview({ location }) {
               : 'Mapa con la ubicación de tu negocio'
           }
         />
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-brand-white/90 to-transparent" />
+        {!interactive ? (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-brand-white/90 to-transparent" />
+        ) : null}
       </div>
       <div className="relative z-10 flex items-center gap-2 border-t border-brand-green/8 bg-brand-white/80 px-3 py-2.5 backdrop-blur-sm">
         <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-green/10 text-brand-green">
@@ -70,6 +87,11 @@ export default function SellerLocationPreview({ location }) {
         <p className="min-w-0 flex-1 truncate text-sm font-medium text-brand-green">
           {location.label || 'Ubicación marcada en el mapa'}
         </p>
+        {interactive ? (
+          <span className="hidden shrink-0 text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70 sm:inline">
+            Arrastra · Zoom
+          </span>
+        ) : null}
       </div>
     </div>
   )

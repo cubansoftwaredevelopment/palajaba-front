@@ -5,6 +5,7 @@ import BuyerModalPortal from './BuyerModalPortal'
 import {
   buyerContextChip,
   buyerStoreMapModal,
+  buyerStoreMapModalBody,
   buyerStoreMapModalHeader,
   buyerStoreMapOverlay,
   buyerStorePageAvatar,
@@ -165,7 +166,9 @@ export default function BuyerStoreProfileHeader({ catalog }) {
                   </svg>
                 </button>
               </div>
-              <SellerLocationPreview location={catalog.business_location} />
+              <div className={buyerStoreMapModalBody}>
+                <SellerLocationPreview location={catalog.business_location} interactive />
+              </div>
             </div>
           </div>
         </BuyerModalPortal>

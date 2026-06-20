@@ -364,7 +364,10 @@ export const buyerStoreMapOverlay =
   'fixed inset-0 z-[70] bg-brand-green/25 backdrop-blur-[2px]'
 
 export const buyerStoreMapModal =
-  'fixed inset-x-4 top-[12dvh] z-[80] flex max-h-[min(76dvh,28rem)] flex-col overflow-hidden rounded-3xl border border-brand-green/10 bg-brand-white shadow-[0_16px_48px_rgba(89,128,44,0.2)] sm:inset-x-auto sm:left-1/2 sm:w-[min(24rem,calc(100vw-2rem))] sm:-translate-x-1/2'
+  'fixed inset-x-3 top-[3dvh] z-[80] flex max-h-[94dvh] min-h-[min(94dvh,40rem)] flex-col overflow-hidden rounded-3xl border border-brand-green/10 bg-brand-white shadow-[0_16px_48px_rgba(89,128,44,0.2)] sm:inset-x-auto sm:left-1/2 sm:w-[min(36rem,calc(100vw-1.5rem))] sm:-translate-x-1/2'
+
+export const buyerStoreMapModalBody =
+  'flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 pt-0'
 
 export const buyerStoreMapModalHeader =
   'flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-5 py-4'

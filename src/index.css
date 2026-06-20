@@ -204,6 +204,16 @@
     z-index: auto;
   }
 
+  .seller-location-preview--interactive .leaflet-container {
+    touch-action: none;
+  }
+
+  .seller-location-preview--interactive .leaflet-control-zoom a {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    line-height: 2.25rem;
+  }
+
   .seller-map-pin {
     background: transparent !important;
     border: none !important;
