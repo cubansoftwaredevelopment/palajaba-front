@@ -1,6 +1,7 @@
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import Logo from '../components/Logo'
 import { BRAND_NAME } from '../constants/branding'
+import { isNativeAppShell } from '../lib/nativeApp'
 import {
   APP_ANDROID_BADGE,
   APP_DOWNLOAD_FILENAME,
@@ -54,6 +55,10 @@ function DownloadButton({ className = '' }) {
 }
 
 export default function DownloadAppPage() {
+  if (isNativeAppShell()) {
+    return <Navigate to="/" replace />
+  }
+
   return (
     <div className="relative min-h-dvh bg-brand-white">
       <div
