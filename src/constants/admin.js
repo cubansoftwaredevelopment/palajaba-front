@@ -39,3 +39,15 @@ export const FILTER_TABS = [
   { id: 'rejected', label: 'Rechazadas' },
   { id: 'all', label: 'Todas' },
 ]
+
+export const FEEDBACK_TYPE_LABELS = {
+  complaint: 'Queja',
+  suggestion: 'Sugerencia',
+}
+
+export const FEEDBACK_FILTER_TABS = [
+  { id: 'all', label: 'Todas' },
+  { id: 'unread', label: 'No leídas' },
+  { id: 'complaint', label: 'Quejas' },
+  { id: 'suggestion', label: 'Sugerencias' },
+]

@@ -9,6 +9,7 @@ import SellerBusinessAreaFields, {
 import SellerDeliveryZonesEditor from '../../components/seller/SellerDeliveryZonesEditor'
 import SellerLocationPreview from '../../components/seller/SellerLocationPreview'
 import SellerAdvancedProfileSettings from '../../components/seller/SellerAdvancedProfileSettings'
+import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection'
 import SellerMarketplaceCard from '../../components/seller/SellerMarketplaceCard'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import SellerProfileFieldGroup from '../../components/seller/SellerProfileFieldGroup'
@@ -466,6 +467,7 @@ export default function SellerProfile() {
         </form>
 
         <SellerAdvancedProfileSettings profile={profile} onUpdated={refreshProfile} />
+        <SellerFeedbackSection />
       </section>
 
       {showMap && (
