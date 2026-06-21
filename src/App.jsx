@@ -20,7 +20,9 @@ import AdminStats from './pages/AdminStats'
 import AdminNotifications from './pages/AdminNotifications'
 import AdminSettings from './pages/AdminSettings'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
+import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './pages/buyer/BuyerHome'
+import BuyerBusinessesPage from './pages/buyer/BuyerBusinessesPage'
 import BuyerSelectMunicipality from './pages/buyer/BuyerSelectMunicipality'
 import BuyerSelectProvince from './pages/buyer/BuyerSelectProvince'
 import PublicStoreRoute from './components/buyer/PublicStoreRoute'
@@ -38,10 +40,16 @@ const router = createBrowserRouter([
         path: 'comprar',
         element: <BuyerJabaLayout />,
         children: [
-          { index: true, element: <BuyerHome /> },
           { path: 'provincia', element: <BuyerSelectProvince /> },
           { path: 'municipio', element: <BuyerSelectMunicipality /> },
           { path: 'tienda/:storeSlug', element: <RedirectLegacyStoreRoute /> },
+          {
+            element: <BuyerMarketplaceLayout />,
+            children: [
+              { index: true, element: <BuyerHome /> },
+              { path: 'negocios', element: <BuyerBusinessesPage /> },
+            ],
+          },
         ],
       },
       { path: 'login', element: <Login /> },

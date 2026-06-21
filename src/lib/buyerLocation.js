@@ -2,6 +2,7 @@ import { getMunicipalityById, getProvinceById } from '../constants/cubaLocations
 
 const STORAGE_KEY = 'pala-jaba-buyer-location'
 const ADDITIONAL_MUNICIPALITIES_KEY = 'pala-jaba-buyer-additional-municipalities'
+const MARKETPLACE_CATEGORY_FILTER_KEY = 'pala-jaba-buyer-marketplace-category-filter'
 
 function normalizeStoredLocation(raw) {
   if (!raw?.province?.id) return null
@@ -133,4 +134,45 @@ export function setAdditionalMunicipalities(provinceId, municipalityIds) {
   }
 
   localStorage.setItem(ADDITIONAL_MUNICIPALITIES_KEY, JSON.stringify(store))
+}
+
+function readMarketplaceCategoryFilterStore() {
+  const raw = localStorage.getItem(MARKETPLACE_CATEGORY_FILTER_KEY)
+  if (!raw) return {}
+
+  try {
+    const parsed = JSON.parse(raw)
+    return parsed && typeof parsed === 'object' ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+/** Categoría compartida entre marketplace y negocios (por provincia). */
+export function getMarketplaceCategoryFilter(provinceId) {
+  if (!provinceId) return ''
+
+  const store = readMarketplaceCategoryFilterStore()
+  const categoryId = store[provinceId]
+  return typeof categoryId === 'string' ? categoryId : ''
+}
+
+export function setMarketplaceCategoryFilter(provinceId, categoryId) {
+  if (!provinceId) return
+
+  const store = readMarketplaceCategoryFilterStore()
+  const normalized = typeof categoryId === 'string' ? categoryId.trim() : ''
+
+  if (!normalized) {
+    delete store[provinceId]
+  } else {
+    store[provinceId] = normalized
+  }
+
+  if (Object.keys(store).length === 0) {
+    localStorage.removeItem(MARKETPLACE_CATEGORY_FILTER_KEY)
+    return
+  }
+
+  localStorage.setItem(MARKETPLACE_CATEGORY_FILTER_KEY, JSON.stringify(store))
 }

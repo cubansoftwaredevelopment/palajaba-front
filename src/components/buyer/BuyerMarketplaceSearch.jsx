@@ -2,7 +2,8 @@ import StatePanel from '../ui/StatePanel'
 import LoadingState from '../ui/LoadingState'
 import DeadState from '../ui/DeadState'
 import BuyerProductCard from './BuyerProductCard'
-import { buyerProductGrid, buyerSearchInput } from './buyerStyles'
+import BuyerBusinessCard from './BuyerBusinessCard'
+import { buyerBusinessList, buyerProductGrid, buyerSearchInput } from './buyerStyles'
 
 export default function BuyerMarketplaceSearch({
   categories,
@@ -11,11 +12,15 @@ export default function BuyerMarketplaceSearch({
   categoryId,
   onQueryChange,
   onCategoryChange,
+  searchLabel = 'Buscar productos',
+  searchPlaceholder = 'Buscar productos en tu municipio…',
+  categoryLabel = 'Filtrar por categoría',
+  allCategoriesLabel = 'Todas las categorías',
 }) {
   return (
     <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,11rem)] lg:grid-cols-[minmax(0,1fr)_minmax(0,13rem)]">
       <label className="sr-only" htmlFor="buyer-marketplace-search">
-        Buscar productos
+        {searchLabel}
       </label>
       <div className="relative">
         <svg
@@ -34,14 +39,14 @@ export default function BuyerMarketplaceSearch({
           type="search"
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Buscar productos en tu municipio…"
+          placeholder={searchPlaceholder}
           className={`${buyerSearchInput} pl-10`}
           autoComplete="off"
         />
       </div>
 
       <label className="sr-only" htmlFor="buyer-marketplace-category">
-        Filtrar por categoría
+        {categoryLabel}
       </label>
       <select
         id="buyer-marketplace-category"
@@ -50,7 +55,7 @@ export default function BuyerMarketplaceSearch({
         disabled={categoriesLoading}
         className={buyerSearchInput}
       >
-        <option value="">Todas las categorías</option>
+        <option value="">{allCategoriesLabel}</option>
         {categories.map((category) => (
           <option key={category.id} value={category.id}>
             {category.name}
@@ -114,6 +119,67 @@ export function BuyerSearchResults({
       <div className={buyerProductGrid}>
         {products.map((product) => (
           <BuyerProductCard key={product.id} product={product} />
+        ))}
+      </div>
+      {hasMore ? (
+        <button
+          type="button"
+          onClick={onLoadMore}
+          disabled={loadingMore}
+          className="mx-auto min-h-10 rounded-full border border-brand-green/20 bg-brand-white px-5 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/10 disabled:opacity-60 lg:mx-0"
+        >
+          {loadingMore ? 'Cargando…' : 'Ver más resultados'}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+export function BuyerBusinessSearchResults({
+  loading,
+  error,
+  results,
+  onLoadMore,
+  loadingMore,
+  onRetry,
+  retrying = false,
+}) {
+  const businesses = results?.businesses ?? []
+  const hasMore = results?.has_more ?? false
+
+  if (loading) {
+    return <LoadingState message="Buscando negocios…" className="lg:items-start lg:text-left" />
+  }
+
+  if (error) {
+    return (
+      <StatePanel
+        variant="buyer"
+        title={error.title}
+        message={error.message}
+        serviceError={error.isServiceError}
+        onRetry={error.canRetry !== false ? onRetry : undefined}
+        retrying={retrying}
+      />
+    )
+  }
+
+  if (!businesses.length) {
+    return (
+      <DeadState
+        variant="panel"
+        title="Sin resultados"
+        message="Prueba con otra palabra o cambia la categoría."
+        className="lg:items-start lg:text-left"
+      />
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className={buyerBusinessList}>
+        {businesses.map((business) => (
+          <BuyerBusinessCard key={business.store.id} business={business} />
         ))}
       </div>
       {hasMore ? (

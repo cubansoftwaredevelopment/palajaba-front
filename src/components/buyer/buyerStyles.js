@@ -321,6 +321,18 @@ export const buyerProductDetailSpecValue =
 export const buyerProductDetailStickyBar =
   'shrink-0 border-t border-brand-green/10 bg-brand-white/95 px-5 py-3 pb-[max(0.85rem,var(--safe-bottom))] shadow-[0_-8px_24px_rgba(89,128,44,0.08)] backdrop-blur-md'
 
+export const buyerMarketplaceNavShell =
+  'fixed bottom-0 left-0 right-0 z-30 w-full max-w-[100dvw] border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md pb-[max(0.375rem,var(--safe-bottom))]'
+
+export function buyerMarketplaceNavItem(isActive) {
+  return `flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 py-1.5 text-[0.625rem] font-semibold leading-none transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/30 sm:text-xs ${
+    isActive ? 'text-brand-green' : 'text-brand-carmelita/65 active:text-brand-green'
+  }`
+}
+
+export const buyerMarketplaceScrollPadding =
+  'pb-[calc(4.75rem+var(--safe-bottom))] lg:pb-[calc(5rem+var(--safe-bottom))]'
+
 export const buyerProductDetailStickyPriceLabel =
   'text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70'
 
@@ -356,6 +368,41 @@ export const buyerStorePageMetaLabel =
 
 export const buyerStorePageMetaValue =
   'mt-1 text-sm font-semibold leading-snug text-brand-green'
+
+export const buyerBusinessList =
+  'grid min-w-0 grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3 lg:gap-5 xl:gap-6'
+
+export const buyerBusinessCard =
+  'flex h-full min-w-0 flex-col overflow-hidden rounded-3xl border border-brand-green/12 bg-brand-white shadow-[0_4px_20px_rgba(89,128,44,0.07)]'
+
+export const buyerBusinessCardImageWrap =
+  'relative aspect-square w-full overflow-hidden bg-brand-yellow/10'
+
+export const buyerBusinessCardImage =
+  'h-full w-full object-cover'
+
+export const buyerBusinessCardImageFallback =
+  'flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-yellow/20 via-brand-white to-brand-green/[0.08] font-display text-4xl font-bold text-brand-carmelita/60 sm:text-5xl'
+
+export const buyerBusinessCardBody = 'flex flex-1 flex-col gap-3 px-4 py-4 sm:px-5 sm:py-5'
+
+export const buyerBusinessCardName =
+  'font-display text-lg font-bold leading-tight text-brand-green sm:text-xl'
+
+export const buyerBusinessCardLocation =
+  'flex flex-col gap-0.5'
+
+export const buyerBusinessCardMunicipality =
+  'text-sm font-semibold text-brand-green sm:text-base'
+
+export const buyerBusinessCardProvince =
+  'text-xs font-semibold text-brand-carmelita/80 sm:text-sm'
+
+export const buyerBusinessCardProductCount =
+  'text-sm font-semibold text-brand-carmelita/90'
+
+export const buyerBusinessCardCatalogBtn =
+  'mt-auto flex min-h-11 w-full items-center justify-center rounded-full bg-brand-green px-5 text-sm font-semibold text-brand-white shadow-[0_6px_20px_rgba(89,128,44,0.28)] transition-all touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 lg:hover:-translate-y-px lg:hover:bg-[#4d7026]'
 
 export const buyerStorePageMapBtn =
   'inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-brand-green/20 bg-brand-green/[0.06] px-4 text-sm font-bold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:w-auto sm:shrink-0 lg:hover:bg-brand-green/[0.1]'

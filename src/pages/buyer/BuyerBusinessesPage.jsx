@@ -1,43 +1,52 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import BuyerAdditionalMunicipalitiesFilter from '../../components/buyer/BuyerAdditionalMunicipalitiesFilter'
-import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
+import BuyerBusinessCard from '../../components/buyer/BuyerBusinessCard'
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
 import BuyerMarketplaceSearch, {
-  BuyerSearchResults,
+  BuyerBusinessSearchResults,
   useMarketplaceSearchActive,
 } from '../../components/buyer/BuyerMarketplaceSearch'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
-import { buyerHomeSections } from '../../components/buyer/buyerStyles'
+import DeadState from '../../components/ui/DeadState'
 import Button from '../../components/Button'
+import { BUSINESSES_LABEL, LOADING_MASCOT } from '../../constants/branding'
+import { buyerBusinessList } from '../../components/buyer/buyerStyles'
+import { fetchCategories, fetchMarketplaceBusinesses } from '../../lib/api'
 import {
-  fetchMarketplaceCategoryProducts,
-  fetchMarketplaceFeed,
-  fetchMarketplaceSearch,
-  fetchCategories,
-} from '../../lib/api'
-import { getBuyerLocation, getAdditionalMunicipalities, hasCompleteBuyerLocation, setAdditionalMunicipalities, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+  getAdditionalMunicipalities,
+  getBuyerLocation,
+  getMarketplaceCategoryFilter,
+  hasCompleteBuyerLocation,
+  setAdditionalMunicipalities,
+  setMarketplaceCategoryFilter,
+} from '../../lib/buyerLocation'
 import { resolveUserFacingError } from '../../lib/userFacingError'
-import { MARKETPLACE_LABEL } from '../../constants/branding'
 
 const PAGE_SIZE = 20
 const SEARCH_DEBOUNCE_MS = 300
 
-export default function BuyerHome() {
+export default function BuyerBusinessesPage() {
   if (!hasCompleteBuyerLocation()) {
     return <Navigate to="/comprar/provincia" replace />
   }
 
-  return <BuyerHomeContent />
+  return <BuyerBusinessesPageContent />
 }
 
-function BuyerHomeContent() {
+function BuyerBusinessesPageContent() {
   const location = getBuyerLocation()
-  const [feed, setFeed] = useState(null)
+  const sentinelRef = useRef(null)
+  const loadingMoreRef = useRef(false)
+
+  const [businesses, setBusinesses] = useState([])
+  const [totalBusinesses, setTotalBusinesses] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const [categories, setCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
@@ -72,34 +81,63 @@ function BuyerHomeContent() {
 
   const searchActive = useMarketplaceSearchActive(debouncedQuery, searchCategoryId)
 
-  const loadFeed = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const loadBusinesses = useCallback(
+    async ({ offset = 0, append = false } = {}) => {
+      if (append) {
+        if (loadingMoreRef.current) return
+        loadingMoreRef.current = true
+        setLoadingMore(true)
+      } else {
+        setLoading(true)
+        setLoadError(null)
+      }
 
-    try {
-      const data = await fetchMarketplaceFeed({
-        provinceId: location.province.id,
-        municipalityId: location.municipality.id,
-        additionalMunicipalityIds,
-        limitPerCategory: PAGE_SIZE,
-      })
-      setFeed(data)
-    } catch (err) {
-      setLoadError(
-        resolveUserFacingError(err, {
-          contextTitle: `No se pudo cargar el ${MARKETPLACE_LABEL.toLowerCase()}`,
-          fallbackMessage: 'No pudimos mostrar los productos de tu zona. Inténtalo de nuevo.',
-        }),
-      )
-      setFeed(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [additionalMunicipalityIds, location.municipality.id, location.province.id])
+      try {
+        const data = await fetchMarketplaceBusinesses({
+          provinceId: location.province.id,
+          municipalityId: location.municipality.id,
+          additionalMunicipalityIds,
+          limit: PAGE_SIZE,
+          offset,
+        })
+
+        setTotalBusinesses(data.total_businesses)
+        setHasMore(data.has_more)
+        setBusinesses((current) => {
+          if (!append) return data.businesses
+          const seen = new Set(current.map((item) => item.store.id))
+          const nextItems = data.businesses.filter((item) => !seen.has(item.store.id))
+          return [...current, ...nextItems]
+        })
+      } catch (err) {
+        if (!append) {
+          setBusinesses([])
+          setTotalBusinesses(0)
+          setHasMore(false)
+          setLoadError(
+            resolveUserFacingError(err, {
+              contextTitle: `No se pudo cargar ${BUSINESSES_LABEL.toLowerCase()}`,
+              fallbackMessage: 'No pudimos mostrar los negocios de tu zona. Inténtalo de nuevo.',
+            }),
+          )
+        }
+      } finally {
+        if (append) {
+          loadingMoreRef.current = false
+          setLoadingMore(false)
+        } else {
+          setLoading(false)
+        }
+      }
+    },
+    [additionalMunicipalityIds, location.municipality.id, location.province.id],
+  )
 
   useEffect(() => {
-    loadFeed()
-  }, [loadFeed])
+    if (!searchActive) {
+      loadBusinesses()
+    }
+  }, [loadBusinesses, searchActive])
 
   useEffect(() => {
     let cancelled = false
@@ -149,23 +187,23 @@ function BuyerHomeContent() {
       }
 
       try {
-        const data = await fetchMarketplaceSearch({
+        const data = await fetchMarketplaceBusinesses({
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
           additionalMunicipalityIds,
           query: debouncedQuery,
-          globalCategoryId: searchCategoryId || undefined,
+          categoryId: searchCategoryId || undefined,
           limit: PAGE_SIZE,
           offset,
         })
 
         setSearchResults((current) => {
           if (!append || !current) return data
-          const seen = new Set(current.products.map((item) => item.id))
-          const nextProducts = data.products.filter((item) => !seen.has(item.id))
+          const seen = new Set(current.businesses.map((item) => item.store.id))
+          const nextBusinesses = data.businesses.filter((item) => !seen.has(item.store.id))
           return {
             ...data,
-            products: [...current.products, ...nextProducts],
+            businesses: [...current.businesses, ...nextBusinesses],
           }
         })
       } catch (err) {
@@ -174,7 +212,7 @@ function BuyerHomeContent() {
           setSearchError(
             resolveUserFacingError(err, {
               contextTitle: 'No se pudo completar la búsqueda',
-              fallbackMessage: 'No pudimos buscar productos en este momento. Inténtalo de nuevo.',
+              fallbackMessage: 'No pudimos buscar negocios en este momento. Inténtalo de nuevo.',
             }),
           )
         }
@@ -196,8 +234,24 @@ function BuyerHomeContent() {
     runSearch()
   }, [runSearch])
 
-  const sections = feed?.sections ?? []
-  const hasProducts = (feed?.total_products ?? 0) > 0
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMore || loading || loadingMore || searchActive) return undefined
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadBusinesses({ offset: businesses.length, append: true })
+        }
+      },
+      { rootMargin: '160px', threshold: 0.1 },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [businesses.length, hasMore, loadBusinesses, loading, loadingMore, searchActive])
+
+  const hasBusinesses = totalBusinesses > 0
 
   return (
     <BuyerShell
@@ -217,6 +271,10 @@ function BuyerHomeContent() {
           categoryId={searchCategoryId}
           onQueryChange={setSearchQuery}
           onCategoryChange={setSearchCategoryId}
+          searchLabel="Buscar negocios"
+          searchPlaceholder="Buscar negocios en tu municipio…"
+          categoryLabel="Filtrar negocios por categoría"
+          allCategoriesLabel="Todas las categorías"
         />
         <BuyerAdditionalMunicipalitiesFilter
           provinceId={location.province.id}
@@ -227,7 +285,7 @@ function BuyerHomeContent() {
       </div>
 
       {searchActive ? (
-        <BuyerSearchResults
+        <BuyerBusinessSearchResults
           loading={searchLoading}
           error={searchError}
           results={searchResults}
@@ -236,7 +294,7 @@ function BuyerHomeContent() {
           retrying={searchLoading}
           onLoadMore={() =>
             runSearch({
-              offset: searchResults?.products?.length ?? 0,
+              offset: searchResults?.businesses?.length ?? 0,
               append: true,
             })
           }
@@ -244,7 +302,7 @@ function BuyerHomeContent() {
       ) : null}
 
       {!searchActive && loading ? (
-        <LoadingState message="Cargando productos…" className="lg:items-start lg:text-left" />
+        <LoadingState message="Cargando negocios…" className="lg:items-start lg:text-left" />
       ) : null}
 
       {!searchActive && !loading && loadError ? (
@@ -253,54 +311,52 @@ function BuyerHomeContent() {
           title={loadError.title}
           message={loadError.message}
           serviceError={loadError.isServiceError}
-          onRetry={loadError.canRetry ? loadFeed : undefined}
+          onRetry={loadError.canRetry ? () => loadBusinesses() : undefined}
           retrying={loading}
         />
       ) : null}
 
-      {!searchActive && !loading && !loadError && !hasProducts ? (
-        <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
-          <p className="font-display text-lg font-bold text-brand-green">Aún no hay productos aquí</p>
-          <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-            No encontramos tiendas con productos disponibles en {location.municipality.name}. Prueba con otra
-            zona o usa el buscador cuando haya más tiendas.
-          </p>
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center lg:justify-start">
-            <Link to="/comprar/provincia">
-              <Button variant="secondary" className="w-full sm:w-auto">
-                Cambiar ubicación
-              </Button>
-            </Link>
-            <Link to="/">
-              <Button variant="ghost" className="w-full sm:w-auto">
-                Volver al inicio
-              </Button>
-            </Link>
-          </div>
-        </div>
+      {!searchActive && !loading && !loadError && !hasBusinesses ? (
+        <DeadState
+          variant="panel"
+          title="Aún no hay negocios aquí"
+          message={`No encontramos tiendas activas en ${location.municipality.name}. Prueba cambiando tu ubicación o marcando otros municipios para recogida.`}
+          className="lg:items-start lg:text-left"
+        >
+          <Link to="/comprar/provincia">
+            <Button variant="secondary" className="w-full sm:w-auto">
+              Cambiar ubicación
+            </Button>
+          </Link>
+        </DeadState>
       ) : null}
 
-      {!searchActive && !loading && !loadError && hasProducts ? (
-        <div className={buyerHomeSections}>
-          {sections.map((section) => (
-            <BuyerCategoryProductRow
-              key={section.category_id}
-              section={section}
-              loadMore={(offset) =>
-                fetchMarketplaceCategoryProducts({
-                  provinceId: location.province.id,
-                  municipalityId: location.municipality.id,
-                  additionalMunicipalityIds,
-                  globalCategoryId: section.category_id,
-                  limit: PAGE_SIZE,
-                  offset,
-                }).then((data) => ({
-                  products: data.products,
-                  has_more: data.has_more,
-                }))
-              }
-            />
-          ))}
+      {!searchActive && !loading && !loadError && hasBusinesses ? (
+        <div className="animate-fade-in">
+          <div className={buyerBusinessList}>
+            {businesses.map((business) => (
+              <BuyerBusinessCard key={business.store.id} business={business} />
+            ))}
+          </div>
+
+          {hasMore ? (
+            <div
+              ref={sentinelRef}
+              className="flex min-h-16 items-center justify-center py-4"
+              aria-hidden={!loadingMore}
+            >
+              {loadingMore ? (
+                <img
+                  src={LOADING_MASCOT.src}
+                  alt=""
+                  className="h-14 w-14 animate-levitate object-contain sm:h-10 sm:w-10"
+                  width={56}
+                  height={56}
+                  decoding="async"
+                />
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </BuyerShell>

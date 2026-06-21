@@ -12,6 +12,9 @@ export const BRAND_NAME = "Pa' La Jaba"
 /** Nombre del home de compradores (feed de tiendas por municipio). */
 export const MARKETPLACE_LABEL = 'Marketplace'
 
+/** Sección de directorio de negocios en el área de compra. */
+export const BUSINESSES_LABEL = 'Negocios'
+
 /** CTA del inicio para entrar a comprar sin cuenta. */
 export const BUY_ENTRY_LABEL = 'Continuar a comprar'
 

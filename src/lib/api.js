@@ -542,6 +542,31 @@ export function fetchMarketplaceFeed({
   return request(`/api/marketplace/feed?${params}`)
 }
 
+export function fetchMarketplaceBusinesses({
+  provinceId,
+  municipalityId,
+  additionalMunicipalityIds,
+  query = '',
+  categoryId,
+  limit = 20,
+  offset = 0,
+}) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+    municipality_id: municipalityId,
+    limit: String(limit),
+    offset: String(offset),
+  })
+  if (query.trim()) {
+    params.set('q', query.trim())
+  }
+  if (categoryId) {
+    params.set('category_id', categoryId)
+  }
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
+  return request(`/api/marketplace/businesses?${params}`)
+}
+
 export function fetchMarketplaceSearch({
   provinceId,
   municipalityId,

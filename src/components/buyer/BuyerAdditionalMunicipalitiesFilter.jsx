@@ -19,7 +19,7 @@ export default function BuyerAdditionalMunicipalitiesFilter({
   onChange,
 }) {
   const province = getProvinceById(provinceId)
-  const [expanded, setExpanded] = useState(selectedIds.length > 0)
+  const [expanded, setExpanded] = useState(false)
   const [query, setQuery] = useState('')
 
   const municipalities = useMemo(() => {

@@ -1,13 +1,23 @@
 import { Link } from 'react-router-dom'
 import BuyerJabaButton from './BuyerJabaButton'
 import BuyerJabaPanel from './BuyerJabaPanel'
+import { buyerMarketplaceScrollPadding } from './buyerStyles'
 import {
   BuyerSellerReturnFooter,
   BuyerSellerReturnHeaderLink,
 } from './BuyerSellerReturnLink'
+import { useBuyerMarketplaceHub } from '../../lib/buyerMarketplaceHub'
+import { isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
 
 export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart = null, headerEnd = null, children }) {
   const showBackLink = Boolean(backTo) && !headerStart
+  const marketplaceHub = useBuyerMarketplaceHub()
+  const sellerBrowsing = isSellerBrowsingMarketplace()
+  const scrollPaddingClass = marketplaceHub
+    ? sellerBrowsing
+      ? 'pb-[calc(8.25rem+var(--safe-bottom))] lg:pb-[calc(5rem+var(--safe-bottom))]'
+      : buyerMarketplaceScrollPadding
+    : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
 
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
@@ -46,7 +56,7 @@ export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart =
       </header>
 
       <div className="buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
-        <div className="mx-auto w-full max-w-md px-5 pb-[max(2rem,var(--safe-bottom))] pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pb-10 lg:pt-8">
+        <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${scrollPaddingClass}`}>
           {children}
         </div>
       </div>
