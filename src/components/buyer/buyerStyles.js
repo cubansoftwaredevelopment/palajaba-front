@@ -70,7 +70,7 @@ export const buyerCategorySectionTitle =
 export const buyerProductRowWrap = 'relative min-w-0 overflow-hidden'
 
 export const buyerProductRow =
-  'flex touch-pan-x gap-3 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+  'flex touch-manipulation gap-3 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
 export const buyerProductRowFade =
   'pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-brand-white via-brand-white/95 to-transparent sm:w-20'
