@@ -23,9 +23,9 @@ export default function PaymentModal({ registration, onClose, onSuccess }) {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    const amountCup = parseCupInput(paymentAmount)
+    const amountCup = parseCupInput(paymentAmount, { allowZero: true })
     if (amountCup == null) {
-      setError('Indica un monto válido en CUP.')
+      setError('Indica un monto válido en CUP (usa 0 si es gratuito).')
       return
     }
 
@@ -64,7 +64,8 @@ export default function PaymentModal({ registration, onClose, onSuccess }) {
             required
           />
           <p className="mt-2 text-xs text-zinc-500">
-            Este monto se suma en las estadísticas del mes en que aprobaste la tienda.
+            Este monto se suma en las estadísticas del mes en que aprobaste la tienda. Usa 0 si no hubo
+            pago.
           </p>
         </div>
 
@@ -78,7 +79,7 @@ export default function PaymentModal({ registration, onClose, onSuccess }) {
           <AdminButton type="button" variant="secondary" onClick={onClose}>
             Cancelar
           </AdminButton>
-          <AdminButton type="submit" disabled={loading || !parseCupInput(paymentAmount)}>
+          <AdminButton type="submit" disabled={loading || parseCupInput(paymentAmount, { allowZero: true }) == null}>
             {loading ? 'Guardando…' : 'Guardar monto'}
           </AdminButton>
         </div>

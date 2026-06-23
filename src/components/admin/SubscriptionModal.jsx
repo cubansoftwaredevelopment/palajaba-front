@@ -224,11 +224,11 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
 
 
 
-    const amountCup = isEdit ? null : parseCupInput(paymentAmount)
+    const amountCup = isEdit ? null : parseCupInput(paymentAmount, { allowZero: true })
 
     if (!isEdit && amountCup == null) {
 
-      setError('Indica el monto real que pagó la tienda (en CUP).')
+      setError('Indica el monto pagado en CUP (usa 0 si es gratuito).')
 
       return
 
@@ -379,13 +379,10 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
             />
 
             <p className="mt-2 text-xs text-zinc-500">
-
-              Importe real de la transferencia. Referencia del plan:{' '}
-
+              Importe real de la transferencia. Usa <strong className="font-semibold text-zinc-400">0</strong>{' '}
+              para tiendas gratuitas. Referencia del plan:{' '}
               {suggestedAmount?.toLocaleString('es')} CUP ({PLAN_TIER_LABELS[planTier]} ·{' '}
-
               {BILLING_LABELS[billingPeriod]}).
-
             </p>
 
           </div>
@@ -442,7 +439,7 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
 
             type="submit"
 
-            disabled={loading || !endsAt || (!isEdit && !parseCupInput(paymentAmount))}
+            disabled={loading || !endsAt || (!isEdit && parseCupInput(paymentAmount, { allowZero: true }) == null)}
 
           >
 
