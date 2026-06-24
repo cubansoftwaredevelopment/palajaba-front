@@ -160,6 +160,17 @@ export default function RegistrationDetailModal({
         <DetailRow label="Plan contratado">
           {PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]} · {BILLING_LABELS[item.billing_period]}
         </DetailRow>
+        {item.discount_code ? (
+          <DetailRow label="Código de descuento">
+            <span className="font-mono text-white">{item.discount_code}</span>
+            <span className={`mt-1 block text-xs ${adminSubtle}`}>
+              {item.discount_percent}% de descuento
+              {item.expected_payment_cup != null
+                ? ` · monto esperado ${formatPrice(item.expected_payment_cup, 'CUP')}`
+                : ''}
+            </span>
+          </DetailRow>
+        ) : null}
         <DetailRow label="Fecha de solicitud">
           {formatDateTime(item.created_at)}
         </DetailRow>

@@ -394,6 +394,58 @@ export function fetchRenewalContactPhone() {
   return request('/api/platform/renewal-contact')
 }
 
+export function fetchDiscountCodesAvailability() {
+  return request('/api/platform/discount-codes/availability')
+}
+
+export function validateDiscountCode({ code, planTier, billingPeriod }) {
+  return request('/api/platform/discount-codes/validate', {
+    method: 'POST',
+    body: JSON.stringify({
+      code,
+      plan_tier: planTier,
+      billing_period: billingPeriod,
+    }),
+  })
+}
+
+export function fetchAdminDiscountCodes(token) {
+  return request('/api/admin/discount-codes', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function createAdminDiscountCode(token, payload) {
+  return request('/api/admin/discount-codes', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function updateAdminDiscountCode(token, id, payload) {
+  return request(`/api/admin/discount-codes/${id}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function deleteAdminDiscountCode(token, id) {
+  return request(`/api/admin/discount-codes/${id}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function fetchExchangeRates() {
   return request('/api/platform/exchange-rates')
 }

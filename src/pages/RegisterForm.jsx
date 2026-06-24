@@ -45,6 +45,7 @@ export default function RegisterForm() {
   const location = useLocation()
   const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
   const planTier = normalizePlanTier(location.state?.planTier)
+  const discountCode = location.state?.discountCode ?? null
 
   const [transferId, setTransferId] = useState('')
   const [storeName, setStoreName] = useState('')
@@ -81,6 +82,7 @@ export default function RegisterForm() {
         password,
         billing_period: billing,
         plan_tier: planTier,
+        ...(discountCode ? { discount_code: discountCode } : {}),
       })
       navigate('/registro/exito')
     } catch (err) {

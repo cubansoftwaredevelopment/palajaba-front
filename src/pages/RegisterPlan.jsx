@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthCard from '../components/auth/AuthCard'
 import AuthHeader from '../components/auth/AuthHeader'
 import AuthShell from '../components/auth/AuthShell'
+import RegisterDiscountCodeField from '../components/auth/RegisterDiscountCodeField'
 import {
   authPageIntro,
   authRegisterGrid,
@@ -17,6 +18,8 @@ import {
   formatPlanPriceLabel,
   normalizePlanTier,
 } from '../constants/plan'
+import { fetchDiscountCodesAvailability } from '../lib/api'
+import { getDiscountedPlanPrice } from '../lib/discountCode'
 import { usePlanPricing } from '../lib/usePlanPricing'
 
 function CheckIcon() {
@@ -64,9 +67,48 @@ function BillingToggle({ billing, onChange }) {
   )
 }
 
-function PlanCard({ tier, billing, selected, onSelect, getPlanPrice, getPlanYearlySavings, formatPlanAmount }) {
+function PlanPriceDisplay({ price, discountPercent, formatPlanAmount }) {
+  const discountedPrice = getDiscountedPlanPrice(price, discountPercent)
+  const hasDiscount = Boolean(discountPercent && discountPercent > 0)
+
+  if (!hasDiscount) {
+    return (
+      <p className="mt-1 font-display text-xl font-bold text-brand-green sm:text-2xl">
+        {formatPlanPriceLabel(price, formatPlanAmount)}
+        <span className="ml-1 text-sm font-semibold text-brand-carmelita/80">/{price.label}</span>
+      </p>
+    )
+  }
+
+  return (
+    <div className="mt-1">
+      <p className="text-sm font-semibold text-brand-carmelita/70 line-through">
+        {formatPlanPriceLabel(price, formatPlanAmount)}
+      </p>
+      <p className="font-display text-xl font-bold text-brand-green sm:text-2xl">
+        {formatPlanPriceLabel(discountedPrice, formatPlanAmount)}
+        <span className="ml-1 text-sm font-semibold text-brand-carmelita/80">/{price.label}</span>
+      </p>
+    </div>
+  )
+}
+
+function PlanCard({
+  tier,
+  billing,
+  selected,
+  onSelect,
+  getPlanPrice,
+  getPlanYearlySavings,
+  formatPlanAmount,
+  discountPercent,
+}) {
   const price = getPlanPrice(tier.id, billing)
   const yearlySavings = getPlanYearlySavings(tier.id)
+  const discountedYearlySavings =
+    discountPercent && yearlySavings != null
+      ? Math.max(0, Math.floor((yearlySavings * (100 - discountPercent)) / 100))
+      : yearlySavings
 
   return (
     <button
@@ -84,10 +126,11 @@ function PlanCard({ tier, billing, selected, onSelect, getPlanPrice, getPlanYear
           <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-carmelita/80">
             Plan {tier.name}
           </p>
-          <p className="mt-1 font-display text-xl font-bold text-brand-green sm:text-2xl">
-            {formatPlanPriceLabel(price, formatPlanAmount)}
-            <span className="ml-1 text-sm font-semibold text-brand-carmelita/80">/{price.label}</span>
-          </p>
+          <PlanPriceDisplay
+            price={price}
+            discountPercent={discountPercent}
+            formatPlanAmount={formatPlanAmount}
+          />
         </div>
         <span
           className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
@@ -101,9 +144,9 @@ function PlanCard({ tier, billing, selected, onSelect, getPlanPrice, getPlanYear
 
       <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">{tier.description}</p>
 
-      {billing === 'yearly' && yearlySavings != null ? (
+      {billing === 'yearly' && discountedYearlySavings != null ? (
         <p className="mt-2 text-xs font-medium text-brand-green">
-          Ahorra {formatPlanAmount(yearlySavings)} al año.
+          Ahorra {formatPlanAmount(discountedYearlySavings)} al año.
         </p>
       ) : null}
 
@@ -125,9 +168,37 @@ export default function RegisterPlan() {
   const navigate = useNavigate()
   const [billing, setBilling] = useState('monthly')
   const [planTier, setPlanTier] = useState('standard')
+  const [discountCodesAvailable, setDiscountCodesAvailable] = useState(false)
+  const [appliedDiscount, setAppliedDiscount] = useState(null)
   const { getPlanPrice, getPlanYearlySavings, formatPlanAmount } = usePlanPricing()
   const selectedTier = PLAN_TIERS[normalizePlanTier(planTier)]
   const selectedPrice = getPlanPrice(planTier, billing)
+  const discountedSelectedPrice = getDiscountedPlanPrice(selectedPrice, appliedDiscount?.percent_off)
+
+  useEffect(() => {
+    let active = true
+    fetchDiscountCodesAvailability()
+      .then((data) => {
+        if (active) setDiscountCodesAvailable(Boolean(data?.available))
+      })
+      .catch(() => {
+        if (active) setDiscountCodesAvailable(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  function continueToPayment() {
+    navigate('/registro/pago', {
+      state: {
+        billing,
+        planTier: normalizePlanTier(planTier),
+        discountCode: appliedDiscount?.code ?? null,
+        discountPercent: appliedDiscount?.percent_off ?? null,
+      },
+    })
+  }
 
   return (
     <AuthShell backTo="/" backLabel="Inicio">
@@ -146,6 +217,16 @@ export default function RegisterPlan() {
           <div className="flex flex-col gap-4">
             <BillingToggle billing={billing} onChange={setBilling} />
 
+            {discountCodesAvailable ? (
+              <RegisterDiscountCodeField
+                billing={billing}
+                planTier={normalizePlanTier(planTier)}
+                applied={appliedDiscount}
+                onApplied={setAppliedDiscount}
+                onClear={() => setAppliedDiscount(null)}
+              />
+            ) : null}
+
             <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
               {PLAN_TIER_ORDER.map((tierId) => (
                 <PlanCard
@@ -157,6 +238,7 @@ export default function RegisterPlan() {
                   getPlanPrice={getPlanPrice}
                   getPlanYearlySavings={getPlanYearlySavings}
                   formatPlanAmount={formatPlanAmount}
+                  discountPercent={appliedDiscount?.percent_off ?? null}
                 />
               ))}
             </div>
@@ -174,24 +256,33 @@ export default function RegisterPlan() {
                 <p className="mt-1 text-sm text-brand-carmelita/85">
                   Facturación {billing === 'yearly' ? 'anual' : 'mensual'}
                 </p>
-                <p className="mt-3 text-3xl font-bold text-brand-green">
-                  {formatPlanPriceLabel(selectedPrice, formatPlanAmount)}
-                  <span className="ml-1 text-base font-semibold text-brand-carmelita/80">
-                    /{selectedPrice.label}
-                  </span>
-                </p>
+                {appliedDiscount ? (
+                  <>
+                    <p className="mt-3 text-base font-semibold text-brand-carmelita/70 line-through">
+                      {formatPlanPriceLabel(selectedPrice, formatPlanAmount)}
+                    </p>
+                    <p className="text-3xl font-bold text-brand-green">
+                      {formatPlanPriceLabel(discountedSelectedPrice, formatPlanAmount)}
+                      <span className="ml-1 text-base font-semibold text-brand-carmelita/80">
+                        /{selectedPrice.label}
+                      </span>
+                    </p>
+                    <p className="mt-2 text-xs font-medium text-brand-green">
+                      Código {appliedDiscount.code} ({appliedDiscount.percent_off}% off)
+                    </p>
+                  </>
+                ) : (
+                  <p className="mt-3 text-3xl font-bold text-brand-green">
+                    {formatPlanPriceLabel(selectedPrice, formatPlanAmount)}
+                    <span className="ml-1 text-base font-semibold text-brand-carmelita/80">
+                      /{selectedPrice.label}
+                    </span>
+                  </p>
+                )}
               </div>
             </AuthCard>
 
-            <Button
-              onClick={() =>
-                navigate('/registro/pago', {
-                  state: { billing, planTier: normalizePlanTier(planTier) },
-                })
-              }
-            >
-              Continuar
-            </Button>
+            <Button onClick={continueToPayment}>Continuar</Button>
 
             <p className="text-center text-xs text-brand-carmelita/80 lg:text-left">
               ¿Ya tienes cuenta?{' '}

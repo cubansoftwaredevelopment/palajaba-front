@@ -19,6 +19,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminStats from './pages/AdminStats'
 import AdminNotifications from './pages/AdminNotifications'
 import AdminFeedback from './pages/AdminFeedback'
+import AdminDiscountCodes from './pages/AdminDiscountCodes'
 import AdminSettings from './pages/AdminSettings'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
@@ -85,6 +86,7 @@ const router = createBrowserRouter([
             children: [
               { path: 'estadisticas', element: <AdminStats /> },
               { path: 'solicitudes', element: <AdminDashboard /> },
+              { path: 'descuentos', element: <AdminDiscountCodes /> },
               { path: 'mensajes', element: <AdminFeedback /> },
               { path: 'notificaciones', element: <AdminNotifications /> },
               { path: 'configuracion', element: <AdminSettings /> },

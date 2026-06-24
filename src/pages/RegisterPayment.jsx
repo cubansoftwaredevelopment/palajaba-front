@@ -7,6 +7,7 @@ import { authPageIntro, authPaymentGrid } from '../components/auth/authStyles'
 import RegisterProgress from '../components/auth/RegisterProgress'
 import Button from '../components/Button'
 import { getPlanTier, normalizePlanTier, formatPlanPriceLabel } from '../constants/plan'
+import { getDiscountedPlanPrice } from '../lib/discountCode'
 import { usePlanPricing } from '../lib/usePlanPricing'
 import {
   PAYMENT_CARD_NUMBER,
@@ -19,8 +20,11 @@ export default function RegisterPayment() {
   const location = useLocation()
   const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
   const planTier = normalizePlanTier(location.state?.planTier)
+  const discountPercent = location.state?.discountPercent ?? null
+  const discountCode = location.state?.discountCode ?? null
   const { getPlanPrice, formatPlanAmount } = usePlanPricing()
   const price = getPlanPrice(planTier, billing)
+  const displayPrice = getDiscountedPlanPrice(price, discountPercent)
   const tier = getPlanTier(planTier)
   const [copied, setCopied] = useState(null)
 
@@ -44,10 +48,22 @@ export default function RegisterPayment() {
             description={
               <>
                 Transfiere{' '}
-                <strong className="text-brand-green">
-                  {formatPlanPriceLabel(price, formatPlanAmount)}
-                </strong>{' '}
-                por el plan {tier.name} ({billing === 'yearly' ? 'anual' : 'mensual'}) para activar tu solicitud.
+                {discountPercent ? (
+                  <>
+                    <span className="text-brand-carmelita/80 line-through">
+                      {formatPlanPriceLabel(price, formatPlanAmount)}
+                    </span>{' '}
+                    <strong className="text-brand-green">
+                      {formatPlanPriceLabel(displayPrice, formatPlanAmount)}
+                    </strong>
+                  </>
+                ) : (
+                  <strong className="text-brand-green">
+                    {formatPlanPriceLabel(displayPrice, formatPlanAmount)}
+                  </strong>
+                )}{' '}
+                por el plan {tier.name} ({billing === 'yearly' ? 'anual' : 'mensual'})
+                {discountCode ? ` con el código ${discountCode}` : ''} para activar tu solicitud.
               </>
             }
             layout="desktop-left"
@@ -112,7 +128,9 @@ export default function RegisterPayment() {
 
             <Button
               onClick={() =>
-                navigate('/registro/verificacion', { state: { billing, planTier } })
+                navigate('/registro/verificacion', {
+                  state: { billing, planTier, discountCode, discountPercent },
+                })
               }
             >
               Ya transferí
