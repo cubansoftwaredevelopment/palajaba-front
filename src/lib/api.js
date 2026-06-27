@@ -566,6 +566,29 @@ export function reorderCatalogCategories(token, categoryIds) {
   })
 }
 
+export function updateCatalogCategoryProductSort(token, categoryId, productSortMode) {
+  return request(`/api/auth/me/catalog/categories/${encodeURIComponent(categoryId)}/product-sort`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ product_sort_mode: productSortMode }),
+  })
+}
+
+export function reorderCatalogProducts(token, categoryId, productIds) {
+  return request(
+    `/api/auth/me/catalog/categories/${encodeURIComponent(categoryId)}/products/order`,
+    {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ product_ids: productIds }),
+    },
+  )
+}
+
 export function fetchCatalogCurrencies(token) {
   return request('/api/auth/me/catalog/currencies', {
     headers: {

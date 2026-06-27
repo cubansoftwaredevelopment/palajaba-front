@@ -32,3 +32,5 @@ export function getCategoryInitial(name) {
   if (!trimmed) return '?'
   return trimmed.charAt(0).toUpperCase()
 }
+
+export { PRODUCT_SORT_MODES, getProductSortModeLabel } from '../lib/catalogProductSort'

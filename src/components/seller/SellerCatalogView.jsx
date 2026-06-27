@@ -7,6 +7,7 @@ export default function SellerCatalogView({
   onEditProduct,
   onDeleteProduct,
   onDeleteCategory,
+  onOrganizeProducts,
 }) {
   return (
     <div className="flex flex-col gap-3 sm:gap-4">
@@ -19,6 +20,7 @@ export default function SellerCatalogView({
           onEditProduct={onEditProduct}
           onDeleteProduct={onDeleteProduct}
           onDeleteCategory={onDeleteCategory}
+          onOrganizeProducts={onOrganizeProducts}
         />
       ))}
     </div>

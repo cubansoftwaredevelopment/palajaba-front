@@ -5,6 +5,7 @@ import SellerCatalogProductItem from './SellerCatalogProductItem'
 import {
   sellerCatalogAddProductZone,
   sellerCatalogCategoryCard,
+  sellerIconBtn,
   sellerIconBtnDanger,
 } from './sellerStyles'
 
@@ -23,6 +24,8 @@ export default function SellerCatalogCategoryCard({
   onDeleteProduct,
 
   onDeleteCategory,
+
+  onOrganizeProducts,
 
 }) {
 
@@ -60,16 +63,31 @@ export default function SellerCatalogCategoryCard({
 
         </div>
 
-        <button
-          type="button"
-          onClick={() => onDeleteCategory(category)}
-          className={`${sellerIconBtnDanger} shrink-0`}
-          aria-label={`Eliminar categoría ${category.name}`}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-          </svg>
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          {(category.product_count ?? products.length) > 0 ? (
+            <button
+              type="button"
+              onClick={() => onOrganizeProducts(category)}
+              className={`${sellerIconBtn} shrink-0`}
+              aria-label={`Organizar productos de ${category.name}`}
+              title="Organizar productos"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+              </svg>
+            </button>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => onDeleteCategory(category)}
+            className={`${sellerIconBtnDanger} shrink-0`}
+            aria-label={`Eliminar categoría ${category.name}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+            </svg>
+          </button>
+        </div>
 
       </div>
 

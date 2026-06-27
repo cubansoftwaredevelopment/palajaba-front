@@ -6,6 +6,7 @@ import CreateCatalogCategoryModal from '../../components/seller/CreateCatalogCat
 import CreateCatalogProductModal from '../../components/seller/CreateCatalogProductModal'
 import DeleteCatalogCategoryModal from '../../components/seller/DeleteCatalogCategoryModal'
 import DeleteCatalogProductModal from '../../components/seller/DeleteCatalogProductModal'
+import OrganizeCatalogProductsModal from '../../components/seller/OrganizeCatalogProductsModal'
 import ReorderCatalogCategoriesModal from '../../components/seller/ReorderCatalogCategoriesModal'
 import SellerCatalogEmpty from '../../components/seller/SellerCatalogEmpty'
 import SellerCatalogFab from '../../components/seller/SellerCatalogFab'
@@ -41,6 +42,7 @@ export default function SellerCatalog() {
   const [categoryToDelete, setCategoryToDelete] = useState(null)
   const [showShareCatalog, setShowShareCatalog] = useState(false)
   const [showReorderCategories, setShowReorderCategories] = useState(false)
+  const [categoryToOrganize, setCategoryToOrganize] = useState(null)
 
   const loadCatalog = useCallback(async () => {
     setError('')
@@ -107,6 +109,12 @@ export default function SellerCatalog() {
     setShowReorderCategories(false)
     setSummary(nextSummary)
     setSuccessMessage('Orden de categorías actualizado.')
+  }
+
+  function handleProductsOrganized(nextSummary) {
+    setCategoryToOrganize(null)
+    setSummary(nextSummary)
+    setSuccessMessage('Orden de productos actualizado.')
   }
 
   const hasLocalCategories = (summary?.categories?.length ?? 0) > 0
@@ -213,6 +221,7 @@ export default function SellerCatalog() {
               onEditProduct={setProductToEdit}
               onDeleteProduct={setProductToDelete}
               onDeleteCategory={setCategoryToDelete}
+              onOrganizeProducts={setCategoryToOrganize}
             />
             <SellerCatalogFab
               onAddCategory={() => setShowCreateCategory(true)}
@@ -283,6 +292,14 @@ export default function SellerCatalog() {
             categories={summary.categories}
             onClose={() => setShowReorderCategories(false)}
             onSaved={handleCategoriesReordered}
+          />
+        ) : null}
+
+        {categoryToOrganize ? (
+          <OrganizeCatalogProductsModal
+            category={categoryToOrganize}
+            onClose={() => setCategoryToOrganize(null)}
+            onSaved={handleProductsOrganized}
           />
         ) : null}
       </div>
