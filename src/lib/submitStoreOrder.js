@@ -1,5 +1,7 @@
-import { createMarketplaceOrder } from './api'
+import { createMarketplaceOrder, ApiError } from './api'
 import { getBuyerLocation } from './buyerLocation'
+import { CHECKOUT_SAVE_FAILED_MESSAGE } from './checkoutMessages.js'
+import { isSavedMarketplaceOrder } from './marketplaceOrder.js'
 import { inferOrderPaymentCurrency, resolveOrderLineItems } from './orderPricing'
 
 function buildBuyerZone() {
@@ -38,11 +40,17 @@ export async function submitStoreOrder({
   const lineItems = resolveOrderLineItems(items, displayCurrency, cupPerUnit)
   const paymentCurrency = inferOrderPaymentCurrency(lineItems)
 
-  return createMarketplaceOrder({
+  const order = await createMarketplaceOrder({
     store_id: storeId,
     items: lineItems,
     payment_currency: paymentCurrency,
     delivery: buildDeliveryPayload(delivery),
     buyer_zone: buildBuyerZone(),
   })
+
+  if (!isSavedMarketplaceOrder(order)) {
+    throw new ApiError(CHECKOUT_SAVE_FAILED_MESSAGE)
+  }
+
+  return order
 }

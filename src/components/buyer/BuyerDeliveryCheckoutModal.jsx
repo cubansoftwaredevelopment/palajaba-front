@@ -28,7 +28,13 @@ function WhatsAppIcon() {
   )
 }
 
-export default function BuyerDeliveryCheckoutModal({ checkout, onClose, onConfirm, onPickup }) {
+export default function BuyerDeliveryCheckoutModal({
+  checkout,
+  checkoutSubmitting = false,
+  onClose,
+  onConfirm,
+  onPickup,
+}) {
   const titleId = useId()
   const location = getBuyerLocation()
   const [form, setForm] = useState(() => getBuyerDeliveryDefaults())
@@ -55,7 +61,7 @@ export default function BuyerDeliveryCheckoutModal({ checkout, onClose, onConfir
     if (error) setError('')
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
 
     const validationError = validateDeliveryForm(form)
@@ -73,7 +79,12 @@ export default function BuyerDeliveryCheckoutModal({ checkout, onClose, onConfir
     }
 
     saveBuyerDeliveryDefaults(form)
-    onConfirm(delivery)
+    await onConfirm(delivery)
+  }
+
+  async function handlePickup() {
+    if (checkoutSubmitting) return
+    await onPickup?.()
   }
 
   const zoneHint =
@@ -165,16 +176,26 @@ export default function BuyerDeliveryCheckoutModal({ checkout, onClose, onConfir
           </div>
 
           <div className={buyerDeliveryModalFooter}>
-            <button type="submit" className={buyerJabaWhatsAppBtn}>
+            <button type="submit" disabled={checkoutSubmitting} className={buyerJabaWhatsAppBtn}>
               <WhatsAppIcon />
-              Enviar pedido a domicilio
+              {checkoutSubmitting ? 'Registrando pedido…' : 'Enviar pedido a domicilio'}
             </button>
             {onPickup ? (
-              <button type="button" onClick={onPickup} className={buyerJabaDeliveryBtn}>
-                Coordinar sin domicilio
+              <button
+                type="button"
+                onClick={handlePickup}
+                disabled={checkoutSubmitting}
+                className={buyerJabaDeliveryBtn}
+              >
+                {checkoutSubmitting ? 'Registrando pedido…' : 'Coordinar sin domicilio'}
               </button>
             ) : null}
-            <button type="button" onClick={onClose} className="text-sm font-semibold text-brand-carmelita/80 underline-offset-2 active:text-brand-green lg:hover:text-brand-green lg:hover:underline">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={checkoutSubmitting}
+              className="text-sm font-semibold text-brand-carmelita/80 underline-offset-2 active:text-brand-green lg:hover:text-brand-green lg:hover:underline disabled:opacity-50"
+            >
               Cancelar
             </button>
           </div>

@@ -48,9 +48,10 @@ export default function BuyerProductCard({ product, compact = false }) {
     window.setTimeout(() => setter(false), 450)
   }
 
-  function handleBuy(event) {
+  async function handleBuy(event) {
     event?.stopPropagation?.()
-    buyProduct(product)
+    const success = await buyProduct(product)
+    if (!success) return
     pulse(setBuyPulse)
     setDetailOpen(false)
   }

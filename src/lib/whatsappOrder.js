@@ -1,3 +1,4 @@
+import { openExternalUrl } from './nativeApp'
 import { PHONE_PREFIX } from './phone'
 import { getCupPerUnit } from './exchangeRates'
 import { resolveDisplayPrice } from './displayPrice'
@@ -106,6 +107,6 @@ export function openWhatsAppCheckout({
   const url = buildWhatsAppUrl(storePhone, message)
   if (!url) return false
 
-  window.open(url, '_blank', 'noopener,noreferrer')
+  openExternalUrl(url)
   return true
 }

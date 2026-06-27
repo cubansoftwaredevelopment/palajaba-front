@@ -28,6 +28,7 @@ import { useBuyerDisplayCurrency } from './BuyerDisplayCurrencyContext'
 import { recordProductPopularity } from '../lib/productPopularity'
 import { submitStoreOrder } from '../lib/submitStoreOrder'
 import { openWhatsAppCheckout } from '../lib/whatsappOrder'
+import { runStoreCheckout } from '../lib/runStoreCheckout'
 
 import BuyerDeliveryCheckoutModal from '../components/buyer/BuyerDeliveryCheckoutModal'
 import BuyerJabaSyncAlert from '../components/buyer/BuyerJabaSyncAlert'
@@ -50,6 +51,7 @@ export function BuyerJabaProvider({ children }) {
   const [syncingContacts, setSyncingContacts] = useState(false)
   const [deliveryCheckout, setDeliveryCheckout] = useState(null)
   const [syncRemoved, setSyncRemoved] = useState(null)
+  const [checkoutSubmittingStoreId, setCheckoutSubmittingStoreId] = useState(null)
 
   useEffect(() => {
     function onChange(event) {
@@ -123,39 +125,39 @@ export function BuyerJabaProvider({ children }) {
   const count = useMemo(() => items.reduce((total, item) => total + (item.quantity ?? 1), 0), [items])
   const groups = useMemo(() => groupJabaByStore(items), [items])
 
-  const runWhatsAppCheckout = useCallback((payload, delivery = null) => {
+  const runWhatsAppCheckout = useCallback(async (payload, delivery = null) => {
     if (!payload?.items?.length || !payload.storePhone) return false
 
-    const needsRates = payload.items.some((item) =>
-      needsExchangeRatesForDisplay(item, displayCurrency),
-    )
-    if (needsRates && !ratesReady && !areExchangeRatesAvailable()) {
-      window.alert('Espera a que carguen las tasas de cambio antes de confirmar el pedido.')
-      return false
+    setCheckoutSubmittingStoreId(payload.storeId ?? '__checkout__')
+
+    try {
+      const result = await runStoreCheckout({
+        payload,
+        delivery,
+        displayCurrency,
+        cupPerUnit,
+        ratesReady,
+        areExchangeRatesAvailable,
+        needsExchangeRatesForDisplay,
+        submitStoreOrder,
+        openWhatsAppCheckout,
+      })
+
+      if (!result.ok) {
+        if (result.message) {
+          window.alert(result.message)
+        }
+        return false
+      }
+
+      if (result.warning) {
+        window.alert(result.warning)
+      }
+
+      return true
+    } finally {
+      setCheckoutSubmittingStoreId(null)
     }
-
-    const opened = openWhatsAppCheckout({
-      storeName: payload.storeName,
-      storePhone: payload.storePhone,
-      items: payload.items,
-      delivery,
-      displayCurrency,
-      cupPerUnit,
-    })
-
-    if (!opened) return false
-
-    submitStoreOrder({
-      storeId: payload.storeId,
-      items: payload.items,
-      delivery,
-      displayCurrency,
-      cupPerUnit,
-    }).catch((err) => {
-      console.error('No se pudo registrar el pedido en Pa\' La Jaba:', err)
-    })
-
-    return true
   }, [cupPerUnit, displayCurrency, ratesReady])
 
   const addProduct = useCallback((product) => {
@@ -245,10 +247,10 @@ export function BuyerJabaProvider({ children }) {
   }, [])
 
   const confirmDeliveryCheckout = useCallback(
-    (delivery) => {
+    async (delivery) => {
       if (!deliveryCheckout) return false
 
-      const success = runWhatsAppCheckout(deliveryCheckout, delivery)
+      const success = await runWhatsAppCheckout(deliveryCheckout, delivery)
       if (success) {
         setDeliveryCheckout(null)
       }
@@ -257,10 +259,10 @@ export function BuyerJabaProvider({ children }) {
     [deliveryCheckout, runWhatsAppCheckout],
   )
 
-  const confirmPickupCheckout = useCallback(() => {
+  const confirmPickupCheckout = useCallback(async () => {
     if (!deliveryCheckout) return false
 
-    const success = runWhatsAppCheckout(deliveryCheckout)
+    const success = await runWhatsAppCheckout(deliveryCheckout)
     if (success) {
       setDeliveryCheckout(null)
     }
@@ -279,6 +281,7 @@ export function BuyerJabaProvider({ children }) {
       open,
       syncingContacts,
       deliveryCheckout,
+      checkoutSubmittingStoreId,
       isInJaba,
       addProduct,
       removeProduct,
@@ -302,6 +305,7 @@ export function BuyerJabaProvider({ children }) {
       open,
       syncingContacts,
       deliveryCheckout,
+      checkoutSubmittingStoreId,
       addProduct,
       removeProduct,
       setQuantity,
@@ -321,6 +325,7 @@ export function BuyerJabaProvider({ children }) {
       {children}
       <BuyerDeliveryCheckoutModal
         checkout={deliveryCheckout}
+        checkoutSubmitting={Boolean(checkoutSubmittingStoreId)}
         onClose={closeDeliveryCheckout}
         onConfirm={confirmDeliveryCheckout}
         onPickup={confirmPickupCheckout}

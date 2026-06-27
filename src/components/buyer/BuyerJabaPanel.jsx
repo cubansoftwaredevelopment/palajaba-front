@@ -36,6 +36,7 @@ function StoreGroup({
   displayCurrency,
   cupPerUnit,
   syncingContacts,
+  checkoutSubmitting,
   onCheckout,
   onRequestDelivery,
   onClearStore,
@@ -55,7 +56,7 @@ function StoreGroup({
     .join(' + ')
 
   const storePhone = group.store_phone ?? resolveStorePhone(group.items)
-  const canCheckout = Boolean(storePhone) && !syncingContacts
+  const canCheckout = Boolean(storePhone) && !syncingContacts && !checkoutSubmitting
   const deliveryAvailable = canCheckout && allItemsOfferDelivery(group.items)
 
   return (
@@ -137,28 +138,30 @@ function StoreGroup({
           <button
             type="button"
             onClick={() => onRequestDelivery(group.store_id)}
+            disabled={!canCheckout}
             className={buyerJabaDeliveryBtn}
           >
             Pedir a domicilio
           </button>
           <button
             type="button"
-            onClick={() => onCheckout(group.store_id)}
+            onClick={() => void onCheckout(group.store_id)}
+            disabled={!canCheckout}
             className={buyerJabaWhatsAppBtn}
           >
             <WhatsAppIcon />
-            Coordinar por WhatsApp
+            {checkoutSubmitting ? 'Registrando pedido…' : 'Coordinar por WhatsApp'}
           </button>
         </div>
       ) : (
         <button
           type="button"
-          onClick={() => onCheckout(group.store_id)}
+          onClick={() => void onCheckout(group.store_id)}
           disabled={!canCheckout}
           className={buyerJabaWhatsAppBtn}
         >
           <WhatsAppIcon />
-          Pedir por WhatsApp
+          {checkoutSubmitting ? 'Registrando pedido…' : 'Pedir por WhatsApp'}
         </button>
       )}
 
@@ -188,6 +191,7 @@ export default function BuyerJabaPanel() {
     groups,
     count,
     syncingContacts,
+    checkoutSubmittingStoreId,
     checkoutStore,
     requestDeliveryCheckout,
     clearStore,
@@ -265,6 +269,7 @@ export default function BuyerJabaPanel() {
                   displayCurrency={displayCurrency}
                   cupPerUnit={cupPerUnit}
                   syncingContacts={syncingContacts}
+                  checkoutSubmitting={checkoutSubmittingStoreId === group.store_id}
                   onCheckout={checkoutStore}
                   onRequestDelivery={requestDeliveryCheckout}
                   onClearStore={clearStore}
