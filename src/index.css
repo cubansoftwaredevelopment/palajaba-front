@@ -153,10 +153,10 @@
   }
 
   .catalog-theme-scope.catalog-theme-red {
-    --color-brand-green: #4a0a0f;
+    --color-brand-green: #dc143c;
     --color-brand-white: #fdfbf2;
-    --color-brand-yellow: #85222f;
-    --color-brand-carmelita: #5f0309;
+    --color-brand-yellow: #ff4040;
+    --color-brand-carmelita: #e34234;
   }
 
   .catalog-theme-scope.catalog-theme-pink {

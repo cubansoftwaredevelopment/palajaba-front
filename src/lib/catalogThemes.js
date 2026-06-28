@@ -11,13 +11,16 @@
  * - Urban Fog      #848484 → brand-carmelita: texto secundario y metadatos (~3.5:1)
  * - Ironclad Grey  #565656 → reservado para bordes fuertes vía opacidad sobre charcoal
  *
- * Tema rojo — escala burdeos/vino (matiz ~0–8°, sin rosas ni magentas):
+ * Tema rojo — rojos vivos (matiz ~0–8°, sin burdeos ni magentas del tema rosa):
+ * Referencias: Cherry #D2042D, Crimson #DC143C, Vermillion #E34234, Coral Red #FF4040.
+ * Fondo crema Jaba para contraste y coherencia con la plataforma.
+ *
  * Escala oscuro → claro (5 tonos):
- * - Rum Chocolate  #4a0a0f → brand-green: títulos, botones primarios (~12:1 sobre crema)
- * - Vampire Hunter #5f0309 → brand-carmelita: texto secundario (~10:1)
- * - Cordovan Wine  #6e1a24 → puente vino entre los burdeos oscuros y Red Dahlia
- * - Red Dahlia     #85222f → brand-yellow: acentos, chips y avisos (~5.5:1)
- * - Crema Jaba     #fdfbf2 → brand-white: fondo (beige medio de Pa' La Jaba)
+ * - Cherry Red   #d2042d → brand-green: títulos, botones primarios (~5.5:1 sobre crema)
+ * - Crimson      #dc143c → puente en la escala, rojo carmesí clásico
+ * - Vermillion   #e34234 → brand-carmelita: texto secundario (~4.2:1)
+ * - Coral Red    #ff4040 → brand-yellow: acentos, chips y avisos
+ * - Crema Jaba   #fdfbf2 → brand-white: fondo
  *
  * Tema rosa — escala magenta/rosa (~330–345°), fondo Peachy Pink (#fce4ec):
  * - Deep Rose    #c2185b → brand-green: títulos, botones primarios (~5.8:1)
@@ -49,8 +52,8 @@ export const CATALOG_THEME_PALETTES = {
   red: {
     id: 'red',
     label: 'Rojo',
-    description: 'Burdeos y carmesí sobre el beige crema de Pa\' La Jaba.',
-    swatches: ['#4a0a0f', '#5f0309', '#6e1a24', '#85222f', '#fdfbf2'],
+    description: 'Rojos vivos estilo carmesí y coral sobre el beige crema de Pa\' La Jaba.',
+    swatches: ['#d2042d', '#dc143c', '#e34234', '#ff4040', '#fdfbf2'],
     className: 'catalog-theme-red',
   },
   pink: {
