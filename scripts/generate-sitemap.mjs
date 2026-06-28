@@ -86,4 +86,7 @@ async function main() {
   console.log(`generate-sitemap: ${outputPath} (${urls.length} URLs)`)
 }
 
-main()
+main().catch((error) => {
+  console.error(`generate-sitemap: error inesperado (${error.message}).`)
+  process.exit(1)
+})
