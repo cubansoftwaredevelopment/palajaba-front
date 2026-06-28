@@ -30,6 +30,8 @@ const REQUIRED = [
   { id: 'comida', name: 'Comida y bebidas' },
   { id: 'construccion', name: 'Materiales y herramientas de construcción' },
   { id: 'medios-transporte', name: 'Medios de transporte' },
+  { id: 'articulos-limpieza', name: 'Articulos de limpieza' },
+  { id: 'suplementos-gimnasio', name: 'Suplementos y articulos de gimnasio' },
   { id: 'otros', name: 'Otros' },
 ]
 

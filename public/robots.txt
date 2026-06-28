@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Rutas privadas o transaccionales (no indexar)
+Disallow: /admin
+Disallow: /tienda
+Disallow: /login
+Disallow: /registro/pago
+Disallow: /registro/verificacion
+Disallow: /registro/exito
+
+# Sitemap generado en cada build de producción
+Sitemap: https://palajaba.com/sitemap.xml
