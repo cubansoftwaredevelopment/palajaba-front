@@ -30,6 +30,16 @@
  * - Peachy Pink  #fce4ec → brand-white: fondo de página
  * - Blush Pink   #f48fb1 → brand-yellow: acentos, chips y avisos
  * - Dusty Pink   #e91e63 → brand-carmelita: texto secundario
+ *
+ * Tema verde — amarillo-verde (~88–100°), no verde azulado (~120°):
+ * Oscuros oliva/lima para texto; YellowGreen #9ACD32 en acentos; fondo cálido #f1f8e9.
+ *
+ * Escala oscuro → claro (5 tonos):
+ * - Olive Deep    #33691e → brand-green: títulos, botones primarios (~7:1)
+ * - Olive Drab    #558b2f → brand-carmelita: texto secundario (~5.5:1)
+ * - Light Green   #7cb342 → puente medio en la escala
+ * - Yellow Green  #9acd32 → brand-yellow: acentos, chips y avisos
+ * - Spring Mist   #f1f8e9 → brand-white: fondo con tinte amarillo-verde
  */
 
 export const DEFAULT_CATALOG_THEME = 'default'
@@ -62,6 +72,13 @@ export const CATALOG_THEME_PALETTES = {
     description: 'Rosas y magentas suaves sobre un fondo Peachy Pink delicado.',
     swatches: ['#c2185b', '#e91e63', '#f48fb1', '#f8bbd0', '#fce4ec'],
     className: 'catalog-theme-pink',
+  },
+  green: {
+    id: 'green',
+    label: 'Verde',
+    description: 'Amarillo-verde oliva con acentos lima cálidos, lejos del verde azulado.',
+    swatches: ['#33691e', '#558b2f', '#7cb342', '#9acd32', '#f1f8e9'],
+    className: 'catalog-theme-green',
   },
 }
 

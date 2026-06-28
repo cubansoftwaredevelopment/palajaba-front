@@ -15,14 +15,16 @@ test('normalizeCatalogTheme usa default para valores desconocidos', () => {
   assert.equal(normalizeCatalogTheme('neon'), 'default')
 })
 
-test('normalizeCatalogTheme acepta default, grey, red y pink', () => {
+test('normalizeCatalogTheme acepta default, grey, red, pink y green', () => {
   assert.equal(normalizeCatalogTheme('default'), 'default')
   assert.equal(normalizeCatalogTheme('grey'), 'grey')
   assert.equal(normalizeCatalogTheme('red'), 'red')
   assert.equal(normalizeCatalogTheme('pink'), 'pink')
+  assert.equal(normalizeCatalogTheme('green'), 'green')
   assert.equal(normalizeCatalogTheme(' GREY '), 'grey')
   assert.equal(normalizeCatalogTheme(' RED '), 'red')
   assert.equal(normalizeCatalogTheme(' PINK '), 'pink')
+  assert.equal(normalizeCatalogTheme(' GREEN '), 'green')
 })
 
 test('getCatalogThemeClass mapea clases css por tema', () => {
@@ -30,15 +32,21 @@ test('getCatalogThemeClass mapea clases css por tema', () => {
   assert.equal(getCatalogThemeClass('grey'), 'catalog-theme-grey')
   assert.equal(getCatalogThemeClass('red'), 'catalog-theme-red')
   assert.equal(getCatalogThemeClass('pink'), 'catalog-theme-pink')
+  assert.equal(getCatalogThemeClass('green'), 'catalog-theme-green')
   assert.equal(getCatalogThemeClass('unknown'), 'catalog-theme-default')
 })
 
-test('listCatalogThemes incluye clásico, gris, rojo y rosa', () => {
+test('listCatalogThemes incluye clásico, gris, rojo, rosa y verde', () => {
   const themes = listCatalogThemes()
   assert.deepEqual(
     themes.map((theme) => theme.id),
-    ['default', 'grey', 'red', 'pink'],
+    ['default', 'grey', 'red', 'pink', 'green'],
   )
+})
+
+test('tema verde usa amarillo-verde cálido con acentos lima', () => {
+  const green = getCatalogThemeDefinition('green')
+  assert.deepEqual(green.swatches, ['#33691e', '#558b2f', '#7cb342', '#9acd32', '#f1f8e9'])
 })
 
 test('tema rosa expone la paleta de cinco tonos rosa', () => {
