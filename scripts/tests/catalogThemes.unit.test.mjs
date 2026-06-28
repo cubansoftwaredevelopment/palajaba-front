@@ -15,16 +15,18 @@ test('normalizeCatalogTheme usa default para valores desconocidos', () => {
   assert.equal(normalizeCatalogTheme('neon'), 'default')
 })
 
-test('normalizeCatalogTheme acepta default, grey, red, pink y green', () => {
+test('normalizeCatalogTheme acepta todos los temas soportados', () => {
   assert.equal(normalizeCatalogTheme('default'), 'default')
   assert.equal(normalizeCatalogTheme('grey'), 'grey')
   assert.equal(normalizeCatalogTheme('red'), 'red')
   assert.equal(normalizeCatalogTheme('pink'), 'pink')
   assert.equal(normalizeCatalogTheme('green'), 'green')
+  assert.equal(normalizeCatalogTheme('blue'), 'blue')
   assert.equal(normalizeCatalogTheme(' GREY '), 'grey')
   assert.equal(normalizeCatalogTheme(' RED '), 'red')
   assert.equal(normalizeCatalogTheme(' PINK '), 'pink')
   assert.equal(normalizeCatalogTheme(' GREEN '), 'green')
+  assert.equal(normalizeCatalogTheme(' BLUE '), 'blue')
 })
 
 test('getCatalogThemeClass mapea clases css por tema', () => {
@@ -33,15 +35,21 @@ test('getCatalogThemeClass mapea clases css por tema', () => {
   assert.equal(getCatalogThemeClass('red'), 'catalog-theme-red')
   assert.equal(getCatalogThemeClass('pink'), 'catalog-theme-pink')
   assert.equal(getCatalogThemeClass('green'), 'catalog-theme-green')
+  assert.equal(getCatalogThemeClass('blue'), 'catalog-theme-blue')
   assert.equal(getCatalogThemeClass('unknown'), 'catalog-theme-default')
 })
 
-test('listCatalogThemes incluye clásico, gris, rojo, rosa y verde', () => {
+test('listCatalogThemes incluye todos los temas del catálogo', () => {
   const themes = listCatalogThemes()
   assert.deepEqual(
     themes.map((theme) => theme.id),
-    ['default', 'grey', 'red', 'pink', 'green'],
+    ['default', 'grey', 'red', 'pink', 'green', 'blue'],
   )
+})
+
+test('tema azul expone la paleta oceánica de cinco tonos', () => {
+  const blue = getCatalogThemeDefinition('blue')
+  assert.deepEqual(blue.swatches, ['#092c56', '#225688', '#668ca9', '#a9cbe0', '#f0f5f4'])
 })
 
 test('tema verde usa amarillo-verde cálido con acentos lima', () => {

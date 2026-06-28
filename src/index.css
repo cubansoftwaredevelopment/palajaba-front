@@ -173,6 +173,13 @@
     --color-brand-carmelita: #558b2f;
   }
 
+  .catalog-theme-scope.catalog-theme-blue {
+    --color-brand-green: #092c56;
+    --color-brand-white: #f0f5f4;
+    --color-brand-yellow: #668ca9;
+    --color-brand-carmelita: #225688;
+  }
+
   button {
     @apply cursor-pointer font-[inherit] [-webkit-tap-highlight-color:transparent];
   }

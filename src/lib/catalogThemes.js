@@ -40,6 +40,13 @@
  * - Light Green   #7cb342 → puente medio en la escala
  * - Yellow Green  #9acd32 → brand-yellow: acentos, chips y avisos
  * - Spring Mist   #f1f8e9 → brand-white: fondo con tinte amarillo-verde
+ *
+ * Tema azul — escala oceánica (~205–210°), fondo Quartz (#f0f5f4):
+ * - Abyss    #092c56 → brand-green: títulos, botones primarios (~12:1)
+ * - Lapis    #225688 → brand-carmelita: texto secundario (~7:1)
+ * - Slate    #668ca9 → brand-yellow: acentos, chips y avisos (~3.8:1)
+ * - Glacier  #a9cbe0 → puente claro en la escala
+ * - Quartz   #f0f5f4 → brand-white: fondo de página
  */
 
 export const DEFAULT_CATALOG_THEME = 'default'
@@ -79,6 +86,13 @@ export const CATALOG_THEME_PALETTES = {
     description: 'Amarillo-verde oliva con acentos lima cálidos, lejos del verde azulado.',
     swatches: ['#33691e', '#558b2f', '#7cb342', '#9acd32', '#f1f8e9'],
     className: 'catalog-theme-green',
+  },
+  blue: {
+    id: 'blue',
+    label: 'Azul',
+    description: 'Azules profundos y glaciares sobre un fondo Quartz claro y sereno.',
+    swatches: ['#092c56', '#225688', '#668ca9', '#a9cbe0', '#f0f5f4'],
+    className: 'catalog-theme-blue',
   },
 }
 
