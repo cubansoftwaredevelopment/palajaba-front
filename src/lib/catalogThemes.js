@@ -41,12 +41,15 @@
  * - Yellow Green  #9acd32 → brand-yellow: acentos, chips y avisos
  * - Spring Mist   #f1f8e9 → brand-white: fondo con tinte amarillo-verde
  *
- * Tema azul — escala oceánica (~205–210°), fondo Quartz (#f0f5f4):
- * - Abyss    #092c56 → brand-green: títulos, botones primarios (~12:1)
- * - Lapis    #225688 → brand-carmelita: texto secundario (~7:1)
- * - Slate    #668ca9 → brand-yellow: acentos, chips y avisos (~3.8:1)
- * - Glacier  #a9cbe0 → puente claro en la escala
- * - Quartz   #f0f5f4 → brand-white: fondo de página
+ * Tema azul — contraste luminancia: abisales para texto, azul vivo para acentos (~205–210°):
+ * Oscuros Abyss/Lapis del usuario; Slate/Glacier reemplazados por azules brillantes UI.
+ *
+ * Escala oscuro → claro (5 tonos):
+ * - Abyss        #092c56 → brand-green: títulos, botones primarios (~12:1)
+ * - Lapis        #225688 → brand-carmelita: texto secundario (~7:1)
+ * - Royal Blue   #1976d2 → puente medio en la escala
+ * - Sky Blue     #42a5f5 → brand-yellow: acentos, chips y avisos
+ * - Quartz       #f0f5f4 → brand-white: fondo de página
  */
 
 export const DEFAULT_CATALOG_THEME = 'default'
@@ -90,8 +93,8 @@ export const CATALOG_THEME_PALETTES = {
   blue: {
     id: 'blue',
     label: 'Azul',
-    description: 'Azules profundos y glaciares sobre un fondo Quartz claro y sereno.',
-    swatches: ['#092c56', '#225688', '#668ca9', '#a9cbe0', '#f0f5f4'],
+    description: 'Azul abisal con acentos cielo brillantes sobre fondo Quartz.',
+    swatches: ['#092c56', '#225688', '#1976d2', '#42a5f5', '#f0f5f4'],
     className: 'catalog-theme-blue',
   },
 }

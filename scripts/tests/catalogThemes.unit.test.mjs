@@ -47,9 +47,9 @@ test('listCatalogThemes incluye todos los temas del catálogo', () => {
   )
 })
 
-test('tema azul expone la paleta oceánica de cinco tonos', () => {
+test('tema azul contrasta abisal con azul cielo brillante', () => {
   const blue = getCatalogThemeDefinition('blue')
-  assert.deepEqual(blue.swatches, ['#092c56', '#225688', '#668ca9', '#a9cbe0', '#f0f5f4'])
+  assert.deepEqual(blue.swatches, ['#092c56', '#225688', '#1976d2', '#42a5f5', '#f0f5f4'])
 })
 
 test('tema verde usa amarillo-verde cálido con acentos lima', () => {
