@@ -12,6 +12,7 @@
     "lint": "eslint .",
     "test:checkout": "node scripts/tests/runStoreCheckout.unit.test.mjs && node scripts/tests/marketplaceOrder.unit.test.mjs",
     "test:catalog-sort": "node scripts/tests/catalogProductSort.unit.test.mjs",
+    "test:catalog-theme": "node scripts/tests/catalogThemes.unit.test.mjs",
     "verify:checkout-flow": "node scripts/verify-checkout-flow.mjs",
     "verify:categories": "node scripts/verify-business-categories.mjs",
     "verify:media-urls": "node scripts/verify-media-urls.mjs",

@@ -7,6 +7,7 @@ import WelcomeGate from './pages/WelcomeGate'
 import Login from './pages/Login'
 import SellerGeneral from './pages/seller/SellerGeneral'
 import SellerCatalog from './pages/seller/SellerCatalog'
+import SellerCatalogPreview from './pages/seller/SellerCatalogPreview'
 import SellerOrders from './pages/seller/SellerOrders'
 import SellerProfile from './pages/seller/SellerProfile'
 import SellerCompleteProfile from './pages/SellerCompleteProfile'
@@ -65,6 +66,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <SellerGeneral /> },
           { path: 'catalogo', element: <SellerCatalog /> },
+          { path: 'catalogo/vista-previa', element: <SellerCatalogPreview /> },
           { path: 'pedidos', element: <SellerOrders /> },
           { path: 'perfil', element: <SellerProfile /> },
           { path: 'completar-perfil', element: <SellerCompleteProfile /> },

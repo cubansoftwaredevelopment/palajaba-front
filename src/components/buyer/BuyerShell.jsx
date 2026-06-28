@@ -9,10 +9,18 @@ import {
 import { useBuyerMarketplaceHub } from '../../lib/buyerMarketplaceHub'
 import { isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
 
-export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart = null, headerEnd = null, children }) {
+export default function BuyerShell({
+  mode = 'default',
+  backTo,
+  backLabel = 'Volver',
+  headerStart = null,
+  headerEnd = null,
+  children,
+}) {
   const showBackLink = Boolean(backTo) && !headerStart
+  const isSellerPreview = mode === 'seller-preview'
   const marketplaceHub = useBuyerMarketplaceHub()
-  const sellerBrowsing = isSellerBrowsingMarketplace()
+  const sellerBrowsing = isSellerBrowsingMarketplace() && !isSellerPreview
   const scrollPaddingClass = marketplaceHub
     ? sellerBrowsing
       ? 'pb-[calc(8.25rem+var(--safe-bottom))] lg:pb-[calc(5rem+var(--safe-bottom))]'
@@ -49,8 +57,8 @@ export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart =
           )}
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             {headerEnd}
-            <BuyerSellerReturnHeaderLink />
-            <BuyerJabaButton />
+            {!isSellerPreview ? <BuyerSellerReturnHeaderLink /> : null}
+            {!isSellerPreview ? <BuyerJabaButton /> : null}
           </div>
         </div>
       </header>
@@ -61,9 +69,9 @@ export default function BuyerShell({ backTo, backLabel = 'Volver', headerStart =
         </div>
       </div>
 
-      <BuyerSellerReturnFooter />
+      {!isSellerPreview ? <BuyerSellerReturnFooter /> : null}
 
-      <BuyerJabaPanel />
+      {!isSellerPreview ? <BuyerJabaPanel /> : null}
     </main>
   )
 }

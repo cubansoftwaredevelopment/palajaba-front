@@ -589,6 +589,16 @@ export function reorderCatalogProducts(token, categoryId, productIds) {
   )
 }
 
+export function updateCatalogTheme(token, catalogTheme) {
+  return request('/api/auth/me/catalog/theme', {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ catalog_theme: catalogTheme }),
+  })
+}
+
 export function fetchCatalogCurrencies(token) {
   return request('/api/auth/me/catalog/currencies', {
     headers: {

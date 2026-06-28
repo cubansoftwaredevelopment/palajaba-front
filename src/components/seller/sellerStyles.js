@@ -190,6 +190,12 @@ export const sellerCatalogProductRow =
 export const sellerCatalogFab =
   `flex h-14 w-14 items-center justify-center rounded-full bg-brand-yellow text-brand-green shadow-[0_6px_24px_rgba(0,0,0,0.28)] transition-transform duration-200 touch-manipulation active:scale-95 ${sellerFocusRing}`
 
+export const sellerCatalogMenuTrigger =
+  `flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-white/25 bg-brand-white/10 text-brand-white shadow-[0_2px_10px_rgba(0,0,0,0.12)] transition-all duration-200 touch-manipulation active:border-brand-white/40 active:bg-brand-white/18 ${sellerFocusRing}`
+
+export const sellerCatalogMenuAction =
+  `flex items-center gap-1.5 rounded-full border border-brand-white/20 bg-brand-white px-3 py-1.5 text-xs font-semibold text-brand-green shadow-[0_4px_14px_rgba(0,0,0,0.14)] transition-colors touch-manipulation active:bg-brand-yellow/20 sm:gap-2 sm:px-3.5 sm:py-2 sm:text-sm ${sellerFocusRing}`
+
 export const sellerCatalogFabAction =
   `flex items-center gap-2 rounded-full border border-brand-green/12 bg-brand-white px-4 py-2.5 text-sm font-semibold text-brand-green shadow-[0_8px_24px_rgba(0,0,0,0.18)] transition-colors touch-manipulation active:bg-brand-yellow/25 ${sellerFocusRing}`
 

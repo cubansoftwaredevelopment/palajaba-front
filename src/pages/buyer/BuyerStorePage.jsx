@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
+import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerShell from '../../components/buyer/BuyerShell'
@@ -15,6 +16,7 @@ import {
   fetchMarketplaceStoreCategoryProducts,
 } from '../../lib/api'
 import { getBuyerLocation, hasCompleteBuyerLocation } from '../../lib/buyerLocation'
+import { normalizeCatalogTheme } from '../../lib/catalogThemes'
 import { recordStoreProfileView } from '../../lib/storeProfileView'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 
@@ -88,9 +90,11 @@ function BuyerStorePageContent() {
 
   const sections = catalog?.sections ?? []
   const hasProducts = (catalog?.total_products ?? 0) > 0
+  const catalogTheme = normalizeCatalogTheme(catalog?.catalog_theme)
 
   return (
-    <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL} headerEnd={<BuyerCurrencySelector />}>
+    <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
+      <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL} headerEnd={<BuyerCurrencySelector />}>
       {loading ? (
         <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
       ) : null}
@@ -153,7 +157,8 @@ function BuyerStorePageContent() {
           )}
         </div>
       ) : null}
-    </BuyerShell>
+      </BuyerShell>
+    </CatalogThemeScope>
   )
 }
 

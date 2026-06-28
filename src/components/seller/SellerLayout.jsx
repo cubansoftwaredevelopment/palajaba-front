@@ -207,8 +207,9 @@ export default function SellerLayout() {
   }
 
   const onCompletePage = location.pathname === '/tienda/completar-perfil'
-  const isCatalogPage = location.pathname.endsWith('/catalogo')
-  const showBottomNav = profile?.profile_completed && !onCompletePage
+  const isCatalogPreview = location.pathname === '/tienda/catalogo/vista-previa'
+  const isCatalogPage = location.pathname.endsWith('/catalogo') && !isCatalogPreview
+  const showBottomNav = profile?.profile_completed && !onCompletePage && !isCatalogPreview
 
   if (!profile?.profile_completed && !onCompletePage) {
     return <Navigate to="/tienda/completar-perfil" replace />
@@ -219,6 +220,10 @@ export default function SellerLayout() {
   }
 
   const sellerNavItems = getSellerNavItems(profile)
+
+  if (isCatalogPreview) {
+    return <Outlet context={{ profile, refreshProfile }} />
+  }
 
   return (
     <>

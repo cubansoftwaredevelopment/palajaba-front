@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 
 import CatalogProductDetailModal from '../../components/seller/CatalogProductDetailModal'
 import CreateCatalogCategoryModal from '../../components/seller/CreateCatalogCategoryModal'
@@ -9,6 +9,7 @@ import DeleteCatalogProductModal from '../../components/seller/DeleteCatalogProd
 import OrganizeCatalogProductsModal from '../../components/seller/OrganizeCatalogProductsModal'
 import ReorderCatalogCategoriesModal from '../../components/seller/ReorderCatalogCategoriesModal'
 import SellerCatalogEmpty from '../../components/seller/SellerCatalogEmpty'
+import SellerCatalogActionsMenu from '../../components/seller/SellerCatalogActionsMenu'
 import SellerCatalogFab from '../../components/seller/SellerCatalogFab'
 import SellerCatalogView from '../../components/seller/SellerCatalogView'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
@@ -19,16 +20,17 @@ import LoadingState from '../../components/ui/LoadingState'
 import {
   sellerAlertError,
   sellerCatalogSection,
-  sellerFocusRing,
   sellerPageWrap,
   sellerSectionGap,
 } from '../../components/seller/sellerStyles'
 import { fetchSellerCatalog } from '../../lib/api'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { resolveStoreSlug } from '../../lib/storeShare'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
 export default function SellerCatalog() {
   const { profile } = useOutletContext()
+  const navigate = useNavigate()
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -119,6 +121,10 @@ export default function SellerCatalog() {
 
   const hasLocalCategories = (summary?.categories?.length ?? 0) > 0
   const canReorderCategories = (summary?.categories?.length ?? 0) >= 2
+  const canShareCatalog = Boolean(profile?.store_name)
+  const canChangeTheme = Boolean(resolveStoreSlug(profile))
+  const showCatalogActionsMenu =
+    !loading && (canReorderCategories || canShareCatalog || canChangeTheme)
   const showProductForm = summary && (showCreateProduct || productToEdit)
 
   return (
@@ -136,52 +142,15 @@ export default function SellerCatalog() {
             }
           />
 
-          {!loading && (canReorderCategories || profile?.store_name) ? (
-            <div className="flex shrink-0 flex-col items-stretch gap-2 sm:items-end">
-              {canReorderCategories ? (
-                <button
-                  type="button"
-                  onClick={() => setShowReorderCategories(true)}
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-white/25 bg-brand-white/10 px-3 py-2 text-xs font-semibold text-brand-white transition-colors touch-manipulation active:border-brand-white/40 active:bg-brand-white/15 sm:px-3.5 sm:text-sm ${sellerFocusRing}`}
-                >
-                  <svg
-                    className="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    aria-hidden="true"
-                  >
-                    <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-                  </svg>
-                  <span className="hidden sm:inline">Organizar categorías</span>
-                  <span className="sm:hidden">Organizar</span>
-                </button>
-              ) : null}
-
-              {profile?.store_name ? (
-                <button
-                  type="button"
-                  onClick={() => setShowShareCatalog(true)}
-                  className={`inline-flex items-center justify-center gap-1.5 rounded-full border border-brand-white/25 bg-brand-white/10 px-3 py-2 text-xs font-semibold text-brand-white transition-colors touch-manipulation active:border-brand-white/40 active:bg-brand-white/15 sm:px-3.5 sm:text-sm ${sellerFocusRing}`}
-                >
-                  <svg
-                    className="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.75"
-                    aria-hidden="true"
-                  >
-                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                    <polyline points="16 6 12 2 8 6" />
-                    <line x1="12" x2="12" y1="2" y2="15" />
-                  </svg>
-                  <span className="hidden sm:inline">Compartir catálogo</span>
-                  <span className="sm:hidden">Compartir</span>
-                </button>
-              ) : null}
-            </div>
+          {showCatalogActionsMenu ? (
+            <SellerCatalogActionsMenu
+              canReorderCategories={canReorderCategories}
+              canShareCatalog={canShareCatalog}
+              canChangeTheme={canChangeTheme}
+              onReorderCategories={() => setShowReorderCategories(true)}
+              onShareCatalog={() => setShowShareCatalog(true)}
+              onChangeTheme={() => navigate('/tienda/catalogo/vista-previa')}
+            />
           ) : null}
         </div>
 

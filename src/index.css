@@ -140,6 +140,32 @@
     @apply min-h-dvh;
   }
 
+  /*
+   * Catálogo público — temas por tienda.
+   * Los tokens semánticos se remapean para que los componentes buyer existentes
+   * hereden la paleta sin cambios de markup.
+   */
+  .catalog-theme-scope.catalog-theme-grey {
+    --color-brand-green: #2b2b2b;
+    --color-brand-white: #e0e0e0;
+    --color-brand-yellow: #b3b3b3;
+    --color-brand-carmelita: #848484;
+  }
+
+  .catalog-theme-scope.catalog-theme-red {
+    --color-brand-green: #4a0a0f;
+    --color-brand-white: #fdfbf2;
+    --color-brand-yellow: #85222f;
+    --color-brand-carmelita: #5f0309;
+  }
+
+  .catalog-theme-scope.catalog-theme-pink {
+    --color-brand-green: #c2185b;
+    --color-brand-white: #fce4ec;
+    --color-brand-yellow: #f48fb1;
+    --color-brand-carmelita: #e91e63;
+  }
+
   button {
     @apply cursor-pointer font-[inherit] [-webkit-tap-highlight-color:transparent];
   }
