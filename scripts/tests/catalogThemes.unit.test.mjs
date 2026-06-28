@@ -46,9 +46,9 @@ test('tema rosa expone la paleta de cinco tonos rosa', () => {
   assert.deepEqual(pink.swatches, ['#c2185b', '#e91e63', '#f48fb1', '#f8bbd0', '#fce4ec'])
 })
 
-test('tema rojo usa rojos brillantes y crema Jaba como fondo', () => {
+test('tema rojo usa rojos intensos separados del rosa magenta', () => {
   const red = getCatalogThemeDefinition('red')
-  assert.deepEqual(red.swatches, ['#d2042d', '#dc143c', '#e34234', '#ff4040', '#fdfbf2'])
+  assert.deepEqual(red.swatches, ['#cc0000', '#e60000', '#ff2400', '#ff5722', '#fdfbf2'])
 })
 
 test('tema gris expone la paleta de cinco tonos', () => {
