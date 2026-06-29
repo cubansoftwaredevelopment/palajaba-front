@@ -6,10 +6,201 @@ services:
     # Tras el build, dist/404.html permite /admin, /login, etc. al recargar o abrir URL directa.
     staticPublishPath: ./dist
     routes:
-      # Tiendas prerenderizadas: /jstore → /jstore/index.html (SEO + React)
+      # AUTO-GENERATED STORE ROUTES START
       - type: rewrite
-        source: /:slug
-        destination: /:slug/index.html
+        source: /alex
+        destination: /alex/index.html
+      - type: rewrite
+        source: /alta-magia
+        destination: /alta-magia/index.html
+      - type: rewrite
+        source: /anancy
+        destination: /anancy/index.html
+      - type: rewrite
+        source: /arte-eterna
+        destination: /arte-eterna/index.html
+      - type: rewrite
+        source: /articulos-para-el-hogar
+        destination: /articulos-para-el-hogar/index.html
+      - type: rewrite
+        source: /aruna
+        destination: /aruna/index.html
+      - type: rewrite
+        source: /badfoxes
+        destination: /badfoxes/index.html
+      - type: rewrite
+        source: /batman
+        destination: /batman/index.html
+      - type: rewrite
+        source: /be-beautiful
+        destination: /be-beautiful/index.html
+      - type: rewrite
+        source: /click-resuelvo
+        destination: /click-resuelvo/index.html
+      - type: rewrite
+        source: /coral-electrohogar
+        destination: /coral-electrohogar/index.html
+      - type: rewrite
+        source: /d-closet
+        destination: /d-closet/index.html
+      - type: rewrite
+        source: /d-farfalla
+        destination: /d-farfalla/index.html
+      - type: rewrite
+        source: /d-paid
+        destination: /d-paid/index.html
+      - type: rewrite
+        source: /dreamroses
+        destination: /dreamroses/index.html
+      - type: rewrite
+        source: /el-mundo-del-ciclismo
+        destination: /el-mundo-del-ciclismo/index.html
+      - type: rewrite
+        source: /el-patron-mipyme
+        destination: /el-patron-mipyme/index.html
+      - type: rewrite
+        source: /ferreteria-2
+        destination: /ferreteria-2/index.html
+      - type: rewrite
+        source: /h-l-style
+        destination: /h-l-style/index.html
+      - type: rewrite
+        source: /hleon-handmade
+        destination: /hleon-handmade/index.html
+      - type: rewrite
+        source: /jesstore
+        destination: /jesstore/index.html
+      - type: rewrite
+        source: /jlo-s
+        destination: /jlo-s/index.html
+      - type: rewrite
+        source: /jonathan
+        destination: /jonathan/index.html
+      - type: rewrite
+        source: /jstore
+        destination: /jstore/index.html
+      - type: rewrite
+        source: /kay-s-shop
+        destination: /kay-s-shop/index.html
+      - type: rewrite
+        source: /kelle-s-creaciones
+        destination: /kelle-s-creaciones/index.html
+      - type: rewrite
+        source: /key
+        destination: /key/index.html
+      - type: rewrite
+        source: /ki-galeria
+        destination: /ki-galeria/index.html
+      - type: rewrite
+        source: /kkkkk
+        destination: /kkkkk/index.html
+      - type: rewrite
+        source: /la-casa-m-p
+        destination: /la-casa-m-p/index.html
+      - type: rewrite
+        source: /leira-s-shop
+        destination: /leira-s-shop/index.html
+      - type: rewrite
+        source: /leles-pc
+        destination: /leles-pc/index.html
+      - type: rewrite
+        source: /liacrochet05
+        destination: /liacrochet05/index.html
+      - type: rewrite
+        source: /lk-shop
+        destination: /lk-shop/index.html
+      - type: rewrite
+        source: /los-reyes
+        destination: /los-reyes/index.html
+      - type: rewrite
+        source: /luis-shop
+        destination: /luis-shop/index.html
+      - type: rewrite
+        source: /mandy-s-store
+        destination: /mandy-s-store/index.html
+      - type: rewrite
+        source: /maria-s
+        destination: /maria-s/index.html
+      - type: rewrite
+        source: /medusa-jewelry
+        destination: /medusa-jewelry/index.html
+      - type: rewrite
+        source: /merkadeli
+        destination: /merkadeli/index.html
+      - type: rewrite
+        source: /mi-tienda
+        destination: /mi-tienda/index.html
+      - type: rewrite
+        source: /mi-tiendita-online
+        destination: /mi-tiendita-online/index.html
+      - type: rewrite
+        source: /mom-s-garden
+        destination: /mom-s-garden/index.html
+      - type: rewrite
+        source: /multimarket-m-p
+        destination: /multimarket-m-p/index.html
+      - type: rewrite
+        source: /mundo-d-etalles
+        destination: /mundo-d-etalles/index.html
+      - type: rewrite
+        source: /my-house
+        destination: /my-house/index.html
+      - type: rewrite
+        source: /nani-ventas
+        destination: /nani-ventas/index.html
+      - type: rewrite
+        source: /papi-churro
+        destination: /papi-churro/index.html
+      - type: rewrite
+        source: /plomero-azul-habana
+        destination: /plomero-azul-habana/index.html
+      - type: rewrite
+        source: /pruchunga
+        destination: /pruchunga/index.html
+      - type: rewrite
+        source: /r-jewelry
+        destination: /r-jewelry/index.html
+      - type: rewrite
+        source: /restauracion-deco-madera
+        destination: /restauracion-deco-madera/index.html
+      - type: rewrite
+        source: /rose-dose
+        destination: /rose-dose/index.html
+      - type: rewrite
+        source: /ross
+        destination: /ross/index.html
+      - type: rewrite
+        source: /san-bernardo
+        destination: /san-bernardo/index.html
+      - type: rewrite
+        source: /sasha-accesorios
+        destination: /sasha-accesorios/index.html
+      - type: rewrite
+        source: /servicios-bravo
+        destination: /servicios-bravo/index.html
+      - type: rewrite
+        source: /skin-glow
+        destination: /skin-glow/index.html
+      - type: rewrite
+        source: /susy-s-shop
+        destination: /susy-s-shop/index.html
+      - type: rewrite
+        source: /tecnohabana
+        destination: /tecnohabana/index.html
+      - type: rewrite
+        source: /tremenda-pinta
+        destination: /tremenda-pinta/index.html
+      - type: rewrite
+        source: /valemark
+        destination: /valemark/index.html
+      - type: rewrite
+        source: /valos-music-shop
+        destination: /valos-music-shop/index.html
+      - type: rewrite
+        source: /variedades-vedado
+        destination: /variedades-vedado/index.html
+      # AUTO-GENERATED STORE ROUTES END
+
       - type: rewrite
         source: /*
         destination: /index.html
