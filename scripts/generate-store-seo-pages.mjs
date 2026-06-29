@@ -26,7 +26,9 @@ function buildStoreHtml(page, assetTags) {
     <meta name="theme-color" content="#59802c" />
     <link rel="icon" type="image/png" href="/logo.png" />
     <link rel="apple-touch-icon" href="/logo.png" />
+    <script>document.documentElement.classList.add('js')</script>
     <style>
+      html.js .seo-store-page { display: none !important; }
       .seo-store-page { max-width: 42rem; margin: 0 auto; padding: 1.25rem; font-family: Georgia, serif; color: #2d5016; line-height: 1.5; }
       .seo-store-page h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
       .seo-store-page h2 { font-size: 1.15rem; margin-top: 1.5rem; }
@@ -37,8 +39,9 @@ function buildStoreHtml(page, assetTags) {
     ${assetTags}
   </head>
   <body>
-    ${page.body_html}
-    <div id="root"></div>
+    <div id="root">
+      ${page.body_html}
+    </div>
   </body>
 </html>
 `

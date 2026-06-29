@@ -5,7 +5,16 @@ import '@fontsource/libre-baskerville/latin-700.css'
 import './index.css'
 import App from './App.jsx'
 
-createRoot(document.getElementById('root')).render(
+document.querySelectorAll('.seo-store-page').forEach((node) => {
+  node.remove()
+})
+
+const rootEl = document.getElementById('root')
+if (!rootEl) {
+  throw new Error('No se encontró el elemento #root.')
+}
+
+createRoot(rootEl).render(
   <StrictMode>
     <App />
   </StrictMode>,
