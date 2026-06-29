@@ -12,6 +12,7 @@ import { MARKETPLACE_LABEL } from '../../constants/branding'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import Button from '../../components/Button'
 import {
+  fetchMarketplaceStore,
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
 } from '../../lib/api'
@@ -22,17 +23,75 @@ import { resolveUserFacingError } from '../../lib/userFacingError'
 
 const PAGE_SIZE = 20
 
+function businessAreaToLocation(area) {
+  if (!area?.province_id || !area?.municipality_id) return null
+  return {
+    province: { id: area.province_id, name: area.province_name },
+    municipality: { id: area.municipality_id, name: area.municipality_name },
+  }
+}
+
 export default function BuyerStorePage() {
-  if (!hasCompleteBuyerLocation()) {
+  const { storeSlug } = useParams()
+  const buyerLocation = hasCompleteBuyerLocation() ? getBuyerLocation() : null
+  const [fallbackLocation, setFallbackLocation] = useState(null)
+  const [resolvingLocation, setResolvingLocation] = useState(!buyerLocation)
+  const [locationError, setLocationError] = useState(false)
+
+  useEffect(() => {
+    if (buyerLocation) return undefined
+
+    let cancelled = false
+    setResolvingLocation(true)
+    setLocationError(false)
+
+    fetchMarketplaceStore(storeSlug)
+      .then((store) => {
+        if (cancelled) return
+        const nextLocation = businessAreaToLocation(store.business_area)
+        if (!nextLocation) {
+          setLocationError(true)
+          setFallbackLocation(null)
+          return
+        }
+        setFallbackLocation(nextLocation)
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLocationError(true)
+          setFallbackLocation(null)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setResolvingLocation(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [buyerLocation, storeSlug])
+
+  if (resolvingLocation) {
+    return (
+      <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL}>
+        <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
+      </BuyerShell>
+    )
+  }
+
+  const effectiveLocation = buyerLocation ?? fallbackLocation
+  if (!effectiveLocation) {
+    if (locationError) {
+      return <Navigate to="/comprar/provincia" replace />
+    }
     return <Navigate to="/comprar/provincia" replace />
   }
 
-  return <BuyerStorePageContent />
+  return <BuyerStorePageContent location={effectiveLocation} />
 }
 
-function BuyerStorePageContent() {
+function BuyerStorePageContent({ location }) {
   const { storeSlug } = useParams()
-  const location = getBuyerLocation()
   const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -161,4 +220,3 @@ function BuyerStorePageContent() {
     </CatalogThemeScope>
   )
 }
-
