@@ -6,6 +6,10 @@ services:
     # Tras el build, dist/404.html permite /admin, /login, etc. al recargar o abrir URL directa.
     staticPublishPath: ./dist
     routes:
+      # Tiendas prerenderizadas: /jstore → /jstore/index.html (SEO + React)
+      - type: rewrite
+        source: /:slug
+        destination: /:slug/index.html
       - type: rewrite
         source: /*
         destination: /index.html
