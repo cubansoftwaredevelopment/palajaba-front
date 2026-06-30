@@ -5,7 +5,7 @@
  *   - logo.png        → sitio público (fondo claro)
  *   - logo-black.png  → panel admin (fondo oscuro)
  *
- * El favicon del navegador usa logo.png automáticamente.
+ * Favicon: apple-touch-icon.png, favicon-16x16.png, favicon-32x32.png y site.webmanifest en public/.
  */
 export const BRAND_NAME = "Pa' La Jaba"
 
