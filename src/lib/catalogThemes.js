@@ -52,8 +52,8 @@
  * - Quartz       #f0f5f4 → brand-white: fondo de página
  *
  * Tema morado — violetas y lilas (~270–300°), fondo Silver Wisteria (#dad4df):
- * - Midnight Orchid #312a44 → brand-green: títulos, botones primarios
- * - Dusky Lilac     #8870e3 → brand-carmelita: texto secundario
+ * - Midnight Orchid #312a44 → brand-carmelita: texto secundario y metadatos
+ * - Dusky Lilac     #8870e3 → brand-green: títulos, botones Comprar (morado visible)
  * - Iris Mist       #bab0c8 → brand-yellow: acentos, chips y avisos
  * - Plum Blossom    #d7c5d6 → puente claro en la escala
  * - Silver Wisteria #dad4df → brand-white: fondo de página
