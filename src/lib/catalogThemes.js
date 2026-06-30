@@ -50,6 +50,13 @@
  * - Royal Blue   #1976d2 → puente medio en la escala
  * - Sky Blue     #42a5f5 → brand-yellow: acentos, chips y avisos
  * - Quartz       #f0f5f4 → brand-white: fondo de página
+ *
+ * Tema morado — violetas y lilas (~270–300°), fondo Silver Wisteria (#dad4df):
+ * - Midnight Orchid #312a44 → brand-green: títulos, botones primarios
+ * - Dusky Lilac     #8870e3 → brand-carmelita: texto secundario
+ * - Iris Mist       #bab0c8 → brand-yellow: acentos, chips y avisos
+ * - Plum Blossom    #d7c5d6 → puente claro en la escala
+ * - Silver Wisteria #dad4df → brand-white: fondo de página
  */
 
 export const DEFAULT_CATALOG_THEME = 'default'
@@ -96,6 +103,13 @@ export const CATALOG_THEME_PALETTES = {
     description: 'Azul abisal con acentos cielo brillantes sobre fondo Quartz.',
     swatches: ['#092c56', '#225688', '#1976d2', '#42a5f5', '#f0f5f4'],
     className: 'catalog-theme-blue',
+  },
+  purple: {
+    id: 'purple',
+    label: 'Morado',
+    description: 'Violetas profundos y lilas suaves sobre fondo Silver Wisteria.',
+    swatches: ['#312a44', '#8870e3', '#bab0c8', '#d7c5d6', '#dad4df'],
+    className: 'catalog-theme-purple',
   },
 }
 

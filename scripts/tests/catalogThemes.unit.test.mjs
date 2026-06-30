@@ -22,11 +22,13 @@ test('normalizeCatalogTheme acepta todos los temas soportados', () => {
   assert.equal(normalizeCatalogTheme('pink'), 'pink')
   assert.equal(normalizeCatalogTheme('green'), 'green')
   assert.equal(normalizeCatalogTheme('blue'), 'blue')
+  assert.equal(normalizeCatalogTheme('purple'), 'purple')
   assert.equal(normalizeCatalogTheme(' GREY '), 'grey')
   assert.equal(normalizeCatalogTheme(' RED '), 'red')
   assert.equal(normalizeCatalogTheme(' PINK '), 'pink')
   assert.equal(normalizeCatalogTheme(' GREEN '), 'green')
   assert.equal(normalizeCatalogTheme(' BLUE '), 'blue')
+  assert.equal(normalizeCatalogTheme(' PURPLE '), 'purple')
 })
 
 test('getCatalogThemeClass mapea clases css por tema', () => {
@@ -36,6 +38,7 @@ test('getCatalogThemeClass mapea clases css por tema', () => {
   assert.equal(getCatalogThemeClass('pink'), 'catalog-theme-pink')
   assert.equal(getCatalogThemeClass('green'), 'catalog-theme-green')
   assert.equal(getCatalogThemeClass('blue'), 'catalog-theme-blue')
+  assert.equal(getCatalogThemeClass('purple'), 'catalog-theme-purple')
   assert.equal(getCatalogThemeClass('unknown'), 'catalog-theme-default')
 })
 
@@ -43,7 +46,7 @@ test('listCatalogThemes incluye todos los temas del catálogo', () => {
   const themes = listCatalogThemes()
   assert.deepEqual(
     themes.map((theme) => theme.id),
-    ['default', 'grey', 'red', 'pink', 'green', 'blue'],
+    ['default', 'grey', 'red', 'pink', 'green', 'blue', 'purple'],
   )
 })
 
@@ -70,6 +73,11 @@ test('tema rojo usa rojos intensos separados del rosa magenta', () => {
 test('tema gris expone la paleta de cinco tonos', () => {
   const grey = getCatalogThemeDefinition('grey')
   assert.deepEqual(grey.swatches, ['#2b2b2b', '#565656', '#848484', '#b3b3b3', '#e0e0e0'])
+})
+
+test('tema morado expone la paleta violeta de cinco tonos', () => {
+  const purple = getCatalogThemeDefinition('purple')
+  assert.deepEqual(purple.swatches, ['#312a44', '#8870e3', '#bab0c8', '#d7c5d6', '#dad4df'])
 })
 
 test('DEFAULT_CATALOG_THEME es default', () => {
