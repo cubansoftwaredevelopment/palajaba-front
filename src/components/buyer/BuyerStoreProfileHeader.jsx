@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import SellerLocationPreview from '../seller/SellerLocationPreview'
 import { resolveMediaUrl } from '../../lib/media'
+import { buildWhatsAppContactUrl } from '../../lib/whatsappOrder'
 import BuyerModalPortal from './BuyerModalPortal'
+import BuyerStoreBio from './BuyerStoreBio'
 import {
   buyerContextChip,
   buyerStoreMapModal,
@@ -9,7 +11,6 @@ import {
   buyerStoreMapModalHeader,
   buyerStoreMapOverlay,
   buyerStorePageAvatar,
-  buyerStorePageBio,
   buyerStorePageHeader,
   buyerStorePageMapBtn,
   buyerStorePageMeta,
@@ -39,10 +40,11 @@ export default function BuyerStoreProfileHeader({ catalog }) {
   const store = catalog.store
   const photoSrc = resolveMediaUrl(store.profile_photo_url)
   const initials = store.store_name?.trim().slice(0, 2).toUpperCase() || '?'
-  const biography = catalog.biography?.trim()
   const businessArea = formatArea(catalog.business_area)
   const instagram = socialUrl(catalog.social_instagram, 'instagram')
   const facebook = socialUrl(catalog.social_facebook, 'facebook')
+  const whatsapp = buildWhatsAppContactUrl(store.phone)
+  const hasSocialLinks = Boolean(instagram || facebook || whatsapp)
   const hasMap = Boolean(catalog.business_location)
   const [mapOpen, setMapOpen] = useState(false)
 
@@ -77,11 +79,6 @@ export default function BuyerStoreProfileHeader({ catalog }) {
               Tienda
             </p>
             <h1 className={buyerStorePageName}>{store.store_name}</h1>
-            {store.phone ? (
-              <a href={`tel:${store.phone}`} className="mt-1 inline-block text-sm font-semibold text-brand-green">
-                {store.phone}
-              </a>
-            ) : null}
           </div>
         </div>
 
@@ -93,7 +90,7 @@ export default function BuyerStoreProfileHeader({ catalog }) {
           </div>
         ) : null}
 
-        {biography ? <p className={buyerStorePageBio}>{biography}</p> : null}
+        <BuyerStoreBio biography={catalog.biography} storeSlug={store.store_slug} />
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {businessArea ? (
@@ -117,10 +114,15 @@ export default function BuyerStoreProfileHeader({ catalog }) {
           ) : null}
         </div>
 
-        {instagram || facebook ? (
+        {hasSocialLinks ? (
           <div className="mt-4">
             <p className={buyerStorePageSectionTitle}>Redes</p>
             <div className="mt-2 flex flex-wrap gap-2">
+              {whatsapp ? (
+                <a href={whatsapp} target="_blank" rel="noreferrer" className={buyerStorePageSocialLink}>
+                  WhatsApp
+                </a>
+              ) : null}
               {instagram ? (
                 <a href={instagram} target="_blank" rel="noreferrer" className={buyerStorePageSocialLink}>
                   Instagram

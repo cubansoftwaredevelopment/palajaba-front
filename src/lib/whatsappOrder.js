@@ -87,6 +87,12 @@ export function buildWhatsAppUrl(phone, message) {
   return `https://wa.me/${id}?text=${encodeURIComponent(message)}`
 }
 
+export function buildWhatsAppContactUrl(phone) {
+  const id = phoneToWhatsAppId(phone)
+  if (!id) return null
+  return `https://wa.me/${id}`
+}
+
 export function openWhatsAppCheckout({
   storeName,
   storePhone,
