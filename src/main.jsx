@@ -10,7 +10,7 @@ if (!rootEl) {
   throw new Error('No se encontró el elemento #root.')
 }
 
-if (rootEl.querySelector('.seo-store-page')) {
+if (rootEl.querySelector('.seo-prerender, .seo-store-page')) {
   rootEl.replaceChildren()
 }
 

@@ -7,11 +7,15 @@
     <link rel="apple-touch-icon" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#59802c" />
+    <script>document.documentElement.classList.add('js')</script>
+    <style>
+      html.js .seo-prerender { display: none !important; }
+    </style>
 
-    <title>Pa' La Jaba — Marketplace cubano: compra y vende en tu municipio</title>
+    <title>Pa' La Jaba — Pa La Jaba | Marketplace cubano en Cuba</title>
     <meta
       name="description"
-      content="Pa' La Jaba conecta compradores y negocios cubanos por provincia y municipio. Explora tiendas, guarda productos en tu jaba y pide por WhatsApp."
+      content="Pa' La Jaba (Pa La Jaba) es el marketplace cubano en palajaba.com: explora tiendas por provincia y municipio, guarda productos en tu jaba y pide por WhatsApp."
     />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://palajaba.com/" />
@@ -23,15 +27,15 @@
     <meta property="og:title" content="Pa' La Jaba — Marketplace cubano" />
     <meta
       property="og:description"
-      content="Compra, vende y descubre lo mejor de Cuba. Tiendas locales, jaba de compras y pedidos por WhatsApp."
+      content="Pa La Jaba: compra, vende y descubre lo mejor de Cuba. Tiendas locales, jaba de compras y pedidos por WhatsApp."
     />
     <meta property="og:image" content="https://palajaba.com/logo.png" />
 
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Pa' La Jaba — Marketplace cubano" />
+    <meta name="twitter:title" content="Pa' La Jaba — Pa La Jaba | Marketplace cubano" />
     <meta
       name="twitter:description"
-      content="Explora tiendas de tu municipio, arma tu jaba y pide por WhatsApp."
+      content="Marketplace cubano en palajaba.com. Explora tiendas de tu municipio, arma tu jaba y pide por WhatsApp."
     />
     <meta name="twitter:image" content="https://palajaba.com/logo.png" />
 
@@ -40,9 +44,9 @@
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "Pa' La Jaba",
-        "alternateName": "palajaba",
+        "alternateName": ["palajaba", "Pa La Jaba", "pa la jaba", "palajaba.com"],
         "url": "https://palajaba.com/",
-        "description": "Marketplace cubano para comprar y vender por provincia y municipio.",
+        "description": "Marketplace cubano para comprar y vender por provincia y municipio en Cuba.",
         "inLanguage": "es-CU"
       }
     </script>
@@ -51,13 +55,26 @@
         "@context": "https://schema.org",
         "@type": "Organization",
         "name": "Pa' La Jaba",
+        "alternateName": ["palajaba", "Pa La Jaba", "pa la jaba"],
         "url": "https://palajaba.com/",
-        "logo": "https://palajaba.com/logo.png"
+        "logo": "https://palajaba.com/logo.png",
+        "description": "Marketplace cubano que conecta compradores y negocios por provincia y municipio."
       }
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="seo-prerender seo-home-page">
+        <h1>Pa' La Jaba — Pa La Jaba</h1>
+        <p>
+          <strong>Pa' La Jaba</strong> (también <strong>Pa La Jaba</strong> o <strong>palajaba</strong>)
+          es el marketplace cubano en <a href="https://palajaba.com">palajaba.com</a>.
+          Compra y vende en tu provincia y municipio: explora tiendas locales, guarda productos en tu jaba
+          y cierra el pedido por WhatsApp.
+        </p>
+        <p>Compra, vende y descubre lo mejor de Cuba.</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
