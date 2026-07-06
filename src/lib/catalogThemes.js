@@ -70,6 +70,18 @@
  * - Mango Soft    #ffb76b → puente claro
  * - Mango Cream   #fff8f0 → brand-white: fondo (crema mango, no el #ffcd90 medio)
  * - Rust Mango    #9a3412 → brand-carmelita: texto secundario (~6.9:1)
+ *
+ * Tema amarillo (Marcolina) — amarillos cálidos (~45–50°):
+ * Misma lógica que Mango: fondo #fdfbcf + dorados oscuros para texto legible.
+ * CTAs en #f7c319 con texto oscuro (blanco sobre amarillo falla contraste ~1.6:1).
+ *
+ * Escala en el picker (oscuro → claro):
+ * - Marcolina Deep  #7a6200 → brand-green: títulos y texto (~5.6:1)
+ * - Marcolina Gold  #f7c319 → brand-yellow + CTAs sólidos (Comprar, AGOTADO)
+ * - Marcolina Warm  #facf43 → puente en la escala
+ * - Marcolina Soft  #fcdb6d → puente claro
+ * - Marcolina Cream #fdfbcf → brand-white: fondo de página
+ * - Marcolina Rust  #8a6d00 → brand-carmelita: texto secundario (~4.7:1)
  */
 
 export const DEFAULT_CATALOG_THEME = 'default'
@@ -78,7 +90,7 @@ export const CATALOG_THEME_PALETTES = {
   default: {
     id: 'default',
     label: 'Pa\' La Jaba',
-    description: 'Amarillo tamal, verde aguacate y carmelota chocolate, pa que te de hambre',
+    description: 'Amarillo tamal, verde aguacate y carmelita chocolate, pa que te de hambre',
     swatches: ['#59802c', '#fdfbf2', '#f5c71a', '#7b4c38'],
     className: 'catalog-theme-default',
   },
@@ -130,6 +142,13 @@ export const CATALOG_THEME_PALETTES = {
     description: 'Bien maduro y picao en cuadritos.',
     swatches: ['#c24100', '#ff7b00', '#ff8d21', '#ffa652', '#fff8f0'],
     className: 'catalog-theme-orange',
+  },
+  yellow: {
+    id: 'yellow',
+    label: 'Marcolina',
+    description: 'YA EMPEZÓ LA SOMBRILLA AMARILLA, VAMOS,  VEN A LA CASA E MARCOLINA',
+    swatches: ['#7a6200', '#f7c319', '#facf43', '#fcdb6d', '#fdfbcf'],
+    className: 'catalog-theme-yellow',
   },
 }
 

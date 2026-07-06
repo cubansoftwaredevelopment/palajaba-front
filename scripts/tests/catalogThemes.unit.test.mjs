@@ -24,6 +24,7 @@ test('normalizeCatalogTheme acepta todos los temas soportados', () => {
   assert.equal(normalizeCatalogTheme('blue'), 'blue')
   assert.equal(normalizeCatalogTheme('purple'), 'purple')
   assert.equal(normalizeCatalogTheme('orange'), 'orange')
+  assert.equal(normalizeCatalogTheme('yellow'), 'yellow')
   assert.equal(normalizeCatalogTheme(' GREY '), 'grey')
   assert.equal(normalizeCatalogTheme(' RED '), 'red')
   assert.equal(normalizeCatalogTheme(' PINK '), 'pink')
@@ -31,6 +32,7 @@ test('normalizeCatalogTheme acepta todos los temas soportados', () => {
   assert.equal(normalizeCatalogTheme(' BLUE '), 'blue')
   assert.equal(normalizeCatalogTheme(' PURPLE '), 'purple')
   assert.equal(normalizeCatalogTheme(' ORANGE '), 'orange')
+  assert.equal(normalizeCatalogTheme(' YELLOW '), 'yellow')
 })
 
 test('getCatalogThemeClass mapea clases css por tema', () => {
@@ -42,6 +44,7 @@ test('getCatalogThemeClass mapea clases css por tema', () => {
   assert.equal(getCatalogThemeClass('blue'), 'catalog-theme-blue')
   assert.equal(getCatalogThemeClass('purple'), 'catalog-theme-purple')
   assert.equal(getCatalogThemeClass('orange'), 'catalog-theme-orange')
+  assert.equal(getCatalogThemeClass('yellow'), 'catalog-theme-yellow')
   assert.equal(getCatalogThemeClass('unknown'), 'catalog-theme-default')
 })
 
@@ -49,7 +52,7 @@ test('listCatalogThemes incluye todos los temas del catálogo', () => {
   const themes = listCatalogThemes()
   assert.deepEqual(
     themes.map((theme) => theme.id),
-    ['default', 'grey', 'red', 'pink', 'green', 'blue', 'purple', 'orange'],
+    ['default', 'grey', 'red', 'pink', 'green', 'blue', 'purple', 'orange', 'yellow'],
   )
 })
 
@@ -90,6 +93,16 @@ test('tema naranja expone la paleta Mango accesible de cinco tonos', () => {
   assert.deepEqual(orange.swatches, ['#c24100', '#ff7b00', '#ff8d21', '#ffa652', '#fff8f0'])
 })
 
+test('tema amarillo expone la paleta Marcolina accesible de cinco tonos', () => {
+  const yellow = getCatalogThemeDefinition('yellow')
+  assert.equal(yellow.label, 'Marcolina')
+  assert.equal(
+    yellow.description,
+    'YA EMPEZÓ LA SOMBRILLA AMARILLA, VAMOS,  VEN A LA CASA E MARCOLINA',
+  )
+  assert.deepEqual(yellow.swatches, ['#7a6200', '#f7c319', '#facf43', '#fcdb6d', '#fdfbcf'])
+})
+
 test('DEFAULT_CATALOG_THEME es default', () => {
   assert.equal(DEFAULT_CATALOG_THEME, 'default')
 })
@@ -103,6 +116,7 @@ test('cada tema expone el nombre y la descripción de la paleta', () => {
   assert.equal(getCatalogThemeDefinition('blue').label, 'Varadero')
   assert.equal(getCatalogThemeDefinition('purple').label, 'Uva Caleta')
   assert.equal(getCatalogThemeDefinition('orange').label, 'Mango')
+  assert.equal(getCatalogThemeDefinition('yellow').label, 'Marcolina')
 
   assert.match(getCatalogThemeDefinition('grey').description, /perro apagón 💡/)
   assert.match(getCatalogThemeDefinition('green').description, /🎶/)

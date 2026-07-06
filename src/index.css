@@ -195,6 +195,15 @@
     --color-mango-bright: #ff7b00;
   }
 
+  .catalog-theme-scope.catalog-theme-yellow {
+    --color-brand-green: #7a6200;
+    --color-brand-white: #fdfbcf;
+    --color-brand-yellow: #f7c319;
+    --color-brand-carmelita: #8a6d00;
+    --color-marcolina-bright: #f7c319;
+    --color-marcolina-cta-text: #5c4800;
+  }
+
   button {
     @apply cursor-pointer font-[inherit] [-webkit-tap-highlight-color:transparent];
   }
@@ -317,5 +326,24 @@
 
   .catalog-theme-scope.catalog-theme-orange :where(.bg-brand-carmelita\/35) {
     background-color: color-mix(in srgb, var(--color-mango-bright) 35%, transparent);
+  }
+
+  /* Marcolina: CTAs y agotado en amarillo vivo con texto oscuro legible */
+  .catalog-theme-scope.catalog-theme-yellow :where(.bg-brand-green.text-brand-white) {
+    background-color: var(--color-marcolina-bright);
+    color: var(--color-marcolina-cta-text);
+  }
+
+  .catalog-theme-scope.catalog-theme-yellow :where(.bg-brand-carmelita.text-brand-white) {
+    background-color: var(--color-marcolina-bright);
+    color: var(--color-marcolina-cta-text);
+  }
+
+  .catalog-theme-scope.catalog-theme-yellow :where(.bg-brand-carmelita\/55) {
+    background-color: color-mix(in srgb, var(--color-marcolina-bright) 55%, transparent);
+  }
+
+  .catalog-theme-scope.catalog-theme-yellow :where(.bg-brand-carmelita\/35) {
+    background-color: color-mix(in srgb, var(--color-marcolina-bright) 35%, transparent);
   }
 }
