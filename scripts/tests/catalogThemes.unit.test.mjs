@@ -83,3 +83,16 @@ test('tema morado expone la paleta violeta de cinco tonos', () => {
 test('DEFAULT_CATALOG_THEME es default', () => {
   assert.equal(DEFAULT_CATALOG_THEME, 'default')
 })
+
+test('cada tema expone el nombre y la descripción de la paleta', () => {
+  assert.equal(getCatalogThemeDefinition('default').label, "Pa' La Jaba")
+  assert.equal(getCatalogThemeDefinition('grey').label, 'Apagón')
+  assert.equal(getCatalogThemeDefinition('red').label, 'Marpacífico')
+  assert.equal(getCatalogThemeDefinition('pink').label, 'Flamenco')
+  assert.equal(getCatalogThemeDefinition('green').label, 'Limonada')
+  assert.equal(getCatalogThemeDefinition('blue').label, 'Varadero')
+  assert.equal(getCatalogThemeDefinition('purple').label, 'Uva Caleta')
+
+  assert.match(getCatalogThemeDefinition('grey').description, /perro apagón 💡/)
+  assert.match(getCatalogThemeDefinition('green').description, /🎶/)
+})
