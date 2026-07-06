@@ -52,11 +52,11 @@
  * - Quartz       #f0f5f4 → brand-white: fondo de página
  *
  * Tema morado — violetas y lilas (~270–300°), fondo Silver Wisteria (#dad4df):
- * - Midnight Orchid #312a44 → brand-carmelita: texto secundario y metadatos
- * - Dusky Lilac     #8870e3 → brand-green: títulos, botones Comprar (morado visible)
- * - Iris Mist       #bab0c8 → brand-yellow: acentos, chips y avisos
- * - Plum Blossom    #d7c5d6 → puente claro en la escala
- * - Silver Wisteria #dad4df → brand-white: fondo de página
+ * - Midnight Orchid #312a44 → brand-green: títulos, botones Comprar (morado oscuro)
+ * - Grape Dusk       #5b4b8a → brand-carmelita: texto secundario y metadatos
+ * - Dusky Lilac      #8870e3 → brand-yellow: acentos, chips y avisos
+ * - Iris Mist        #bab0c8 → puente claro en la escala
+ * - Silver Wisteria  #dad4df → brand-white: fondo de página
  */
 
 export const DEFAULT_CATALOG_THEME = 'default'
@@ -108,7 +108,7 @@ export const CATALOG_THEME_PALETTES = {
     id: 'purple',
     label: 'Uva Caleta',
     description: 'Moradito, acido y con arena en las manos.',
-    swatches: ['#312a44', '#8870e3', '#bab0c8', '#d7c5d6', '#dad4df'],
+    swatches: ['#312a44', '#5b4b8a', '#8870e3', '#bab0c8', '#dad4df'],
     className: 'catalog-theme-purple',
   },
 }

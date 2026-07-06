@@ -77,7 +77,7 @@ test('tema gris expone la paleta de cinco tonos', () => {
 
 test('tema morado expone la paleta violeta de cinco tonos', () => {
   const purple = getCatalogThemeDefinition('purple')
-  assert.deepEqual(purple.swatches, ['#312a44', '#8870e3', '#bab0c8', '#d7c5d6', '#dad4df'])
+  assert.deepEqual(purple.swatches, ['#312a44', '#5b4b8a', '#8870e3', '#bab0c8', '#dad4df'])
 })
 
 test('DEFAULT_CATALOG_THEME es default', () => {
