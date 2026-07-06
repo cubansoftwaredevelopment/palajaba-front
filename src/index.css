@@ -204,6 +204,14 @@
     --color-marcolina-cta-text: #5c4800;
   }
 
+  .catalog-theme-scope.catalog-theme-carmelita {
+    --color-brand-green: #5e3023;
+    --color-brand-white: #f3e9dc;
+    --color-brand-yellow: #c08552;
+    --color-brand-carmelita: #895737;
+    --color-cafe-bright: #c08552;
+  }
+
   button {
     @apply cursor-pointer font-[inherit] [-webkit-tap-highlight-color:transparent];
   }
@@ -345,5 +353,22 @@
 
   .catalog-theme-scope.catalog-theme-yellow :where(.bg-brand-carmelita\/35) {
     background-color: color-mix(in srgb, var(--color-marcolina-bright) 35%, transparent);
+  }
+
+  /* Café Cortao: CTAs y agotado en caramelo #c08552 */
+  .catalog-theme-scope.catalog-theme-carmelita :where(.bg-brand-green.text-brand-white) {
+    background-color: var(--color-cafe-bright);
+  }
+
+  .catalog-theme-scope.catalog-theme-carmelita :where(.bg-brand-carmelita.text-brand-white) {
+    background-color: var(--color-cafe-bright);
+  }
+
+  .catalog-theme-scope.catalog-theme-carmelita :where(.bg-brand-carmelita\/55) {
+    background-color: color-mix(in srgb, var(--color-cafe-bright) 55%, transparent);
+  }
+
+  .catalog-theme-scope.catalog-theme-carmelita :where(.bg-brand-carmelita\/35) {
+    background-color: color-mix(in srgb, var(--color-cafe-bright) 35%, transparent);
   }
 }

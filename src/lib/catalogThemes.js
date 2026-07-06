@@ -82,6 +82,17 @@
  * - Marcolina Soft  #fcdb6d → puente claro
  * - Marcolina Cream #fdfbcf → brand-white: fondo de página
  * - Marcolina Rust  #8a6d00 → brand-carmelita: texto secundario (~4.7:1)
+ *
+ * Tema carmelita (Café Cortao) — marrones café (~20–30°), escala café con leche:
+ * Los cuatro tonos del usuario ya contrastan bien sobre #f3e9dc (espresso ~9:1).
+ * Quinto tono añadido: Latte Foam #e5c9a8 — puente entre caramelo #c08552 y crema #f3e9dc.
+ *
+ * Escala oscuro → claro (5 tonos):
+ * - Espresso      #5e3023 → brand-green: títulos y texto (~9.1:1)
+ * - Mocha         #895737 → brand-carmelita: texto secundario (~5.0:1)
+ * - Caramel       #c08552 → brand-yellow + CTAs sólidos (Comprar, AGOTADO)
+ * - Latte Foam    #e5c9a8 → puente claro (chips, superficies elevadas)
+ * - Oat Cream     #f3e9dc → brand-white: fondo de página
  */
 
 export const DEFAULT_CATALOG_THEME = 'default'
@@ -149,6 +160,13 @@ export const CATALOG_THEME_PALETTES = {
     description: 'YA EMPEZÓ LA SOMBRILLA AMARILLA, VAMOS,  VEN A LA CASA E MARCOLINA',
     swatches: ['#7a6200', '#f7c319', '#facf43', '#fcdb6d', '#fdfbcf'],
     className: 'catalog-theme-yellow',
+  },
+  carmelita: {
+    id: 'carmelita',
+    label: 'Café Cortao',
+    description: '5% café, 95% chícharo',
+    swatches: ['#5e3023', '#895737', '#c08552', '#e5c9a8', '#f3e9dc'],
+    className: 'catalog-theme-carmelita',
   },
 }
 
