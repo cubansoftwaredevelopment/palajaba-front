@@ -23,12 +23,14 @@ test('normalizeCatalogTheme acepta todos los temas soportados', () => {
   assert.equal(normalizeCatalogTheme('green'), 'green')
   assert.equal(normalizeCatalogTheme('blue'), 'blue')
   assert.equal(normalizeCatalogTheme('purple'), 'purple')
+  assert.equal(normalizeCatalogTheme('orange'), 'orange')
   assert.equal(normalizeCatalogTheme(' GREY '), 'grey')
   assert.equal(normalizeCatalogTheme(' RED '), 'red')
   assert.equal(normalizeCatalogTheme(' PINK '), 'pink')
   assert.equal(normalizeCatalogTheme(' GREEN '), 'green')
   assert.equal(normalizeCatalogTheme(' BLUE '), 'blue')
   assert.equal(normalizeCatalogTheme(' PURPLE '), 'purple')
+  assert.equal(normalizeCatalogTheme(' ORANGE '), 'orange')
 })
 
 test('getCatalogThemeClass mapea clases css por tema', () => {
@@ -39,6 +41,7 @@ test('getCatalogThemeClass mapea clases css por tema', () => {
   assert.equal(getCatalogThemeClass('green'), 'catalog-theme-green')
   assert.equal(getCatalogThemeClass('blue'), 'catalog-theme-blue')
   assert.equal(getCatalogThemeClass('purple'), 'catalog-theme-purple')
+  assert.equal(getCatalogThemeClass('orange'), 'catalog-theme-orange')
   assert.equal(getCatalogThemeClass('unknown'), 'catalog-theme-default')
 })
 
@@ -46,7 +49,7 @@ test('listCatalogThemes incluye todos los temas del catálogo', () => {
   const themes = listCatalogThemes()
   assert.deepEqual(
     themes.map((theme) => theme.id),
-    ['default', 'grey', 'red', 'pink', 'green', 'blue', 'purple'],
+    ['default', 'grey', 'red', 'pink', 'green', 'blue', 'purple', 'orange'],
   )
 })
 
@@ -80,6 +83,13 @@ test('tema morado expone la paleta violeta de cinco tonos', () => {
   assert.deepEqual(purple.swatches, ['#312a44', '#5b4b8a', '#8870e3', '#bab0c8', '#dad4df'])
 })
 
+test('tema naranja expone la paleta Mango accesible de cinco tonos', () => {
+  const orange = getCatalogThemeDefinition('orange')
+  assert.equal(orange.label, 'Mango')
+  assert.equal(orange.description, 'Bien maduro y picao en cuadritos.')
+  assert.deepEqual(orange.swatches, ['#c24100', '#ff7b00', '#ff8d21', '#ffa652', '#fff8f0'])
+})
+
 test('DEFAULT_CATALOG_THEME es default', () => {
   assert.equal(DEFAULT_CATALOG_THEME, 'default')
 })
@@ -92,6 +102,7 @@ test('cada tema expone el nombre y la descripción de la paleta', () => {
   assert.equal(getCatalogThemeDefinition('green').label, 'Limonada')
   assert.equal(getCatalogThemeDefinition('blue').label, 'Varadero')
   assert.equal(getCatalogThemeDefinition('purple').label, 'Uva Caleta')
+  assert.equal(getCatalogThemeDefinition('orange').label, 'Mango')
 
   assert.match(getCatalogThemeDefinition('grey').description, /perro apagón 💡/)
   assert.match(getCatalogThemeDefinition('green').description, /🎶/)

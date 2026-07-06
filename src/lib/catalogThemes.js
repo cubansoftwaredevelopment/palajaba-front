@@ -57,6 +57,19 @@
  * - Dusky Lilac      #8870e3 → brand-yellow: acentos, chips y avisos
  * - Iris Mist        #bab0c8 → puente claro en la escala
  * - Silver Wisteria  #dad4df → brand-white: fondo de página
+ *
+ * Tema naranja (Mango) — naranjas cálidos maduros (~30–35°):
+ * Los cinco tonos del usuario son vibrantes y cercanos en luminancia; usados tal cual
+ * como fondo (#ffcd90) el contraste con el resto cae ~1.2–1.8:1 (WCAG AA pide ≥4.5:1).
+ * Patrón como Marpacífico: fondo crema cálida + naranjas oscuros para texto/CTA.
+ *
+ * Escala en el picker (oscuro → claro):
+ * - Burnt Mango   #c24100 → brand-green: títulos y texto (legible)
+ * - Mango Deep    #ff7b00 → brand-yellow + CTAs sólidos (Comprar, AGOTADO)
+ * - Mango Rich    #ff8d21 → puente en la escala
+ * - Mango Soft    #ffb76b → puente claro
+ * - Mango Cream   #fff8f0 → brand-white: fondo (crema mango, no el #ffcd90 medio)
+ * - Rust Mango    #9a3412 → brand-carmelita: texto secundario (~6.9:1)
  */
 
 export const DEFAULT_CATALOG_THEME = 'default'
@@ -110,6 +123,13 @@ export const CATALOG_THEME_PALETTES = {
     description: 'Moradito, acido y con arena en las manos.',
     swatches: ['#312a44', '#5b4b8a', '#8870e3', '#bab0c8', '#dad4df'],
     className: 'catalog-theme-purple',
+  },
+  orange: {
+    id: 'orange',
+    label: 'Mango',
+    description: 'Bien maduro y picao en cuadritos.',
+    swatches: ['#c24100', '#ff7b00', '#ff8d21', '#ffa652', '#fff8f0'],
+    className: 'catalog-theme-orange',
   },
 }
 
