@@ -515,6 +515,19 @@ export function fetchSellerStatsSummary(token, { year, month } = {}) {
   })
 }
 
+export function fetchSellerRevenueTotals(token, { year, month } = {}) {
+  const params = new URLSearchParams()
+  if (year != null) params.set('year', String(year))
+  if (month != null) params.set('month', String(month))
+  const query = params.toString() ? `?${params.toString()}` : ''
+
+  return request(`/api/auth/me/stats/revenue-totals${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function fetchSellerRevenueChart(token, { granularity, year, month } = {}) {
   const params = new URLSearchParams({ granularity })
   if (year != null) params.set('year', String(year))

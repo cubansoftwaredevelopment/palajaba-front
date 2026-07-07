@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
+import KpiDashboard from '../../components/seller/KpiDashboard'
 import SellerProductsSoldSection from '../../components/seller/SellerProductsSoldSection'
 import SellerRevenueSection from '../../components/seller/SellerRevenueSection'
 import SellerSection from '../../components/seller/SellerSection'
@@ -16,7 +17,7 @@ import {
   sellerPageWrap,
   sellerSectionGap,
 } from '../../components/seller/sellerStyles'
-import { fetchSellerProductsSoldChart, fetchSellerRevenueChart, fetchSellerStatsSummary, fetchSellerTopProducts } from '../../lib/api'
+import { fetchSellerProductsSoldChart, fetchSellerRevenueChart, fetchSellerRevenueTotals, fetchSellerStatsSummary, fetchSellerTopProducts } from '../../lib/api'
 import { formatDateTime } from '../../lib/dates'
 import { resolveMediaUrl } from '../../lib/media'
 import { getSellerToken } from '../../lib/sellerAuth'
@@ -45,6 +46,9 @@ export default function SellerGeneral() {
   const [topProducts, setTopProducts] = useState(null)
   const [topProductsLoading, setTopProductsLoading] = useState(true)
   const [topProductsError, setTopProductsError] = useState('')
+  const [revenueTotals, setRevenueTotals] = useState(null)
+  const [revenueTotalsLoading, setRevenueTotalsLoading] = useState(true)
+  const [revenueTotalsError, setRevenueTotalsError] = useState('')
 
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
@@ -79,6 +83,40 @@ export default function SellerGeneral() {
     }
 
     loadStats()
+    return () => {
+      cancelled = true
+    }
+  }, [seller, selectedYear, selectedMonth])
+
+  useEffect(() => {
+    if (!seller || !sellerHasStatistics(seller)) return undefined
+    if (selectedYear == null || selectedMonth == null) return undefined
+
+    let cancelled = false
+
+    async function loadRevenueTotals() {
+      setRevenueTotalsLoading(true)
+      setRevenueTotalsError('')
+      try {
+        const token = getSellerToken()
+        const data = await fetchSellerRevenueTotals(token, {
+          year: selectedYear,
+          month: selectedMonth,
+        })
+        if (!cancelled) setRevenueTotals(data)
+      } catch (err) {
+        if (!cancelled) {
+          setRevenueTotals(null)
+          setRevenueTotalsError(
+            getUserFacingMessage(err, 'No pudimos cargar la recaudación del mes.'),
+          )
+        }
+      } finally {
+        if (!cancelled) setRevenueTotalsLoading(false)
+      }
+    }
+
+    loadRevenueTotals()
     return () => {
       cancelled = true
     }
@@ -257,6 +295,13 @@ export default function SellerGeneral() {
               onChange={handleMonthChange}
             />
           ) : null}
+
+          <KpiDashboard
+            data={revenueTotals}
+            loading={revenueTotalsLoading}
+            error={revenueTotalsError}
+            monthLabel={monthLabel}
+          />
 
           <SellerSection
             label={monthLabel ? `Resumen de ${monthLabel}` : 'Resumen del mes'}
