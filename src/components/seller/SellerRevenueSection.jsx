@@ -16,6 +16,7 @@ import {
   sellerSectionGap,
 } from './sellerStyles'
 import SellerChartGranularity from './SellerChartGranularity'
+import TrendIndicator from './TrendIndicator'
 
 const CURRENCY_COLORS = {
   CUP: '#59802c',
@@ -57,6 +58,7 @@ function RevenueCurrencyChart({ series }) {
           <p className="font-display text-xl font-bold text-brand-green">
             {formatRevenueAmount(series.total, series.currency)}
           </p>
+          <TrendIndicator comparison={series.comparison} className="mt-1" />
         </div>
         <span
           className="rounded-full px-2.5 py-1 text-[0.65rem] font-bold uppercase tracking-[0.06em] text-brand-white"

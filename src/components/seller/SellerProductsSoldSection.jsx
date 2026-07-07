@@ -12,6 +12,7 @@ import StatePanel from '../ui/StatePanel'
 import LoadingState from '../ui/LoadingState'
 import { sellerHint, sellerSection, sellerSectionGap } from './sellerStyles'
 import SellerChartGranularity from './SellerChartGranularity'
+import TrendIndicator from './TrendIndicator'
 
 const CHART_COLOR = '#59802c'
 const CHART_GRADIENT = ['#59802c', '#59802c22']
@@ -80,6 +81,7 @@ export default function SellerProductsSoldSection({
             <p className="font-display text-xl font-bold text-brand-green">
               {formatProductCount(total)}
             </p>
+            <TrendIndicator comparison={chart?.comparison} className="mt-1" />
           </div>
 
           <div className="h-56 w-full min-w-0 sm:h-64">

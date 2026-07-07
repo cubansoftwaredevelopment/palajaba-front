@@ -15,6 +15,7 @@
     "test:catalog-sort": "node scripts/tests/catalogProductSort.unit.test.mjs",
     "test:catalog-theme": "node scripts/tests/catalogThemes.unit.test.mjs",
     "test:seller-stats-kpi": "node scripts/tests/sellerStatsKpi.unit.test.mjs && node scripts/tests/sellerStatsKpi.integration.test.mjs",
+    "test:seller-stats-trend": "node scripts/tests/sellerStatsTrend.unit.test.mjs && node scripts/tests/sellerStatsTrend.integration.test.mjs",
     "verify:checkout-flow": "node scripts/verify-checkout-flow.mjs",
     "verify:categories": "node scripts/verify-business-categories.mjs",
     "verify:media-urls": "node scripts/verify-media-urls.mjs",
