@@ -121,7 +121,7 @@ export const sellerBtnPrimary =
 
 /** Primario compacto en desktop (toolbar, etc.) */
 export const sellerBtnPrimaryCompact =
-  `${sellerBtnPrimary} lg:w-auto lg:min-w-[11rem]`
+  `${sellerBtnPrimary} sm:w-auto sm:min-w-[11rem]`
 
 export const sellerBtnSecondary =
   `flex min-h-10 w-full items-center justify-center rounded-full border border-brand-green/22 bg-brand-white px-4 py-2.5 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/10 disabled:opacity-60 ${sellerFocusRing}`

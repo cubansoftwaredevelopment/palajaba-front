@@ -784,6 +784,16 @@ export function fetchSellerOrders(token) {
   })
 }
 
+export function createSellerManualOrder(token, payload) {
+  return request('/api/auth/me/orders', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
 export function updateSellerOrder(token, orderId, payload) {
   return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}`, {
     method: 'PATCH',

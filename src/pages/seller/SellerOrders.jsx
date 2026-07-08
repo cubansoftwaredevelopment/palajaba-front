@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import SellerEmptyState from '../../components/seller/SellerEmptyState'
+import SellerManualOrderModal from '../../components/seller/SellerManualOrderModal'
 import SellerOrderDetailModal from '../../components/seller/SellerOrderDetailModal'
 import SellerOrderItem from '../../components/seller/SellerOrderItem'
 import SellerOrdersGroup from '../../components/seller/SellerOrdersGroup'
@@ -7,8 +8,9 @@ import SellerOrdersTabs from '../../components/seller/SellerOrdersTabs'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
-import { sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
+import { sellerBtnPrimaryCompact, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
 import {
+  createSellerManualOrder,
   deleteSellerOrder,
   downloadSellerOrderInvoice,
   fetchSellerOrders,
@@ -49,6 +51,7 @@ export default function SellerOrders() {
   const [cancelling, setCancelling] = useState(false)
   const [downloading, setDownloading] = useState(null)
   const [saveError, setSaveError] = useState('')
+  const [manualOrderOpen, setManualOrderOpen] = useState(false)
 
   const loadOrders = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -177,12 +180,33 @@ export default function SellerOrders() {
     }
   }
 
+  async function handleCreateManualOrder(payload) {
+    try {
+      const token = getSellerToken()
+      const created = await createSellerManualOrder(token, payload)
+      setOrders((current) => [created, ...current])
+      setActiveTab('pending')
+      setSelectedOrder(created)
+    } catch (err) {
+      throw new Error(getUserFacingMessage(err, 'No pudimos registrar el pedido.'))
+    }
+  }
+
   return (
     <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
       <SellerPageHeader
         eyebrow="Pedidos"
         title="Bandeja de pedidos"
         subtitle="Usa las pestañas para alternar entre pendientes y ventas ya cerradas."
+        action={(
+          <button
+            type="button"
+            className={sellerBtnPrimaryCompact}
+            onClick={() => setManualOrderOpen(true)}
+          >
+            Registrar venta
+          </button>
+        )}
       />
 
       {loading ? (
@@ -239,6 +263,13 @@ export default function SellerOrders() {
             ))}
           </SellerOrdersGroup>
         </>
+      ) : null}
+
+      {manualOrderOpen ? (
+        <SellerManualOrderModal
+          onClose={() => setManualOrderOpen(false)}
+          onCreated={handleCreateManualOrder}
+        />
       ) : null}
 
       {selectedOrder ? (
