@@ -1,15 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AdminButton from '../components/admin/AdminButton'
-import AdminModal from '../components/admin/AdminModal'
+import AdminDiscountCodeCard from '../components/admin/AdminDiscountCodeCard'
+import AdminDiscountCodeForm from '../components/admin/AdminDiscountCodeForm'
 import ConfirmDialog from '../components/admin/ConfirmDialog'
 import {
   adminAlertError,
   adminAlertSuccess,
   adminCard,
+  adminCardHighlight,
   adminFocusRing,
   adminInput,
-  adminLabel,
   adminMuted,
   adminSubtle,
 } from '../components/admin/adminStyles'
@@ -23,97 +24,40 @@ import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import LoadingState from '../components/ui/LoadingState'
 
-function DiscountCodeForm({ initial, onSubmit, onClose, submitLabel, loading }) {
-  const [code, setCode] = useState(initial?.code ?? '')
-  const [percentOff, setPercentOff] = useState(String(initial?.percent_off ?? ''))
-  const [isActive, setIsActive] = useState(initial?.is_active ?? true)
-  const [error, setError] = useState('')
+const FILTER_TABS = [
+  { id: 'all', label: 'Todos' },
+  { id: 'active', label: 'Activos' },
+  { id: 'inactive', label: 'Inactivos' },
+]
 
-  async function handleSubmit(event) {
-    event.preventDefault()
-    const parsedPercent = Number.parseInt(percentOff, 10)
-    if (!code.trim()) {
-      setError('El código es obligatorio.')
-      return
-    }
-    if (!Number.isFinite(parsedPercent) || parsedPercent < 1 || parsedPercent > 100) {
-      setError('El descuento debe estar entre 1 y 100.')
-      return
-    }
+function filterTabClass(active) {
+  return `rounded-xl border px-3 py-2 text-xs font-medium transition-colors sm:text-sm ${adminFocusRing} ${
+    active
+      ? 'border-brand-green/40 bg-brand-green/12 text-brand-green'
+      : 'border-zinc-800 bg-zinc-900/50 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+  }`
+}
 
-    setError('')
-    await onSubmit({
-      code: code.trim().toUpperCase(),
-      percent_off: parsedPercent,
-      is_active: isActive,
-    })
-  }
-
+function SummaryCard({ label, value, hint, accentClass }) {
   return (
-    <AdminModal
-      title={initial ? 'Editar código' : 'Nuevo código de descuento'}
-      subtitle={initial ? initial.code : 'Los vendedores lo usarán al registrarse'}
-      onClose={onClose}
-    >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <div>
-          <label htmlFor="discount-code-value" className={adminLabel}>
-            Código
-          </label>
-          <input
-            id="discount-code-value"
-            type="text"
-            value={code}
-            onChange={(event) => setCode(event.target.value.toUpperCase())}
-            className={adminInput}
-            placeholder="Ej. AMIGO20"
-            required
-          />
-        </div>
-
-        <div>
-          <label htmlFor="discount-code-percent" className={adminLabel}>
-            Descuento (%)
-          </label>
-          <input
-            id="discount-code-percent"
-            type="number"
-            min={1}
-            max={100}
-            value={percentOff}
-            onChange={(event) => setPercentOff(event.target.value)}
-            className={adminInput}
-            required
-          />
-        </div>
-
-        <label className="flex items-center gap-2 text-sm text-zinc-200">
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={(event) => setIsActive(event.target.checked)}
-            className="h-4 w-4 rounded border-zinc-700 bg-zinc-900"
-          />
-          Código activo (visible en el registro)
-        </label>
-
-        {error ? (
-          <p className={adminAlertError} role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <AdminButton type="button" variant="secondary" onClick={onClose}>
-            Cancelar
-          </AdminButton>
-          <AdminButton type="submit" disabled={loading}>
-            {loading ? 'Guardando…' : submitLabel}
-          </AdminButton>
-        </div>
-      </form>
-    </AdminModal>
+    <article className={`${adminCard} border-t-2 ${accentClass}`}>
+      <p className={`text-xs font-medium uppercase tracking-wide ${adminMuted}`}>{label}</p>
+      <p className="mt-2 text-3xl font-semibold tabular-nums text-zinc-50">{value}</p>
+      <p className={`mt-2 text-xs leading-relaxed ${adminSubtle}`}>{hint}</p>
+    </article>
   )
+}
+
+function matchesFilter(item, filter) {
+  if (filter === 'active') return item.is_active
+  if (filter === 'inactive') return !item.is_active
+  return true
+}
+
+function matchesSearch(item, query) {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return true
+  return item.code.toLowerCase().includes(normalized)
 }
 
 export default function AdminDiscountCodes() {
@@ -126,6 +70,8 @@ export default function AdminDiscountCodes() {
   const [createOpen, setCreateOpen] = useState(false)
   const [editTarget, setEditTarget] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
 
   const loadCodes = useCallback(async () => {
     setError('')
@@ -149,6 +95,24 @@ export default function AdminDiscountCodes() {
   useEffect(() => {
     loadCodes()
   }, [loadCodes])
+
+  const stats = useMemo(() => {
+    const activeCount = items.filter((item) => item.is_active).length
+    return {
+      total: items.length,
+      activeCount,
+      inactiveCount: items.length - activeCount,
+    }
+  }, [items])
+
+  const visibleItems = useMemo(
+    () =>
+      items
+        .filter((item) => matchesFilter(item, filter))
+        .filter((item) => matchesSearch(item, search))
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [filter, items, search],
+  )
 
   async function handleCreate(payload) {
     setActionId('create')
@@ -224,69 +188,144 @@ export default function AdminDiscountCodes() {
     }
   }
 
-  const activeCount = items.filter((item) => item.is_active).length
-
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className={`text-sm ${adminSubtle}`}>
-            {activeCount > 0
-              ? `${activeCount} código${activeCount === 1 ? '' : 's'} activo${activeCount === 1 ? '' : 's'} en el registro.`
+    <div className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <p className={`text-sm leading-relaxed ${adminSubtle}`}>
+            Gestiona los códigos promocionales que los vendedores pueden aplicar durante el registro.
+          </p>
+          <p className={`mt-2 text-xs ${adminMuted}`}>
+            {stats.activeCount > 0
+              ? `${stats.activeCount} código${stats.activeCount === 1 ? '' : 's'} activo${stats.activeCount === 1 ? '' : 's'} visible${stats.activeCount === 1 ? '' : 's'} en el registro.`
               : 'Sin códigos activos: el registro no mostrará el campo de descuento.'}
           </p>
         </div>
-        <AdminButton onClick={() => setCreateOpen(true)}>Nuevo código</AdminButton>
+        <AdminButton type="button" className="sm:w-auto sm:shrink-0" onClick={() => setCreateOpen(true)}>
+          Nuevo código
+        </AdminButton>
       </div>
 
-      {success ? <p className={adminAlertSuccess}>{success}</p> : null}
-      {error ? <p className={adminAlertError}>{error}</p> : null}
-
-      {loading ? <LoadingState message="Cargando códigos…" /> : null}
-
-      {!loading && items.length === 0 ? (
-        <div className={`${adminCard} p-6 text-center`}>
-          <p className="text-sm text-zinc-300">Aún no hay códigos de descuento.</p>
+      {!loading && items.length > 0 ? (
+        <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <SummaryCard
+            label="Total"
+            value={stats.total}
+            hint="Códigos guardados en la plataforma."
+            accentClass="border-t-zinc-500/70"
+          />
+          <SummaryCard
+            label="Activos"
+            value={stats.activeCount}
+            hint="Visibles para nuevos registros."
+            accentClass="border-t-brand-green"
+          />
+          <SummaryCard
+            label="Inactivos"
+            value={stats.inactiveCount}
+            hint="Archivados sin mostrarse al público."
+            accentClass="border-t-zinc-600"
+          />
         </div>
       ) : null}
 
       {!loading && items.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          {items.map((item) => (
-            <article key={item.id} className={`${adminCard} p-4`}>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-mono text-lg font-bold text-white">{item.code}</p>
-                  <p className={`mt-1 text-sm ${adminMuted}`}>{item.percent_off}% de descuento</p>
-                  <p className={`mt-1 text-xs ${item.is_active ? 'text-brand-green' : 'text-zinc-500'}`}>
-                    {item.is_active ? 'Activo' : 'Inactivo'}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditTarget(item)}
-                    className={`rounded-xl border border-zinc-700 px-3 py-2 text-sm font-medium text-zinc-200 ${adminFocusRing}`}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteTarget(item)}
-                    disabled={actionId === item.id}
-                    className={`rounded-xl border border-red-500/30 px-3 py-2 text-sm font-medium text-red-300 ${adminFocusRing}`}
-                  >
-                    Eliminar
-                  </button>
-                </div>
-              </div>
-            </article>
+        <div className={`${adminCardHighlight} mb-4 flex flex-col gap-3 sm:flex-row sm:items-center`}>
+          <div className="min-w-0 flex-1">
+            <label htmlFor="discount-code-search" className="sr-only">
+              Buscar código
+            </label>
+            <input
+              id="discount-code-search"
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar por código…"
+              className={adminInput}
+              autoComplete="off"
+            />
+          </div>
+          <AdminButton
+            type="button"
+            variant="secondary"
+            className="sm:w-auto sm:shrink-0"
+            onClick={() => loadCodes()}
+            disabled={loading}
+          >
+            Actualizar
+          </AdminButton>
+        </div>
+      ) : null}
+
+      {!loading && items.length > 0 ? (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {FILTER_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setFilter(tab.id)}
+              className={filterTabClass(filter === tab.id)}
+            >
+              {tab.label}
+            </button>
           ))}
         </div>
       ) : null}
 
+      {success ? (
+        <p className={`mb-4 ${adminAlertSuccess}`} role="status">
+          {success}
+        </p>
+      ) : null}
+
+      {error ? (
+        <p className={`mb-4 ${adminAlertError}`} role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {loading ? <LoadingState variant="admin" message="Cargando códigos…" /> : null}
+
+      {!loading && items.length === 0 ? (
+        <article className={`${adminCard} text-center`}>
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-green/20 bg-brand-green/10 text-brand-green">
+            <span className="text-xl font-bold">%</span>
+          </div>
+          <p className="text-sm font-medium text-white">Aún no hay códigos de descuento</p>
+          <p className={`mt-2 text-sm ${adminSubtle}`}>
+            Crea el primero para que los vendedores puedan aplicarlo al registrarse.
+          </p>
+          <AdminButton type="button" className="mx-auto mt-5 max-w-xs" onClick={() => setCreateOpen(true)}>
+            Crear primer código
+          </AdminButton>
+        </article>
+      ) : null}
+
+      {!loading && items.length > 0 && visibleItems.length === 0 ? (
+        <article className={`${adminCard} text-center`}>
+          <p className="text-sm font-medium text-white">No hay códigos en esta vista</p>
+          <p className={`mt-2 text-sm ${adminSubtle}`}>
+            Prueba otro filtro o limpia la búsqueda.
+          </p>
+        </article>
+      ) : null}
+
+      {!loading && visibleItems.length > 0 ? (
+        <ul className="flex flex-col gap-3">
+          {visibleItems.map((item) => (
+            <AdminDiscountCodeCard
+              key={item.id}
+              item={item}
+              busy={actionId === item.id}
+              onEdit={setEditTarget}
+              onDelete={setDeleteTarget}
+            />
+          ))}
+        </ul>
+      ) : null}
+
       {createOpen ? (
-        <DiscountCodeForm
+        <AdminDiscountCodeForm
           onClose={() => setCreateOpen(false)}
           onSubmit={handleCreate}
           submitLabel="Crear código"
@@ -295,7 +334,7 @@ export default function AdminDiscountCodes() {
       ) : null}
 
       {editTarget ? (
-        <DiscountCodeForm
+        <AdminDiscountCodeForm
           initial={editTarget}
           onClose={() => setEditTarget(null)}
           onSubmit={handleUpdate}
@@ -307,12 +346,17 @@ export default function AdminDiscountCodes() {
       {deleteTarget ? (
         <ConfirmDialog
           title="Eliminar código"
-          message={`¿Eliminar el código ${deleteTarget.code}? Los nuevos registros ya no podrán usarlo.`}
+          subtitle={deleteTarget.code}
           confirmLabel="Eliminar"
-          onConfirm={confirmDelete}
-          onCancel={() => setDeleteTarget(null)}
+          confirmVariant="danger"
           loading={actionId === deleteTarget.id}
-        />
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={confirmDelete}
+        >
+          <p className={`text-sm ${adminSubtle}`}>
+            Los nuevos registros ya no podrán usar este código. Esta acción no se puede deshacer.
+          </p>
+        </ConfirmDialog>
       ) : null}
     </div>
   )
