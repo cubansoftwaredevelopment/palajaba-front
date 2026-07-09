@@ -5,6 +5,7 @@ import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProduct
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHeader'
+import BuyerCatalogPoweredFooter from '../../components/buyer/BuyerCatalogPoweredFooter'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import DeadState from '../../components/ui/DeadState'
@@ -214,6 +215,8 @@ function BuyerStorePageContent({ location }) {
               />
             ))
           )}
+
+          <BuyerCatalogPoweredFooter />
         </div>
       ) : null}
       </BuyerShell>

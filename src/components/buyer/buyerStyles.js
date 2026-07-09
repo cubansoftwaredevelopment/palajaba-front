@@ -64,6 +64,24 @@ export const buyerProductGrid =
 
 export const buyerHomeSections = 'flex min-w-0 flex-col gap-7 sm:gap-8'
 
+export const buyerCatalogPoweredFooter =
+  '-mx-5 mt-6 -mb-[max(2rem,var(--safe-bottom))] sm:-mx-6 sm:mt-8 lg:-mx-10 lg:-mb-10'
+
+export const buyerCatalogPoweredFooterShell =
+  'relative w-full border-t border-brand-green/12 bg-gradient-to-b from-brand-yellow/10 via-brand-white to-brand-green/[0.03] px-5 py-4 pb-[max(1rem,var(--safe-bottom))] sm:px-6 sm:py-5 sm:pb-[max(1.25rem,var(--safe-bottom))] lg:px-10 lg:py-6 lg:pb-6'
+
+export const buyerCatalogPoweredFooterEyebrow =
+  'mb-1 inline-flex items-center rounded-full border border-brand-green/12 bg-brand-white/70 px-2.5 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.1em] text-brand-carmelita/80'
+
+export const buyerCatalogPoweredFooterTitle =
+  'font-display text-base font-bold leading-snug text-brand-green sm:text-xl lg:text-2xl'
+
+export const buyerCatalogPoweredFooterSubtitle =
+  'mt-1 text-xs leading-relaxed text-brand-carmelita/85 sm:mt-1.5 sm:max-w-md sm:text-sm'
+
+export const buyerCatalogPoweredFooterCta =
+  'inline-flex min-h-10 w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-brand-green px-4 text-xs font-semibold text-brand-white shadow-[0_4px_16px_rgba(89,128,44,0.22)] transition-all touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 sm:min-h-11 sm:w-auto sm:px-5 sm:text-sm lg:hover:-translate-y-px lg:hover:bg-[#4d7026]'
+
 export const buyerCategorySectionTitle =
   'font-display text-lg font-bold text-brand-green sm:text-xl'
 

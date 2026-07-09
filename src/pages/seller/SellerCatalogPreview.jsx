@@ -7,6 +7,7 @@ import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProduct
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHeader'
+import BuyerCatalogPoweredFooter from '../../components/buyer/BuyerCatalogPoweredFooter'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
@@ -249,6 +250,8 @@ function SellerCatalogPreviewContent() {
                   />
                 ))
               )}
+
+              <BuyerCatalogPoweredFooter />
             </div>
           ) : null}
         </>,
