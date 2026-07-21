@@ -35,7 +35,6 @@ import {
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { gestorLoginPath } from '../../lib/gestorAuth'
 import { resolveStoreSlug } from '../../lib/storeShare'
-import { resolveStoreSlug } from '../../lib/storeShare'
 import {
   sellerAlertError,
   sellerBtnPrimary,
