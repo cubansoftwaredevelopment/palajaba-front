@@ -13,13 +13,18 @@ import { MARKETPLACE_LABEL } from '../../constants/branding'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import Button from '../../components/Button'
 import {
+  fetchMarketplaceGestorStoreCatalog,
+  fetchMarketplaceGestorStoreCategoryProducts,
   fetchMarketplaceStore,
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
 } from '../../lib/api'
 import { getBuyerLocation, hasCompleteBuyerLocation } from '../../lib/buyerLocation'
 import { normalizeCatalogTheme } from '../../lib/catalogThemes'
+import { validateGestorUsername } from '../../lib/sellerGestores'
 import { recordStoreProfileView } from '../../lib/storeProfileView'
+import { setStoreCheckoutPhones } from '../../lib/storeCheckoutPhones'
+import { storePublicPath } from '../../lib/storeSlug'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 
 const PAGE_SIZE = 20
@@ -33,11 +38,13 @@ function businessAreaToLocation(area) {
 }
 
 export default function BuyerStorePage() {
-  const { storeSlug } = useParams()
+  const { storeSlug, gestorUsername } = useParams()
   const buyerLocation = hasCompleteBuyerLocation() ? getBuyerLocation() : null
   const [fallbackLocation, setFallbackLocation] = useState(null)
   const [resolvingLocation, setResolvingLocation] = useState(!buyerLocation)
   const [locationError, setLocationError] = useState(false)
+
+  const gestorCheck = gestorUsername ? validateGestorUsername(gestorUsername) : { ok: true, username: null }
 
   useEffect(() => {
     if (buyerLocation) return undefined
@@ -72,6 +79,10 @@ export default function BuyerStorePage() {
     }
   }, [buyerLocation, storeSlug])
 
+  if (gestorUsername && !gestorCheck.ok) {
+    return <Navigate to={storePublicPath(storeSlug)} replace />
+  }
+
   if (resolvingLocation) {
     return (
       <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL}>
@@ -88,27 +99,51 @@ export default function BuyerStorePage() {
     return <Navigate to="/comprar/provincia" replace />
   }
 
-  return <BuyerStorePageContent location={effectiveLocation} />
+  return (
+    <BuyerStorePageContent
+      location={effectiveLocation}
+      gestorUsername={gestorCheck.ok ? gestorCheck.username : null}
+    />
+  )
 }
 
-function BuyerStorePageContent({ location }) {
+function BuyerStorePageContent({ location, gestorUsername = null }) {
   const { storeSlug } = useParams()
   const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const isGestorCatalog = Boolean(gestorUsername)
 
   const loadCatalog = useCallback(async () => {
     setLoading(true)
     setLoadError(null)
 
     try {
-      const data = await fetchMarketplaceStoreCatalog({
-        storeSlug,
-        provinceId: location.province.id,
-        municipalityId: location.municipality.id,
-        limitPerCategory: PAGE_SIZE,
-      })
+      const data = isGestorCatalog
+        ? await fetchMarketplaceGestorStoreCatalog({
+            storeSlug,
+            gestorUsername,
+            provinceId: location.province.id,
+            municipalityId: location.municipality.id,
+            limitPerCategory: PAGE_SIZE,
+          })
+        : await fetchMarketplaceStoreCatalog({
+            storeSlug,
+            provinceId: location.province.id,
+            municipalityId: location.municipality.id,
+            limitPerCategory: PAGE_SIZE,
+          })
       setCatalog(data)
+      if (!isGestorCatalog && data?.store?.id) {
+        const phones = Array.isArray(data.checkout_phones)
+          ? data.checkout_phones
+          : Array.isArray(data.store?.checkout_phones)
+            ? data.store.checkout_phones
+            : []
+        if (phones.length) {
+          setStoreCheckoutPhones(data.store.id, phones)
+        }
+      }
       recordStoreProfileView(storeSlug, {
         provinceId: location.province.id,
         municipalityId: location.municipality.id,
@@ -116,15 +151,25 @@ function BuyerStorePageContent({ location }) {
     } catch (err) {
       setLoadError(
         resolveUserFacingError(err, {
-          contextTitle: 'No se pudo abrir la tienda',
-          fallbackMessage: 'No pudimos cargar esta tienda. Inténtalo de nuevo.',
+          contextTitle: isGestorCatalog
+            ? 'No se pudo abrir el catálogo del gestor'
+            : 'No se pudo abrir la tienda',
+          fallbackMessage: isGestorCatalog
+            ? 'No pudimos cargar este catálogo. Inténtalo de nuevo.'
+            : 'No pudimos cargar esta tienda. Inténtalo de nuevo.',
         }),
       )
       setCatalog(null)
     } finally {
       setLoading(false)
     }
-  }, [location.municipality.id, location.province.id, storeSlug])
+  }, [
+    isGestorCatalog,
+    gestorUsername,
+    location.municipality.id,
+    location.province.id,
+    storeSlug,
+  ])
 
   useEffect(() => {
     loadCatalog()
@@ -132,29 +177,47 @@ function BuyerStorePageContent({ location }) {
 
   const createLoadMore = useCallback(
     (section) => async (offset) => {
-      const data = await fetchMarketplaceStoreCategoryProducts({
-        storeSlug,
-        localCategoryId: section.category_id,
-        provinceId: location.province.id,
-        municipalityId: location.municipality.id,
-        limit: PAGE_SIZE,
-        offset,
-      })
+      const data = isGestorCatalog
+        ? await fetchMarketplaceGestorStoreCategoryProducts({
+            storeSlug,
+            gestorUsername,
+            localCategoryId: section.category_id,
+            provinceId: location.province.id,
+            municipalityId: location.municipality.id,
+            limit: PAGE_SIZE,
+            offset,
+          })
+        : await fetchMarketplaceStoreCategoryProducts({
+            storeSlug,
+            localCategoryId: section.category_id,
+            provinceId: location.province.id,
+            municipalityId: location.municipality.id,
+            limit: PAGE_SIZE,
+            offset,
+          })
       return {
         products: data.products,
         has_more: data.has_more,
       }
     },
-    [location.municipality.id, location.province.id, storeSlug],
+    [
+      isGestorCatalog,
+      gestorUsername,
+      location.municipality.id,
+      location.province.id,
+      storeSlug,
+    ],
   )
 
   const sections = catalog?.sections ?? []
   const hasProducts = (catalog?.total_products ?? 0) > 0
   const catalogTheme = normalizeCatalogTheme(catalog?.catalog_theme)
+  const backTo = isGestorCatalog ? storePublicPath(storeSlug) : '/comprar'
+  const backLabel = isGestorCatalog ? catalog?.store?.store_name || 'Tienda' : MARKETPLACE_LABEL
 
   return (
     <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
-      <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL} headerEnd={<BuyerCurrencySelector />}>
+      <BuyerShell backTo={backTo} backLabel={backLabel} headerEnd={<BuyerCurrencySelector />}>
       {loading ? (
         <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
       ) : null}
@@ -163,15 +226,17 @@ function BuyerStorePageContent({ location }) {
         loadError.isNotFound ? (
           <DeadState
             variant="panel"
-            title="Tienda no disponible"
+            title={isGestorCatalog ? 'Catálogo no disponible' : 'Tienda no disponible'}
             message={
               loadError.message ||
-              'Esta tienda no existe o ya no está activa en Pa\' La Jaba.'
+              (isGestorCatalog
+                ? 'Este gestor no existe o aún no publicó productos.'
+                : 'Esta tienda no existe o ya no está activa en Pa\' La Jaba.')
             }
           >
-            <Link to="/comprar">
+            <Link to={backTo}>
               <Button variant="ghost" className="w-full sm:w-auto">
-                Volver al {MARKETPLACE_LABEL.toLowerCase()}
+                {isGestorCatalog ? 'Ver tienda' : `Volver al ${MARKETPLACE_LABEL.toLowerCase()}`}
               </Button>
             </Link>
           </DeadState>
@@ -185,9 +250,9 @@ function BuyerStorePageContent({ location }) {
             retrying={loading}
           >
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:justify-center lg:justify-start">
-              <Link to="/comprar">
+              <Link to={backTo}>
                 <Button variant="ghost" className="w-full sm:w-auto">
-                  Volver al {MARKETPLACE_LABEL.toLowerCase()}
+                  {isGestorCatalog ? 'Ver tienda' : `Volver al ${MARKETPLACE_LABEL.toLowerCase()}`}
                 </Button>
               </Link>
             </div>
@@ -203,7 +268,9 @@ function BuyerStorePageContent({ location }) {
             <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
               <p className="font-display text-lg font-bold text-brand-green">Sin productos disponibles</p>
               <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-                Esta tienda no tiene productos publicados en este momento.
+                {isGestorCatalog
+                  ? 'Este gestor todavía no tiene productos en su catálogo.'
+                  : 'Esta tienda no tiene productos publicados en este momento.'}
               </p>
             </div>
           ) : (

@@ -6,6 +6,7 @@ const RESERVED_STORE_SLUGS = new Set([
   'tienda',
   'configuracion',
   'aplicacion',
+  'g',
 ])
 
 export function storeNameToSlug(storeName) {
@@ -29,4 +30,11 @@ export function storePublicPath(storeSlug) {
   const slug = storeSlug?.trim()
   if (!slug || isReservedStoreSlug(slug)) return '/comprar'
   return `/${encodeURIComponent(slug)}`
+}
+
+export function storeGestorPublicPath(storeSlug, gestorUsername) {
+  const slug = storeSlug?.trim()
+  const username = gestorUsername?.trim()
+  if (!slug || !username || isReservedStoreSlug(slug)) return '/comprar'
+  return `/${encodeURIComponent(slug)}/${encodeURIComponent(username)}`
 }

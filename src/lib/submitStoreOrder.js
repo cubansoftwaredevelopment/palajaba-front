@@ -34,19 +34,25 @@ export async function submitStoreOrder({
   delivery = null,
   displayCurrency = 'CUP',
   cupPerUnit,
+  gestorId = null,
+  gestorUsername = null,
 }) {
   if (!storeId || !items?.length) return null
 
   const lineItems = resolveOrderLineItems(items, displayCurrency, cupPerUnit)
   const paymentCurrency = inferOrderPaymentCurrency(lineItems)
 
-  const order = await createMarketplaceOrder({
+  const body = {
     store_id: storeId,
     items: lineItems,
     payment_currency: paymentCurrency,
     delivery: buildDeliveryPayload(delivery),
     buyer_zone: buildBuyerZone(),
-  })
+  }
+  if (gestorId) body.gestor_id = gestorId
+  if (gestorUsername) body.gestor_username = gestorUsername
+
+  const order = await createMarketplaceOrder(body)
 
   if (!isSavedMarketplaceOrder(order)) {
     throw new ApiError(CHECKOUT_SAVE_FAILED_MESSAGE)

@@ -107,6 +107,7 @@ export function allItemsOfferDelivery(items = []) {
 }
 
 function normalizeProduct(product) {
+  const hasGestor = Boolean(product?.gestor_id)
   return {
     id: product.id,
     name: product.name,
@@ -118,6 +119,8 @@ function normalizeProduct(product) {
     store_id: product.store?.id,
     store_name: product.store?.store_name,
     store_phone: product.store?.phone ?? null,
+    gestor_id: hasGestor ? product.gestor_id : null,
+    gestor_username: hasGestor ? product.gestor_username ?? null : null,
     quantity: 1,
   }
 }
@@ -135,6 +138,8 @@ export function buildDirectBuyCheckoutPayload(product) {
     storeId,
     storeName: product.store?.store_name ?? item.store_name ?? 'Tienda',
     storePhone: product.store?.phone ?? item.store_phone ?? null,
+    gestorId: item.gestor_id ?? null,
+    gestorUsername: item.gestor_username ?? null,
     items: [item],
   }
 }
@@ -144,6 +149,7 @@ export function addToJaba(product) {
 
   const items = readJaba()
   const existing = items.find((item) => item.id === product.id)
+  const hasGestor = Boolean(product?.gestor_id)
 
   if (existing) {
     existing.quantity = (existing.quantity ?? 1) + 1
@@ -153,6 +159,11 @@ export function addToJaba(product) {
     if (Array.isArray(product.accepted_currencies)) {
       existing.accepted_currencies = product.accepted_currencies
     }
+    if (product.base_price != null) existing.base_price = product.base_price
+    if (product.base_currency) existing.base_currency = product.base_currency
+    // Marketplace / tienda del negocio: limpia atribución de gestor.
+    existing.gestor_id = hasGestor ? product.gestor_id : null
+    existing.gestor_username = hasGestor ? product.gestor_username ?? null : null
   } else {
     items.push(normalizeProduct(product))
   }

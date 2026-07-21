@@ -9,7 +9,12 @@ import SellerGeneral from './pages/seller/SellerGeneral'
 import SellerCatalog from './pages/seller/SellerCatalog'
 import SellerCatalogPreview from './pages/seller/SellerCatalogPreview'
 import SellerOrders from './pages/seller/SellerOrders'
+import SellerGestores from './pages/seller/SellerGestores'
 import SellerProfile from './pages/seller/SellerProfile'
+import GestorRoute from './components/gestor/GestorRoute'
+import GestorLogin from './pages/gestor/GestorLogin'
+import GestorSetup from './pages/gestor/GestorSetup'
+import GestorPanel from './pages/gestor/GestorPanel'
 import SellerCompleteProfile from './pages/SellerCompleteProfile'
 import RegisterEntry from './pages/RegisterEntry'
 import RegisterPayment from './pages/RegisterPayment'
@@ -67,6 +72,7 @@ const router = createBrowserRouter([
           { index: true, element: <SellerGeneral /> },
           { path: 'catalogo', element: <SellerCatalog /> },
           { path: 'catalogo/vista-previa', element: <SellerCatalogPreview /> },
+          { path: 'gestores', element: <SellerGestores /> },
           { path: 'pedidos', element: <SellerOrders /> },
           { path: 'perfil', element: <SellerProfile /> },
           { path: 'completar-perfil', element: <SellerCompleteProfile /> },
@@ -97,10 +103,23 @@ const router = createBrowserRouter([
         ],
       },
       { path: 'admin/inicio', element: <Navigate to="/admin/estadisticas" replace /> },
+      { path: 'g/:storeSlug/gestor', element: <GestorLogin /> },
+      { path: 'g/:storeSlug/gestor/setup', element: <GestorSetup /> },
+      {
+        path: 'g/:storeSlug/gestor/panel',
+        element: (
+          <GestorRoute>
+            <GestorPanel />
+          </GestorRoute>
+        ),
+      },
       {
         path: ':storeSlug',
         element: <BuyerJabaLayout />,
-        children: [{ index: true, element: <PublicStoreRoute /> }],
+        children: [
+          { index: true, element: <PublicStoreRoute /> },
+          { path: ':gestorUsername', element: <PublicStoreRoute /> },
+        ],
       },
     ],
   },

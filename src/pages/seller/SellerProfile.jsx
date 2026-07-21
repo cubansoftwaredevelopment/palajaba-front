@@ -110,6 +110,7 @@ export default function SellerProfile() {
   )
   const [deliveryAreas, setDeliveryAreas] = useState(profile?.delivery_areas ?? [])
   const [offersDelivery, setOffersDelivery] = useState(profile?.offers_delivery ?? false)
+  const [gestoresEnabled, setGestoresEnabled] = useState(Boolean(profile?.gestores_enabled))
   const [loading, setLoading] = useState(false)
   const [categoriesLoading, setCategoriesLoading] = useState(true)
   const [categoriesError, setCategoriesError] = useState('')
@@ -197,6 +198,7 @@ export default function SellerProfile() {
         social_facebook: facebook.trim() || null,
         category_ids: selectedCategories,
         offers_delivery: offersDelivery,
+        gestores_enabled: gestoresEnabled,
         business_area: businessArea,
         delivery_areas: offersDelivery
           ? dedupeDeliveryAreas(deliveryAreas, businessArea)
@@ -224,6 +226,7 @@ export default function SellerProfile() {
       normalizeText(instagram) !== normalizeText(profile.social_instagram) ||
       normalizeText(facebook) !== normalizeText(profile.social_facebook) ||
       offersDelivery !== (profile.offers_delivery ?? false) ||
+      gestoresEnabled !== Boolean(profile.gestores_enabled) ||
       !sameStringArray(selectedCategories, profile.category_ids) ||
       !sameLocation(location, profile.business_location) ||
       !sameBusinessArea(
@@ -241,6 +244,7 @@ export default function SellerProfile() {
     instagram,
     facebook,
     offersDelivery,
+    gestoresEnabled,
     selectedCategories,
     location,
     businessProvinceId,
@@ -399,6 +403,34 @@ export default function SellerProfile() {
                 />
               </SellerSection>
             )}
+
+            <SellerSection
+              label="¿Usas gestores de venta?"
+              hint="Si lo activas, podrás crear gestores y aparecerá la sección Gestores en tu panel."
+            >
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGestoresEnabled(true)
+                    markDirty()
+                  }}
+                  className={sellerChoice(gestoresEnabled === true)}
+                >
+                  Sí
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setGestoresEnabled(false)
+                    markDirty()
+                  }}
+                  className={sellerChoice(gestoresEnabled === false)}
+                >
+                  No
+                </button>
+              </div>
+            </SellerSection>
           </SellerProfileFieldGroup>
 
           <SellerProfileFieldGroup title="Clasificación">

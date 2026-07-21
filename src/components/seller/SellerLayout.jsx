@@ -13,7 +13,7 @@ import {
   setSellerSession,
 } from '../../lib/sellerAuth'
 import { clearSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
-import { getSellerDefaultPath, getSellerNavItems } from '../../lib/planAccess'
+import { getSellerDefaultPath, getSellerNavItems, sellerHasGestores } from '../../lib/planAccess'
 import { requestSellerOrdersRefresh } from '../../lib/sellerOrdersRefresh'
 import { isSessionError, resolveUserFacingError } from '../../lib/userFacingError'
 
@@ -216,6 +216,14 @@ export default function SellerLayout() {
   }
 
   if (profile?.profile_completed && onCompletePage) {
+    return <Navigate to={getSellerDefaultPath(profile)} replace />
+  }
+
+  if (
+    profile?.profile_completed &&
+    location.pathname.startsWith('/tienda/gestores') &&
+    !sellerHasGestores(profile)
+  ) {
     return <Navigate to={getSellerDefaultPath(profile)} replace />
   }
 

@@ -148,6 +148,7 @@ export default function SellerCompleteProfile() {
         social_facebook: facebook.trim() || null,
         category_ids: selectedCategories,
         offers_delivery: offersDelivery,
+        gestores_enabled: Boolean(profile?.gestores_enabled),
         business_area: businessArea,
         delivery_areas: offersDelivery
           ? dedupeDeliveryAreas(deliveryAreas, businessArea)

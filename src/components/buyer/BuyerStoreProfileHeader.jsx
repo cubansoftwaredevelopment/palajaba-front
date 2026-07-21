@@ -76,9 +76,14 @@ export default function BuyerStoreProfileHeader({ catalog }) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-brand-carmelita/70">
-              Tienda
+              {catalog.gestor ? 'Catálogo de gestor' : 'Tienda'}
             </p>
             <h1 className={buyerStorePageName}>{store.store_name}</h1>
+            {catalog.gestor?.username ? (
+              <p className="mt-1 text-sm text-brand-carmelita/85">
+                Ofrecido por @{catalog.gestor.username}
+              </p>
+            ) : null}
           </div>
         </div>
 

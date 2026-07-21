@@ -58,6 +58,8 @@ export async function runStoreCheckout({
       delivery,
       displayCurrency,
       cupPerUnit,
+      gestorId: payload.gestorId ?? null,
+      gestorUsername: payload.gestorUsername ?? null,
     })
   } catch (error) {
     return {

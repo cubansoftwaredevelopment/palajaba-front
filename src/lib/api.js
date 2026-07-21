@@ -750,6 +750,23 @@ export function fetchMarketplaceStoreCatalog({
   return request(`/api/marketplace/stores/${encodeURIComponent(storeSlug)}/catalog?${params}`)
 }
 
+export function fetchMarketplaceGestorStoreCatalog({
+  storeSlug,
+  gestorUsername,
+  provinceId,
+  municipalityId,
+  limitPerCategory = 20,
+}) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+    municipality_id: municipalityId,
+    limit_per_category: String(limitPerCategory),
+  })
+  return request(
+    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/catalog?${params}`,
+  )
+}
+
 export function fetchMarketplaceStoreCategoryProducts({
   storeSlug,
   localCategoryId,
@@ -766,6 +783,26 @@ export function fetchMarketplaceStoreCategoryProducts({
   })
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
+  )
+}
+
+export function fetchMarketplaceGestorStoreCategoryProducts({
+  storeSlug,
+  gestorUsername,
+  localCategoryId,
+  provinceId,
+  municipalityId,
+  limit = 20,
+  offset = 0,
+}) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+    municipality_id: municipalityId,
+    limit: String(limit),
+    offset: String(offset),
+  })
+  return request(
+    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
   )
 }
 
@@ -868,5 +905,131 @@ export function syncBuyerJaba({ items, provinceId, municipalityId, additionalMun
   return request('/api/marketplace/jaba/sync', {
     method: 'POST',
     body: JSON.stringify(body),
+  })
+}
+
+/* —— Gestores de venta (panel del negocio) —— */
+
+export function fetchSellerGestores(token) {
+  return request('/api/auth/me/gestores', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function createSellerGestor(token, username) {
+  return request('/api/auth/me/gestores', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ username }),
+  })
+}
+
+export function deleteSellerGestor(token, gestorId) {
+  return request(`/api/auth/me/gestores/${encodeURIComponent(gestorId)}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function fetchSellerGestorCatalogAccess(token) {
+  return request('/api/auth/me/gestores/catalog-access', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function updateSellerGestorCatalogAccess(token, payload) {
+  return request('/api/auth/me/gestores/catalog-access', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function fetchSellerGestorCheckoutPhones(token) {
+  return request('/api/auth/me/gestores/checkout-phones', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function updateSellerGestorCheckoutPhones(token, payload) {
+  const body =
+    payload && typeof payload === 'object' && !Array.isArray(payload)
+      ? payload
+      : { gestor_ids: payload, include_store_phone: true }
+  return request('/api/auth/me/gestores/checkout-phones', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  })
+}
+
+export function fetchSellerGestorNetworkProducts(token) {
+  return request('/api/auth/me/gestores/network-products', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+/* —— Auth y panel del gestor —— */
+
+export function gestorLogin({ store_name, username, password }) {
+  const body = {
+    store_name,
+    username,
+  }
+  if (password) {
+    body.password = password
+  }
+  return request('/api/gestores/login', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export function gestorSetup({ setup_token, password, phone }) {
+  return request('/api/gestores/setup', {
+    method: 'POST',
+    body: JSON.stringify({ setup_token, password, phone }),
+  })
+}
+
+export function fetchGestorMe(token) {
+  return request('/api/gestores/me', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function fetchGestorAllowedProducts(token) {
+  return request('/api/gestores/me/allowed-products', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function updateGestorSelectedProducts(token, products) {
+  return request('/api/gestores/me/selected-products', {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ products }),
   })
 }
