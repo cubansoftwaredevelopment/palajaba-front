@@ -34,10 +34,13 @@ import {
 } from '../../lib/sellerGestores'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { gestorLoginPath } from '../../lib/gestorAuth'
+import { resolveStoreSlug } from '../../lib/storeShare'
+import { resolveStoreSlug } from '../../lib/storeShare'
 import {
   sellerAlertError,
   sellerBtnPrimary,
   sellerBtnPrimaryCompact,
+  sellerBtnSecondary,
   sellerChoice,
   sellerHint,
   sellerInput,
@@ -63,8 +66,9 @@ const PeopleIcon = (
 
 export default function SellerGestores() {
   const { profile } = useOutletContext()
-  const loginUrl = profile?.store_slug
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}${gestorLoginPath(profile.store_slug)}`
+  const storeSlug = resolveStoreSlug(profile)
+  const loginUrl = storeSlug
+    ? `${typeof window !== 'undefined' ? window.location.origin : ''}${gestorLoginPath(storeSlug)}`
     : ''
   const [gestores, setGestores] = useState([])
   const [products, setProducts] = useState([])
@@ -91,6 +95,7 @@ export default function SellerGestores() {
   const [includeStorePhone, setIncludeStorePhone] = useState(true)
   const [savingCheckoutPhones, setSavingCheckoutPhones] = useState(false)
   const [checkoutPhonesError, setCheckoutPhonesError] = useState('')
+  const [copiedLoginUrl, setCopiedLoginUrl] = useState(false)
 
   const loadAll = useCallback(async () => {
     setLoading(true)
@@ -286,6 +291,17 @@ export default function SellerGestores() {
     }
   }
 
+  async function handleCopyLoginUrl() {
+    if (!loginUrl) return
+    try {
+      await navigator.clipboard.writeText(loginUrl)
+      setCopiedLoginUrl(true)
+      window.setTimeout(() => setCopiedLoginUrl(false), 2000)
+    } catch {
+      setSuccessMessage(`Enlace de acceso: ${loginUrl}`)
+    }
+  }
+
   if (loading) {
     return (
       <section className={`animate-fade-in ${sellerPageWrap}`}>
@@ -330,16 +346,41 @@ export default function SellerGestores() {
       ) : null}
 
       <div className={sellerSection}>
+        <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">
+          Acceso de tus gestores
+        </h3>
+        <p className={`mt-1 ${sellerHint}`}>
+          Comparte este enlace para que entren a su cuenta (primer ingreso o login).
+        </p>
+        {loginUrl ? (
+          <div className="mt-4 rounded-2xl border border-brand-green/12 bg-brand-green/[0.04] px-3.5 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-carmelita/80">
+              URL de acceso
+            </p>
+            <p className="mt-1.5 break-all font-display text-sm font-bold text-brand-green">
+              {loginUrl}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleCopyLoginUrl}
+                className={`${sellerBtnSecondary} !w-auto sm:min-w-[9rem]`}
+              >
+                {copiedLoginUrl ? 'Copiado' : 'Copiar enlace'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className={`mt-4 ${sellerHint}`}>
+            No pudimos generar el enlace. Verifica que tu tienda tenga nombre en el perfil.
+          </p>
+        )}
+      </div>
+
+      <div className={sellerSection}>
         <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">Tus gestores</h3>
         <p className={`mt-1 ${sellerHint}`}>
           Solo necesitas el usuario. Ellos completan contraseña y teléfono en su primer ingreso.
-          {loginUrl ? (
-            <>
-              {' '}
-              Login:{' '}
-              <span className="break-all font-medium text-brand-green">{loginUrl.replace(/^https?:\/\//, '')}</span>
-            </>
-          ) : null}
         </p>
 
         <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-start">
