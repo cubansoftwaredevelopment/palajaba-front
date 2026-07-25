@@ -21,6 +21,7 @@
     "test:gestor-public": "node scripts/tests/gestorPublicCatalog.unit.test.mjs && node scripts/tests/gestorPublicCatalog.integration.test.mjs",
     "test:marketplace-visit": "node scripts/tests/marketplaceVisit.unit.test.mjs && node scripts/tests/marketplaceVisit.integration.test.mjs",
     "test:admin-orders": "node scripts/tests/adminOrdersAnalytics.unit.test.mjs",
+    "test:admin-notifications": "node scripts/tests/adminNotificationAudience.unit.test.mjs",
     "verify:checkout-flow": "node scripts/verify-checkout-flow.mjs",
     "verify:categories": "node scripts/verify-business-categories.mjs",
     "verify:media-urls": "node scripts/verify-media-urls.mjs",

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AdminButton from '../components/admin/AdminButton'
 import SendNotificationModal from '../components/admin/SendNotificationModal'
-import { NOTIFICATION_AUDIENCE_LABELS } from '../constants/admin'
+import { notificationAudienceDisplay } from '../constants/admin'
 import { adminAlertError, adminAlertSuccess, adminCard, adminMuted, adminSubtle } from '../components/admin/adminStyles'
 import { fetchAdminNotifications, sendAdminNotification } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
@@ -45,8 +45,11 @@ export default function AdminNotifications() {
     setSuccess('')
     const token = getAdminToken()
     const result = await sendAdminNotification(token, payload)
+    const targetLabel = notificationAudienceDisplay(result)
     setSuccess(
-      `Notificación enviada a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${NOTIFICATION_AUDIENCE_LABELS[result.audience] ?? 'Todos'}).`,
+      result.audience === 'single'
+        ? `Notificación enviada a ${result.target_store_name || 'la tienda'}.`
+        : `Notificación enviada a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${targetLabel}).`,
     )
     await loadNotifications()
   }
@@ -55,7 +58,7 @@ export default function AdminNotifications() {
     <div className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6">
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
-          Envía avisos por plan y facturación: Premium o Básico, mensual o anual, o a todos.
+          Envía avisos a todos, por plan/facturación, o a un negocio concreto.
         </p>
         <AdminButton type="button" className="sm:w-auto" onClick={() => setShowModal(true)}>
           Nueva notificación
@@ -101,7 +104,7 @@ export default function AdminNotifications() {
                     {item.recipient_count} vendedor{item.recipient_count === 1 ? '' : 'es'}
                   </span>
                   <span className="text-[0.65rem] text-zinc-500">
-                    {NOTIFICATION_AUDIENCE_LABELS[item.audience] ?? NOTIFICATION_AUDIENCE_LABELS.all}
+                    {notificationAudienceDisplay(item)}
                   </span>
                 </div>
               </div>

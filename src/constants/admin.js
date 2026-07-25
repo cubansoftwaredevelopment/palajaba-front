@@ -24,12 +24,20 @@ export const NOTIFICATION_AUDIENCE_OPTIONS = [
   { id: 'premium_yearly', label: 'Premium · Anual' },
   { id: 'standard_monthly', label: 'Básico · Mensual' },
   { id: 'standard_yearly', label: 'Básico · Anual' },
+  { id: 'single', label: 'Un negocio específico' },
 ]
 
 export const NOTIFICATION_AUDIENCE_LABELS = {
   ...Object.fromEntries(NOTIFICATION_AUDIENCE_OPTIONS.map(({ id, label }) => [id, label])),
   premium: 'Plan Premium (mensual o anual)',
   standard: 'Plan Básico (mensual o anual)',
+}
+
+export function notificationAudienceDisplay(item) {
+  if (item?.audience === 'single' && item?.target_store_name) {
+    return `Tienda: ${item.target_store_name}`
+  }
+  return NOTIFICATION_AUDIENCE_LABELS[item?.audience] ?? NOTIFICATION_AUDIENCE_LABELS.all
 }
 
 export const FILTER_TABS = [
