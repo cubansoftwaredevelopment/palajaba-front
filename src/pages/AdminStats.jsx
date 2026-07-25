@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AdminBusinessesByProvinceChart from '../components/admin/AdminBusinessesByProvinceChart'
+import AdminRevenueChart from '../components/admin/AdminRevenueChart'
 import { adminAlertError, adminCard, adminCardHighlight, adminFocusRing, adminMuted, adminSubtle } from '../components/admin/adminStyles'
-import { fetchAdminBusinessesByProvince, fetchAdminStats } from '../lib/api'
+import { fetchAdminBusinessesByProvince, fetchAdminRevenueChart, fetchAdminStats } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatPrice } from '../lib/money'
@@ -58,8 +59,24 @@ export default function AdminStats() {
   const location = useLocation()
   const [stats, setStats] = useState(null)
   const [provinceStats, setProvinceStats] = useState(null)
+  const [revenueChart, setRevenueChart] = useState(null)
+  const [revenueGranularity, setRevenueGranularity] = useState('daily')
   const [loading, setLoading] = useState(true)
+  const [revenueLoading, setRevenueLoading] = useState(true)
   const [error, setError] = useState('')
+  const [revenueError, setRevenueError] = useState('')
+
+  const handleSessionError = useCallback(
+    (err) => {
+      if (isSessionError(err)) {
+        clearAdminToken()
+        navigate('/admin', { replace: true })
+        return true
+      }
+      return false
+    },
+    [navigate],
+  )
 
   const loadStats = useCallback(async () => {
     setError('')
@@ -73,30 +90,54 @@ export default function AdminStats() {
       setStats(summary)
       setProvinceStats(byProvince)
     } catch (err) {
-      if (isSessionError(err)) {
-        clearAdminToken()
-        navigate('/admin', { replace: true })
-        return
-      }
+      if (handleSessionError(err)) return
       setError(getUserFacingMessage(err, 'No pudimos cargar las estadísticas.'))
     } finally {
       setLoading(false)
     }
-  }, [navigate])
+  }, [handleSessionError])
+
+  const loadRevenueChart = useCallback(async () => {
+    setRevenueError('')
+    setRevenueLoading(true)
+    try {
+      const token = getAdminToken()
+      const now = new Date()
+      const year = stats?.year ?? now.getFullYear()
+      const month = stats?.month ?? now.getMonth() + 1
+      const data = await fetchAdminRevenueChart(token, {
+        granularity: revenueGranularity,
+        year: revenueGranularity === 'monthly' ? undefined : year,
+        month: revenueGranularity === 'monthly' ? undefined : month,
+      })
+      setRevenueChart(data)
+    } catch (err) {
+      if (handleSessionError(err)) return
+      setRevenueChart(null)
+      setRevenueError(getUserFacingMessage(err, 'No pudimos cargar el gráfico de recaudación.'))
+    } finally {
+      setRevenueLoading(false)
+    }
+  }, [handleSessionError, revenueGranularity, stats?.month, stats?.year])
 
   useEffect(() => {
     loadStats()
   }, [loadStats, location.pathname])
 
   useEffect(() => {
+    loadRevenueChart()
+  }, [loadRevenueChart, location.pathname])
+
+  useEffect(() => {
     function onVisible() {
       if (document.visibilityState === 'visible') {
         loadStats()
+        loadRevenueChart()
       }
     }
     document.addEventListener('visibilitychange', onVisible)
     return () => document.removeEventListener('visibilitychange', onVisible)
-  }, [loadStats])
+  }, [loadStats, loadRevenueChart])
 
   const periodLabel = stats
     ? `${MONTH_NAMES[stats.month - 1]} ${stats.year}`
@@ -108,11 +149,14 @@ export default function AdminStats() {
         <div className="mb-4 flex justify-end">
           <button
             type="button"
-            onClick={() => loadStats()}
-            disabled={loading}
+            onClick={() => {
+              loadStats()
+              loadRevenueChart()
+            }}
+            disabled={loading || revenueLoading}
             className={`rounded-xl border border-zinc-700/80 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-brand-green/30 hover:bg-brand-green/10 hover:text-zinc-100 disabled:opacity-50 ${adminFocusRing}`}
           >
-            {loading ? 'Actualizando…' : 'Actualizar'}
+            {loading || revenueLoading ? 'Actualizando…' : 'Actualizar'}
           </button>
         </div>
         <div className="flex items-start gap-4">
@@ -155,11 +199,11 @@ export default function AdminStats() {
         <MetricCard
           accent="payments"
           label="Pagos del mes"
-          hint="Monto total registrado al aprobar tiendas este mes"
+          hint="Monto total registrado al aprobar o renovar tiendas este mes"
           value={loading ? '…' : formatPrice(stats?.payments_total_cup ?? 0, 'CUP')}
           subvalue={
             !loading && stats
-              ? `${stats.payments_count} aprobación${stats.payments_count === 1 ? '' : 'es'}`
+              ? `${stats.payments_count} pago${stats.payments_count === 1 ? '' : 's'}`
               : undefined
           }
         />
@@ -186,6 +230,16 @@ export default function AdminStats() {
           label="Pedidos realizados"
           hint="Compras registradas en la plataforma"
           value={loading ? '…' : String(stats?.orders_total ?? 0)}
+        />
+      </div>
+
+      <div className="mt-4">
+        <AdminRevenueChart
+          granularity={revenueGranularity}
+          onGranularityChange={setRevenueGranularity}
+          chart={revenueChart}
+          loading={revenueLoading}
+          error={revenueError}
         />
       </div>
 

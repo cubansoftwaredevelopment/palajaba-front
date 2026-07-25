@@ -263,6 +263,18 @@ export function fetchAdminBusinessesByProvince(token) {
   })
 }
 
+export function fetchAdminRevenueChart(token, { granularity, year, month } = {}) {
+  const params = new URLSearchParams({ granularity })
+  if (year != null) params.set('year', String(year))
+  if (month != null) params.set('month', String(month))
+
+  return request(`/api/admin/stats/revenue?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function updateRegistrationPayment(token, id, paymentAmountCup) {
   const params = new URLSearchParams()
   params.set('payment_amount_cup', String(paymentAmountCup))

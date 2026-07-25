@@ -47,3 +47,10 @@ export const adminIconButton =
 
 export const adminIconButtonActive =
   'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-green/15 text-brand-green ring-1 ring-brand-green/25'
+
+export const adminChoice = (active) =>
+  `min-h-10 touch-manipulation rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${adminFocusRing} ${
+    active
+      ? 'border-brand-green/40 bg-brand-green/15 text-brand-green'
+      : 'border-zinc-700/80 bg-zinc-900/40 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+  }`
