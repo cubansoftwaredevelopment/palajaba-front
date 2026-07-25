@@ -1,13 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AdminBusinessesByProvinceChart from '../components/admin/AdminBusinessesByProvinceChart'
+import AdminOrdersChart from '../components/admin/AdminOrdersChart'
+import AdminOrdersLocationChart from '../components/admin/AdminOrdersLocationChart'
 import AdminRevenueChart from '../components/admin/AdminRevenueChart'
+import AdminTopBusinessesChart from '../components/admin/AdminTopBusinessesChart'
 import AdminTrafficChart from '../components/admin/AdminTrafficChart'
 import AdminTrafficLocationChart from '../components/admin/AdminTrafficLocationChart'
 import AdminTrafficPatternsChart from '../components/admin/AdminTrafficPatternsChart'
 import { adminAlertError, adminCard, adminCardHighlight, adminFocusRing, adminMuted, adminSubtle } from '../components/admin/adminStyles'
 import {
   fetchAdminBusinessesByProvince,
+  fetchAdminOrdersChart,
+  fetchAdminOrdersLocations,
+  fetchAdminOrdersTopBusinesses,
   fetchAdminRevenueChart,
   fetchAdminStats,
   fetchAdminTrafficChart,
@@ -76,14 +82,22 @@ export default function AdminStats() {
   const [trafficGranularity, setTrafficGranularity] = useState('daily')
   const [trafficLocations, setTrafficLocations] = useState(null)
   const [trafficPatterns, setTrafficPatterns] = useState(null)
+  const [ordersGranularity, setOrdersGranularity] = useState('daily')
+  const [ordersChart, setOrdersChart] = useState(null)
+  const [topBusinesses, setTopBusinesses] = useState(null)
+  const [ordersLocations, setOrdersLocations] = useState(null)
   const [loading, setLoading] = useState(true)
   const [revenueLoading, setRevenueLoading] = useState(true)
   const [trafficLoading, setTrafficLoading] = useState(true)
+  const [ordersLoading, setOrdersLoading] = useState(true)
   const [error, setError] = useState('')
   const [revenueError, setRevenueError] = useState('')
   const [trafficError, setTrafficError] = useState('')
   const [locationsError, setLocationsError] = useState('')
   const [patternsError, setPatternsError] = useState('')
+  const [ordersError, setOrdersError] = useState('')
+  const [topBusinessesError, setTopBusinessesError] = useState('')
+  const [ordersLocationsError, setOrdersLocationsError] = useState('')
 
   const handleSessionError = useCallback(
     (err) => {
@@ -188,12 +202,47 @@ export default function AdminStats() {
     }
   }, [handleSessionError, statsYearMonth])
 
+  const loadOrdersAnalytics = useCallback(async () => {
+    setOrdersError('')
+    setTopBusinessesError('')
+    setOrdersLocationsError('')
+    setOrdersLoading(true)
+    try {
+      const token = getAdminToken()
+      const { year, month } = statsYearMonth()
+      const [chart, top, locations] = await Promise.all([
+        fetchAdminOrdersChart(token, {
+          granularity: ordersGranularity,
+          year: ordersGranularity === 'monthly' ? undefined : year,
+          month: ordersGranularity === 'monthly' ? undefined : month,
+        }),
+        fetchAdminOrdersTopBusinesses(token, { granularity: ordersGranularity }),
+        fetchAdminOrdersLocations(token, { granularity: ordersGranularity }),
+      ])
+      setOrdersChart(chart)
+      setTopBusinesses(top)
+      setOrdersLocations(locations)
+    } catch (err) {
+      if (handleSessionError(err)) return
+      setOrdersChart(null)
+      setTopBusinesses(null)
+      setOrdersLocations(null)
+      const message = getUserFacingMessage(err, 'No pudimos cargar el análisis de pedidos.')
+      setOrdersError(message)
+      setTopBusinessesError(message)
+      setOrdersLocationsError(message)
+    } finally {
+      setOrdersLoading(false)
+    }
+  }, [handleSessionError, ordersGranularity, statsYearMonth])
+
   const refreshAll = useCallback(() => {
     loadStats()
     loadRevenueChart()
     loadTrafficChart()
     loadTrafficBreakdown()
-  }, [loadStats, loadRevenueChart, loadTrafficChart, loadTrafficBreakdown])
+    loadOrdersAnalytics()
+  }, [loadStats, loadRevenueChart, loadTrafficChart, loadTrafficBreakdown, loadOrdersAnalytics])
 
   useEffect(() => {
     loadStats()
@@ -212,6 +261,10 @@ export default function AdminStats() {
   }, [loadTrafficBreakdown, location.pathname])
 
   useEffect(() => {
+    loadOrdersAnalytics()
+  }, [loadOrdersAnalytics, location.pathname])
+
+  useEffect(() => {
     function onVisible() {
       if (document.visibilityState === 'visible') {
         refreshAll()
@@ -225,7 +278,7 @@ export default function AdminStats() {
     ? `${MONTH_NAMES[stats.month - 1]} ${stats.year}`
     : ''
 
-  const refreshing = loading || revenueLoading || trafficLoading
+  const refreshing = loading || revenueLoading || trafficLoading || ordersLoading
 
   return (
     <main className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">
@@ -317,6 +370,36 @@ export default function AdminStats() {
           label="Pedidos realizados"
           hint="Compras registradas en la plataforma"
           value={loading ? '…' : String(stats?.orders_total ?? 0)}
+        />
+      </div>
+
+      <div className="mt-4">
+        <AdminOrdersChart
+          granularity={ordersGranularity}
+          onGranularityChange={setOrdersGranularity}
+          chart={ordersChart}
+          loading={ordersLoading}
+          error={ordersError}
+        />
+      </div>
+
+      <div className="mt-4">
+        <AdminTopBusinessesChart
+          granularity={ordersGranularity}
+          onGranularityChange={setOrdersGranularity}
+          data={topBusinesses}
+          loading={ordersLoading}
+          error={topBusinessesError}
+        />
+      </div>
+
+      <div className="mt-4">
+        <AdminOrdersLocationChart
+          granularity={ordersGranularity}
+          onGranularityChange={setOrdersGranularity}
+          data={ordersLocations}
+          loading={ordersLoading}
+          error={ordersLocationsError}
         />
       </div>
 
