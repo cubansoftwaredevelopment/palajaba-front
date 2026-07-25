@@ -3,8 +3,17 @@ import { dirname, resolve } from 'node:path'
 
 const distDir = resolve('dist')
 const indexPath = resolve(distDir, 'index.html')
+const sitemapPath = resolve(distDir, 'sitemap.xml')
 const apiUrl = (process.env.VITE_API_URL ?? '').replace(/\/+$/, '')
 const siteUrl = (process.env.VITE_SITE_URL ?? 'https://palajaba.com').replace(/\/+$/, '')
+
+const TRANSIENT_STATUS = new Set([408, 425, 429, 500, 502, 503, 504])
+const MAX_ATTEMPTS = 4
+const RETRY_BASE_MS = 700
+
+function sleep(ms) {
+  return new Promise((resolveSleep) => setTimeout(resolveSleep, ms))
+}
 
 function extractAssetTags(html) {
   const tags = []
@@ -60,6 +69,77 @@ function locToSlug(loc) {
   return ''
 }
 
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+function rebuildUrlBlock(block) {
+  const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1]
+  if (!loc) return null
+
+  const lastmod = block.match(/<lastmod>([^<]+)<\/lastmod>/)?.[1]
+  const changefreq = block.match(/<changefreq>([^<]+)<\/changefreq>/)?.[1]
+  const priority = block.match(/<priority>([^<]+)<\/priority>/)?.[1]
+  const parts = ['  <url>', `    <loc>${escapeXml(loc)}</loc>`]
+  if (lastmod) parts.push(`    <lastmod>${escapeXml(lastmod)}</lastmod>`)
+  if (changefreq) parts.push(`    <changefreq>${escapeXml(changefreq)}</changefreq>`)
+  if (priority) parts.push(`    <priority>${escapeXml(priority)}</priority>`)
+  parts.push('  </url>')
+  return parts.join('\n')
+}
+
+/**
+ * Quita del sitemap las tiendas cuya página SEO no se pudo generar,
+ * para que verify-store-seo-pages no tumbe el deploy por un 502 puntual del API.
+ */
+function pruneSitemapMissingStores(writtenSlugs) {
+  if (!existsSync(sitemapPath)) return
+
+  const written = new Set(writtenSlugs)
+  const sitemap = readFileSync(sitemapPath, 'utf8')
+  const staticPaths = new Set(['', 'comprar', 'aplicacion', 'registro'])
+  const urlBlocks = [...sitemap.matchAll(/<url>[\s\S]*?<\/url>/g)].map((match) => match[0])
+
+  if (urlBlocks.length === 0) return
+
+  const kept = []
+  const removed = []
+
+  for (const block of urlBlocks) {
+    const locMatch = block.match(/<loc>([^<]+)<\/loc>/)
+    if (!locMatch) continue
+
+    const slug = locToSlug(locMatch[1])
+    if (!slug || staticPaths.has(slug) || written.has(slug)) {
+      const rebuilt = rebuildUrlBlock(block)
+      if (rebuilt) kept.push(rebuilt)
+      continue
+    }
+
+    removed.push(slug)
+  }
+
+  if (removed.length === 0) return
+
+  const xml = [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    kept.join('\n'),
+    '</urlset>',
+    '',
+  ].join('\n')
+
+  writeFileSync(sitemapPath, xml, 'utf8')
+  console.warn(
+    `generate-store-seo-pages: sitemap actualizado; omitidas del índice: ${removed.join(', ')}`,
+  )
+}
+
 async function fetchStoreSlugs() {
   if (!apiUrl) {
     console.warn('generate-store-seo-pages: VITE_API_URL no definida; se omiten tiendas.')
@@ -85,11 +165,40 @@ async function fetchStoreSlugs() {
 
 async function fetchStorePage(slug) {
   const endpoint = `${apiUrl}/api/platform/seo/store/${encodeURIComponent(slug)}`
-  const response = await fetch(endpoint)
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`)
+  let lastError = null
+
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const response = await fetch(endpoint)
+      if (response.ok) {
+        return response.json()
+      }
+
+      const statusError = new Error(`HTTP ${response.status}`)
+      lastError = statusError
+      if (!TRANSIENT_STATUS.has(response.status) || attempt === MAX_ATTEMPTS) {
+        throw statusError
+      }
+    } catch (error) {
+      lastError = error
+      const statusMatch = /^HTTP (\d+)$/.exec(error.message ?? '')
+      const status = statusMatch ? Number(statusMatch[1]) : null
+      const isTransientNetwork = !statusMatch
+      const isTransientHttp = status != null && TRANSIENT_STATUS.has(status)
+
+      if ((!isTransientNetwork && !isTransientHttp) || attempt === MAX_ATTEMPTS) {
+        throw error
+      }
+    }
+
+    const delay = RETRY_BASE_MS * attempt
+    console.warn(
+      `generate-store-seo-pages: reintento ${attempt + 1}/${MAX_ATTEMPTS} para ${slug} tras ${lastError?.message ?? 'error'}…`,
+    )
+    await sleep(delay)
   }
-  return response.json()
+
+  throw lastError ?? new Error('Error desconocido')
 }
 
 async function main() {
@@ -105,7 +214,7 @@ async function main() {
   }
 
   const assetTags = extractAssetTags(readFileSync(indexPath, 'utf8'))
-  let written = 0
+  const writtenSlugs = []
 
   for (const slug of slugs) {
     try {
@@ -113,13 +222,17 @@ async function main() {
       const outputPath = resolve(distDir, slug, 'index.html')
       mkdirSync(dirname(outputPath), { recursive: true })
       writeFileSync(outputPath, buildStoreHtml(page, assetTags), 'utf8')
-      written += 1
+      writtenSlugs.push(slug)
     } catch (error) {
       console.warn(`generate-store-seo-pages: omitiendo ${slug} (${error.message}).`)
     }
   }
 
-  console.log(`generate-store-seo-pages: ${written}/${slugs.length} páginas en dist/{slug}/index.html`)
+  pruneSitemapMissingStores(writtenSlugs)
+
+  console.log(
+    `generate-store-seo-pages: ${writtenSlugs.length}/${slugs.length} páginas en dist/{slug}/index.html`,
+  )
 }
 
 main().catch((error) => {
