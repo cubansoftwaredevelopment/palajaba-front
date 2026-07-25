@@ -275,6 +275,44 @@ export function fetchAdminRevenueChart(token, { granularity, year, month } = {})
   })
 }
 
+export function fetchAdminTrafficChart(token, { granularity, year, month } = {}) {
+  const params = new URLSearchParams({ granularity })
+  if (year != null) params.set('year', String(year))
+  if (month != null) params.set('month', String(month))
+
+  return request(`/api/admin/stats/traffic?${params.toString()}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function fetchAdminTrafficLocations(token, { year, month } = {}) {
+  const params = new URLSearchParams()
+  if (year != null) params.set('year', String(year))
+  if (month != null) params.set('month', String(month))
+  const query = params.toString() ? `?${params.toString()}` : ''
+
+  return request(`/api/admin/stats/traffic/locations${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
+export function fetchAdminTrafficPatterns(token, { year, month } = {}) {
+  const params = new URLSearchParams()
+  if (year != null) params.set('year', String(year))
+  if (month != null) params.set('month', String(month))
+  const query = params.toString() ? `?${params.toString()}` : ''
+
+  return request(`/api/admin/stats/traffic/patterns${query}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function updateRegistrationPayment(token, id, paymentAmountCup) {
   const params = new URLSearchParams()
   params.set('payment_amount_cup', String(paymentAmountCup))

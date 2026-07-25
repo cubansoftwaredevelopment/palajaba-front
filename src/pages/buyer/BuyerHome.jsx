@@ -20,6 +20,7 @@ import {
   fetchCategories,
 } from '../../lib/api'
 import { getBuyerLocation, getAdditionalMunicipalities, hasCompleteBuyerLocation, setAdditionalMunicipalities, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+import { recordMarketplaceVisit } from '../../lib/marketplaceVisit'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 import { MARKETPLACE_LABEL } from '../../constants/branding'
 
@@ -53,6 +54,13 @@ function BuyerHomeContent() {
   const [additionalMunicipalityIds, setAdditionalMunicipalityIdsState] = useState(
     () => getAdditionalMunicipalities(location.province.id),
   )
+
+  useEffect(() => {
+    recordMarketplaceVisit({
+      provinceId: location.province.id,
+      municipalityId: location.municipality.id,
+    })
+  }, [location.province.id, location.municipality.id])
 
   const setAdditionalMunicipalityIds = useCallback(
     (nextIds) => {

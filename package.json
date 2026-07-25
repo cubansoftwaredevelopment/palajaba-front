@@ -19,6 +19,7 @@
     "test:seller-gestores": "node scripts/tests/sellerGestores.unit.test.mjs && node scripts/tests/sellerGestores.integration.test.mjs && node scripts/tests/sellerGestoresNav.unit.test.mjs && node scripts/tests/storeCheckoutPhones.unit.test.mjs",
     "test:gestor-panel": "node scripts/tests/gestorCatalog.unit.test.mjs && node scripts/tests/gestorCatalog.integration.test.mjs",
     "test:gestor-public": "node scripts/tests/gestorPublicCatalog.unit.test.mjs && node scripts/tests/gestorPublicCatalog.integration.test.mjs",
+    "test:marketplace-visit": "node scripts/tests/marketplaceVisit.unit.test.mjs && node scripts/tests/marketplaceVisit.integration.test.mjs",
     "verify:checkout-flow": "node scripts/verify-checkout-flow.mjs",
     "verify:categories": "node scripts/verify-business-categories.mjs",
     "verify:media-urls": "node scripts/verify-media-urls.mjs",
