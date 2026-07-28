@@ -53,7 +53,7 @@ function CollapsibleSection({ title, open, onToggle, children }) {
   )
 }
 
-export default function SellerAdvancedProfileSettings({ profile, onUpdated }) {
+export default function SellerAdvancedProfileSettings({ profile, onUpdated, embedded = false }) {
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [storeNameOpen, setStoreNameOpen] = useState(false)
 
@@ -138,11 +138,8 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated }) {
     }
   }
 
-  return (
-    <SellerProfileFieldGroup
-      title="Configuración avanzada"
-      description="Opciones sensibles de tu cuenta. Los cambios aquí no afectan el resto del perfil hasta que los guardes."
-    >
+  const body = (
+    <>
       <CollapsibleSection
         title="Cambiar nombre del negocio"
         open={storeNameOpen}
@@ -238,6 +235,19 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated }) {
           </button>
         </form>
       </CollapsibleSection>
+    </>
+  )
+
+  if (embedded) {
+    return <div className="flex flex-col gap-2.5 sm:gap-3">{body}</div>
+  }
+
+  return (
+    <SellerProfileFieldGroup
+      title="Configuración avanzada"
+      description="Opciones sensibles de tu cuenta. Los cambios aquí no afectan el resto del perfil hasta que los guardes."
+    >
+      {body}
     </SellerProfileFieldGroup>
   )
 }

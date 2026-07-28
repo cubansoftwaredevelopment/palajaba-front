@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import CategoryAutocomplete from '../../components/seller/CategoryAutocomplete'
 import LoadingState from '../../components/ui/LoadingState'
 import LocationMapModal from '../../components/seller/LocationMapModal'
@@ -10,10 +10,8 @@ import SellerDeliveryZonesEditor from '../../components/seller/SellerDeliveryZon
 import SellerLocationPreview from '../../components/seller/SellerLocationPreview'
 import SellerAdvancedProfileSettings from '../../components/seller/SellerAdvancedProfileSettings'
 import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection'
-import SellerMarketplaceCard from '../../components/seller/SellerMarketplaceCard'
-import SellerPageHeader from '../../components/seller/SellerPageHeader'
-import SellerProfileFieldGroup from '../../components/seller/SellerProfileFieldGroup'
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
+import SellerProfileMenuList from '../../components/seller/SellerProfileMenuList'
 import SellerSection from '../../components/seller/SellerSection'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
 import {
@@ -23,7 +21,9 @@ import {
   sellerBtnSecondary,
   sellerCharCounter,
   sellerChoice,
+  sellerFocusRing,
   sellerFormActions,
+  sellerHint,
   sellerInputBare,
   sellerInputPrefix,
   sellerInputPrefixWrap,
@@ -44,6 +44,16 @@ import {
   sameBusinessArea,
   sameDeliveryAreas,
 } from '../../lib/businessArea'
+import { beginSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
+import {
+  PROFILE_PANEL_IDS,
+  closeProfilePanel,
+  getProfileMenuSections,
+  getProfilePanel,
+  isProfileFormPanel,
+  openProfilePanel,
+  resolveProfileMenuAction,
+} from '../../lib/sellerProfileHub'
 import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
 
 const BIO_MAX = 500
@@ -89,10 +99,32 @@ function SocialField({ id, label, prefix, value, onChange, placeholder }) {
   )
 }
 
+function BackToHubButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-1 py-1 text-sm font-semibold text-brand-green touch-manipulation active:bg-brand-green/8 ${sellerFocusRing}`}
+    >
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+        <path
+          fillRule="evenodd"
+          d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z"
+          clipRule="evenodd"
+        />
+      </svg>
+      Mi cuenta
+    </button>
+  )
+}
+
 export default function SellerProfile() {
+  const navigate = useNavigate()
   const { profile, refreshProfile } = useOutletContext()
   const fileInputRef = useRef(null)
+  const menuSections = useMemo(() => getProfileMenuSections(), [])
 
+  const [activePanel, setActivePanel] = useState(null)
   const [categories, setCategories] = useState([])
   const [photoUrl, setPhotoUrl] = useState(profile?.profile_photo_url ?? null)
   const [photoUploading, setPhotoUploading] = useState(false)
@@ -140,6 +172,25 @@ export default function SellerProfile() {
 
   function markDirty() {
     setSaved(false)
+  }
+
+  function goToHub() {
+    setActivePanel(closeProfilePanel())
+    setError('')
+  }
+
+  function handleMenuSelect(panelId) {
+    const action = resolveProfileMenuAction(panelId)
+    if (!action) return
+
+    if (action.type === 'action' && action.panelId === PROFILE_PANEL_IDS.marketplace) {
+      const path = beginSellerMarketplaceVisit(profile, '/tienda/perfil')
+      navigate(path)
+      return
+    }
+
+    setError('')
+    setActivePanel(openProfilePanel(activePanel, action.panelId))
   }
 
   async function handlePhotoChange(event) {
@@ -255,6 +306,8 @@ export default function SellerProfile() {
   if (!profile) return null
 
   const submitDisabled = loading || photoUploading || !hasChanges
+  const panelMeta = getProfilePanel(activePanel)
+  const showFormSave = isProfileFormPanel(activePanel)
 
   const submitButton = (
     <button
@@ -267,25 +320,224 @@ export default function SellerProfile() {
     </button>
   )
 
+  const identityFields = (
+    <SellerSection label="Biografía" optional>
+      <textarea
+        value={biography}
+        onChange={(e) => {
+          setBiography(e.target.value)
+          markDirty()
+        }}
+        rows={4}
+        maxLength={BIO_MAX}
+        placeholder="Ej.: Panadería artesanal en el Vedado. Panes dulces y salados hechos cada mañana."
+        className={sellerTextarea}
+      />
+      <p className={`mt-1.5 ${sellerCharCounter}`}>
+        {biography.length}/{BIO_MAX}
+      </p>
+    </SellerSection>
+  )
+
+  const locationFields = (
+    <>
+      <SellerSection
+        label="Provincia y municipio"
+        required
+        hint="Así te encontrarán los compradores de tu zona."
+      >
+        <SellerBusinessAreaFields
+          provinceId={businessProvinceId}
+          municipalityId={businessMunicipalityId}
+          onProvinceChange={(value) => {
+            setBusinessProvinceId(value)
+            markDirty()
+          }}
+          onMunicipalityChange={(value) => {
+            setBusinessMunicipalityId(value)
+            markDirty()
+          }}
+          provinceInputId="seller-profile-business-province"
+          municipalityInputId="seller-profile-business-municipality"
+        />
+      </SellerSection>
+
+      <SellerSection label="Ubicación en mapa" optional>
+        {location && <SellerLocationPreview location={location} />}
+        <div className={`flex flex-col gap-1.5 sm:flex-row sm:items-center ${location ? 'mt-3' : ''}`}>
+          <button type="button" onClick={() => setShowMap(true)} className={sellerBtnSecondary}>
+            {location ? 'Cambiar en mapa' : 'Marcar en mapa'}
+          </button>
+          {location && (
+            <button
+              type="button"
+              onClick={() => {
+                setLocation(null)
+                markDirty()
+              }}
+              className={sellerBtnGhost}
+            >
+              Quitar ubicación
+            </button>
+          )}
+        </div>
+      </SellerSection>
+
+      <SellerSection label="¿Haces domicilio?" required>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setOffersDelivery(true)
+              markDirty()
+            }}
+            className={sellerChoice(offersDelivery === true)}
+          >
+            Sí
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOffersDelivery(false)
+              setDeliveryAreas([])
+              markDirty()
+            }}
+            className={sellerChoice(offersDelivery === false)}
+          >
+            No
+          </button>
+        </div>
+      </SellerSection>
+
+      {offersDelivery && (
+        <SellerSection
+          label="Zonas de envío"
+          optional
+          hint="Otros municipios donde entregas además del tuyo."
+        >
+          <SellerDeliveryZonesEditor
+            zones={deliveryAreas}
+            businessArea={getBusinessAreaFromSelection(
+              businessProvinceId,
+              businessMunicipalityId,
+            )}
+            onChange={(zones) => {
+              setDeliveryAreas(zones)
+              markDirty()
+            }}
+            idPrefix="seller-profile-delivery"
+          />
+        </SellerSection>
+      )}
+
+      <SellerSection
+        label="¿Usas gestores de venta?"
+        hint="Si lo activas, podrás crear gestores y aparecerá la sección Gestores en tu panel."
+      >
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setGestoresEnabled(true)
+              markDirty()
+            }}
+            className={sellerChoice(gestoresEnabled === true)}
+          >
+            Sí
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setGestoresEnabled(false)
+              markDirty()
+            }}
+            className={sellerChoice(gestoresEnabled === false)}
+          >
+            No
+          </button>
+        </div>
+      </SellerSection>
+    </>
+  )
+
+  const categoriesFields = (
+    <SellerSection label="Categorías" required>
+      {categoriesLoading ? (
+        <LoadingState variant="compact" size="sm" message="Cargando categorías…" className="!py-2" />
+      ) : null}
+      {categoriesError && (
+        <p className={sellerAlertError} role="alert">
+          {categoriesError}
+        </p>
+      )}
+      {!categoriesLoading && !categoriesError && categories.length === 0 && (
+        <p className="text-xs text-brand-carmelita/80">No hay categorías disponibles.</p>
+      )}
+      <CategoryAutocomplete
+        id="seller-profile-categories"
+        categories={categories}
+        value={selectedCategories}
+        onChange={(nextIds) => {
+          markDirty()
+          setSelectedCategories(nextIds)
+        }}
+        multiple
+        placeholder="Buscar y agregar categorías…"
+        disabled={categoriesLoading || categories.length === 0}
+      />
+    </SellerSection>
+  )
+
+  const socialFields = (
+    <SellerSection optional>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <SocialField
+          id="profile-instagram"
+          label="Instagram"
+          prefix="@"
+          value={instagram}
+          onChange={(e) => {
+            setInstagram(e.target.value)
+            markDirty()
+          }}
+          placeholder="tu_tienda"
+        />
+        <SocialField
+          id="profile-facebook"
+          label="Facebook"
+          value={facebook}
+          onChange={(e) => {
+            setFacebook(e.target.value)
+            markDirty()
+          }}
+          placeholder="Nombre de tu página"
+        />
+      </div>
+    </SellerSection>
+  )
+
+  function renderActivePanelBody() {
+    switch (activePanel) {
+      case PROFILE_PANEL_IDS.identity:
+        return identityFields
+      case PROFILE_PANEL_IDS.location:
+        return locationFields
+      case PROFILE_PANEL_IDS.categories:
+        return categoriesFields
+      case PROFILE_PANEL_IDS.social:
+        return socialFields
+      case PROFILE_PANEL_IDS.advanced:
+        return <SellerAdvancedProfileSettings profile={profile} onUpdated={refreshProfile} embedded />
+      case PROFILE_PANEL_IDS.feedback:
+        return <SellerFeedbackSection embedded />
+      default:
+        return null
+    }
+  }
+
   return (
     <>
-      <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
-        <SellerPageHeader eyebrow="Perfil" title="Tu tienda" />
-
-        <SellerSuccessAlert
-          message={saved ? 'Cambios guardados correctamente.' : ''}
-          onDismiss={() => setSaved(false)}
-        />
-
-        <SellerProfileHeroCard
-          profile={profile}
-          photoUrl={photoUrl}
-          photoUploading={photoUploading}
-          onPhotoClick={() => fileInputRef.current?.click()}
-        />
-
-        <SellerMarketplaceCard profile={profile} />
-
+      <section className={`animate-fade-in ${sellerPageWrap}`}>
         <input
           ref={fileInputRef}
           type="file"
@@ -294,212 +546,94 @@ export default function SellerProfile() {
           onChange={handlePhotoChange}
         />
 
-        <form id="seller-edit-profile-form" onSubmit={handleSubmit} className={sellerSectionGap} noValidate>
-          <SellerProfileFieldGroup title="Identidad">
-            <SellerSection label="Biografía" optional>
-              <textarea
-                value={biography}
-                onChange={(e) => {
-                  setBiography(e.target.value)
-                  markDirty()
-                }}
-                rows={4}
-                maxLength={BIO_MAX}
-                placeholder="Ej.: Panadería artesanal en el Vedado. Panes dulces y salados hechos cada mañana."
-                className={sellerTextarea}
+        {!activePanel ? (
+          <div className="-mx-4 -mt-4 sm:-mx-5 lg:-mx-8 lg:-mt-8">
+            <header className="relative overflow-hidden bg-brand-green px-4 pb-16 pt-5 sm:px-5 sm:pt-6 lg:px-8">
+              <div
+                className="pointer-events-none absolute -right-10 -top-8 h-36 w-36 rounded-full bg-brand-yellow/20 blur-2xl"
+                aria-hidden
               />
-              <p className={`mt-1.5 ${sellerCharCounter}`}>
-                {biography.length}/{BIO_MAX}
-              </p>
-            </SellerSection>
-          </SellerProfileFieldGroup>
-
-          <SellerProfileFieldGroup title="Ubicación y entrega">
-            <SellerSection
-              label="Provincia y municipio"
-              required
-              hint="Así te encontrarán los compradores de tu zona."
-            >
-              <SellerBusinessAreaFields
-                provinceId={businessProvinceId}
-                municipalityId={businessMunicipalityId}
-                onProvinceChange={(value) => {
-                  setBusinessProvinceId(value)
-                  markDirty()
-                }}
-                onMunicipalityChange={(value) => {
-                  setBusinessMunicipalityId(value)
-                  markDirty()
-                }}
-                provinceInputId="seller-profile-business-province"
-                municipalityInputId="seller-profile-business-municipality"
+              <div
+                className="pointer-events-none absolute -left-12 bottom-0 h-28 w-28 rounded-full bg-brand-white/10 blur-2xl"
+                aria-hidden
               />
-            </SellerSection>
-
-            <SellerSection label="Ubicación en mapa" optional>
-              {location && <SellerLocationPreview location={location} />}
-              <div className={`flex flex-col gap-1.5 sm:flex-row sm:items-center ${location ? 'mt-3' : ''}`}>
-                <button type="button" onClick={() => setShowMap(true)} className={sellerBtnSecondary}>
-                  {location ? 'Cambiar en mapa' : 'Marcar en mapa'}
-                </button>
-                {location && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLocation(null)
-                      markDirty()
-                    }}
-                    className={sellerBtnGhost}
-                  >
-                    Quitar ubicación
-                  </button>
-                )}
+              <div className="relative mx-auto w-full max-w-md lg:max-w-3xl xl:max-w-4xl">
+                <h2 className="font-display text-2xl font-bold text-brand-white sm:text-3xl">
+                  Mi cuenta
+                </h2>
+                <p className="mt-1 text-sm text-brand-white/80">
+                  Gestiona los datos de tu tienda
+                </p>
               </div>
-            </SellerSection>
+            </header>
 
-            <SellerSection label="¿Haces domicilio?" required>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOffersDelivery(true)
-                    markDirty()
-                  }}
-                  className={sellerChoice(offersDelivery === true)}
-                >
-                  Sí
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOffersDelivery(false)
-                    setDeliveryAreas([])
-                    markDirty()
-                  }}
-                  className={sellerChoice(offersDelivery === false)}
-                >
-                  No
-                </button>
-              </div>
-            </SellerSection>
+            <div className="relative z-10 mx-auto w-full max-w-md -mt-12 px-4 pb-8 sm:px-5 lg:max-w-3xl lg:px-8 xl:max-w-4xl">
+              <SellerSuccessAlert
+                message={saved ? 'Cambios guardados correctamente.' : ''}
+                onDismiss={() => setSaved(false)}
+              />
 
-            {offersDelivery && (
-              <SellerSection
-                label="Zonas de envío"
-                optional
-                hint="Otros municipios donde entregas además del tuyo."
-              >
-                <SellerDeliveryZonesEditor
-                  zones={deliveryAreas}
-                  businessArea={getBusinessAreaFromSelection(
-                    businessProvinceId,
-                    businessMunicipalityId,
-                  )}
-                  onChange={(zones) => {
-                    setDeliveryAreas(zones)
-                    markDirty()
-                  }}
-                  idPrefix="seller-profile-delivery"
-                />
-              </SellerSection>
-            )}
-
-            <SellerSection
-              label="¿Usas gestores de venta?"
-              hint="Si lo activas, podrás crear gestores y aparecerá la sección Gestores en tu panel."
-            >
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGestoresEnabled(true)
-                    markDirty()
-                  }}
-                  className={sellerChoice(gestoresEnabled === true)}
-                >
-                  Sí
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setGestoresEnabled(false)
-                    markDirty()
-                  }}
-                  className={sellerChoice(gestoresEnabled === false)}
-                >
-                  No
-                </button>
-              </div>
-            </SellerSection>
-          </SellerProfileFieldGroup>
-
-          <SellerProfileFieldGroup title="Clasificación">
-            <SellerSection label="Categorías" required>
-              {categoriesLoading ? (
-                <LoadingState variant="compact" size="sm" message="Cargando categorías…" className="!py-2" />
-              ) : null}
-              {categoriesError && (
-                <p className={sellerAlertError} role="alert">
-                  {categoriesError}
+              {error && !activePanel && (
+                <p className={`mb-3 ${sellerAlertError}`} role="alert">
+                  {error}
                 </p>
               )}
-              {!categoriesLoading && !categoriesError && categories.length === 0 && (
-                <p className="text-xs text-brand-carmelita/80">No hay categorías disponibles.</p>
-              )}
-              <CategoryAutocomplete
-                id="seller-profile-categories"
-                categories={categories}
-                value={selectedCategories}
-                onChange={(nextIds) => {
-                  markDirty()
-                  setSelectedCategories(nextIds)
-                }}
-                multiple
-                placeholder="Buscar y agregar categorías…"
-                disabled={categoriesLoading || categories.length === 0}
+
+              <SellerProfileHeroCard
+                profile={profile}
+                photoUrl={photoUrl}
+                photoUploading={photoUploading}
+                onPhotoClick={() => fileInputRef.current?.click()}
               />
-            </SellerSection>
-          </SellerProfileFieldGroup>
 
-          <SellerProfileFieldGroup title="Redes sociales">
-            <SellerSection optional>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <SocialField
-                  id="profile-instagram"
-                  label="Instagram"
-                  prefix="@"
-                  value={instagram}
-                  onChange={(e) => {
-                    setInstagram(e.target.value)
-                    markDirty()
-                  }}
-                  placeholder="tu_tienda"
-                />
-                <SocialField
-                  id="profile-facebook"
-                  label="Facebook"
-                  value={facebook}
-                  onChange={(e) => {
-                    setFacebook(e.target.value)
-                    markDirty()
-                  }}
-                  placeholder="Nombre de tu página"
-                />
+              <div className="mt-5">
+                <SellerProfileMenuList sections={menuSections} onSelect={handleMenuSelect} />
               </div>
-            </SellerSection>
-          </SellerProfileFieldGroup>
+            </div>
+          </div>
+        ) : (
+          <div className={`${sellerSectionGap} animate-fade-in`}>
+            <div className="flex flex-col gap-2">
+              <BackToHubButton onClick={goToHub} />
+              <div>
+                <h2 className="font-display text-xl font-bold text-brand-green sm:text-2xl">
+                  {panelMeta?.label}
+                </h2>
+                {panelMeta?.description ? (
+                  <p className={`mt-1 ${sellerHint}`}>{panelMeta.description}</p>
+                ) : null}
+              </div>
+            </div>
 
-          {error && (
-            <p className={sellerAlertError} role="alert">
-              {error}
-            </p>
-          )}
+            <SellerSuccessAlert
+              message={saved ? 'Cambios guardados correctamente.' : ''}
+              onDismiss={() => setSaved(false)}
+            />
 
-          <div className={sellerFormActions}>{submitButton}</div>
-        </form>
+            {showFormSave ? (
+              <form
+                id="seller-edit-profile-form"
+                onSubmit={handleSubmit}
+                className={`${sellerSectionGap} rounded-2xl border border-brand-green/12 bg-brand-white p-4 shadow-sm sm:p-5`}
+                noValidate
+              >
+                {renderActivePanelBody()}
 
-        <SellerAdvancedProfileSettings profile={profile} onUpdated={refreshProfile} />
-        <SellerFeedbackSection />
+                {error && (
+                  <p className={sellerAlertError} role="alert">
+                    {error}
+                  </p>
+                )}
+
+                <div className={sellerFormActions}>{submitButton}</div>
+              </form>
+            ) : (
+              <div className="rounded-2xl border border-brand-green/12 bg-brand-white p-4 shadow-sm sm:p-5">
+                {renderActivePanelBody()}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       {showMap && (

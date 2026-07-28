@@ -19,8 +19,8 @@ const FEEDBACK_TYPES = [
   { id: 'suggestion', label: 'Sugerencia' },
 ]
 
-export default function SellerFeedbackSection() {
-  const [open, setOpen] = useState(false)
+export default function SellerFeedbackSection({ embedded = false }) {
+  const [open, setOpen] = useState(embedded)
   const [feedbackType, setFeedbackType] = useState('suggestion')
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -55,6 +55,87 @@ export default function SellerFeedbackSection() {
     }
   }
 
+  const form = (
+    <form
+      onSubmit={handleSubmit}
+      className="rounded-2xl border border-brand-green/12 bg-brand-green/[0.02] p-4"
+    >
+      <fieldset>
+        <legend className={sellerLabel}>Tipo de mensaje</legend>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {FEEDBACK_TYPES.map((option) => {
+            const active = feedbackType === option.id
+            return (
+              <button
+                key={option.id}
+                type="button"
+                onClick={() => {
+                  setFeedbackType(option.id)
+                  setError('')
+                  setSuccess('')
+                }}
+                className={`rounded-full border px-4 py-2 text-sm font-semibold touch-manipulation ${sellerFocusRing} ${
+                  active
+                    ? 'border-brand-green bg-brand-green text-brand-white'
+                    : 'border-brand-green/20 bg-brand-white text-brand-green'
+                }`}
+              >
+                {option.label}
+              </button>
+            )
+          })}
+        </div>
+      </fieldset>
+
+      <label htmlFor="seller-feedback-message" className={`mt-4 block ${sellerLabel}`}>
+        Tu mensaje
+      </label>
+      <textarea
+        id="seller-feedback-message"
+        value={message}
+        onChange={(event) => {
+          setMessage(event.target.value)
+          setError('')
+          setSuccess('')
+        }}
+        className={`mt-1.5 ${sellerTextarea}`}
+        placeholder="Describe con detalle la queja o la idea que quieres compartir…"
+        maxLength={2000}
+        rows={5}
+      />
+      <p className={`mt-2 ${sellerHint}`}>
+        Mínimo 10 caracteres · {trimmed.length}/2000
+      </p>
+
+      {error && (
+        <p className={`mt-3 ${sellerAlertError}`} role="alert">
+          {error}
+        </p>
+      )}
+
+      {success && !error && (
+        <p className="mt-3 text-center text-xs font-semibold text-brand-green sm:text-sm" role="status">
+          {success}
+        </p>
+      )}
+
+      <button type="submit" disabled={!canSubmit} className={`mt-4 ${sellerBtnPrimary}`}>
+        {loading ? 'Enviando…' : 'Enviar mensaje'}
+      </button>
+    </form>
+  )
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col gap-2">
+        <p className={sellerHint}>
+          Cuéntanos si algo no funciona bien o cómo podemos mejorar Pa&apos; La Jaba.
+        </p>
+        {form}
+      </div>
+    )
+  }
+
   return (
     <SellerProfileFieldGroup
       title="Quejas y sugerencias"
@@ -84,75 +165,7 @@ export default function SellerFeedbackSection() {
           </svg>
         </button>
 
-        {open && (
-          <form
-            onSubmit={handleSubmit}
-            className="mt-3 rounded-2xl border border-brand-green/12 bg-brand-green/[0.02] p-4"
-          >
-            <fieldset>
-              <legend className={sellerLabel}>Tipo de mensaje</legend>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {FEEDBACK_TYPES.map((option) => {
-                  const active = feedbackType === option.id
-                  return (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => {
-                        setFeedbackType(option.id)
-                        setError('')
-                        setSuccess('')
-                      }}
-                      className={`rounded-full border px-4 py-2 text-sm font-semibold touch-manipulation ${sellerFocusRing} ${
-                        active
-                          ? 'border-brand-green bg-brand-green text-brand-white'
-                          : 'border-brand-green/20 bg-brand-white text-brand-green'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  )
-                })}
-              </div>
-            </fieldset>
-
-            <label htmlFor="seller-feedback-message" className={`mt-4 block ${sellerLabel}`}>
-              Tu mensaje
-            </label>
-            <textarea
-              id="seller-feedback-message"
-              value={message}
-              onChange={(event) => {
-                setMessage(event.target.value)
-                setError('')
-                setSuccess('')
-              }}
-              className={`mt-1.5 ${sellerTextarea}`}
-              placeholder="Describe con detalle la queja o la idea que quieres compartir…"
-              maxLength={2000}
-              rows={5}
-            />
-            <p className={`mt-2 ${sellerHint}`}>
-              Mínimo 10 caracteres · {trimmed.length}/2000
-            </p>
-
-            {error && (
-              <p className={`mt-3 ${sellerAlertError}`} role="alert">
-                {error}
-              </p>
-            )}
-
-            {success && !error && (
-              <p className="mt-3 text-center text-xs font-semibold text-brand-green sm:text-sm" role="status">
-                {success}
-              </p>
-            )}
-
-            <button type="submit" disabled={!canSubmit} className={`mt-4 ${sellerBtnPrimary}`}>
-              {loading ? 'Enviando…' : 'Enviar mensaje'}
-            </button>
-          </form>
-        )}
+        {open && <div className="mt-3">{form}</div>}
       </SellerSection>
     </SellerProfileFieldGroup>
   )
