@@ -5,6 +5,7 @@ export const PROFILE_PANEL_IDS = Object.freeze({
   location: 'location',
   categories: 'categories',
   social: 'social',
+  gestores: 'gestores',
   advanced: 'advanced',
   feedback: 'feedback',
   marketplace: 'marketplace',
@@ -16,6 +17,7 @@ export const PROFILE_FORM_PANEL_IDS = Object.freeze([
   PROFILE_PANEL_IDS.location,
   PROFILE_PANEL_IDS.categories,
   PROFILE_PANEL_IDS.social,
+  PROFILE_PANEL_IDS.gestores,
 ])
 
 const PANELS = Object.freeze({
@@ -46,6 +48,13 @@ const PANELS = Object.freeze({
     description: 'Instagram y Facebook',
     kind: 'form',
     icon: 'social',
+  },
+  [PROFILE_PANEL_IDS.gestores]: {
+    id: PROFILE_PANEL_IDS.gestores,
+    label: 'Gestores de venta',
+    description: 'Activa tu red de revendedores',
+    kind: 'form',
+    icon: 'gestores',
   },
   [PROFILE_PANEL_IDS.advanced]: {
     id: PROFILE_PANEL_IDS.advanced,
@@ -79,6 +88,7 @@ export const PROFILE_MENU_SECTIONS = Object.freeze([
       PROFILE_PANEL_IDS.location,
       PROFILE_PANEL_IDS.categories,
       PROFILE_PANEL_IDS.social,
+      PROFILE_PANEL_IDS.gestores,
     ],
   },
   {

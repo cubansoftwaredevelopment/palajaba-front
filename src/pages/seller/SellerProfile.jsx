@@ -429,35 +429,37 @@ export default function SellerProfile() {
           />
         </SellerSection>
       )}
-
-      <SellerSection
-        label="¿Usas gestores de venta?"
-        hint="Si lo activas, podrás crear gestores y aparecerá la sección Gestores en tu panel."
-      >
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setGestoresEnabled(true)
-              markDirty()
-            }}
-            className={sellerChoice(gestoresEnabled === true)}
-          >
-            Sí
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setGestoresEnabled(false)
-              markDirty()
-            }}
-            className={sellerChoice(gestoresEnabled === false)}
-          >
-            No
-          </button>
-        </div>
-      </SellerSection>
     </>
+  )
+
+  const gestoresFields = (
+    <SellerSection
+      label="¿Usas gestores de venta?"
+      hint="Si lo activas, podrás crear gestores y aparecerá la sección Gestores en tu panel. El plan Básico permite hasta 3; Premium es ilimitado."
+    >
+      <div className="grid grid-cols-2 gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setGestoresEnabled(true)
+            markDirty()
+          }}
+          className={sellerChoice(gestoresEnabled === true)}
+        >
+          Sí
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setGestoresEnabled(false)
+            markDirty()
+          }}
+          className={sellerChoice(gestoresEnabled === false)}
+        >
+          No
+        </button>
+      </div>
+    </SellerSection>
   )
 
   const categoriesFields = (
@@ -526,6 +528,8 @@ export default function SellerProfile() {
         return categoriesFields
       case PROFILE_PANEL_IDS.social:
         return socialFields
+      case PROFILE_PANEL_IDS.gestores:
+        return gestoresFields
       case PROFILE_PANEL_IDS.advanced:
         return <SellerAdvancedProfileSettings profile={profile} onUpdated={refreshProfile} embedded />
       case PROFILE_PANEL_IDS.feedback:

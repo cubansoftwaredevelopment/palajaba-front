@@ -16,6 +16,11 @@ import {
   updateSellerGestorCatalogAccess,
   updateSellerGestorCheckoutPhones,
 } from '../../lib/api'
+import {
+  canAddGestor,
+  formatGestorUsage,
+  maxGestoresForPlan,
+} from '../../lib/gestorPlanLimits'
 import { getSellerToken } from '../../lib/sellerAuth'
 import {
   areAllProductsSelected,
@@ -164,9 +169,22 @@ export default function SellerGestores() {
 
   const allSelected = areAllProductsSelected(products, selectedIds)
 
+  const planTier = profile?.plan_tier
+  const gestorLimit = maxGestoresForPlan(planTier)
+  const atGestorLimit = !canAddGestor(planTier, gestores.length)
+  const gestorUsageLabel = formatGestorUsage(planTier, gestores.length)
+
   async function handleCreate(e) {
     e.preventDefault()
     setCreateError('')
+    if (atGestorLimit) {
+      setCreateError(
+        gestorLimit == null
+          ? 'No pudimos crear el gestor.'
+          : `El plan Básico permite hasta ${gestorLimit} gestores. Pasa a Premium para gestores ilimitados.`,
+      )
+      return
+    }
     const validated = validateGestorUsername(newUsername)
     if (!validated.ok) {
       setCreateError(validated.message)
@@ -377,10 +395,23 @@ export default function SellerGestores() {
       </div>
 
       <div className={sellerSection}>
-        <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">Tus gestores</h3>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">Tus gestores</h3>
+          <p className="text-xs font-semibold text-brand-carmelita/85">{gestorUsageLabel}</p>
+        </div>
         <p className={`mt-1 ${sellerHint}`}>
           Solo necesitas el usuario. Ellos completan contraseña y teléfono en su primer ingreso.
+          {gestorLimit == null
+            ? ' Tu plan Premium permite gestores ilimitados.'
+            : ` El plan Básico permite hasta ${gestorLimit}.`}
         </p>
+
+        {atGestorLimit ? (
+          <p className={`mt-4 ${sellerAlertError}`} role="status">
+            Alcanzaste el máximo de {gestorLimit} gestores del plan Básico. Pasa a Premium para
+            gestores ilimitados.
+          </p>
+        ) : null}
 
         <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-start">
           <div className="min-w-0 flex-1">
@@ -400,7 +431,7 @@ export default function SellerGestores() {
                 setNewUsername(e.target.value)
               }}
               className={sellerInput}
-              disabled={creating}
+              disabled={creating || atGestorLimit}
             />
             {createError ? (
               <p className="mt-1.5 text-xs text-brand-carmelita" role="alert">
@@ -410,7 +441,11 @@ export default function SellerGestores() {
               <p className={`mt-1.5 ${sellerHint}`}>Letras minúsculas, números, _ y - (2–32 caracteres).</p>
             )}
           </div>
-          <button type="submit" disabled={creating || !newUsername.trim()} className={sellerBtnPrimaryCompact}>
+          <button
+            type="submit"
+            disabled={creating || atGestorLimit || !newUsername.trim()}
+            className={sellerBtnPrimaryCompact}
+          >
             {creating ? 'Creando…' : 'Agregar'}
           </button>
         </form>

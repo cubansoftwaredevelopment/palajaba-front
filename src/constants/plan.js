@@ -1,5 +1,6 @@
 import { convertBetweenCurrencies } from '../lib/displayPrice'
 import { areExchangeRatesAvailable, getCupPerUnit } from '../lib/exchangeRates'
+import { PLAN_GESTOR_FEATURES } from '../lib/gestorPlanLimits'
 
 export const PLAN_SOURCE_CURRENCY = 'USD'
 export const PLAN_DISPLAY_CURRENCY = 'CUP'
@@ -17,6 +18,7 @@ export const PLAN_TIERS = {
       'Pedidos directos a Whatsapp',
       'Control total de tus ganancias',
       'Impresión de tickets para mensajeros',
+      PLAN_GESTOR_FEATURES.standard,
     ],
     prices: {
       monthly: { amountUsd: 2, label: 'mes', period: 'monthly' },
@@ -32,6 +34,7 @@ export const PLAN_TIERS = {
       'Todo lo del plan Básico',
       'Estadísticas de tu tienda',
       'Boost en recomendaciones (×2 visibilidad)',
+      PLAN_GESTOR_FEATURES.premium,
     ],
     prices: {
       monthly: { amountUsd: 4, label: 'mes', period: 'monthly' },
@@ -100,6 +103,15 @@ export function sellerHasRecommendationBoost(profile) {
     profile?.has_recommendation_boost ?? normalizePlanTier(profile?.plan_tier) === 'premium',
   )
 }
+
+export {
+  STANDARD_GESTOR_LIMIT,
+  PLAN_GESTOR_FEATURES,
+  canAddGestor,
+  formatGestorUsage,
+  gestorLimitFeatureLabel,
+  maxGestoresForPlan,
+} from '../lib/gestorPlanLimits'
 
 /** @deprecated Use getPlanPrice(planTier, billing) */
 export const PLAN_PRICES = PLAN_TIERS.standard.prices

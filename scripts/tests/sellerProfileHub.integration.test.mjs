@@ -86,7 +86,8 @@ test('flujo integrado: el menú del hub cubre todos los paneles editables', () =
     .flatMap((section) => section.items)
     .filter((item) => item.kind !== 'action')
 
-  assert.ok(editable.length >= 6)
+  assert.ok(editable.length >= 7)
+  assert.ok(editable.some((item) => item.id === PROFILE_PANEL_IDS.gestores))
   for (const item of editable) {
     const opened = openProfilePanel(null, item.id)
     assert.equal(opened, item.id)

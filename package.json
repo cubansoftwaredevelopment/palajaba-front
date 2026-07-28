@@ -23,6 +23,7 @@
     "test:admin-orders": "node scripts/tests/adminOrdersAnalytics.unit.test.mjs",
     "test:admin-notifications": "node scripts/tests/adminNotificationAudience.unit.test.mjs",
     "test:seller-profile-hub": "node scripts/tests/sellerProfileHub.unit.test.mjs && node scripts/tests/sellerProfileHub.integration.test.mjs",
+    "test:plan-gestor-limits": "node scripts/tests/planGestorLimits.unit.test.mjs && node scripts/tests/planGestorLimits.integration.test.mjs",
     "verify:checkout-flow": "node scripts/verify-checkout-flow.mjs",
     "verify:categories": "node scripts/verify-business-categories.mjs",
     "verify:media-urls": "node scripts/verify-media-urls.mjs",
