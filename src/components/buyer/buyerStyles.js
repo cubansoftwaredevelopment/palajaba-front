@@ -364,28 +364,28 @@ export const buyerStoreStripLink =
   `${buyerStoreStrip} transition-colors touch-manipulation active:border-brand-green/25 active:bg-brand-yellow/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 lg:hover:border-brand-green/22 lg:hover:bg-brand-yellow/8`
 
 export const buyerStorePageHeader =
-  'min-w-0 rounded-3xl border border-brand-green/12 bg-gradient-to-br from-brand-yellow/15 via-brand-white to-brand-green/[0.04] px-5 py-5 shadow-[0_4px_20px_rgba(89,128,44,0.07)]'
+  'min-w-0 rounded-3xl border border-zinc-200/90 bg-white px-5 py-5 shadow-[0_4px_20px_rgba(15,23,42,0.06)]'
 
 export const buyerStorePageAvatar =
-  'flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-yellow/15 font-display text-lg font-bold text-brand-carmelita/75 ring-2 ring-brand-green/15 sm:h-20 sm:w-20'
+  'flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-100 font-display text-lg font-bold text-zinc-500 ring-2 ring-brand-green sm:h-20 sm:w-20'
 
 export const buyerStorePageName =
   'font-display text-xl font-bold text-brand-green sm:text-2xl'
 
 export const buyerStorePageBio =
-  'mt-4 text-sm leading-relaxed text-brand-carmelita/90'
+  'mt-4 text-sm leading-relaxed text-zinc-700'
 
 export const buyerStorePageSectionTitle =
-  'text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-brand-carmelita/70'
+  'text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-zinc-500'
 
 export const buyerStorePageMeta =
-  'rounded-2xl border border-brand-green/10 bg-brand-white/70 px-3.5 py-3'
+  'pt-4'
 
 export const buyerStorePageMetaLabel =
-  'text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-brand-carmelita/70'
+  'text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-zinc-500'
 
 export const buyerStorePageMetaValue =
-  'mt-1 text-sm font-semibold leading-snug text-brand-green'
+  'mt-1 text-sm font-semibold leading-snug text-zinc-800'
 
 export const buyerBusinessList =
   'grid min-w-0 grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-3 lg:gap-5 xl:gap-6'
@@ -422,8 +422,20 @@ export const buyerBusinessCardProductCount =
 export const buyerBusinessCardCatalogBtn =
   'mt-auto flex min-h-11 w-full items-center justify-center rounded-full bg-brand-green px-5 text-sm font-semibold text-brand-white shadow-[0_6px_20px_rgba(89,128,44,0.28)] transition-all touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 lg:hover:-translate-y-px lg:hover:bg-[#4d7026]'
 
+export const buyerStorePageDeliveryBadge =
+  'mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[0.68rem] font-semibold text-zinc-700'
+
+export const buyerStorePageActions =
+  'mt-4 flex flex-wrap items-center gap-2'
+
+export const buyerStorePageWhatsAppBtn =
+  'inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-full bg-brand-green px-4 text-sm font-bold text-white shadow-[0_4px_14px_rgba(15,23,42,0.12)] transition-transform touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35 sm:flex-none sm:min-w-[9.5rem]'
+
+export const buyerStorePageSecondaryBtn =
+  'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-colors touch-manipulation active:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-xs sm:font-semibold'
+
 export const buyerStorePageMapBtn =
-  'inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-xl border border-brand-green/20 bg-brand-green/[0.06] px-4 text-sm font-bold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:w-auto sm:shrink-0 lg:hover:bg-brand-green/[0.1]'
+  'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-colors touch-manipulation active:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-xs sm:font-semibold'
 
 export const buyerStoreMapOverlay =
   'fixed inset-0 z-[70] bg-brand-green/25 backdrop-blur-[2px]'
@@ -438,7 +450,7 @@ export const buyerStoreMapModalHeader =
   'flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-5 py-4'
 
 export const buyerStorePageSocialLink =
-  'inline-flex min-h-9 items-center rounded-full border border-brand-green/15 bg-brand-white px-3.5 text-xs font-bold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/15 lg:hover:bg-brand-green/[0.04]'
+  'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-colors touch-manipulation active:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-xs sm:font-semibold'
 
 export const buyerStoreStripAvatar =
   'flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-yellow/15 font-display text-sm font-bold text-brand-carmelita/75 ring-2 ring-brand-green/15'
