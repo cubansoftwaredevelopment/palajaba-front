@@ -156,26 +156,26 @@ export const buyerExpandSearchChip = (active) =>
 
 export const buyerProductBody = 'flex min-h-0 flex-1 flex-col px-2 pb-2 pt-1.5'
 
-export const buyerProductPrice =
-  'font-display text-[0.95rem] font-bold leading-none text-brand-green sm:text-base'
-
 export const buyerProductName =
-  'mt-1 line-clamp-2 text-[0.68rem] font-semibold leading-snug text-brand-green/95'
+  'line-clamp-2 font-display text-[0.82rem] font-bold leading-snug text-brand-green sm:text-[0.9rem]'
+
+export const buyerProductPrice =
+  'mt-1 text-[0.72rem] font-semibold leading-none text-brand-green sm:text-[0.78rem]'
 
 export const buyerProductStore =
-  'mt-0.5 truncate text-[0.58rem] font-medium text-brand-carmelita/70'
+  'mt-1.5 truncate text-[0.62rem] font-semibold text-brand-carmelita underline-offset-2 transition-colors touch-manipulation hover:text-brand-green hover:underline focus-visible:text-brand-green focus-visible:underline focus-visible:outline-none'
 
 export const buyerProductActions =
-  'mt-2 grid grid-cols-2 gap-1'
+  'mt-2 flex flex-col gap-1.5'
 
 export const buyerProductBtnBuy =
-  'flex min-h-8 items-center justify-center rounded-xl bg-brand-green px-1 text-[0.62rem] font-bold leading-none text-brand-white shadow-[0_3px_10px_rgba(89,128,44,0.22)] transition-transform touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 sm:min-h-9 sm:text-[0.65rem]'
+  'flex min-h-9 w-full items-center justify-center rounded-xl bg-brand-green px-2 text-[0.68rem] font-bold leading-none text-brand-white shadow-[0_3px_10px_rgba(89,128,44,0.22)] transition-transform touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 sm:min-h-10 sm:text-[0.72rem]'
 
 export const buyerProductBtnJaba =
-  'flex min-h-8 items-center justify-center gap-0.5 rounded-xl border border-brand-yellow/45 bg-brand-yellow/15 px-0.5 text-[0.54rem] font-bold leading-[1.05] text-brand-green transition-[transform,background-color,border-color] touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow/50 sm:min-h-9 sm:gap-1 sm:text-[0.58rem]'
+  'flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-green/22 bg-transparent px-2 text-[0.62rem] font-semibold leading-none text-brand-green transition-[transform,background-color,border-color] touch-manipulation active:scale-[0.97] active:bg-brand-green/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:min-h-10 sm:text-[0.65rem]'
 
 export const buyerProductBtnJabaActive =
-  'flex min-h-8 items-center justify-center rounded-xl border border-brand-green/25 bg-brand-green/[0.08] px-0.5 text-[0.54rem] font-bold leading-[1.05] text-brand-green transition-[transform,background-color,border-color] touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:min-h-9 sm:text-[0.58rem]'
+  'flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl border border-brand-green/30 bg-brand-green/[0.08] px-2 text-[0.62rem] font-semibold leading-none text-brand-green transition-[transform,background-color,border-color] touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:min-h-10 sm:text-[0.65rem]'
 
 export const buyerProductBadge =
   'mt-2 inline-flex w-fit rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[0.6rem] font-bold text-brand-green'
