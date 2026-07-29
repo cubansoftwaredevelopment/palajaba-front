@@ -44,8 +44,9 @@ test('BUYER_PRODUCT_CARD_ACTIONS pone Comprar como primaria en stack', () => {
 test('jerarquía tipográfica: nombre más prominente que precio', () => {
   assert.match(buyerProductName, /font-bold/)
   assert.match(buyerProductName, /font-display/)
-  assert.match(buyerProductName, /line-clamp-2/)
-  assert.match(buyerProductName, /min-h-\[/)
+  assert.match(buyerProductName, /truncate/)
+  assert.doesNotMatch(buyerProductName, /line-clamp-2/)
+  assert.doesNotMatch(buyerProductName, /min-h-\[/)
   assert.match(buyerProductPrice, /font-semibold/)
   assert.match(buyerProductPrice, /text-brand-green/)
   assert.doesNotMatch(buyerProductPrice, /font-display/)

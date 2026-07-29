@@ -157,7 +157,7 @@ export const buyerExpandSearchChip = (active) =>
 export const buyerProductBody = 'flex shrink-0 flex-col px-2 pb-1 pt-1.5'
 
 export const buyerProductName =
-  'line-clamp-2 min-h-[2.3rem] overflow-hidden text-ellipsis font-display text-[0.82rem] font-bold leading-snug text-brand-green sm:min-h-[2.5rem] sm:text-[0.9rem]'
+  'truncate font-display text-[0.82rem] font-bold leading-snug text-brand-green sm:text-[0.9rem]'
 
 export const buyerProductPrice =
   'mt-1 text-[0.72rem] font-semibold leading-none text-brand-green sm:text-[0.78rem]'
