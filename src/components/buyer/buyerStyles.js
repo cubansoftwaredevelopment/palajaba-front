@@ -60,7 +60,7 @@ export const buyerCapitalBadge =
   'shrink-0 rounded-full bg-brand-yellow/25 px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.06em] text-brand-green'
 
 export const buyerProductGrid =
-  'grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5 xl:grid-cols-4'
+  'grid grid-cols-2 items-stretch gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5 xl:grid-cols-4'
 
 export const buyerHomeSections = 'flex min-w-0 flex-col gap-7 sm:gap-8'
 
@@ -88,7 +88,7 @@ export const buyerCategorySectionTitle =
 export const buyerProductRowWrap = 'relative min-w-0 overflow-hidden'
 
 export const buyerProductRow =
-  'flex touch-manipulation gap-3 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+  'flex items-stretch touch-manipulation gap-3 overflow-x-auto overscroll-x-contain py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
 export const buyerProductRowFade =
   'pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-brand-white via-brand-white/95 to-transparent sm:w-20'
@@ -103,10 +103,10 @@ export const buyerProductRowArrowLeft =
   'absolute left-0 top-1/2 z-20 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-brand-green/15 bg-brand-white text-brand-green shadow-[0_4px_14px_rgba(89,128,44,0.14)] transition-[transform,background-color,box-shadow] duration-200 touch-manipulation active:scale-95 active:bg-brand-yellow/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:h-10 sm:w-10 lg:hover:-translate-y-1/2 lg:hover:scale-105 lg:hover:shadow-[0_6px_18px_rgba(89,128,44,0.18)]'
 
 export const buyerProductRowItem =
-  'w-[11rem] shrink-0 snap-start sm:w-[11.5rem]'
+  'flex h-auto w-[11rem] shrink-0 snap-start flex-col self-stretch sm:w-[11.5rem]'
 
 export const buyerProductCard =
-  'group relative flex h-full flex-col overflow-hidden rounded-2xl border border-brand-green/10 bg-brand-white shadow-[0_3px_16px_rgba(89,128,44,0.07)] transition-shadow touch-manipulation sm:hover:shadow-[0_6px_22px_rgba(89,128,44,0.11)]'
+  'group relative flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-brand-green/10 bg-brand-white shadow-[0_3px_16px_rgba(89,128,44,0.07)] transition-shadow touch-manipulation sm:hover:shadow-[0_6px_22px_rgba(89,128,44,0.11)]'
 
 export const buyerProductCardCompact = `${buyerProductCard} w-full`
 
@@ -154,19 +154,19 @@ export const buyerExpandSearchChip = (active) =>
       : 'border-brand-green/16 bg-brand-white text-brand-green active:bg-brand-yellow/10 lg:hover:border-brand-green/24 lg:hover:bg-brand-green/[0.03]'
   }`
 
-export const buyerProductBody = 'flex min-h-0 flex-1 flex-col px-2 pb-2 pt-1.5'
+export const buyerProductBody = 'flex shrink-0 flex-col px-2 pb-1 pt-1.5'
 
 export const buyerProductName =
-  'line-clamp-2 font-display text-[0.82rem] font-bold leading-snug text-brand-green sm:text-[0.9rem]'
+  'line-clamp-2 min-h-[2.3rem] overflow-hidden text-ellipsis font-display text-[0.82rem] font-bold leading-snug text-brand-green sm:min-h-[2.5rem] sm:text-[0.9rem]'
 
 export const buyerProductPrice =
   'mt-1 text-[0.72rem] font-semibold leading-none text-brand-green sm:text-[0.78rem]'
 
 export const buyerProductStore =
-  'mt-1.5 truncate text-[0.62rem] font-semibold text-brand-carmelita underline-offset-2 transition-colors touch-manipulation hover:text-brand-green hover:underline focus-visible:text-brand-green focus-visible:underline focus-visible:outline-none'
+  'mt-0 truncate text-[0.62rem] font-semibold text-brand-carmelita underline-offset-2 transition-colors touch-manipulation hover:text-brand-green hover:underline focus-visible:text-brand-green focus-visible:underline focus-visible:outline-none'
 
 export const buyerProductActions =
-  'mt-2 flex flex-col gap-1.5'
+  'mt-auto flex flex-col gap-1.5 pt-2'
 
 export const buyerProductBtnBuy =
   'flex min-h-9 w-full items-center justify-center rounded-xl bg-brand-green px-2 text-[0.68rem] font-bold leading-none text-brand-white shadow-[0_3px_10px_rgba(89,128,44,0.22)] transition-transform touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 sm:min-h-10 sm:text-[0.72rem]'

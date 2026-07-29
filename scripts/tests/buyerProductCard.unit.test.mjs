@@ -7,10 +7,15 @@ import {
   resolveBuyerProductStorePath,
 } from '../../src/lib/buyerProductCardView.js'
 import {
+  buyerProductActions,
   buyerProductBtnBuy,
   buyerProductBtnJaba,
+  buyerProductCard,
+  buyerProductGrid,
   buyerProductName,
   buyerProductPrice,
+  buyerProductRow,
+  buyerProductRowItem,
   buyerProductStore,
 } from '../../src/components/buyer/buyerStyles.js'
 
@@ -39,6 +44,8 @@ test('BUYER_PRODUCT_CARD_ACTIONS pone Comprar como primaria en stack', () => {
 test('jerarquía tipográfica: nombre más prominente que precio', () => {
   assert.match(buyerProductName, /font-bold/)
   assert.match(buyerProductName, /font-display/)
+  assert.match(buyerProductName, /line-clamp-2/)
+  assert.match(buyerProductName, /min-h-\[/)
   assert.match(buyerProductPrice, /font-semibold/)
   assert.match(buyerProductPrice, /text-brand-green/)
   assert.doesNotMatch(buyerProductPrice, /font-display/)
@@ -50,4 +57,13 @@ test('jerarquía de botones: Comprar sólido, Jaba outline', () => {
   assert.match(buyerProductBtnJaba, /bg-transparent/)
   assert.match(buyerProductBtnJaba, /border-brand-green/)
   assert.match(buyerProductStore, /hover:underline/)
+})
+
+test('alineación de fila: acciones al fondo y contenedores stretch', () => {
+  assert.match(buyerProductActions, /mt-auto/)
+  assert.match(buyerProductCard, /h-full/)
+  assert.match(buyerProductCard, /flex-col/)
+  assert.match(buyerProductGrid, /items-stretch/)
+  assert.match(buyerProductRow, /items-stretch/)
+  assert.match(buyerProductRowItem, /self-stretch/)
 })

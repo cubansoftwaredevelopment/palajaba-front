@@ -98,11 +98,17 @@ export default function BuyerProductCard({ product, compact = false }) {
   return (
     <>
       <article className={compact ? buyerProductCardCompact : buyerProductCard}>
-        <div className={soldOut ? 'flex min-h-0 flex-1 flex-col grayscale' : 'flex min-h-0 flex-1 flex-col'}>
+        <div
+          className={
+            soldOut
+              ? 'flex min-h-0 flex-1 flex-col grayscale'
+              : 'flex min-h-0 flex-1 flex-col'
+          }
+        >
           <button
             type="button"
             onClick={openDetail}
-            className="flex min-h-0 w-full flex-1 flex-col text-left touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/25"
+            className="flex w-full shrink-0 flex-col text-left touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/25"
             aria-label={`Ver detalles de ${product.name}${soldOut ? ' (agotado)' : ''}`}
           >
             <div className={buyerProductImageWrap}>
@@ -116,7 +122,7 @@ export default function BuyerProductCard({ product, compact = false }) {
           </button>
 
           {product.store?.store_name && storePath ? (
-            <div className="px-2 pb-1">
+            <div className="shrink-0 px-2 pb-1">
               <Link
                 to={storePath}
                 onClick={(event) => event.stopPropagation()}
@@ -127,11 +133,16 @@ export default function BuyerProductCard({ product, compact = false }) {
               </Link>
             </div>
           ) : product.store?.store_name ? (
-            <p className={`${buyerProductStore} px-2 pb-1 no-underline`}>{product.store.store_name}</p>
+            <p className={`${buyerProductStore} shrink-0 px-2 pb-1 no-underline`}>
+              {product.store.store_name}
+            </p>
           ) : null}
 
           {canPurchase ? (
-            <div className={`${buyerProductActions} px-2 pb-2`} data-action-layout={BUYER_PRODUCT_CARD_ACTIONS.layout}>
+            <div
+              className={`${buyerProductActions} px-2 pb-2`}
+              data-action-layout={BUYER_PRODUCT_CARD_ACTIONS.layout}
+            >
               <button
                 type="button"
                 onClick={handleBuy}
