@@ -195,6 +195,17 @@ export const buyerJabaTrigger =
 export const buyerJabaBadge =
   'absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-green px-1 text-[0.62rem] font-bold leading-none text-brand-white shadow-[0_2px_8px_rgba(89,128,44,0.35)]'
 
+export const buyerJabaBadgePulse = `${buyerJabaBadge} animate-jaba-badge-bump`
+
+export const buyerJabaToastShell =
+  'pointer-events-none fixed inset-x-0 bottom-[max(1.25rem,var(--safe-bottom))] z-[85] flex justify-center px-4'
+
+export const buyerJabaToastCard =
+  'pointer-events-none w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-brand-green/15 bg-brand-white px-4 py-3 text-center text-sm font-semibold leading-snug text-brand-green shadow-[0_12px_32px_rgba(89,128,44,0.18)]'
+
+export const buyerJabaToastEnter = `${buyerJabaToastCard} animate-jaba-toast-in`
+export const buyerJabaToastLeave = `${buyerJabaToastCard} animate-jaba-toast-out`
+
 export const buyerJabaOverlay =
   'fixed inset-0 z-[70] bg-brand-green/20 backdrop-blur-[2px]'
 

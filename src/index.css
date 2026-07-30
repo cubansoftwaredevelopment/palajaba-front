@@ -23,6 +23,43 @@
   --animate-float-delayed: float 6s ease-in-out 1s infinite;
   --animate-levitate: levitate 2.8s ease-in-out infinite;
   --animate-pulse-soft: pulse-soft 4s ease-in-out infinite;
+  --animate-jaba-badge-bump: jaba-badge-bump 0.35s ease-out;
+  --animate-jaba-toast-in: jaba-toast-in 0.28s ease-out;
+  --animate-jaba-toast-out: jaba-toast-out 0.25s ease-in forwards;
+
+  @keyframes jaba-badge-bump {
+    0% {
+      transform: scale(1);
+    }
+    40% {
+      transform: scale(1.22);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+
+  @keyframes jaba-toast-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes jaba-toast-out {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
 
   @keyframes fade-in {
     from {

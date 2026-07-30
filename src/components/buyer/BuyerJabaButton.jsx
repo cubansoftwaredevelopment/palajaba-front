@@ -1,9 +1,10 @@
 import { JABA_BAG } from '../../constants/branding'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
-import { buyerJabaBadge, buyerJabaTrigger } from './buyerStyles'
+import { buyerJabaBadge, buyerJabaBadgePulse, buyerJabaTrigger } from './buyerStyles'
 
 export default function BuyerJabaButton() {
-  const { count, togglePanel, open } = useBuyerJaba()
+  const { count, togglePanel, open, badgePulseId } = useBuyerJaba()
+  const badgeClass = badgePulseId > 0 ? buyerJabaBadgePulse : buyerJabaBadge
 
   return (
     <button
@@ -23,7 +24,7 @@ export default function BuyerJabaButton() {
         decoding="async"
       />
       {count > 0 ? (
-        <span className={buyerJabaBadge} aria-hidden="true">
+        <span key={badgePulseId} className={badgeClass} aria-hidden="true">
           {count > 99 ? '99+' : count}
         </span>
       ) : null}

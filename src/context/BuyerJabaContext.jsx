@@ -38,6 +38,13 @@ import BuyerDeliveryCheckoutModal from '../components/buyer/BuyerDeliveryCheckou
 import BuyerPickupCheckoutModal from '../components/buyer/BuyerPickupCheckoutModal'
 import BuyerPhoneCheckoutModal from '../components/buyer/BuyerPhoneCheckoutModal'
 import BuyerJabaSyncAlert from '../components/buyer/BuyerJabaSyncAlert'
+import BuyerJabaToast from '../components/buyer/BuyerJabaToast'
+
+function buildJabaAddedToastMessage(productName) {
+  const name = String(productName ?? '').trim() || 'Producto'
+  const short = name.length > 42 ? `${name.slice(0, 39)}…` : name
+  return `${short} agregado a tu jaba`
+}
 
 const BuyerJabaContext = createContext(null)
 
@@ -83,6 +90,8 @@ export function BuyerJabaProvider({ children }) {
   const [phonePicker, setPhonePicker] = useState(null)
   const [syncRemoved, setSyncRemoved] = useState(null)
   const [checkoutSubmittingStoreId, setCheckoutSubmittingStoreId] = useState(null)
+  const [jabaToast, setJabaToast] = useState(null)
+  const [badgePulseId, setBadgePulseId] = useState(0)
 
   useEffect(() => {
     function onChange(event) {
@@ -221,8 +230,19 @@ export function BuyerJabaProvider({ children }) {
   )
 
   const addProduct = useCallback((product) => {
+    if (product?.is_available === false) return
+
     addToJaba(product)
     recordProductPopularity(product.id, 'jaba')
+    setJabaToast({
+      id: Date.now(),
+      message: buildJabaAddedToastMessage(product?.name),
+    })
+    setBadgePulseId((current) => current + 1)
+  }, [])
+
+  const dismissJabaToast = useCallback((toastId) => {
+    setJabaToast((current) => (current?.id === toastId ? null : current))
   }, [])
 
   const removeProduct = useCallback((productId) => {
@@ -392,6 +412,7 @@ export function BuyerJabaProvider({ children }) {
       deliveryCheckout,
       pickupCheckout,
       checkoutSubmittingStoreId,
+      badgePulseId,
       isInJaba,
       addProduct,
       removeProduct,
@@ -420,6 +441,7 @@ export function BuyerJabaProvider({ children }) {
       deliveryCheckout,
       pickupCheckout,
       checkoutSubmittingStoreId,
+      badgePulseId,
       addProduct,
       removeProduct,
       setQuantity,
@@ -448,6 +470,7 @@ export function BuyerJabaProvider({ children }) {
   return (
     <BuyerJabaContext.Provider value={value}>
       {children}
+      <BuyerJabaToast toast={jabaToast} onDone={dismissJabaToast} />
       <BuyerDeliveryCheckoutModal
         checkout={activeCheckoutModal === 'delivery' ? deliveryCheckout : null}
         checkoutSubmitting={Boolean(checkoutSubmittingStoreId)}
