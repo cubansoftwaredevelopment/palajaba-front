@@ -4,9 +4,8 @@ import { alertErrorClass } from '../auth/formStyles'
 import {
   getBuyerDeliveryDefaults,
   saveBuyerDeliveryDefaults,
-  validateDeliveryForm,
+  validatePickupForm,
 } from '../../lib/buyerDelivery'
-import { getBuyerLocation } from '../../lib/buyerLocation'
 import {
   buyerDeliveryFieldLabel,
   buyerDeliveryInput,
@@ -15,8 +14,6 @@ import {
   buyerDeliveryModalFooter,
   buyerDeliveryModalHeader,
   buyerDeliveryOverlay,
-  buyerDeliveryTextarea,
-  buyerJabaSecondaryBtn,
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
 
@@ -28,22 +25,30 @@ function WhatsAppIcon() {
   )
 }
 
-export default function BuyerDeliveryCheckoutModal({
+export default function BuyerPickupCheckoutModal({
   checkout,
   checkoutSubmitting = false,
   onClose,
   onConfirm,
-  onPickup,
 }) {
   const titleId = useId()
-  const location = getBuyerLocation()
-  const [form, setForm] = useState(() => getBuyerDeliveryDefaults())
+  const [form, setForm] = useState(() => {
+    const defaults = getBuyerDeliveryDefaults()
+    return {
+      recipient_name: defaults.recipient_name,
+      phone_primary: defaults.phone_primary,
+    }
+  })
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!checkout) return undefined
 
-    setForm(getBuyerDeliveryDefaults())
+    const defaults = getBuyerDeliveryDefaults()
+    setForm({
+      recipient_name: defaults.recipient_name,
+      phone_primary: defaults.phone_primary,
+    })
     setError('')
 
     function handleKeyDown(event) {
@@ -64,45 +69,44 @@ export default function BuyerDeliveryCheckoutModal({
   async function handleSubmit(event) {
     event.preventDefault()
 
-    const validationError = validateDeliveryForm(form)
+    const validationError = validatePickupForm(form)
     if (validationError) {
       setError(validationError)
       return
     }
 
-    const delivery = {
+    const pickup = {
+      mode: 'pickup',
       recipient_name: form.recipient_name.trim(),
-      address: form.address.trim(),
       phone_primary: form.phone_primary,
-      phone_secondary: form.phone_secondary,
-      notes: form.notes.trim(),
     }
 
-    saveBuyerDeliveryDefaults(form)
-    await onConfirm(delivery)
-  }
+    const defaults = getBuyerDeliveryDefaults()
+    saveBuyerDeliveryDefaults({
+      ...defaults,
+      recipient_name: form.recipient_name.trim(),
+      phone_primary: form.phone_primary,
+    })
 
-  async function handlePickup() {
-    if (checkoutSubmitting) return
-    await onPickup?.()
+    await onConfirm(pickup)
   }
-
-  const zoneHint =
-    location?.municipality?.name && location?.province?.name
-      ? `${location.municipality.name}, ${location.province.name}`
-      : null
 
   return (
     <>
-      <button type="button" className={buyerDeliveryOverlay} aria-label="Cerrar formulario de domicilio" onClick={onClose} />
+      <button
+        type="button"
+        className={buyerDeliveryOverlay}
+        aria-label="Cerrar formulario de recogida"
+        onClick={onClose}
+      />
 
       <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={buyerDeliveryModal}>
         <div className={buyerDeliveryModalHeader}>
           <h2 id={titleId} className="font-display text-lg font-bold text-brand-green">
-            Pedido a domicilio
+            Recoger en la tienda
           </h2>
           <p className="mt-1 text-xs font-medium text-brand-carmelita">
-            {checkout.storeName} · todos los productos incluyen domicilio
+            {checkout.storeName} · la tienda sabrá quién va a recoger
           </p>
         </div>
 
@@ -110,11 +114,11 @@ export default function BuyerDeliveryCheckoutModal({
           <div className={buyerDeliveryModalBody}>
             <div className="flex flex-col gap-4">
               <div>
-                <label htmlFor="delivery-recipient" className={buyerDeliveryFieldLabel}>
-                  Nombre de quien recibe <span className="text-brand-carmelita">*</span>
+                <label htmlFor="pickup-recipient" className={buyerDeliveryFieldLabel}>
+                  Nombre de quien recoge <span className="text-brand-carmelita">*</span>
                 </label>
                 <input
-                  id="delivery-recipient"
+                  id="pickup-recipient"
                   type="text"
                   value={form.recipient_name}
                   onChange={(event) => updateField('recipient_name', event.target.value)}
@@ -125,51 +129,12 @@ export default function BuyerDeliveryCheckoutModal({
                 />
               </div>
 
-              <div>
-                <label htmlFor="delivery-address" className={buyerDeliveryFieldLabel}>
-                  Dirección de entrega <span className="text-brand-carmelita">*</span>
-                </label>
-                <textarea
-                  id="delivery-address"
-                  value={form.address}
-                  onChange={(event) => updateField('address', event.target.value)}
-                  className={buyerDeliveryTextarea}
-                  placeholder={
-                    zoneHint
-                      ? `Calle, número, reparto… (${zoneHint})`
-                      : 'Calle, número, entre calles, reparto…'
-                  }
-                  required
-                />
-              </div>
-
               <PhoneField
-                id="delivery-phone-primary"
+                id="pickup-phone-primary"
                 label="Teléfono de contacto"
                 value={form.phone_primary}
                 onChange={(value) => updateField('phone_primary', value)}
               />
-
-              <PhoneField
-                id="delivery-phone-secondary"
-                label="Teléfono adicional (opcional)"
-                value={form.phone_secondary}
-                onChange={(value) => updateField('phone_secondary', value)}
-                required={false}
-              />
-
-              <div>
-                <label htmlFor="delivery-notes" className={buyerDeliveryFieldLabel}>
-                  Detalles adicionales
-                </label>
-                <textarea
-                  id="delivery-notes"
-                  value={form.notes}
-                  onChange={(event) => updateField('notes', event.target.value)}
-                  className={buyerDeliveryTextarea}
-                  placeholder="Ej. casa de color verde, llamar al llegar, timbre roto…"
-                />
-              </div>
 
               {error ? <p className={alertErrorClass}>{error}</p> : null}
             </div>
@@ -178,18 +143,8 @@ export default function BuyerDeliveryCheckoutModal({
           <div className={buyerDeliveryModalFooter}>
             <button type="submit" disabled={checkoutSubmitting} className={buyerJabaWhatsAppBtn}>
               <WhatsAppIcon />
-              {checkoutSubmitting ? 'Registrando pedido…' : 'Enviar pedido a domicilio'}
+              {checkoutSubmitting ? 'Registrando pedido…' : 'Enviar por WhatsApp'}
             </button>
-            {onPickup ? (
-              <button
-                type="button"
-                onClick={handlePickup}
-                disabled={checkoutSubmitting}
-                className={buyerJabaSecondaryBtn}
-              >
-                Recoger en la tienda
-              </button>
-            ) : null}
             <button
               type="button"
               onClick={onClose}

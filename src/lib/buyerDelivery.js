@@ -56,3 +56,22 @@ export function validateDeliveryForm(form) {
 
   return null
 }
+
+export function validatePickupForm(form) {
+  const recipientName = form.recipient_name?.trim()
+  if (!recipientName) return 'Indica el nombre de quien recogerá el pedido.'
+
+  const phoneDigits = String(form.phone_primary ?? '').replace(/\D/g, '')
+  if (phoneDigits.length !== 8) return 'Ingresa un teléfono de contacto válido (8 dígitos).'
+
+  return null
+}
+
+export function isPickupFulfillment(fulfillment) {
+  return Boolean(fulfillment && fulfillment.mode === 'pickup')
+}
+
+export function toApiDelivery(fulfillment) {
+  if (!fulfillment || isPickupFulfillment(fulfillment)) return null
+  return fulfillment
+}

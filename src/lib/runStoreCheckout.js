@@ -3,6 +3,7 @@ import {
   CHECKOUT_SAVE_FAILED_MESSAGE,
   CHECKOUT_WHATSAPP_FAILED_MESSAGE,
 } from './checkoutMessages.js'
+import { toApiDelivery } from './buyerDelivery.js'
 import { isSavedMarketplaceOrder } from './marketplaceOrder.js'
 
 export const CHECKOUT_INVALID_PAYLOAD = 'invalid_payload'
@@ -55,7 +56,7 @@ export async function runStoreCheckout({
     order = await submitStoreOrder({
       storeId: payload.storeId,
       items: payload.items,
-      delivery,
+      delivery: toApiDelivery(delivery),
       displayCurrency,
       cupPerUnit,
       gestorId: payload.gestorId ?? null,

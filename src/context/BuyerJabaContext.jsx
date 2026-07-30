@@ -35,6 +35,7 @@ import {
 } from '../lib/storeCheckoutPhones'
 
 import BuyerDeliveryCheckoutModal from '../components/buyer/BuyerDeliveryCheckoutModal'
+import BuyerPickupCheckoutModal from '../components/buyer/BuyerPickupCheckoutModal'
 import BuyerPhoneCheckoutModal from '../components/buyer/BuyerPhoneCheckoutModal'
 import BuyerJabaSyncAlert from '../components/buyer/BuyerJabaSyncAlert'
 
@@ -78,6 +79,7 @@ export function BuyerJabaProvider({ children }) {
   const [open, setOpen] = useState(false)
   const [syncingContacts, setSyncingContacts] = useState(false)
   const [deliveryCheckout, setDeliveryCheckout] = useState(null)
+  const [pickupCheckout, setPickupCheckout] = useState(null)
   const [phonePicker, setPhonePicker] = useState(null)
   const [syncRemoved, setSyncRemoved] = useState(null)
   const [checkoutSubmittingStoreId, setCheckoutSubmittingStoreId] = useState(null)
@@ -248,23 +250,31 @@ export function BuyerJabaProvider({ children }) {
       const payload = buildCheckoutPayload(group, storeItems)
       if (!payload.storePhone) return false
 
+      setPickupCheckout(null)
       setDeliveryCheckout(payload)
       return true
     },
     [groups],
   )
 
-  const checkoutStore = useCallback(
+  const requestPickupCheckout = useCallback(
     (storeId) => {
       const group = groups.find((entry) => entry.store_id === storeId)
       const storeItems = group?.items ?? getJabaStoreItems(storeId)
       if (!storeItems.length) return false
 
       const payload = buildCheckoutPayload(group, storeItems)
-      return beginWhatsAppCheckout(payload).then((result) => result !== 'fail')
+      if (!payload.storePhone) return false
+
+      setDeliveryCheckout(null)
+      setPickupCheckout(payload)
+      return true
     },
-    [groups, beginWhatsAppCheckout],
+    [groups],
   )
+
+  /** @deprecated Prefer requestPickupCheckout — kept for callers that still use checkoutStore */
+  const checkoutStore = requestPickupCheckout
 
   const requestCheckout = useCallback(
     (storeId) => {
@@ -276,33 +286,47 @@ export function BuyerJabaProvider({ children }) {
       if (!payload.storePhone) return false
 
       if (allItemsOfferDelivery(storeItems)) {
+        setPickupCheckout(null)
         setDeliveryCheckout(payload)
         return true
       }
 
-      return beginWhatsAppCheckout(payload).then((result) => result !== 'fail')
+      setDeliveryCheckout(null)
+      setPickupCheckout(payload)
+      return true
     },
-    [groups, beginWhatsAppCheckout],
+    [groups],
   )
 
-  const buyProduct = useCallback(
-    (product) => {
-      const payload = buildDirectBuyCheckoutPayload(product)
-      if (!payload?.storePhone) return false
+  const buyProduct = useCallback((product) => {
+    const payload = buildDirectBuyCheckoutPayload(product)
+    if (!payload?.storePhone) return false
 
-      if (payload.items[0]?.offers_delivery) {
-        setDeliveryCheckout(payload)
-        return true
-      }
+    if (payload.items[0]?.offers_delivery) {
+      setPickupCheckout(null)
+      setDeliveryCheckout(payload)
+      return true
+    }
 
-      return beginWhatsAppCheckout(payload).then((result) => result !== 'fail')
-    },
-    [beginWhatsAppCheckout],
-  )
+    setDeliveryCheckout(null)
+    setPickupCheckout(payload)
+    return true
+  }, [])
 
   const closeDeliveryCheckout = useCallback(() => {
     setDeliveryCheckout(null)
   }, [])
+
+  const closePickupCheckout = useCallback(() => {
+    setPickupCheckout(null)
+  }, [])
+
+  const switchDeliveryToPickup = useCallback(() => {
+    if (!deliveryCheckout) return false
+    setPickupCheckout(deliveryCheckout)
+    setDeliveryCheckout(null)
+    return true
+  }, [deliveryCheckout])
 
   const closePhonePicker = useCallback(() => {
     setPhonePicker(null)
@@ -315,21 +339,26 @@ export function BuyerJabaProvider({ children }) {
       const result = await beginWhatsAppCheckout(deliveryCheckout, delivery)
       if (result === 'done') {
         setDeliveryCheckout(null)
+        setPickupCheckout(null)
       }
       return result !== 'fail'
     },
     [deliveryCheckout, beginWhatsAppCheckout],
   )
 
-  const confirmPickupCheckout = useCallback(async () => {
-    if (!deliveryCheckout) return false
+  const confirmPickupCheckout = useCallback(
+    async (pickup) => {
+      if (!pickupCheckout) return false
 
-    const result = await beginWhatsAppCheckout(deliveryCheckout)
-    if (result === 'done') {
-      setDeliveryCheckout(null)
-    }
-    return result !== 'fail'
-  }, [deliveryCheckout, beginWhatsAppCheckout])
+      const result = await beginWhatsAppCheckout(pickupCheckout, pickup)
+      if (result === 'done') {
+        setPickupCheckout(null)
+        setDeliveryCheckout(null)
+      }
+      return result !== 'fail'
+    },
+    [pickupCheckout, beginWhatsAppCheckout],
+  )
 
   const confirmPhonePicker = useCallback(
     async (selected) => {
@@ -342,6 +371,7 @@ export function BuyerJabaProvider({ children }) {
       if (success) {
         setPhonePicker(null)
         setDeliveryCheckout(null)
+        setPickupCheckout(null)
       }
       return success
     },
@@ -360,6 +390,7 @@ export function BuyerJabaProvider({ children }) {
       open,
       syncingContacts,
       deliveryCheckout,
+      pickupCheckout,
       checkoutSubmittingStoreId,
       isInJaba,
       addProduct,
@@ -369,10 +400,13 @@ export function BuyerJabaProvider({ children }) {
       clearAll,
       checkoutStore,
       requestDeliveryCheckout,
+      requestPickupCheckout,
       requestCheckout,
       buyProduct,
       closeDeliveryCheckout,
+      closePickupCheckout,
       confirmDeliveryCheckout,
+      confirmPickupCheckout,
       openPanel: () => setOpen(true),
       closePanel: () => setOpen(false),
       togglePanel: () => setOpen((current) => !current),
@@ -384,6 +418,7 @@ export function BuyerJabaProvider({ children }) {
       open,
       syncingContacts,
       deliveryCheckout,
+      pickupCheckout,
       checkoutSubmittingStoreId,
       addProduct,
       removeProduct,
@@ -392,22 +427,39 @@ export function BuyerJabaProvider({ children }) {
       clearAll,
       checkoutStore,
       requestDeliveryCheckout,
+      requestPickupCheckout,
       requestCheckout,
       buyProduct,
       closeDeliveryCheckout,
+      closePickupCheckout,
       confirmDeliveryCheckout,
+      confirmPickupCheckout,
     ],
   )
+
+  const activeCheckoutModal = phonePicker
+    ? null
+    : deliveryCheckout
+      ? 'delivery'
+      : pickupCheckout
+        ? 'pickup'
+        : null
 
   return (
     <BuyerJabaContext.Provider value={value}>
       {children}
       <BuyerDeliveryCheckoutModal
-        checkout={phonePicker ? null : deliveryCheckout}
+        checkout={activeCheckoutModal === 'delivery' ? deliveryCheckout : null}
         checkoutSubmitting={Boolean(checkoutSubmittingStoreId)}
         onClose={closeDeliveryCheckout}
         onConfirm={confirmDeliveryCheckout}
-        onPickup={confirmPickupCheckout}
+        onPickup={switchDeliveryToPickup}
+      />
+      <BuyerPickupCheckoutModal
+        checkout={activeCheckoutModal === 'pickup' ? pickupCheckout : null}
+        checkoutSubmitting={Boolean(checkoutSubmittingStoreId)}
+        onClose={closePickupCheckout}
+        onConfirm={confirmPickupCheckout}
       />
       <BuyerPhoneCheckoutModal
         picker={phonePicker}

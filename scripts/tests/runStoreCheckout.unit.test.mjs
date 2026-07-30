@@ -186,3 +186,22 @@ test('propaga datos de entrega al guardar y al mensaje de WhatsApp', async () =>
   assert.deepEqual(calls.submitArgs.delivery, delivery)
   assert.deepEqual(calls.whatsappArgs.delivery, delivery)
 })
+
+test('recogida en tienda: WhatsApp recibe datos y el API no marca domicilio', async () => {
+  const { submitStoreOrder, openWhatsAppCheckout, calls } = createMocks()
+  const pickup = {
+    mode: 'pickup',
+    recipient_name: 'Luis',
+    phone_primary: '51234567',
+  }
+
+  await runStoreCheckout({
+    ...baseOptions,
+    delivery: pickup,
+    submitStoreOrder,
+    openWhatsAppCheckout,
+  })
+
+  assert.equal(calls.submitArgs.delivery, null)
+  assert.deepEqual(calls.whatsappArgs.delivery, pickup)
+})

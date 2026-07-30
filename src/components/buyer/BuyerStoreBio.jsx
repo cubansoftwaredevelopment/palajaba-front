@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { buyerStorePageBio } from './buyerStyles'
+import { buyerStorePageBio, buyerStorePageBioLink } from './buyerStyles'
 
 const BIO_PREVIEW_MOBILE = 100
 const BIO_PREVIEW_DESKTOP = 200
@@ -56,7 +56,7 @@ export default function BuyerStoreBio({ biography, storeSlug }) {
         <button
           type="button"
           onClick={() => setExpanded((current) => !current)}
-          className="mt-2 text-sm font-semibold text-brand-green underline-offset-2 touch-manipulation active:opacity-80 lg:hover:underline"
+          className={buyerStorePageBioLink}
         >
           {expanded ? 'Ver menos' : 'Leer más'}
         </button>

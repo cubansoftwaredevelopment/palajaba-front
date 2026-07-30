@@ -19,23 +19,33 @@ function formatContactPhone(digits) {
   return `${PHONE_PREFIX} ${normalized.slice(0, 1)} ${normalized.slice(1, 4)} ${normalized.slice(4)}`
 }
 
-function buildDeliverySection(delivery) {
-  if (!delivery) return ''
+function buildFulfillmentSection(fulfillment) {
+  if (!fulfillment) return ''
 
-  const phones = [delivery.phone_primary, delivery.phone_secondary]
+  const phones = [fulfillment.phone_primary, fulfillment.phone_secondary]
     .map((value) => formatContactPhone(value))
     .filter(Boolean)
+
+  if (fulfillment.mode === 'pickup') {
+    const lines = [
+      '',
+      '*Recoger en la tienda*',
+      `Recoge: ${fulfillment.recipient_name}`,
+      `Contacto: ${phones.join(', ')}`,
+    ]
+    return lines.join('\n')
+  }
 
   const lines = [
     '',
     '*Entrega a domicilio*',
-    `Recibe: ${delivery.recipient_name}`,
-    `Dirección: ${delivery.address}`,
+    `Recibe: ${fulfillment.recipient_name}`,
+    `Dirección: ${fulfillment.address}`,
     `Contacto: ${phones.join(', ')}`,
   ]
 
-  if (delivery.notes?.trim()) {
-    lines.push(`Detalles: ${delivery.notes.trim()}`)
+  if (fulfillment.notes?.trim()) {
+    lines.push(`Detalles: ${fulfillment.notes.trim()}`)
   }
 
   return lines.join('\n')
@@ -70,13 +80,13 @@ export function buildStoreOrderMessage({
     .map(([currency, amount]) => formatPrice(amount, currency))
     .join(' + ')
 
-  const deliverySection = buildDeliverySection(delivery)
+  const fulfillmentSection = buildFulfillmentSection(delivery)
 
   return `Hola, quiero pedir desde Pa' La Jaba en *${storeName}*:
 
 ${lines.join('\n')}
 
-*Total:* ${totalLine}${deliverySection}
+*Total:* ${totalLine}${fulfillmentSection}
 
 ¡Gracias!`
 }

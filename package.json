@@ -11,7 +11,7 @@
     "build": "vite build && node scripts/copy-spa-fallback.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-store-seo-pages.mjs && node scripts/verify-sitemap.mjs && node scripts/verify-store-seo-pages.mjs && node scripts/verify-checkout-flow.mjs",
     "sync:render-routes": "node scripts/sync-render-store-routes.mjs",
     "lint": "eslint .",
-    "test:checkout": "node scripts/tests/runStoreCheckout.unit.test.mjs && node scripts/tests/marketplaceOrder.unit.test.mjs",
+    "test:checkout": "node scripts/tests/runStoreCheckout.unit.test.mjs && node scripts/tests/marketplaceOrder.unit.test.mjs && node scripts/tests/whatsappOrderPickup.unit.test.mjs && node scripts/tests/buyerJabaCheckout.integration.test.mjs",
     "test:catalog-sort": "node scripts/tests/catalogProductSort.unit.test.mjs",
     "test:catalog-theme": "node scripts/tests/catalogThemes.unit.test.mjs",
     "test:seller-stats-trend": "node scripts/tests/sellerStatsTrend.unit.test.mjs && node scripts/tests/sellerStatsTrend.integration.test.mjs",

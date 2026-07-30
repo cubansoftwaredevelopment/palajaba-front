@@ -202,16 +202,31 @@ export const buyerJabaPanel =
   'fixed inset-x-0 bottom-0 z-[80] flex max-h-[min(88dvh,42rem)] flex-col rounded-t-[1.75rem] border border-brand-green/10 bg-brand-white shadow-[0_-12px_40px_rgba(89,128,44,0.18)] sm:inset-x-auto sm:right-4 sm:top-4 sm:bottom-4 sm:w-[min(24rem,calc(100vw-2rem))] sm:max-h-none sm:rounded-3xl lg:right-6 lg:w-[26rem]'
 
 export const buyerJabaPanelHeader =
-  'flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-5 py-4'
+  'flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/10 px-5 py-4'
 
 export const buyerJabaPanelTitle =
   'font-display text-lg font-bold text-brand-green'
+
+export const buyerJabaStickySummary =
+  'shrink-0 border-b border-brand-green/10 bg-brand-white px-5 py-2.5'
+
+export const buyerJabaStickySummaryText =
+  'text-sm font-semibold text-brand-green'
+
+export const buyerJabaStoreChips =
+  'flex gap-2 overflow-x-auto overscroll-x-contain pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+
+export const buyerJabaStoreChip =
+  'inline-flex h-11 shrink-0 items-center rounded-full border border-brand-green/25 bg-brand-green/[0.04] px-3.5 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/25 lg:hover:bg-brand-green/[0.08]'
 
 export const buyerJabaPanelBody =
   'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4'
 
 export const buyerJabaStoreSection =
-  'rounded-2xl border border-brand-green/10 bg-brand-green/[0.02] p-3.5'
+  'overflow-hidden rounded-2xl border border-brand-green/10 bg-brand-green/[0.02]'
+
+export const buyerJabaStoreAccordionBtn =
+  'flex w-full min-h-11 items-start justify-between gap-3 px-3.5 py-3 text-left transition-colors touch-manipulation active:bg-brand-green/[0.04] lg:hover:bg-brand-green/[0.03]'
 
 export const buyerJabaStoreTitle =
   'font-display text-sm font-bold text-brand-green'
@@ -223,15 +238,25 @@ export const buyerJabaItemImage =
   'h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-brand-green/[0.06] object-cover'
 
 export const buyerJabaQtyBtn =
-  'flex h-7 w-7 items-center justify-center rounded-full border border-brand-green/15 text-sm font-bold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/20 lg:hover:bg-brand-green/[0.06]'
+  'flex h-11 w-11 items-center justify-center rounded-full border border-brand-green/25 text-base font-bold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/25 lg:hover:bg-brand-green/[0.08]'
+
+export const buyerJabaIconBtn =
+  'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 lg:hover:bg-brand-green/[0.08]'
 
 export const buyerJabaWhatsAppBtn =
-  'mt-3 flex w-full min-h-10 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-bold text-white shadow-[0_4px_14px_rgba(37,211,102,0.28)] transition-transform touch-manipulation active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50'
+  'flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-bold text-white shadow-[0_4px_14px_rgba(37,211,102,0.28)] transition-transform touch-manipulation active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50'
 
-export const buyerJabaDeliveryBtn =
-  'flex w-full min-h-10 items-center justify-center gap-2 rounded-xl border border-brand-green/20 bg-brand-green/[0.06] px-4 text-sm font-bold text-brand-green transition-transform touch-manipulation active:scale-[0.98] active:bg-brand-yellow/15 lg:hover:bg-brand-green/[0.1]'
+export const buyerJabaPrimaryBtn =
+  'flex w-full min-h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-4 text-sm font-bold text-brand-white shadow-[0_4px_14px_rgba(89,128,44,0.28)] transition-transform touch-manipulation active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50'
+
+export const buyerJabaSecondaryBtn =
+  'flex w-full min-h-11 items-center justify-center gap-2 rounded-xl border-2 border-brand-green bg-transparent px-4 text-sm font-bold text-brand-green transition-transform touch-manipulation active:scale-[0.98] active:bg-brand-yellow/20 disabled:cursor-not-allowed disabled:opacity-50 lg:hover:bg-brand-green/[0.06]'
+
+/** @deprecated Use buyerJabaPrimaryBtn — kept for existing imports */
+export const buyerJabaDeliveryBtn = buyerJabaPrimaryBtn
 
 export const buyerJabaCheckoutActions = 'mt-3 grid gap-2'
+export const buyerJabaShippingNote = 'mt-1 text-xs leading-snug text-brand-carmelita'
 
 export const buyerJabaSyncOverlay =
   'fixed inset-0 z-[95] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'
@@ -375,6 +400,10 @@ export const buyerStorePageName =
 export const buyerStorePageBio =
   'mt-4 text-sm leading-relaxed text-zinc-700'
 
+/** Mismo acento de marca que nombre / WhatsApp (token brand-green del tema). */
+export const buyerStorePageBioLink =
+  'mt-2 text-sm font-semibold text-brand-green underline-offset-2 touch-manipulation active:opacity-80 lg:hover:underline'
+
 export const buyerStorePageSectionTitle =
   'text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-zinc-500'
 
@@ -423,7 +452,7 @@ export const buyerBusinessCardCatalogBtn =
   'mt-auto flex min-h-11 w-full items-center justify-center rounded-full bg-brand-green px-5 text-sm font-semibold text-brand-white shadow-[0_6px_20px_rgba(89,128,44,0.28)] transition-all touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 lg:hover:-translate-y-px lg:hover:bg-[#4d7026]'
 
 export const buyerStorePageDeliveryBadge =
-  'mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-[0.68rem] font-semibold text-zinc-700'
+  'mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-brand-green/20 bg-brand-green/[0.08] px-2.5 py-1 text-[0.68rem] font-semibold text-brand-green'
 
 export const buyerStorePageActions =
   'mt-4 flex flex-wrap items-center gap-2'

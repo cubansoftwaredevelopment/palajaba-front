@@ -1,13 +1,14 @@
-import { useEffect, useId } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
 import LoadingState from '../ui/LoadingState'
 import { allItemsOfferDelivery, resolveStorePhone } from '../../lib/buyerJaba'
 import { resolveDisplayPrice } from '../../lib/displayPrice'
-import BuyerCurrencySelector from './BuyerCurrencySelector'
 import { formatPrice } from '../../lib/money'
 import { resolveMediaUrl } from '../../lib/media'
 import {
+  buyerJabaCheckoutActions,
+  buyerJabaIconBtn,
   buyerJabaItemImage,
   buyerJabaItemRow,
   buyerJabaOverlay,
@@ -15,169 +16,249 @@ import {
   buyerJabaPanelBody,
   buyerJabaPanelHeader,
   buyerJabaPanelTitle,
+  buyerJabaPrimaryBtn,
   buyerJabaQtyBtn,
+  buyerJabaSecondaryBtn,
+  buyerJabaShippingNote,
+  buyerJabaStickySummary,
+  buyerJabaStickySummaryText,
+  buyerJabaStoreAccordionBtn,
+  buyerJabaStoreChip,
+  buyerJabaStoreChips,
   buyerJabaStoreSection,
   buyerJabaStoreTitle,
-  buyerJabaCheckoutActions,
-  buyerJabaDeliveryBtn,
-  buyerJabaWhatsAppBtn,
 } from './buyerStyles'
 
-function WhatsAppIcon() {
+function TrashIcon({ className = '' }) {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+      <path d="M10 11v6M14 11v6" />
     </svg>
   )
 }
 
-function StoreGroup({
-  group,
-  displayCurrency,
-  cupPerUnit,
-  syncingContacts,
-  checkoutSubmitting,
-  onCheckout,
-  onRequestDelivery,
-  onClearStore,
-  onRemove,
-  onSetQuantity,
-}) {
+function ChevronIcon({ expanded }) {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      className={`shrink-0 text-brand-green transition-transform ${expanded ? 'rotate-180' : ''}`}
+      aria-hidden
+    >
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  )
+}
+
+function formatStoreSubtotal(items, displayCurrency, cupPerUnit) {
   const subtotalByCurrency = {}
 
-  for (const item of group.items) {
+  for (const item of items) {
     const display = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
     const key = display.currency
     subtotalByCurrency[key] = (subtotalByCurrency[key] ?? 0) + display.amount * (item.quantity ?? 1)
   }
 
-  const subtotalLabel = Object.entries(subtotalByCurrency)
+  return Object.entries(subtotalByCurrency)
     .map(([currency, amount]) => formatPrice(amount, currency))
     .join(' + ')
+}
 
+function StoreGroup({
+  group,
+  expanded,
+  onToggle,
+  sectionRef,
+  displayCurrency,
+  cupPerUnit,
+  syncingContacts,
+  checkoutSubmitting,
+  onRequestPickup,
+  onRequestDelivery,
+  onClearStore,
+  onRemove,
+  onSetQuantity,
+}) {
+  const panelId = useId()
+  const subtotalLabel = formatStoreSubtotal(group.items, displayCurrency, cupPerUnit)
   const storePhone = group.store_phone ?? resolveStorePhone(group.items)
   const canCheckout = Boolean(storePhone) && !syncingContacts && !checkoutSubmitting
   const deliveryAvailable = canCheckout && allItemsOfferDelivery(group.items)
 
+  function handleClearStore(event) {
+    event.stopPropagation()
+    const confirmed = window.confirm(
+      `¿Vaciar los productos de ${group.store_name}? Esta acción no se puede deshacer.`,
+    )
+    if (confirmed) onClearStore(group.store_id)
+  }
+
   return (
-    <section className={buyerJabaStoreSection}>
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h3 className={buyerJabaStoreTitle}>{group.store_name}</h3>
-          <p className="mt-0.5 text-xs font-medium text-brand-carmelita/75">
-            {group.itemCount} {group.itemCount === 1 ? 'producto' : 'productos'}
-          </p>
-        </div>
+    <section
+      ref={sectionRef}
+      id={`jaba-store-${group.store_id}`}
+      className={buyerJabaStoreSection}
+    >
+      <div className="flex items-stretch gap-0.5">
         <button
           type="button"
-          onClick={() => onClearStore(group.store_id)}
-          className="shrink-0 text-xs font-semibold text-brand-carmelita/80 underline-offset-2 active:text-brand-green lg:hover:text-brand-green lg:hover:underline"
+          className={buyerJabaStoreAccordionBtn}
+          aria-expanded={expanded}
+          aria-controls={panelId}
+          onClick={onToggle}
         >
-          Vaciar
+          <div className="min-w-0 flex-1">
+            <h3 className={buyerJabaStoreTitle}>{group.store_name}</h3>
+            <p className="mt-0.5 text-xs font-medium text-brand-carmelita">
+              {group.itemCount} {group.itemCount === 1 ? 'producto' : 'productos'}
+              <span className="text-brand-green"> · {subtotalLabel}</span>
+            </p>
+          </div>
+          <ChevronIcon expanded={expanded} />
+        </button>
+        <button
+          type="button"
+          onClick={handleClearStore}
+          className={`${buyerJabaIconBtn} mt-1 mr-1`}
+          aria-label={`Vaciar productos de ${group.store_name}`}
+          title="Vaciar tienda"
+        >
+          <TrashIcon />
         </button>
       </div>
 
-      <ul className="mt-2">
-        {group.items.map((item) => {
-          const imageSrc = resolveMediaUrl(item.image_url)
-          const display = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
-          const qty = item.quantity ?? 1
+      {expanded ? (
+        <div id={panelId} className="border-t border-brand-green/8 px-3.5 pb-3.5">
+          <ul className="mt-1">
+            {group.items.map((item) => {
+              const imageSrc = resolveMediaUrl(item.image_url)
+              const display = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
+              const qty = item.quantity ?? 1
 
-          return (
-            <li key={item.id} className={buyerJabaItemRow}>
-              {imageSrc ? (
-                <img src={imageSrc} alt="" className={buyerJabaItemImage} loading="lazy" />
-              ) : (
-                <div className={`${buyerJabaItemImage} flex items-center justify-center text-[0.55rem] font-semibold text-brand-carmelita/45`}>
-                  Sin foto
-                </div>
-              )}
+              return (
+                <li key={item.id} className={buyerJabaItemRow}>
+                  {imageSrc ? (
+                    <img src={imageSrc} alt="" className={buyerJabaItemImage} loading="lazy" />
+                  ) : (
+                    <div
+                      className={`${buyerJabaItemImage} flex items-center justify-center text-[0.55rem] font-semibold text-brand-carmelita`}
+                    >
+                      Sin foto
+                    </div>
+                  )}
 
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-sm font-semibold leading-snug text-brand-green">{item.name}</p>
-                <p className="mt-0.5 text-xs font-bold text-brand-green">{display.label}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display line-clamp-2 text-sm font-semibold leading-snug text-brand-green">
+                      {item.name}
+                    </p>
+                    <p className="mt-0.5 text-xs font-bold text-brand-green">{display.label}</p>
 
-                <div className="mt-2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => onSetQuantity(item.id, qty - 1)}
-                    className={buyerJabaQtyBtn}
-                    aria-label={`Quitar uno de ${item.name}`}
-                  >
-                    −
-                  </button>
-                  <span className="min-w-5 text-center text-sm font-bold text-brand-green">{qty}</span>
-                  <button
-                    type="button"
-                    onClick={() => onSetQuantity(item.id, qty + 1)}
-                    className={buyerJabaQtyBtn}
-                    aria-label={`Agregar uno de ${item.name}`}
-                  >
-                    +
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onRemove(item.id)}
-                    className="ml-auto text-xs font-semibold text-brand-carmelita/80 underline-offset-2 active:text-brand-green lg:hover:text-brand-green lg:hover:underline"
-                  >
-                    Quitar
-                  </button>
-                </div>
-              </div>
-            </li>
-          )
-        })}
-      </ul>
+                    <div className="mt-2 flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => onSetQuantity(item.id, qty - 1)}
+                        className={buyerJabaQtyBtn}
+                        aria-label={`Quitar uno de ${item.name}`}
+                      >
+                        −
+                      </button>
+                      <span className="min-w-6 text-center text-sm font-bold text-brand-green">{qty}</span>
+                      <button
+                        type="button"
+                        onClick={() => onSetQuantity(item.id, qty + 1)}
+                        className={buyerJabaQtyBtn}
+                        aria-label={`Agregar uno de ${item.name}`}
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onRemove(item.id)}
+                        className={`${buyerJabaIconBtn} ml-auto`}
+                        aria-label={`Quitar ${item.name} de la jaba`}
+                        title="Quitar producto"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
 
-      <p className="mt-2 text-xs font-semibold text-brand-carmelita/85">
-        Subtotal: <span className="text-brand-green">{subtotalLabel}</span>
-      </p>
+          <p className="mt-2 text-xs font-semibold text-brand-carmelita">
+            Subtotal: <span className="text-brand-green">{subtotalLabel}</span>
+          </p>
+          <p className={buyerJabaShippingNote}>
+            El costo de entrega se coordina directamente con la tienda
+          </p>
 
-      {deliveryAvailable ? (
-        <div className={buyerJabaCheckoutActions}>
-          <button
-            type="button"
-            onClick={() => onRequestDelivery(group.store_id)}
-            disabled={!canCheckout}
-            className={buyerJabaDeliveryBtn}
-          >
-            Pedir a domicilio
-          </button>
-          <button
-            type="button"
-            onClick={() => void onCheckout(group.store_id)}
-            disabled={!canCheckout}
-            className={buyerJabaWhatsAppBtn}
-          >
-            <WhatsAppIcon />
-            {checkoutSubmitting ? 'Registrando pedido…' : 'Coordinar por WhatsApp'}
-          </button>
+          <div className={buyerJabaCheckoutActions}>
+            {deliveryAvailable ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onRequestDelivery(group.store_id)}
+                  disabled={!canCheckout}
+                  className={buyerJabaPrimaryBtn}
+                >
+                  Pedir a domicilio
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRequestPickup(group.store_id)}
+                  disabled={!canCheckout}
+                  className={buyerJabaSecondaryBtn}
+                >
+                  {checkoutSubmitting ? 'Registrando pedido…' : 'Recoger en la tienda'}
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onRequestPickup(group.store_id)}
+                disabled={!canCheckout}
+                className={buyerJabaPrimaryBtn}
+              >
+                {checkoutSubmitting ? 'Registrando pedido…' : 'Recoger en la tienda'}
+              </button>
+            )}
+          </div>
+
+          {syncingContacts ? (
+            <LoadingState
+              variant="compact"
+              size="xs"
+              message="Buscando teléfono de la tienda…"
+              className="mt-2 !py-0"
+            />
+          ) : null}
+
+          {!syncingContacts && !canCheckout ? (
+            <p className="mt-2 text-center text-xs text-brand-carmelita">
+              Esta tienda no tiene teléfono disponible para pedidos.
+            </p>
+          ) : null}
         </div>
-      ) : (
-        <button
-          type="button"
-          onClick={() => void onCheckout(group.store_id)}
-          disabled={!canCheckout}
-          className={buyerJabaWhatsAppBtn}
-        >
-          <WhatsAppIcon />
-          {checkoutSubmitting ? 'Registrando pedido…' : 'Pedir por WhatsApp'}
-        </button>
-      )}
-
-      {syncingContacts ? (
-        <LoadingState
-          variant="compact"
-          size="xs"
-          message="Buscando teléfono de la tienda…"
-          className="mt-2 !py-0"
-        />
-      ) : null}
-
-      {!syncingContacts && !canCheckout ? (
-        <p className="mt-2 text-center text-[0.65rem] text-brand-carmelita/75">
-          Esta tienda no tiene teléfono disponible para pedidos.
-        </p>
       ) : null}
     </section>
   )
@@ -185,6 +266,7 @@ function StoreGroup({
 
 export default function BuyerJabaPanel() {
   const titleId = useId()
+  const sectionRefs = useRef({})
   const {
     open,
     closePanel,
@@ -192,13 +274,38 @@ export default function BuyerJabaPanel() {
     count,
     syncingContacts,
     checkoutSubmittingStoreId,
-    checkoutStore,
+    requestPickupCheckout,
     requestDeliveryCheckout,
     clearStore,
     removeProduct,
     setQuantity,
   } = useBuyerJaba()
   const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
+  const [expandedIds, setExpandedIds] = useState(() => new Set())
+
+  const storeIdsKey = groups.map((group) => group.store_id).join('|')
+  const showStoreChips = groups.length >= 3
+
+  useEffect(() => {
+    if (!open) {
+      setExpandedIds(new Set())
+      return
+    }
+
+    const ids = storeIdsKey ? storeIdsKey.split('|') : []
+    setExpandedIds((prev) => {
+      if (!prev.size) {
+        return new Set(ids.length <= 2 ? ids : ids.slice(0, 1))
+      }
+
+      const next = new Set([...prev].filter((id) => ids.includes(id)))
+      for (const id of ids) {
+        if (!next.has(id) && ids.length <= 2) next.add(id)
+      }
+      if (!next.size && ids[0]) next.add(ids[0])
+      return next
+    })
+  }, [open, storeIdsKey])
 
   useEffect(() => {
     if (!open) return undefined
@@ -217,32 +324,42 @@ export default function BuyerJabaPanel() {
 
   if (!open) return null
 
+  function toggleStore(storeId) {
+    setExpandedIds((current) => {
+      const next = new Set(current)
+      if (next.has(storeId)) next.delete(storeId)
+      else next.add(storeId)
+      return next
+    })
+  }
+
+  function jumpToStore(storeId) {
+    setExpandedIds((current) => new Set(current).add(storeId))
+    requestAnimationFrame(() => {
+      sectionRefs.current[storeId]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }
+
+  const summaryLabel =
+    count > 0
+      ? `${groups.length} ${groups.length === 1 ? 'tienda' : 'tiendas'} · ${count} ${count === 1 ? 'producto' : 'productos'}`
+      : 'Agrega productos con Pa\' La Jaba'
+
   return (
     <>
       <button type="button" className={buyerJabaOverlay} aria-label="Cerrar tu jaba" onClick={closePanel} />
 
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className={buyerJabaPanel}
-      >
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={buyerJabaPanel}>
         <div className={buyerJabaPanelHeader}>
-          <div className="min-w-0 flex-1 pr-3">
+          <div className="min-w-0 flex-1 pr-2">
             <h2 id={titleId} className={buyerJabaPanelTitle}>
               Tu Jaba
             </h2>
-            <p className="text-xs font-medium text-brand-carmelita/80">
-              {count > 0
-                ? `${count} ${count === 1 ? 'producto' : 'productos'} · ${groups.length} ${groups.length === 1 ? 'tienda' : 'tiendas'}`
-                : 'Agrega productos con Pa\' La Jaba'}
-            </p>
           </div>
-          <BuyerCurrencySelector panelZIndex={110} />
           <button
             type="button"
             onClick={closePanel}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-green transition-colors active:bg-brand-green/8 lg:hover:bg-brand-green/8"
+            className={buyerJabaIconBtn}
             aria-label="Cerrar"
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
@@ -251,26 +368,49 @@ export default function BuyerJabaPanel() {
           </button>
         </div>
 
+        <div className={buyerJabaStickySummary}>
+          <p className={buyerJabaStickySummaryText}>{summaryLabel}</p>
+          {showStoreChips ? (
+            <div className={`${buyerJabaStoreChips} mt-2`} role="navigation" aria-label="Ir a tienda">
+              {groups.map((group) => (
+                <button
+                  key={group.store_id}
+                  type="button"
+                  className={buyerJabaStoreChip}
+                  onClick={() => jumpToStore(group.store_id)}
+                >
+                  {group.store_name}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
         <div className={buyerJabaPanelBody}>
           {groups.length === 0 ? (
             <div className="rounded-2xl border border-brand-yellow/25 bg-brand-yellow/10 px-4 py-8 text-center">
               <p className="font-display text-base font-bold text-brand-green">Tu jaba está vacía</p>
-              <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/85">
-                Toca <span className="font-semibold text-brand-green">Pa&apos; La Jaba</span> en un producto para guardarlo aquí.
-                Cada tienda se pide por separado por WhatsApp.
+              <p className="mt-2 text-sm leading-relaxed text-brand-carmelita">
+                Toca <span className="font-semibold text-brand-green">Pa&apos; La Jaba</span> en un producto para
+                guardarlo aquí. Cada tienda se pide por separado por WhatsApp.
               </p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {groups.map((group) => (
                 <StoreGroup
                   key={group.store_id}
                   group={group}
+                  expanded={expandedIds.has(group.store_id)}
+                  onToggle={() => toggleStore(group.store_id)}
+                  sectionRef={(node) => {
+                    sectionRefs.current[group.store_id] = node
+                  }}
                   displayCurrency={displayCurrency}
                   cupPerUnit={cupPerUnit}
                   syncingContacts={syncingContacts}
                   checkoutSubmitting={checkoutSubmittingStoreId === group.store_id}
-                  onCheckout={checkoutStore}
+                  onRequestPickup={requestPickupCheckout}
                   onRequestDelivery={requestDeliveryCheckout}
                   onClearStore={clearStore}
                   onRemove={removeProduct}
