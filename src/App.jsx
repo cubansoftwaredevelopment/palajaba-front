@@ -31,6 +31,7 @@ import BuyerJabaLayout from './layouts/BuyerJabaLayout'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './pages/buyer/BuyerHome'
 import BuyerBusinessesPage from './pages/buyer/BuyerBusinessesPage'
+import { BUYER_BUSINESSES_SECTION_ENABLED } from './constants/buyerMarketplaceNav'
 import BuyerSelectMunicipality from './pages/buyer/BuyerSelectMunicipality'
 import BuyerSelectProvince from './pages/buyer/BuyerSelectProvince'
 import PublicStoreRoute from './components/buyer/PublicStoreRoute'
@@ -55,7 +56,15 @@ const router = createBrowserRouter([
             element: <BuyerMarketplaceLayout />,
             children: [
               { index: true, element: <BuyerHome /> },
-              { path: 'negocios', element: <BuyerBusinessesPage /> },
+              {
+                path: 'negocios',
+                // Página conservada; el flag solo oculta la sección temporalmente.
+                element: BUYER_BUSINESSES_SECTION_ENABLED ? (
+                  <BuyerBusinessesPage />
+                ) : (
+                  <Navigate to="/comprar" replace />
+                ),
+              },
             ],
           },
         ],

@@ -1,5 +1,8 @@
 import { NavLink } from 'react-router-dom'
-import { BUYER_MARKETPLACE_NAV } from '../../constants/buyerMarketplaceNav'
+import {
+  getVisibleBuyerMarketplaceNav,
+  isBuyerMarketplaceNavVisible,
+} from '../../constants/buyerMarketplaceNav'
 import { buyerMarketplaceNavItem, buyerMarketplaceNavShell } from './buyerStyles'
 
 const ICONS = {
@@ -18,10 +21,15 @@ const ICONS = {
 }
 
 export default function BuyerMarketplaceNav() {
+  if (!isBuyerMarketplaceNavVisible()) return null
+
+  const items = getVisibleBuyerMarketplaceNav()
+  if (!items.length) return null
+
   return (
     <nav className={buyerMarketplaceNavShell} aria-label="Secciones de compra">
       <div className="mx-auto flex w-full min-w-0 max-w-md items-stretch px-1 sm:max-w-lg lg:max-w-5xl">
-        {BUYER_MARKETPLACE_NAV.map((item) => (
+        {items.map((item) => (
           <NavLink
             key={item.id}
             to={item.path}

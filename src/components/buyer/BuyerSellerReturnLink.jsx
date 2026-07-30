@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { isBuyerMarketplaceNavVisible } from '../../constants/buyerMarketplaceNav'
 import { useBuyerMarketplaceHub } from '../../lib/buyerMarketplaceHub'
 import { getSellerReturnPath, isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
 
@@ -36,13 +37,16 @@ export function BuyerSellerReturnFooter() {
   if (!isSellerBrowsingMarketplace()) return null
 
   const marketplaceHub = useBuyerMarketplaceHub()
+  const floatAboveMarketplaceNav = marketplaceHub && isBuyerMarketplaceNavVisible()
 
   return (
     <nav
       className={
-        marketplaceHub
+        floatAboveMarketplaceNav
           ? 'fixed inset-x-0 bottom-[calc(4.25rem+var(--safe-bottom))] z-20 border-t border-brand-carmelita/15 bg-brand-white/95 px-4 py-2 backdrop-blur-md lg:hidden'
-          : 'relative z-20 shrink-0 border-t border-brand-carmelita/15 bg-brand-white/95 px-4 py-2 backdrop-blur-md lg:hidden'
+          : marketplaceHub
+            ? 'fixed inset-x-0 bottom-0 z-20 border-t border-brand-carmelita/15 bg-brand-white/95 px-4 py-2 pb-[max(0.5rem,var(--safe-bottom))] backdrop-blur-md lg:hidden'
+            : 'relative z-20 shrink-0 border-t border-brand-carmelita/15 bg-brand-white/95 px-4 py-2 backdrop-blur-md lg:hidden'
       }
       style={marketplaceHub ? undefined : { paddingBottom: 'max(0.5rem, var(--safe-bottom))' }}
       aria-label="Volver al panel de vendedor"

@@ -6,6 +6,7 @@ import {
   BuyerSellerReturnFooter,
   BuyerSellerReturnHeaderLink,
 } from './BuyerSellerReturnLink'
+import { isBuyerMarketplaceNavVisible } from '../../constants/buyerMarketplaceNav'
 import { useBuyerMarketplaceHub } from '../../lib/buyerMarketplaceHub'
 import { isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
 
@@ -20,12 +21,16 @@ export default function BuyerShell({
   const showBackLink = Boolean(backTo) && !headerStart
   const isSellerPreview = mode === 'seller-preview'
   const marketplaceHub = useBuyerMarketplaceHub()
+  const marketplaceNavVisible = isBuyerMarketplaceNavVisible()
   const sellerBrowsing = isSellerBrowsingMarketplace() && !isSellerPreview
-  const scrollPaddingClass = marketplaceHub
-    ? sellerBrowsing
-      ? 'pb-[calc(8.25rem+var(--safe-bottom))] lg:pb-[calc(5rem+var(--safe-bottom))]'
-      : buyerMarketplaceScrollPadding
-    : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
+  const scrollPaddingClass =
+    marketplaceHub && marketplaceNavVisible
+      ? sellerBrowsing
+        ? 'pb-[calc(8.25rem+var(--safe-bottom))] lg:pb-[calc(5rem+var(--safe-bottom))]'
+        : buyerMarketplaceScrollPadding
+      : sellerBrowsing && marketplaceHub
+        ? 'pb-[calc(4.75rem+var(--safe-bottom))] lg:pb-10'
+        : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
 
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
