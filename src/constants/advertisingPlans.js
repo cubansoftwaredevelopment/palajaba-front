@@ -10,38 +10,23 @@ export const ADVERTISING_PLANS = Object.freeze([
     eyebrow: 'Plan 1',
     amountUsd: 15,
     recommended: false,
-    features: [
-      'Banner promocional por 10 días',
-      '1 reel en colaboración',
-      '1 post en colaboración',
-      '2 historias',
-    ],
+    features: ['Banner 10 días', '1 reel', '1 post', '2 historias'],
   },
   {
     id: 'ads-20',
     name: '20 días',
     eyebrow: 'Plan 2',
     amountUsd: 20,
-    recommended: false,
-    features: [
-      'Banner promocional por 20 días',
-      '2 reels en colaboración',
-      '1 post en colaboración',
-      '3 historias',
-    ],
+    recommended: true,
+    features: ['Banner 20 días', '2 reels', '1 post', '3 historias'],
   },
   {
     id: 'ads-30',
     name: '30 días',
     eyebrow: 'Plan 3',
     amountUsd: 25,
-    recommended: true,
-    features: [
-      'Banner promocional por 30 días',
-      '2 reels en colaboración',
-      '2 posts en colaboración',
-      '4 historias',
-    ],
+    recommended: false,
+    features: ['Banner 30 días', '2 reels', '2 posts', '4 historias'],
   },
 ])
 

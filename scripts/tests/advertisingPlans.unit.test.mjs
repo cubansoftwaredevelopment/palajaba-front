@@ -29,13 +29,11 @@ test('getAdvertisingPlan encuentra por id y devuelve null si no existe', () => {
   assert.equal(getAdvertisingPlan('no-existe'), null)
 })
 
-test('el plan de 30 días incluye banner, reels, posts e historias', () => {
-  const plan = getAdvertisingPlan('ads-30')
+test('el plan de 20 días es el recomendado y lista beneficios compactos', () => {
+  const plan = getAdvertisingPlan('ads-20')
   assert.equal(plan.recommended, true)
-  assert.ok(plan.features.includes('Banner promocional por 30 días'))
-  assert.ok(plan.features.includes('2 reels en colaboración'))
-  assert.ok(plan.features.includes('2 posts en colaboración'))
-  assert.ok(plan.features.includes('4 historias'))
+  assert.equal(getAdvertisingPlan('ads-30').recommended, false)
+  assert.deepEqual(plan.features, ['Banner 20 días', '2 reels', '1 post', '3 historias'])
 })
 
 test('el mensaje de contratación nombra la tienda y el plan', () => {

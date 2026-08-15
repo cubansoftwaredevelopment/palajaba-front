@@ -38,9 +38,9 @@ export const PLAN_TIERS = {
     ],
     prices: {
       monthly: { amountUsd: 4, label: 'mes', period: 'monthly' },
-      yearly: { amountUsd: 30, label: 'año', period: 'yearly' },
+      yearly: { amountUsd: 40, label: 'año', period: 'yearly' },
     },
-    yearlySavingsUsd: 18,
+    yearlySavingsUsd: 8,
   },
 }
 
