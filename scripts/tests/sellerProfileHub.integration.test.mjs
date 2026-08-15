@@ -80,6 +80,14 @@ test('flujo integrado: marketplace navega sin abrir panel', () => {
   assert.equal(result.opened.length, 1)
 })
 
+test('flujo integrado: publicidad abre panel sin Guardar cambios del form', () => {
+  const result = simulateProfileHubFlow([PROFILE_PANEL_IDS.advertising])
+  assert.equal(result.activePanel, PROFILE_PANEL_IDS.advertising)
+  assert.deepEqual(result.opened, [
+    { panelId: PROFILE_PANEL_IDS.advertising, showsSave: false },
+  ])
+})
+
 test('flujo integrado: el menú del hub cubre todos los paneles editables', () => {
   const sections = getProfileMenuSections()
   const editable = sections

@@ -22,7 +22,7 @@
     "test:marketplace-visit": "node scripts/tests/marketplaceVisit.unit.test.mjs && node scripts/tests/marketplaceVisit.integration.test.mjs",
     "test:admin-orders": "node scripts/tests/adminOrdersAnalytics.unit.test.mjs",
     "test:admin-notifications": "node scripts/tests/adminNotificationAudience.unit.test.mjs",
-    "test:seller-profile-hub": "node scripts/tests/sellerProfileHub.unit.test.mjs && node scripts/tests/sellerProfileHub.integration.test.mjs",
+    "test:seller-profile-hub": "node scripts/tests/sellerProfileHub.unit.test.mjs && node scripts/tests/sellerProfileHub.integration.test.mjs && node scripts/tests/advertisingPlans.unit.test.mjs",
     "test:plan-gestor-limits": "node scripts/tests/planGestorLimits.unit.test.mjs && node scripts/tests/planGestorLimits.integration.test.mjs",
     "test:buyer-product-card": "node scripts/tests/buyerProductCard.unit.test.mjs && node scripts/tests/buyerProductCard.integration.test.mjs",
     "verify:checkout-flow": "node scripts/verify-checkout-flow.mjs",

@@ -9,6 +9,7 @@ export const PROFILE_PANEL_IDS = Object.freeze({
   advanced: 'advanced',
   feedback: 'feedback',
   marketplace: 'marketplace',
+  advertising: 'advertising',
 })
 
 /** Paneles que editan el formulario principal (Guardar cambios). */
@@ -77,9 +78,22 @@ const PANELS = Object.freeze({
     kind: 'action',
     icon: 'marketplace',
   },
+  [PROFILE_PANEL_IDS.advertising]: {
+    id: PROFILE_PANEL_IDS.advertising,
+    label: 'Publicidad',
+    description: 'Contrata un plan para destacar tu tienda',
+    kind: 'panel',
+    icon: 'advertising',
+  },
 })
 
 export const PROFILE_MENU_SECTIONS = Object.freeze([
+  {
+    id: 'marketplace',
+    title: '',
+    ariaLabel: 'Marketplace y publicidad',
+    itemIds: [PROFILE_PANEL_IDS.marketplace, PROFILE_PANEL_IDS.advertising],
+  },
   {
     id: 'general',
     title: 'General',
@@ -97,7 +111,6 @@ export const PROFILE_MENU_SECTIONS = Object.freeze([
     itemIds: [
       PROFILE_PANEL_IDS.advanced,
       PROFILE_PANEL_IDS.feedback,
-      PROFILE_PANEL_IDS.marketplace,
     ],
   },
 ])
@@ -143,6 +156,7 @@ export function getProfileMenuSections() {
   return PROFILE_MENU_SECTIONS.map((section) => ({
     id: section.id,
     title: section.title,
+    ariaLabel: section.ariaLabel,
     items: section.itemIds.map((id) => PANELS[id]).filter(Boolean),
   }))
 }

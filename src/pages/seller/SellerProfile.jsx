@@ -9,6 +9,7 @@ import SellerBusinessAreaFields, {
 import SellerDeliveryZonesEditor from '../../components/seller/SellerDeliveryZonesEditor'
 import SellerLocationPreview from '../../components/seller/SellerLocationPreview'
 import SellerAdvancedProfileSettings from '../../components/seller/SellerAdvancedProfileSettings'
+import SellerAdvertisingPlans from '../../components/seller/SellerAdvertisingPlans'
 import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection'
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
 import SellerProfileMenuList from '../../components/seller/SellerProfileMenuList'
@@ -534,6 +535,8 @@ export default function SellerProfile() {
         return <SellerAdvancedProfileSettings profile={profile} onUpdated={refreshProfile} embedded />
       case PROFILE_PANEL_IDS.feedback:
         return <SellerFeedbackSection embedded />
+      case PROFILE_PANEL_IDS.advertising:
+        return <SellerAdvertisingPlans profile={profile} />
       default:
         return null
     }

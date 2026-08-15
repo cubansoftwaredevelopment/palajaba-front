@@ -66,6 +66,13 @@ const ICONS = {
       d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
     />
   ),
+  advertising: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l10.5-4.5v16.5l-10.5-4.5m0-7.5l-3.75.375c-.621.062-1.125.57-1.125 1.193v4.264c0 .623.504 1.131 1.125 1.193l3.75.375m0-7.5v7.5"
+    />
+  ),
 }
 
 function MenuIcon({ name }) {
@@ -110,13 +117,20 @@ export default function SellerProfileMenuList({ sections, onSelect }) {
   return (
     <div className="flex flex-col gap-5 animate-fade-in">
       {sections.map((section) => (
-        <section key={section.id} aria-labelledby={`profile-menu-${section.id}`}>
-          <h3
-            id={`profile-menu-${section.id}`}
-            className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.12em] text-brand-carmelita/75"
-          >
-            {section.title}
-          </h3>
+        <section
+          key={section.id}
+          {...(section.title
+            ? { 'aria-labelledby': `profile-menu-${section.id}` }
+            : { 'aria-label': section.ariaLabel || section.items[0]?.label || section.id })}
+        >
+          {section.title ? (
+            <h3
+              id={`profile-menu-${section.id}`}
+              className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.12em] text-brand-carmelita/75"
+            >
+              {section.title}
+            </h3>
+          ) : null}
           <ul className="flex flex-col gap-2">
             {section.items.map((item) => (
               <li key={item.id}>

@@ -1,4 +1,7 @@
 import { buildWhatsAppUrl } from './whatsappOrder'
+import { buildAdvertisingPlanMessage } from '../constants/advertisingPlans'
+
+export { buildAdvertisingPlanMessage }
 
 export function buildRenewalPlanMessage(storeName) {
   const name = (storeName || 'mi tienda').trim()
@@ -33,6 +36,18 @@ export function openRenewalWhatsApp({ storeName, adminPhone }) {
 
 export function openPremiumUpgradeWhatsApp({ storeName, adminPhone }) {
   const url = buildPremiumUpgradeWhatsAppUrl({ storeName, adminPhone })
+  if (!url) return false
+  window.open(url, '_blank', 'noopener,noreferrer')
+  return true
+}
+
+export function buildAdvertisingPlanWhatsAppUrl({ storeName, planName, adminPhone }) {
+  const message = buildAdvertisingPlanMessage(storeName, planName)
+  return buildWhatsAppUrl(adminPhone, message)
+}
+
+export function openAdvertisingPlanWhatsApp({ storeName, planName, adminPhone }) {
+  const url = buildAdvertisingPlanWhatsAppUrl({ storeName, planName, adminPhone })
   if (!url) return false
   window.open(url, '_blank', 'noopener,noreferrer')
   return true

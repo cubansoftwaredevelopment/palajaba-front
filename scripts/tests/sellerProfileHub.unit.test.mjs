@@ -15,12 +15,15 @@ import {
 
 test('getProfileMenuSections agrupa General y Cuenta sin solapes', () => {
   const sections = getProfileMenuSections()
-  assert.equal(sections.length, 2)
-  assert.equal(sections[0].title, 'General')
-  assert.equal(sections[1].title, 'Cuenta')
+  assert.equal(sections.length, 3)
+  assert.equal(sections[0].id, 'marketplace')
+  assert.equal(sections[1].title, 'General')
+  assert.equal(sections[2].title, 'Cuenta')
 
   const ids = sections.flatMap((section) => section.items.map((item) => item.id))
   assert.deepEqual(ids, [
+    PROFILE_PANEL_IDS.marketplace,
+    PROFILE_PANEL_IDS.advertising,
     PROFILE_PANEL_IDS.identity,
     PROFILE_PANEL_IDS.location,
     PROFILE_PANEL_IDS.categories,
@@ -28,7 +31,6 @@ test('getProfileMenuSections agrupa General y Cuenta sin solapes', () => {
     PROFILE_PANEL_IDS.gestores,
     PROFILE_PANEL_IDS.advanced,
     PROFILE_PANEL_IDS.feedback,
-    PROFILE_PANEL_IDS.marketplace,
   ])
   assert.equal(isProfileFormPanel(PROFILE_PANEL_IDS.gestores), true)
   assert.equal(new Set(ids).size, ids.length)
@@ -57,6 +59,8 @@ test('openProfilePanel ignora acciones y closeProfilePanel vuelve al hub', () =>
   assert.equal(openProfilePanel(null, PROFILE_PANEL_IDS.identity), PROFILE_PANEL_IDS.identity)
   assert.equal(openProfilePanel(PROFILE_PANEL_IDS.identity, PROFILE_PANEL_IDS.marketplace), PROFILE_PANEL_IDS.identity)
   assert.equal(isProfileHubPanel(PROFILE_PANEL_IDS.marketplace), false)
+  assert.equal(isProfileHubPanel(PROFILE_PANEL_IDS.advertising), true)
+  assert.equal(openProfilePanel(null, PROFILE_PANEL_IDS.advertising), PROFILE_PANEL_IDS.advertising)
   assert.equal(closeProfilePanel(), null)
 })
 
