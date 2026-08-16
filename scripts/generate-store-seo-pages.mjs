@@ -102,7 +102,7 @@ function pruneSitemapMissingStores(writtenSlugs) {
 
   const written = new Set(writtenSlugs)
   const sitemap = readFileSync(sitemapPath, 'utf8')
-  const staticPaths = new Set(['', 'comprar', 'aplicacion', 'registro'])
+  const staticPaths = new Set(['', 'comprar', 'aplicacion', 'registro', 'remesas'])
   const urlBlocks = [...sitemap.matchAll(/<url>[\s\S]*?<\/url>/g)].map((match) => match[0])
 
   if (urlBlocks.length === 0) return
@@ -153,7 +153,7 @@ async function fetchStoreSlugs() {
       throw new Error(`HTTP ${response.status}`)
     }
     const payload = await response.json()
-    const staticPaths = new Set(['', 'comprar', 'aplicacion', 'registro'])
+    const staticPaths = new Set(['', 'comprar', 'aplicacion', 'registro', 'remesas'])
     return (payload.urls ?? [])
       .map((entry) => locToSlug(entry.loc))
       .filter((slug) => slug && !staticPaths.has(slug))

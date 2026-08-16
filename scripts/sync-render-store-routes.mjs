@@ -5,7 +5,7 @@ const renderYamlPath = resolve('render.yaml')
 const apiUrl = (process.env.VITE_API_URL ?? '').replace(/\/+$/, '')
 const siteUrl = (process.env.VITE_SITE_URL ?? 'https://palajaba.com').replace(/\/+$/, '')
 
-const STATIC_SLUGS = new Set(['', 'comprar', 'aplicacion', 'registro'])
+const STATIC_SLUGS = new Set(['', 'comprar', 'aplicacion', 'registro', 'remesas'])
 const ROUTES_START = '      # AUTO-GENERATED STORE ROUTES START'
 const ROUTES_END = '      # AUTO-GENERATED STORE ROUTES END'
 

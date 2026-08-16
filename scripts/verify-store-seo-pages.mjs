@@ -11,7 +11,7 @@ if (!existsSync(sitemapPath)) {
 
 const sitemap = readFileSync(sitemapPath, 'utf8')
 const siteUrl = (process.env.VITE_SITE_URL ?? 'https://palajaba.com').replace(/\/+$/, '')
-const staticPaths = new Set(['', 'comprar', 'aplicacion', 'registro'])
+const staticPaths = new Set(['', 'comprar', 'aplicacion', 'registro', 'remesas'])
 const slugs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
   .map((match) => match[1].replace(`${siteUrl}/`, '').replace(`${siteUrl}`, ''))
   .filter((slug) => slug && !staticPaths.has(slug))

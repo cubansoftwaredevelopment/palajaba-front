@@ -11,6 +11,7 @@ const STATIC_URLS = [
   { loc: `${siteUrl}/comprar`, changefreq: 'daily', priority: '0.9' },
   { loc: `${siteUrl}/aplicacion`, changefreq: 'monthly', priority: '0.6' },
   { loc: `${siteUrl}/registro`, changefreq: 'monthly', priority: '0.7' },
+  { loc: `${siteUrl}/remesas`, changefreq: 'monthly', priority: '0.7' },
 ]
 
 function escapeXml(value) {

@@ -37,6 +37,7 @@ import BuyerSelectProvince from './pages/buyer/BuyerSelectProvince'
 import PublicStoreRoute from './components/buyer/PublicStoreRoute'
 import RedirectLegacyStoreRoute from './components/buyer/RedirectLegacyStoreRoute'
 import DownloadAppPage from './pages/DownloadAppPage'
+import Remesas from './pages/Remesas'
 
 const router = createBrowserRouter([
   {
@@ -93,6 +94,11 @@ const router = createBrowserRouter([
       { path: 'registro/verificacion', element: <RegisterForm /> },
       { path: 'registro/exito', element: <RegisterSuccess /> },
       { path: 'aplicacion', element: <DownloadAppPage /> },
+      {
+        path: 'remesas',
+        element: <BuyerJabaLayout />,
+        children: [{ index: true, element: <Remesas /> }],
+      },
       {
         path: 'admin',
         element: <Outlet />,
