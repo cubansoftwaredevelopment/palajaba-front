@@ -1,5 +1,7 @@
 export const REMESA_COMMISSION_RATE = 0.1
 export const REMESA_NET_RATE = 0.9
+export const REMESA_MIN_COMMISSION = 5
+export const REMESA_MIN_SENT = 50
 export const REMESA_ZONE = 'La Habana'
 
 export const REMESA_WHATSAPP_PHONE = '+34634820211'

@@ -12,6 +12,8 @@ import {
 import Logo from '../components/Logo'
 import {
   REMESA_DELIVERY_NOTE,
+  REMESA_MIN_COMMISSION,
+  REMESA_MIN_SENT,
   REMESA_MUNICIPALITIES,
   REMESA_ZONE,
 } from '../constants/remesas'
@@ -66,6 +68,7 @@ export default function Remesas() {
   const [submitting, setSubmitting] = useState(false)
 
   const amounts = computeRemesaAmounts(form.amount)
+  const belowMinCommission = Boolean(amounts && amounts.commission < REMESA_MIN_COMMISSION)
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -114,7 +117,8 @@ export default function Remesas() {
               Comisión del 10% sobre el monto enviado
             </p>
             <p className="mt-1 text-xs leading-relaxed text-brand-carmelita/90 sm:text-sm">
-              Si envías 100€, el destinatario recibe 90€. El domicilio se confirma por WhatsApp.
+              Comisión mínima {formatEuro(REMESA_MIN_COMMISSION)} (envío mínimo {formatEuro(REMESA_MIN_SENT)}).
+              Si envías 100€, el destinatario recibe 90€.
             </p>
           </div>
         </div>
@@ -127,7 +131,8 @@ export default function Remesas() {
           <section className="rounded-2xl border border-brand-green/12 bg-brand-white p-3.5 shadow-sm sm:p-4 lg:p-5">
             <h2 className="font-display text-lg font-bold text-brand-green">Calculadora</h2>
             <p className="mt-1 text-sm leading-relaxed text-brand-carmelita/90">
-              Ingresa el monto en euros. El destinatario recibe el 90% en efectivo.
+              Ingresa el monto en euros. El destinatario recibe el 90% en efectivo, con una comisión mínima de{' '}
+              {formatEuro(REMESA_MIN_COMMISSION)}.
             </p>
 
             <label htmlFor="remesa-amount" className={`${labelClass} mt-4`}>
@@ -158,6 +163,12 @@ export default function Remesas() {
               ) : (
                 <p className="mt-1 text-xs text-brand-carmelita/75">Escribe un monto para ver el cálculo.</p>
               )}
+              {belowMinCommission ? (
+                <p className="mt-2 text-xs font-medium text-brand-carmelita" role="alert">
+                  La comisión mínima es {formatEuro(REMESA_MIN_COMMISSION)}. Debes enviar al menos{' '}
+                  {formatEuro(REMESA_MIN_SENT)}.
+                </p>
+              ) : null}
             </div>
           </section>
 
@@ -289,7 +300,7 @@ export default function Remesas() {
             <button
               type="submit"
               className={`${buyerJabaWhatsAppBtn} mt-5 lg:w-auto lg:min-w-[16rem] lg:px-6`}
-              disabled={submitting}
+              disabled={submitting || belowMinCommission}
             >
               <WhatsAppIcon />
               {submitting ? 'Abriendo WhatsApp…' : 'Coordinar por WhatsApp'}

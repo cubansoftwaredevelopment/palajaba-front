@@ -1,4 +1,12 @@
-import { REMESA_COMMISSION_RATE, REMESA_MUNICIPALITIES, REMESA_NET_RATE, REMESA_WHATSAPP_PHONE, REMESA_ZONE } from '../constants/remesas.js'
+import {
+  REMESA_COMMISSION_RATE,
+  REMESA_MIN_COMMISSION,
+  REMESA_MIN_SENT,
+  REMESA_MUNICIPALITIES,
+  REMESA_NET_RATE,
+  REMESA_WHATSAPP_PHONE,
+  REMESA_ZONE,
+} from '../constants/remesas.js'
 
 function roundEuro(amount) {
   return Math.round(Number(amount) * 100) / 100
@@ -41,6 +49,9 @@ export function getRemesaMunicipality(id) {
 export function validateRemesaForm(form) {
   const amounts = computeRemesaAmounts(form.amount)
   if (!amounts) return 'Indica el monto en euros que quieres enviar.'
+  if (amounts.commission < REMESA_MIN_COMMISSION) {
+    return `La comisión mínima es ${formatEuro(REMESA_MIN_COMMISSION)}. Debes enviar al menos ${formatEuro(REMESA_MIN_SENT)}.`
+  }
 
   if (!form.sender_name?.trim()) return 'Indica el nombre del remitente.'
   if (!form.recipient_name?.trim()) return 'Indica el nombre del destinatario en Cuba.'

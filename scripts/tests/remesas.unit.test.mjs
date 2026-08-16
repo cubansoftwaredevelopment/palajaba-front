@@ -45,3 +45,31 @@ test('el formulario exige municipio y dirección', () => {
   })
   assert.equal(error, 'Selecciona el municipio de entrega en La Habana.')
 })
+
+test('rechaza montos cuya comisión queda por debajo de 5€', () => {
+  const error = validateRemesaForm({
+    amount: '40',
+    sender_name: 'Ana',
+    recipient_name: 'Luis',
+    contact_phone: '600111222',
+    municipality_id: 'playa',
+    address: 'Calle 1',
+  })
+  assert.equal(error, 'La comisión mínima es 5€. Debes enviar al menos 50€.')
+})
+
+test('50€ cumple la comisión mínima de 5€', () => {
+  const amounts = computeRemesaAmounts('50')
+  assert.equal(amounts.commission, 5)
+  assert.equal(
+    validateRemesaForm({
+      amount: '50',
+      sender_name: 'Ana',
+      recipient_name: 'Luis',
+      contact_phone: '600111222',
+      municipality_id: 'playa',
+      address: 'Calle 1',
+    }),
+    null,
+  )
+})
