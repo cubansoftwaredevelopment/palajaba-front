@@ -94,7 +94,7 @@ export function buildRemesaWhatsAppMessage(form) {
     `*Municipio:* ${municipality.name}, ${REMESA_ZONE}`,
     `*Dirección:* ${form.address.trim()}`,
     '',
-    '*Domicilio:* Costo de domicilio: 1€ por km, se paga en Cuba y se confirma por WhatsApp',
+    '*Domicilio:* Costo de domicilio: 0.5€ por km, se paga en Cuba y se confirma por WhatsApp',
     '',
     '¡Gracias!',
   )
