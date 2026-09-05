@@ -32,13 +32,16 @@ export function formatEuro(amount) {
   return `${formatted}€`
 }
 
-export function computeRemesaAmounts(sentAmount) {
-  const sent = parseEuroAmount(sentAmount)
-  if (sent == null) return null
+export function computeRemesaAmounts(receivedAmount) {
+  const received = parseEuroAmount(receivedAmount)
+  if (received == null) return null
+  const commission = roundEuro(received * REMESA_COMMISSION_RATE)
+  const toTransfer = roundEuro(received + commission)
+  
   return {
-    sent,
-    commission: roundEuro(sent * REMESA_COMMISSION_RATE),
-    net: roundEuro(sent * REMESA_NET_RATE),
+    received,
+    commission,
+    toTransfer,
   }
 }
 
@@ -48,9 +51,9 @@ export function getRemesaMunicipality(id) {
 
 export function validateRemesaForm(form) {
   const amounts = computeRemesaAmounts(form.amount)
-  if (!amounts) return 'Indica el monto en euros que quieres enviar.'
+  if (!amounts) return 'Indica el monto en euros que quieres que reciba el destinatario.'
   if (amounts.commission < REMESA_MIN_COMMISSION) {
-    return `La comisión mínima es ${formatEuro(REMESA_MIN_COMMISSION)}. Debes enviar al menos ${formatEuro(REMESA_MIN_SENT)}.`
+    return `La comisión mínima es ${formatEuro(REMESA_MIN_COMMISSION)}. El destinatario debe recibir al menos ${formatEuro(REMESA_MIN_SENT)}.`
   }
 
   if (!form.sender_name?.trim()) return 'Indica el nombre del remitente.'
@@ -76,9 +79,9 @@ export function buildRemesaWhatsAppMessage(form) {
   const lines = [
     `Hola, quiero enviar una remesa desde Pa' La Jaba:`,
     '',
-    `*Monto enviado:* ${formatEuro(amounts.sent)}`,
+    `*El destinatario recibe:* ${formatEuro(amounts.received)}`,
     `*Comisión (10%):* ${formatEuro(amounts.commission)}`,
-    `*El destinatario recibe:* ${formatEuro(amounts.net)}`,
+    `*Cantidad a transferir:* ${formatEuro(amounts.toTransfer)}`,
     '',
     `*Remitente:* ${form.sender_name.trim()}`,
     `*Destinatario:* ${form.recipient_name.trim()}`,
