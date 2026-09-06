@@ -109,7 +109,7 @@ export default function Remesas() {
             className="rounded-xl border border-brand-yellow/35 bg-brand-yellow/15 px-3.5 py-2 text-xs font-semibold leading-snug text-brand-green sm:text-sm"
             role="status"
           >
-            Comisión del 10% · envío mínimo {formatEuro(REMESA_MIN_SENT)} · comisión mínima{' '}
+            Comisión del 10% · monto mínimo a recibir {formatEuro(REMESA_MIN_SENT)} · comisión mínima{' '}
             {formatEuro(REMESA_MIN_COMMISSION)}
           </p>
         </div>
@@ -123,7 +123,7 @@ export default function Remesas() {
             <h2 className="font-display text-lg font-bold text-brand-green">Calculadora</h2>
 
             <label htmlFor="remesa-amount" className={`${labelClass} mt-3`}>
-              Monto a enviar (euros)
+              Monto que quiere recibir el destinatario (euros)
             </label>
             <input
               id="remesa-amount"
@@ -141,11 +141,11 @@ export default function Remesas() {
                 El destinatario recibe
               </p>
               <p className="mt-1.5 font-display text-5xl font-bold leading-none tracking-tight text-brand-green sm:text-6xl">
-                {amounts ? formatEuro(amounts.net) : '—'}
+                {amounts ? formatEuro(amounts.received) : '—'}
               </p>
               {amounts ? (
                 <p className="mt-3 text-xs text-brand-carmelita/65 sm:text-sm">
-                  Enviado {formatEuro(amounts.sent)} · comisión {formatEuro(amounts.commission)}
+                  Transferencia {formatEuro(amounts.toTransfer)} · comisión {formatEuro(amounts.commission)}
                 </p>
               ) : (
                 <p className="mt-3 text-xs text-brand-carmelita/55 sm:text-sm">
@@ -154,7 +154,7 @@ export default function Remesas() {
               )}
               {belowMinCommission ? (
                 <p className="mt-3 text-xs font-medium text-brand-carmelita" role="alert">
-                  La comisión mínima es {formatEuro(REMESA_MIN_COMMISSION)}. Debes enviar al menos{' '}
+                  La comisión mínima es {formatEuro(REMESA_MIN_COMMISSION)}. El destinatario debe recibir al menos{' '}
                   {formatEuro(REMESA_MIN_SENT)}.
                 </p>
               ) : null}

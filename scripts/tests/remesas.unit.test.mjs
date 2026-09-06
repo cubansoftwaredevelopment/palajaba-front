@@ -8,15 +8,15 @@ import {
   validateRemesaForm,
 } from '../../src/lib/remesas.js'
 
-test('100€ envía 90€ netos con comisión del 10%', () => {
+test('100€ recibidos generan 10€ de comisión y 110€ a transferir', () => {
   const amounts = computeRemesaAmounts('100')
-  assert.equal(amounts.sent, 100)
-  assert.equal(amounts.net, 90)
+  assert.equal(amounts.received, 100)
   assert.equal(amounts.commission, 10)
-  assert.equal(formatEuro(amounts.net), '90€')
+  assert.equal(amounts.toTransfer, 110)
+  assert.equal(formatEuro(amounts.toTransfer), '110€')
 })
 
-test('el mensaje de WhatsApp incluye monto, neto, comisión, municipio y dirección', () => {
+test('el mensaje de WhatsApp incluye el monto recibido, la comisión y la cantidad a transferir', () => {
   const message = buildRemesaWhatsAppMessage({
     amount: '100',
     sender_name: 'Ana',
@@ -27,9 +27,9 @@ test('el mensaje de WhatsApp incluye monto, neto, comisión, municipio y direcci
     address: 'Calle 1 #23',
   })
 
-  assert.match(message, /Monto enviado:\* 100€/)
+  assert.match(message, /El destinatario recibe:\* 100€/)
   assert.match(message, /Comisión \(10%\):\* 10€/)
-  assert.match(message, /El destinatario recibe:\* 90€/)
+  assert.match(message, /Cantidad a transferir:\* 110€/)
   assert.match(message, /Playa, La Habana/)
   assert.match(message, /Calle 1 #23/)
 })
@@ -55,12 +55,13 @@ test('rechaza montos cuya comisión queda por debajo de 5€', () => {
     municipality_id: 'playa',
     address: 'Calle 1',
   })
-  assert.equal(error, 'La comisión mínima es 5€. Debes enviar al menos 50€.')
+  assert.equal(error, 'La comisión mínima es 5€. El destinatario debe recibir al menos 50€.')
 })
 
 test('50€ cumple la comisión mínima de 5€', () => {
   const amounts = computeRemesaAmounts('50')
   assert.equal(amounts.commission, 5)
+  assert.equal(amounts.toTransfer, 55)
   assert.equal(
     validateRemesaForm({
       amount: '50',
