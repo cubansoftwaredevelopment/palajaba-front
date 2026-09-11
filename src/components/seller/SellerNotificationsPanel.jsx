@@ -50,7 +50,7 @@ function NotificationIcon({ kind }) {
   )
 }
 
-function NotificationCard({ notification, onClose, onMarkRead }) {
+function NotificationCard({ notification, onClose, onMarkRead, storeName = '' }) {
   const unread = !notification.read_at
   const isExpiring = notification.kind === NOTIFICATION_KIND_EXPIRING
   const isNewOrder = notification.kind === NOTIFICATION_KIND_NEW_ORDER
@@ -269,6 +269,7 @@ export default function SellerNotificationsPanel({
                       notification={notification}
                       onClose={onClose}
                       onMarkRead={onMarkRead}
+                      storeName={storeName}
                     />
                   </li>
                 ))}
