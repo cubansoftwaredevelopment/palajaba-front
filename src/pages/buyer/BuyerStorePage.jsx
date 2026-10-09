@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
+import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHeader'
 import BuyerCatalogPoweredFooter from '../../components/buyer/BuyerCatalogPoweredFooter'
@@ -217,7 +218,16 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
 
   return (
     <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
-      <BuyerShell backTo={backTo} backLabel={backLabel} headerEnd={<BuyerCurrencySelector />}>
+      <BuyerShell
+        backTo={backTo}
+        backLabel={backLabel}
+        headerEnd={
+          <>
+            <BuyerLoginButton />
+            <BuyerCurrencySelector />
+          </>
+        }
+      >
       {loading ? (
         <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
       ) : null}

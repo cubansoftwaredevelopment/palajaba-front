@@ -17,10 +17,24 @@ const LOGIN_METHODS = [
   { id: 'store_name', label: 'Tienda' },
 ]
 
+function loginBackTarget(state) {
+  const backTo = state?.backTo
+  if (
+    typeof backTo !== 'string' ||
+    !backTo.startsWith('/') ||
+    backTo.startsWith('//') ||
+    backTo.startsWith('/login')
+  ) {
+    return { backTo: '/', backLabel: 'Inicio' }
+  }
+  return { backTo, backLabel: 'Volver' }
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const redirectTo = location.state?.from ?? '/tienda'
+  const { backTo, backLabel } = loginBackTarget(location.state)
   const [method, setMethod] = useState('phone')
   const [phoneDigits, setPhoneDigits] = useState('')
   const [storeName, setStoreName] = useState('')
@@ -80,7 +94,7 @@ export default function Login() {
   }
 
   return (
-    <AuthShell backTo="/" backLabel="Inicio" contentWidth="narrow">
+    <AuthShell backTo={backTo} backLabel={backLabel} contentWidth="narrow">
       <section className="animate-fade-in lg:mx-auto lg:max-w-md" aria-labelledby="login-title">
         <AuthHeader
           eyebrow="Vendedores"

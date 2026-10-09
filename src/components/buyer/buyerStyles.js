@@ -48,6 +48,9 @@ export const buyerHeaderLocationProvince =
 export const buyerCurrencyTrigger =
   'inline-flex min-h-10 items-center gap-1.5 rounded-full border border-brand-green/15 bg-brand-white px-3 py-2 text-brand-green shadow-[0_2px_10px_rgba(89,128,44,0.08)] transition-colors touch-manipulation active:bg-brand-yellow/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 lg:min-h-11 lg:px-3.5'
 
+export const buyerLoginTrigger =
+  'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-green/15 bg-brand-white text-brand-green shadow-[0_2px_10px_rgba(89,128,44,0.08)] transition-colors touch-manipulation active:bg-brand-yellow/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 lg:h-11 lg:w-11'
+
 export const buyerCurrencyPanel =
   'min-w-[10.5rem] overflow-hidden rounded-2xl border border-brand-green/12 bg-brand-white py-1 shadow-[0_12px_32px_rgba(89,128,44,0.16)]'
 

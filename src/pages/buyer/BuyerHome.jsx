@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import BuyerAdditionalMunicipalitiesFilter from '../../components/buyer/BuyerAdditionalMunicipalitiesFilter'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
+import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
 import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
 import BuyerMarketplaceSearch, {
   BuyerSearchResults,
@@ -215,7 +216,12 @@ function BuyerHomeContent() {
           municipality={location.municipality}
         />
       }
-      headerEnd={<BuyerCurrencySelector />}
+      headerEnd={
+        <>
+          <BuyerLoginButton />
+          <BuyerCurrencySelector />
+        </>
+      }
     >
       <div className="mb-4 flex flex-col gap-2 lg:mb-6 lg:gap-3">
         <BuyerMarketplaceSearch

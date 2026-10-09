@@ -5,6 +5,7 @@ import CatalogThemePickerModal from '../../components/catalog/CatalogThemePicker
 import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
+import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHeader'
 import BuyerCatalogPoweredFooter from '../../components/buyer/BuyerCatalogPoweredFooter'
@@ -166,6 +167,7 @@ function SellerCatalogPreviewContent() {
 
   const headerEnd = (
     <div className="flex items-center gap-2">
+      <BuyerLoginButton />
       <BuyerCurrencySelector />
       <CatalogPreviewThemeButton onClick={() => setShowThemePicker(true)} />
     </div>

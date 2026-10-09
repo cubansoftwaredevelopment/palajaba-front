@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AuthCard from '../components/auth/AuthCard'
 import AuthHeader from '../components/auth/AuthHeader'
 import AuthShell from '../components/auth/AuthShell'
 import RegisterDiscountCodeField from '../components/auth/RegisterDiscountCodeField'
@@ -171,9 +170,6 @@ export default function RegisterPlan() {
   const [discountCodesAvailable, setDiscountCodesAvailable] = useState(false)
   const [appliedDiscount, setAppliedDiscount] = useState(null)
   const { getPlanPrice, getPlanYearlySavings, formatPlanAmount } = usePlanPricing()
-  const selectedTier = PLAN_TIERS[normalizePlanTier(planTier)]
-  const selectedPrice = getPlanPrice(planTier, billing)
-  const discountedSelectedPrice = getDiscountedPlanPrice(selectedPrice, appliedDiscount?.percent_off)
 
   useEffect(() => {
     let active = true
@@ -245,43 +241,6 @@ export default function RegisterPlan() {
           </div>
 
           <aside className={`${authStickyAside} flex flex-col gap-4`}>
-            <AuthCard>
-              <div className="text-center lg:text-left">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-carmelita/80">
-                  Resumen
-                </p>
-                <p className="mt-2 font-display text-2xl font-bold text-brand-green">
-                  Plan {selectedTier.name}
-                </p>
-                <p className="mt-1 text-sm text-brand-carmelita/85">
-                  Facturación {billing === 'yearly' ? 'anual' : 'mensual'}
-                </p>
-                {appliedDiscount ? (
-                  <>
-                    <p className="mt-3 text-base font-semibold text-brand-carmelita/70 line-through">
-                      {formatPlanPriceLabel(selectedPrice, formatPlanAmount)}
-                    </p>
-                    <p className="text-3xl font-bold text-brand-green">
-                      {formatPlanPriceLabel(discountedSelectedPrice, formatPlanAmount)}
-                      <span className="ml-1 text-base font-semibold text-brand-carmelita/80">
-                        /{selectedPrice.label}
-                      </span>
-                    </p>
-                    <p className="mt-2 text-xs font-medium text-brand-green">
-                      Código {appliedDiscount.code} ({appliedDiscount.percent_off}% off)
-                    </p>
-                  </>
-                ) : (
-                  <p className="mt-3 text-3xl font-bold text-brand-green">
-                    {formatPlanPriceLabel(selectedPrice, formatPlanAmount)}
-                    <span className="ml-1 text-base font-semibold text-brand-carmelita/80">
-                      /{selectedPrice.label}
-                    </span>
-                  </p>
-                )}
-              </div>
-            </AuthCard>
-
             <Button onClick={continueToPayment}>Continuar</Button>
 
             <p className="text-center text-xs text-brand-carmelita/80 lg:text-left">
