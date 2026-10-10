@@ -1,9 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
+import { isAdminAuthenticated } from '../../lib/adminAuth'
+import { isSellerAuthenticated } from '../../lib/sellerAuth'
 import { buyerLoginTrigger } from './buyerStyles'
 
 export default function BuyerLoginButton() {
   const location = useLocation()
   const backTo = `${location.pathname}${location.search}${location.hash}`
+
+  if (isSellerAuthenticated() || isAdminAuthenticated()) return null
 
   return (
     <Link
