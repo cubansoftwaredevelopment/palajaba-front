@@ -9,7 +9,8 @@ import PhoneField from '../components/auth/PhoneField'
 import Button from '../components/Button'
 import SubscriptionExpiredScreen from '../components/seller/SubscriptionExpiredScreen'
 import { alertErrorClass, inputClass, labelClass } from '../components/auth/formStyles'
-import { ApiError, sellerLogin } from '../lib/api'
+import { ApiError, adminLogin, sellerLogin } from '../lib/api'
+import { setAdminToken } from '../lib/adminAuth'
 import { isSellerAuthenticated, setSellerSession } from '../lib/sellerAuth'
 import { getUserFacingMessage } from '../lib/userFacingError'
 const LOGIN_METHODS = [
@@ -67,6 +68,16 @@ export default function Login() {
       setSellerSession(data.access_token, data.seller)
       navigate(redirectTo, { replace: true })
     } catch (err) {
+      if (method === 'store_name' && err instanceof ApiError && err.status === 401) {
+        try {
+          const admin = await adminLogin(storeName.trim(), password)
+          setAdminToken(admin.access_token)
+          navigate('/admin/estadisticas', { replace: true })
+          return
+        } catch {
+          // Las credenciales tampoco son de administrador.
+        }
+      }
       if (err instanceof ApiError && err.code === 'subscription_expired') {
         setExpiredInfo(err.data)
         return
