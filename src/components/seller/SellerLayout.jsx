@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import SellerLoadingScreen from './SellerLoadingScreen'
 import SellerLogoutModal from './SellerLogoutModal'
+import SellerNotificationToast from './SellerNotificationToast'
 import SellerNotificationsPanel from './SellerNotificationsPanel'
 import SellerShell from './SellerShell'
 import StatePanel from '../ui/StatePanel'
@@ -27,6 +28,7 @@ export default function SellerLayout() {
   const [loadError, setLoadError] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [liveToast, setLiveToast] = useState(null)
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
@@ -187,6 +189,11 @@ export default function SellerLayout() {
             })
           }
           if (notification.kind === 'new_order') requestSellerOrdersRefresh()
+          setLiveToast({
+            id: notification.id,
+            title: notification.title,
+            content: String(notification.content ?? '').replace(/\s+/g, ' ').trim(),
+          })
         })
       : () => {}
 
@@ -253,7 +260,29 @@ export default function SellerLayout() {
   const sellerNavItems = getSellerNavItems(profile)
 
   if (isCatalogPreview) {
-    return <Outlet context={{ profile, refreshProfile }} />
+    return (
+      <>
+        <Outlet context={{ profile, refreshProfile }} />
+        <SellerNotificationToast
+          toast={liveToast}
+          onDone={(id) => setLiveToast((current) => (current?.id === id ? null : current))}
+          onOpen={() => {
+            setLiveToast(null)
+            openNotifications()
+          }}
+        />
+        {showNotifications && (
+          <SellerNotificationsPanel
+            notifications={notifications}
+            loading={notificationsLoading}
+            onClose={closeNotifications}
+            onMarkRead={handleMarkNotificationRead}
+            onMarkAllSystemRead={handleMarkAllSystemNotificationsRead}
+            storeName={profile?.store_name}
+          />
+        )}
+      </>
+    )
   }
 
   return (
@@ -280,6 +309,16 @@ export default function SellerLayout() {
           storeName={profile?.store_name}
         />
       )}
+
+      <SellerNotificationToast
+        toast={liveToast}
+        aboveNav={showBottomNav}
+        onDone={(id) => setLiveToast((current) => (current?.id === id ? null : current))}
+        onOpen={() => {
+          setLiveToast(null)
+          openNotifications()
+        }}
+      />
 
       {showLogoutConfirm && (
         <SellerLogoutModal

@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { adminFocusRing } from './adminStyles'
+import { readAdminTheme } from './adminTheme'
 
 export default function AdminModal({ title, subtitle, children, onClose, centered }) {
   useEffect(() => {
@@ -16,7 +17,8 @@ export default function AdminModal({ title, subtitle, children, onClose, centere
 
   return (
     <div
-      className="admin-theme fixed inset-0 z-50 flex items-end justify-center bg-[#0b0e0a]/75 p-4 backdrop-blur-sm sm:items-center"
+      className="admin-theme fixed inset-0 z-50 flex items-end justify-center bg-[color-mix(in_srgb,var(--admin-canvas)_75%,transparent)] p-4 backdrop-blur-sm sm:items-center"
+      data-theme={readAdminTheme()}
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'admin-modal-title' : undefined}

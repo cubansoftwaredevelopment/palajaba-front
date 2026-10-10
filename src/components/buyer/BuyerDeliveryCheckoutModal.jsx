@@ -7,6 +7,9 @@ import {
   validateDeliveryForm,
 } from '../../lib/buyerDelivery'
 import { getBuyerLocation } from '../../lib/buyerLocation'
+import { useLiveLocation } from '../../live/context/LiveLocationContext.jsx'
+import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
+import BuyerOrderLocationMap from './BuyerOrderLocationMap'
 import {
   buyerDeliveryFieldLabel,
   buyerDeliveryInput,
@@ -37,6 +40,19 @@ export default function BuyerDeliveryCheckoutModal({
 }) {
   const titleId = useId()
   const location = getBuyerLocation()
+  const { coords } = useLiveLocation()
+  const [point, setPoint] = useState(null)
+  const [mapSession, setMapSession] = useState(0)
+  const open = Boolean(checkout)
+  const [wasOpen, setWasOpen] = useState(open)
+  if (open !== wasOpen) {
+    setWasOpen(open)
+    if (open) {
+      setMapSession((current) => current + 1)
+      setPoint(null)
+    }
+  }
+  const mapUrl = buildOpenStreetMapUrl(point?.lat, point?.lng)
   const [form, setForm] = useState(() => getBuyerDeliveryDefaults())
   const [error, setError] = useState('')
 
@@ -76,6 +92,10 @@ export default function BuyerDeliveryCheckoutModal({
       phone_primary: form.phone_primary,
       phone_secondary: form.phone_secondary,
       notes: form.notes.trim(),
+    }
+    if (mapUrl && point) {
+      delivery.latitude = point.lat
+      delivery.longitude = point.lng
     }
 
     saveBuyerDeliveryDefaults(form)
@@ -141,6 +161,27 @@ export default function BuyerDeliveryCheckoutModal({
                   }
                   required
                 />
+                <div className="mt-3">
+                  <p className={buyerDeliveryFieldLabel}>Ubicación del pedido</p>
+                  <BuyerOrderLocationMap
+                    key={mapSession}
+                    initialCoords={coords}
+                    onChange={setPoint}
+                  />
+                  <p className="mt-2 text-xs leading-relaxed text-brand-carmelita/90">
+                    Toca el mapa para marcar el punto. Se enviará por WhatsApp.
+                  </p>
+                  {mapUrl ? (
+                    <a
+                      href={mapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-block text-sm font-semibold text-brand-green underline-offset-2 active:opacity-80 lg:hover:underline"
+                    >
+                      Ver en OpenStreetMap
+                    </a>
+                  ) : null}
+                </div>
               </div>
 
               <PhoneField

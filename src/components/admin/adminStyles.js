@@ -1,10 +1,10 @@
-/** Tokens y clases del panel admin (oscuro + acentos Pa' La Jaba) */
+/** Tokens y clases del panel admin. El claro y el oscuro viven en `.admin-theme`. */
 
 export const adminPage =
-  'admin-theme relative min-h-dvh overflow-x-hidden bg-[#0b0e0a] text-zinc-100'
+  'admin-theme relative min-h-dvh overflow-x-hidden bg-[var(--admin-canvas)] text-zinc-100'
 
 export const adminHeader =
-  'sticky top-0 z-20 border-b border-zinc-800/80 bg-black'
+  'sticky top-0 z-20 border-b border-zinc-800/80 bg-[var(--admin-header)]'
 
 export const adminInput =
   'w-full min-h-11 rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-4 py-3 text-base text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/15'
@@ -28,7 +28,7 @@ export const adminAlertSuccess =
   'rounded-xl border border-brand-green/25 bg-brand-green/10 px-4 py-3 text-sm text-zinc-100'
 
 export const adminFocusRing =
-  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0e0a]'
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--admin-canvas)]'
 
 export const adminBadgePending =
   'rounded-md border border-brand-yellow/35 bg-brand-yellow/12 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-brand-yellow'

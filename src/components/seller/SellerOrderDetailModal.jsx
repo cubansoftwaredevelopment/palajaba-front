@@ -4,6 +4,7 @@ import { formatOrderDateTime } from '../../lib/dates'
 import { convertBetweenCurrencies } from '../../lib/displayPrice'
 import { loadExchangeRates, getCupPerUnit } from '../../lib/exchangeRates'
 import { formatPrice, parseCupInput } from '../../lib/money'
+import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import SellerModalPortal from './SellerModalPortal'
 import SellerSelect from './SellerSelect'
 import {
@@ -235,6 +236,10 @@ export default function SellerOrderDetailModal({
     onDownloadInvoice(type)
   }
 
+  const deliveryMapUrl = order.delivery
+    ? buildOpenStreetMapUrl(order.delivery.latitude, order.delivery.longitude)
+    : null
+
   return (
     <SellerModalPortal>
       <div
@@ -400,6 +405,19 @@ export default function SellerOrderDetailModal({
                   <span className="font-semibold text-brand-green">Contacto:</span> {order.delivery.phone_primary}
                   {order.delivery.phone_secondary ? `, ${order.delivery.phone_secondary}` : ''}
                 </div>
+                {deliveryMapUrl ? (
+                  <div>
+                    <span className="font-semibold text-brand-green">Ubicación:</span>{' '}
+                    <a
+                      href={deliveryMapUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-semibold text-brand-green underline-offset-2 active:opacity-80 lg:hover:underline"
+                    >
+                      Ver en OpenStreetMap
+                    </a>
+                  </div>
+                ) : null}
                 {order.delivery.notes ? (
                   <div>
                     <span className="font-semibold text-brand-green">Detalles:</span> {order.delivery.notes}

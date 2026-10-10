@@ -238,3 +238,19 @@ export const sellerNotificationsOverlay =
 
 export const sellerNotificationsPanel =
   'relative flex w-full max-w-md min-h-0 animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.2)] sm:max-h-[min(88dvh,40rem)] sm:rounded-3xl lg:max-w-lg'
+
+export const sellerNoticeToastShell =
+  'pointer-events-none fixed inset-x-0 z-[85] flex justify-center px-4'
+
+export const sellerNoticeToastShellNav =
+  `${sellerNoticeToastShell} bottom-[calc(4.75rem+var(--safe-bottom))] lg:bottom-6`
+
+export const sellerNoticeToastShellPage =
+  `${sellerNoticeToastShell} bottom-[max(1.25rem,var(--safe-bottom))]`
+
+export const sellerNoticeToastCard =
+  'pointer-events-auto w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-brand-green/15 bg-brand-white px-4 py-3 text-left shadow-[0_12px_32px_rgba(89,128,44,0.18)]'
+
+export const sellerNoticeToastEnter = `${sellerNoticeToastCard} animate-jaba-toast-in`
+
+export const sellerNoticeToastLeave = `${sellerNoticeToastCard} animate-jaba-toast-out`

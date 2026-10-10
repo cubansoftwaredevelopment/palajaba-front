@@ -3,6 +3,7 @@ import { PHONE_PREFIX } from './phone'
 import { getCupPerUnit } from './exchangeRates'
 import { resolveDisplayPrice } from './displayPrice'
 import { formatPrice } from './money'
+import { buildOpenStreetMapUrl } from './openStreetMap'
 
 export function phoneToWhatsAppId(phone) {
   const digits = String(phone ?? '').replace(/\D/g, '')
@@ -46,6 +47,11 @@ function buildFulfillmentSection(fulfillment) {
 
   if (fulfillment.notes?.trim()) {
     lines.push(`Detalles: ${fulfillment.notes.trim()}`)
+  }
+
+  const mapUrl = buildOpenStreetMapUrl(fulfillment.latitude, fulfillment.longitude)
+  if (mapUrl) {
+    lines.push(`Ubicación: ${mapUrl}`)
   }
 
   return lines.join('\n')

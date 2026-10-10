@@ -159,18 +159,53 @@
   }
 
   .admin-theme {
+    --admin-canvas: #0b0e0a;
+    --admin-header: #000000;
     font-family: system-ui, -apple-system, sans-serif;
     letter-spacing: normal;
     color-scheme: dark;
   }
 
-  /* Admin: calendario oscuro (react-day-picker) */
+  .admin-theme[data-theme='light'],
+  .admin-theme[data-theme='light'] .admin-theme {
+    --admin-canvas: #f6f3ea;
+    --admin-header: #fbf9f3;
+    color-scheme: light;
+    --color-white: #1c2118;
+    --color-zinc-50: #1a1f16;
+    --color-zinc-100: #24291e;
+    --color-zinc-200: #3a4032;
+    --color-zinc-300: #4e5544;
+    --color-zinc-400: #5c6352;
+    --color-zinc-500: #6b7260;
+    --color-zinc-600: #7c8370;
+    --color-zinc-700: #cfc8b6;
+    --color-zinc-800: #e3ddd0;
+    --color-zinc-900: #f3f0e6;
+    --color-zinc-950: #faf8f2;
+    --color-emerald-200: #3f6a24;
+    --color-orange-100: #7b4c38;
+    --color-orange-200: #8d5340;
+    --color-orange-300: #a35b32;
+  }
+
+  /* Admin: calendario (react-day-picker) */
   .admin-theme .rdp-root {
     --rdp-accent-color: #59802c;
     --rdp-accent-background-color: rgba(89, 128, 44, 0.2);
     --rdp-day-height: 2.25rem;
     --rdp-day-width: 2.25rem;
     color: #e4e4e7;
+  }
+
+  .admin-theme[data-theme='light'] .rdp-root,
+  .admin-theme[data-theme='light'] .admin-theme .rdp-root {
+    color: #3a4032;
+  }
+
+  .admin-theme[data-theme='light'] .recharts-cartesian-axis-tick-value,
+  .admin-theme[data-theme='light'] .admin-theme .recharts-cartesian-axis-tick-value {
+    fill: #5c6352;
   }
 
   #root {
@@ -326,6 +361,21 @@
   .seller-map-pin {
     background: transparent !important;
     border: none !important;
+  }
+
+  .buyer-order-map .leaflet-container {
+    z-index: 0;
+    font-family: inherit;
+  }
+
+  .buyer-order-map .leaflet-pane {
+    z-index: auto;
+  }
+
+  .buyer-order-map .leaflet-control-zoom a {
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    line-height: 2.25rem;
   }
 
   .seller-shell-viewport {

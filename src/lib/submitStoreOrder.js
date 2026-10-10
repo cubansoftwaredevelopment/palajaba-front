@@ -19,13 +19,20 @@ function buildBuyerZone() {
 function buildDeliveryPayload(delivery) {
   if (!delivery) return null
 
-  return {
+  const payload = {
     recipient_name: delivery.recipient_name,
     address: delivery.address,
     phone_primary: delivery.phone_primary,
     phone_secondary: delivery.phone_secondary || null,
     notes: delivery.notes || null,
   }
+  const latitude = delivery.latitude == null || delivery.latitude === '' ? NaN : Number(delivery.latitude)
+  const longitude = delivery.longitude == null || delivery.longitude === '' ? NaN : Number(delivery.longitude)
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    payload.latitude = latitude
+    payload.longitude = longitude
+  }
+  return payload
 }
 
 export async function submitStoreOrder({
