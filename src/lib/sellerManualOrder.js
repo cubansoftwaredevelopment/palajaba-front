@@ -17,60 +17,37 @@ export function flattenCatalogProducts(catalog) {
 
 const PAYMENT_CURRENCIES = ['CUP', 'USD', 'EUR', 'MLC']
 
-export function normalizeProductSearchQuery(value) {
-  return String(value ?? '').trim().toLowerCase()
-}
-
-export function productMatchesSearch(product, query) {
-  const normalized = normalizeProductSearchQuery(query)
-  if (!normalized) return true
-
-  const name = String(product?.name ?? '').toLowerCase()
-  const category = String(product?.category_name ?? '').toLowerCase()
-  return name.includes(normalized) || category.includes(normalized)
-}
-
-export function filterProductsForManualOrder(
-  products,
-  query,
-  { previewLimit = 12, searchLimit = 40 } = {},
-) {
-  const list = Array.isArray(products) ? products : []
-  const normalized = normalizeProductSearchQuery(query)
-
-  if (!normalized) {
-    return list.slice(0, previewLimit)
+export function getProductSearchStatus({
+  query = '',
+  total = 0,
+  shown = 0,
+  hasOrderedProducts = false,
+} = {}) {
+  if (!hasOrderedProducts) {
+    return { type: 'empty', message: 'No hay productos con pedidos.' }
   }
 
-  return list.filter((product) => productMatchesSearch(product, normalized)).slice(0, searchLimit)
-}
-
-export function getProductSearchStatus(products, query, { previewLimit = 12 } = {}) {
-  const list = Array.isArray(products) ? products : []
-  const normalized = normalizeProductSearchQuery(query)
-
-  if (list.length === 0) {
-    return { type: 'empty', message: 'No hay productos disponibles para agregar.' }
-  }
-
+  const normalized = String(query ?? '').trim()
   if (!normalized) {
-    if (list.length > previewLimit) {
+    if (total === 0) {
+      return { type: 'empty', message: 'No hay productos disponibles para agregar.' }
+    }
+    if (total > shown) {
       return {
         type: 'preview',
-        message: `Mostrando ${previewLimit} de ${list.length}. Busca por nombre o categoría.`,
+        message: `Mostrando ${shown} de ${total}. Busca por nombre o categoría.`,
       }
     }
     return { type: 'idle', message: '' }
   }
 
-  const totalMatches = list.filter((product) => productMatchesSearch(product, normalized)).length
-  if (totalMatches === 0) {
+  if (total === 0) {
     return { type: 'no-results', message: 'No encontramos productos con esa búsqueda.' }
   }
 
   return {
     type: 'results',
-    message: `${totalMatches} coincidencia${totalMatches === 1 ? '' : 's'}`,
+    message: `${total} coincidencia${total === 1 ? '' : 's'}`,
   }
 }
 

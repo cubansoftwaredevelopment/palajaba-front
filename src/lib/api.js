@@ -1,358 +1,406 @@
-import { downloadBlob } from './downloadFile'
+import { downloadBlob } from "./downloadFile";
 
 /** En dev usa rutas relativas → proxy de Vite. En prod usa VITE_API_URL. */
 function getApiBase() {
-  if (import.meta.env.DEV) return ''
-  return import.meta.env.VITE_API_URL ?? 'https://palajaba-api.onrender.com'
+  if (import.meta.env.DEV) return "";
+  return import.meta.env.VITE_API_URL ?? "https://palajaba-api.onrender.com";
 }
 
-export const NETWORK_ERROR_CODE = 'network_error'
+export const NETWORK_ERROR_CODE = "network_error";
 
 export class ApiError extends Error {
   constructor(message, { code = null, data = null, status = null } = {}) {
-    super(message)
-    this.name = 'ApiError'
-    this.code = code
-    this.data = data
-    this.status = status
+    super(message);
+    this.name = "ApiError";
+    this.code = code;
+    this.data = data;
+    this.status = status;
   }
 }
 
 export function parseApiErrorDetail(detail) {
-  if (typeof detail === 'string') {
-    return { message: detail, code: null, data: null }
+  if (typeof detail === "string") {
+    return { message: detail, code: null, data: null };
   }
 
-  if (detail && typeof detail === 'object' && !Array.isArray(detail)) {
+  if (detail && typeof detail === "object" && !Array.isArray(detail)) {
     return {
-      message: detail.message || 'Ocurrió un error. Intenta de nuevo.',
+      message: detail.message || "Ocurrió un error. Intenta de nuevo.",
       code: detail.code || null,
       data: detail,
-    }
+    };
   }
 
   if (Array.isArray(detail)) {
     return {
       message: detail
         .map((item) => {
-          if (typeof item === 'string') return item
+          if (typeof item === "string") return item;
           if (item?.msg) {
             const field = Array.isArray(item.loc)
-              ? item.loc.filter((p) => p !== 'body').join('.')
-              : ''
-            return field ? `${field}: ${item.msg}` : item.msg
+              ? item.loc.filter((p) => p !== "body").join(".")
+              : "";
+            if (
+              field.endsWith("phone_primary") &&
+              (item.type === "string_too_short" ||
+                item.type === "phone_primary_too_short" ||
+                /at least 8 characters/i.test(item.msg))
+            ) {
+              return "Ingresa un teléfono de contacto con al menos 8 caracteres.";
+            }
+            return field ? `${field}: ${item.msg}` : item.msg;
           }
-          return 'Datos inválidos'
+          return "Datos inválidos";
         })
-        .join(' '),
+        .join(" "),
       code: null,
       data: null,
-    }
+    };
   }
 
-  return { message: 'Ocurrió un error. Intenta de nuevo.', code: null, data: null }
+  return {
+    message: "Ocurrió un error. Intenta de nuevo.",
+    code: null,
+    data: null,
+  };
 }
 
 export async function parseApiError(response) {
-  const data = await response.json().catch(() => ({}))
-  return parseApiErrorDetail(data.detail).message
+  const data = await response.json().catch(() => ({}));
+  return parseApiErrorDetail(data.detail).message;
 }
 
 async function request(path, options = {}) {
-  const headers = { ...options.headers }
-  const hasBody = options.body != null && options.body !== ''
-  if (hasBody && !headers['Content-Type'] && !(options.body instanceof FormData)) {
-    headers['Content-Type'] = 'application/json'
+  const headers = { ...options.headers };
+  const hasBody = options.body != null && options.body !== "";
+  if (
+    hasBody &&
+    !headers["Content-Type"] &&
+    !(options.body instanceof FormData)
+  ) {
+    headers["Content-Type"] = "application/json";
   }
 
-  let response
+  let response;
   try {
     response = await fetch(`${getApiBase()}${path}`, {
       ...options,
       headers,
-    })
+    });
   } catch {
-    throw new ApiError('Error de conexión', { code: NETWORK_ERROR_CODE })
+    throw new ApiError("Error de conexión", { code: NETWORK_ERROR_CODE });
   }
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}))
-    const parsed = parseApiErrorDetail(data.detail)
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
     const fallback =
       response.status === 404
-        ? 'No encontramos lo que buscabas.'
+        ? "No encontramos lo que buscabas."
         : response.status >= 500
-          ? 'El servicio no está disponible en este momento.'
-          : 'Ocurrió un error. Intenta de nuevo.'
+          ? "El servicio no está disponible en este momento."
+          : "Ocurrió un error. Intenta de nuevo.";
     const message =
-      parsed.message === 'Ocurrió un error. Intenta de nuevo.' ? fallback : parsed.message
-    throw new ApiError(message, { code: parsed.code, data: parsed.data, status: response.status })
+      parsed.message === "Ocurrió un error. Intenta de nuevo."
+        ? fallback
+        : parsed.message;
+    throw new ApiError(message, {
+      code: parsed.code,
+      data: parsed.data,
+      status: response.status,
+    });
   }
 
   if (response.status === 204) {
-    return null
+    return null;
   }
 
-  return response.json()
+  return response.json();
 }
 
 export async function sellerLogin(payload) {
-  const data = await request('/api/auth/login', {
-    method: 'POST',
+  const data = await request("/api/auth/login", {
+    method: "POST",
     body: JSON.stringify(payload),
-  })
+  });
 
   if (data?.subscription_expired) {
     throw new ApiError(data.subscription_expired.message, {
-      code: 'subscription_expired',
+      code: "subscription_expired",
       data: data.subscription_expired,
-    })
+    });
   }
 
-  return data
+  return data;
 }
 
 export function fetchSellerProfile(token) {
-  return request('/api/auth/me', {
+  return request("/api/auth/me", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchSellerBusinessCategories(token) {
-  return request('/api/auth/me/business-categories', {
+  return request("/api/auth/me/business-categories", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchCategories() {
-  return request('/api/categories/')
+  return request("/api/categories/");
 }
 
 export function fetchProductCategories() {
-  return request('/api/product-categories/')
+  return request("/api/product-categories/");
 }
 
 export function updateSellerProfile(token, payload) {
-  return request('/api/auth/me/profile', {
-    method: 'PATCH',
+  return request("/api/auth/me/profile", {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function updateSellerPhone(token, phone) {
-  return request('/api/auth/me/phone', {
-    method: 'PATCH',
+  return request("/api/auth/me/phone", {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ phone }),
-  })
+  });
 }
 
 export function updateSellerStoreName(token, storeName) {
-  return request('/api/auth/me/store-name', {
-    method: 'PATCH',
+  return request("/api/auth/me/store-name", {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ store_name: storeName }),
-  })
+  });
 }
 
 export async function uploadSellerProfilePhoto(token, file) {
-  const formData = new FormData()
-  formData.append('photo', file)
+  const formData = new FormData();
+  formData.append("photo", file);
 
   const response = await fetch(`${getApiBase()}/api/auth/me/profile-photo`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: formData,
-  })
+  });
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}))
-    const parsed = parseApiErrorDetail(data.detail)
-    throw new ApiError(parsed.message, { code: parsed.code, data: parsed.data })
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
+    throw new ApiError(parsed.message, {
+      code: parsed.code,
+      data: parsed.data,
+    });
   }
 
-  return response.json()
+  return response.json();
 }
 
 export function registerSeller(payload) {
-  return request('/api/register', {
-    method: 'POST',
+  return request("/api/register", {
+    method: "POST",
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function adminLogin(username, password) {
-  return request('/api/admin/login', {
-    method: 'POST',
+  return request("/api/admin/login", {
+    method: "POST",
     body: JSON.stringify({ username, password }),
-  })
+  });
 }
 
-export function fetchRegistrations(token, status = 'pending') {
+export function fetchRegistrations(token, status = "pending") {
   return request(`/api/admin/registrations?status=${status}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
-export function approveRegistration(token, id, subscriptionEndsAt, paymentAmountCup) {
-  const params = new URLSearchParams()
-  params.set('payment_amount_cup', String(paymentAmountCup))
+export function approveRegistration(
+  token,
+  id,
+  subscriptionEndsAt,
+  paymentAmountCup,
+) {
+  const params = new URLSearchParams();
+  params.set("payment_amount_cup", String(paymentAmountCup));
   if (subscriptionEndsAt) {
-    params.set('subscription_ends_at', subscriptionEndsAt)
+    params.set("subscription_ends_at", subscriptionEndsAt);
   }
 
-  return request(`/api/admin/registrations/${id}/approve?${params.toString()}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
+  return request(
+    `/api/admin/registrations/${id}/approve?${params.toString()}`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  })
+  );
 }
 
 export function rejectRegistration(token, id) {
   return request(`/api/admin/registrations/${id}/reject`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function deleteRegistration(token, id) {
   return request(`/api/admin/registrations/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchAdminStats(token, { year, month } = {}) {
-  const params = new URLSearchParams()
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
-  const query = params.toString() ? `?${params.toString()}` : ''
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
+  const query = params.toString() ? `?${params.toString()}` : "";
 
   return request(`/api/admin/stats/summary${query}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchAdminBusinessesByProvince(token) {
-  return request('/api/admin/stats/businesses-by-province', {
+  return request("/api/admin/stats/businesses-by-province", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
-export function fetchAdminRevenueChart(token, { granularity, year, month } = {}) {
-  const params = new URLSearchParams({ granularity })
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
+export function fetchAdminRevenueChart(
+  token,
+  { granularity, year, month } = {},
+) {
+  const params = new URLSearchParams({ granularity });
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
 
   return request(`/api/admin/stats/revenue?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
-export function fetchAdminTrafficChart(token, { granularity, year, month } = {}) {
-  const params = new URLSearchParams({ granularity })
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
+export function fetchAdminTrafficChart(
+  token,
+  { granularity, year, month } = {},
+) {
+  const params = new URLSearchParams({ granularity });
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
 
   return request(`/api/admin/stats/traffic?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchAdminTrafficLocations(token, { year, month } = {}) {
-  const params = new URLSearchParams()
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
-  const query = params.toString() ? `?${params.toString()}` : ''
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
+  const query = params.toString() ? `?${params.toString()}` : "";
 
   return request(`/api/admin/stats/traffic/locations${query}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchAdminTrafficPatterns(token, { year, month } = {}) {
-  const params = new URLSearchParams()
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
-  const query = params.toString() ? `?${params.toString()}` : ''
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
+  const query = params.toString() ? `?${params.toString()}` : "";
 
   return request(`/api/admin/stats/traffic/patterns${query}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
-export function fetchAdminOrdersChart(token, { granularity, year, month } = {}) {
-  const params = new URLSearchParams({ granularity })
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
+export function fetchAdminOrdersChart(
+  token,
+  { granularity, year, month } = {},
+) {
+  const params = new URLSearchParams({ granularity });
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
 
   return request(`/api/admin/stats/orders?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchAdminOrdersTopBusinesses(token, { granularity } = {}) {
-  const params = new URLSearchParams({ granularity })
-  return request(`/api/admin/stats/orders/top-businesses?${params.toString()}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const params = new URLSearchParams({ granularity });
+  return request(
+    `/api/admin/stats/orders/top-businesses?${params.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  })
+  );
 }
 
 export function fetchAdminOrdersLocations(token, { granularity } = {}) {
-  const params = new URLSearchParams({ granularity })
+  const params = new URLSearchParams({ granularity });
   return request(`/api/admin/stats/orders/locations?${params.toString()}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function updateRegistrationPayment(token, id, paymentAmountCup) {
-  const params = new URLSearchParams()
-  params.set('payment_amount_cup', String(paymentAmountCup))
+  const params = new URLSearchParams();
+  params.set("payment_amount_cup", String(paymentAmountCup));
 
-  return request(`/api/admin/registrations/${id}/payment?${params.toString()}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${token}`,
+  return request(
+    `/api/admin/registrations/${id}/payment?${params.toString()}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  })
+  );
 }
 
 export function updateRegistrationSubscription(
@@ -360,22 +408,25 @@ export function updateRegistrationSubscription(
   id,
   { subscriptionEndsAt, planTier, billingPeriod } = {},
 ) {
-  const params = new URLSearchParams()
-  params.set('subscription_ends_at', subscriptionEndsAt)
-  if (planTier) params.set('plan_tier', planTier)
-  if (billingPeriod) params.set('billing_period', billingPeriod)
+  const params = new URLSearchParams();
+  params.set("subscription_ends_at", subscriptionEndsAt);
+  if (planTier) params.set("plan_tier", planTier);
+  if (billingPeriod) params.set("billing_period", billingPeriod);
 
-  return request(`/api/admin/registrations/${id}/subscription?${params.toString()}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${token}`,
+  return request(
+    `/api/admin/registrations/${id}/subscription?${params.toString()}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  })
+  );
 }
 
 /** @deprecated Use updateRegistrationSubscription */
 export function updateSubscriptionEnd(token, id, subscriptionEndsAt) {
-  return updateRegistrationSubscription(token, id, { subscriptionEndsAt })
+  return updateRegistrationSubscription(token, id, { subscriptionEndsAt });
 }
 
 export function renewRegistration(
@@ -383,369 +434,404 @@ export function renewRegistration(
   id,
   { subscriptionEndsAt, paymentAmountCup, planTier, billingPeriod } = {},
 ) {
-  const params = new URLSearchParams()
-  params.set('payment_amount_cup', String(paymentAmountCup))
-  if (subscriptionEndsAt) params.set('subscription_ends_at', subscriptionEndsAt)
-  if (planTier) params.set('plan_tier', planTier)
-  if (billingPeriod) params.set('billing_period', billingPeriod)
+  const params = new URLSearchParams();
+  params.set("payment_amount_cup", String(paymentAmountCup));
+  if (subscriptionEndsAt)
+    params.set("subscription_ends_at", subscriptionEndsAt);
+  if (planTier) params.set("plan_tier", planTier);
+  if (billingPeriod) params.set("billing_period", billingPeriod);
 
   return request(`/api/admin/registrations/${id}/renew?${params.toString()}`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchAdminNotifications(token) {
-  return request('/api/admin/notifications', {
+  return request("/api/admin/notifications", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function sendAdminNotification(token, payload) {
-  return request('/api/admin/notifications', {
-    method: 'POST',
+  return request("/api/admin/notifications", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function submitSellerFeedback(token, payload) {
-  return request('/api/auth/me/feedback', {
-    method: 'POST',
+  return request("/api/auth/me/feedback", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
-export function fetchAdminFeedback(token, filter = 'all') {
-  const params = new URLSearchParams()
-  if (filter && filter !== 'all') params.set('filter', filter)
-  const query = params.toString() ? `?${params.toString()}` : ''
+export function fetchAdminFeedback(token, filter = "all") {
+  const params = new URLSearchParams();
+  if (filter && filter !== "all") params.set("filter", filter);
+  const query = params.toString() ? `?${params.toString()}` : "";
   return request(`/api/admin/feedback${query}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchAdminFeedbackUnreadCount(token) {
-  return request('/api/admin/feedback/unread-count', {
+  return request("/api/admin/feedback/unread-count", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function markAdminFeedbackRead(token, feedbackId) {
   return request(`/api/admin/feedback/${feedbackId}/read`, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function deleteAdminFeedback(token, feedbackId) {
   return request(`/api/admin/feedback/${feedbackId}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchAdminSettings(token) {
-  return request('/api/admin/settings', {
+  return request("/api/admin/settings", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function updateAdminSettings(token, payload) {
-  return request('/api/admin/settings', {
-    method: 'PATCH',
+  return request("/api/admin/settings", {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function fetchRenewalContactPhone() {
-  return request('/api/platform/renewal-contact')
+  return request("/api/platform/renewal-contact");
 }
 
 export function fetchDiscountCodesAvailability() {
-  return request('/api/platform/discount-codes/availability')
+  return request("/api/platform/discount-codes/availability");
 }
 
 export function validateDiscountCode({ code, planTier, billingPeriod }) {
-  return request('/api/platform/discount-codes/validate', {
-    method: 'POST',
+  return request("/api/platform/discount-codes/validate", {
+    method: "POST",
     body: JSON.stringify({
       code,
       plan_tier: planTier,
       billing_period: billingPeriod,
     }),
-  })
+  });
 }
 
 export function fetchAdminDiscountCodes(token) {
-  return request('/api/admin/discount-codes', {
+  return request("/api/admin/discount-codes", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function createAdminDiscountCode(token, payload) {
-  return request('/api/admin/discount-codes', {
-    method: 'POST',
+  return request("/api/admin/discount-codes", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function updateAdminDiscountCode(token, id, payload) {
   return request(`/api/admin/discount-codes/${id}`, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function deleteAdminDiscountCode(token, id) {
   return request(`/api/admin/discount-codes/${id}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchExchangeRates() {
-  return request('/api/platform/exchange-rates')
+  return request("/api/platform/exchange-rates");
 }
 
 export function fetchSellerNotifications(token) {
-  return request('/api/auth/me/notifications', {
+  return request("/api/auth/me/notifications", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchSellerUnreadNotificationCount(token) {
-  return request('/api/auth/me/notifications/unread-count', {
+  return request("/api/auth/me/notifications/unread-count", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function markSellerNotificationRead(token, notificationId) {
   return request(`/api/auth/me/notifications/${notificationId}/read`, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function markSellerSystemNotificationsRead(token) {
-  return request('/api/auth/me/notifications/read-system', {
-    method: 'PATCH',
+  return request("/api/auth/me/notifications/read-system", {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchSellerCatalog(token) {
-  return request('/api/auth/me/catalog', {
+  return request("/api/auth/me/catalog", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
+}
+
+export function searchSellerOrderedProducts(token, query = "") {
+  const params = new URLSearchParams();
+  const normalized = String(query ?? "").trim();
+  if (normalized) params.set("q", normalized);
+  const suffix = params.toString() ? `?${params}` : "";
+  return request(`/api/auth/me/catalog/products/search${suffix}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 }
 
 export function fetchSellerStatsSummary(token, { year, month } = {}) {
-  const params = new URLSearchParams()
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
-  const query = params.toString() ? `?${params.toString()}` : ''
+  const params = new URLSearchParams();
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
+  const query = params.toString() ? `?${params.toString()}` : "";
 
   return request(`/api/auth/me/stats/summary${query}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
-export function fetchSellerRevenueChart(token, { granularity, year, month } = {}) {
-  const params = new URLSearchParams({ granularity })
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
+export function fetchSellerRevenueChart(
+  token,
+  { granularity, year, month } = {},
+) {
+  const params = new URLSearchParams({ granularity });
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
 
   return request(`/api/auth/me/stats/revenue?${params}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
-export function fetchSellerProductsSoldChart(token, { granularity, year, month } = {}) {
-  const params = new URLSearchParams({ granularity })
-  if (year != null) params.set('year', String(year))
-  if (month != null) params.set('month', String(month))
+export function fetchSellerProductsSoldChart(
+  token,
+  { granularity, year, month } = {},
+) {
+  const params = new URLSearchParams({ granularity });
+  if (year != null) params.set("year", String(year));
+  if (month != null) params.set("month", String(month));
 
   return request(`/api/auth/me/stats/products-sold?${params}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchSellerTopProducts(token) {
-  return request('/api/auth/me/stats/top-products', {
+  return request("/api/auth/me/stats/top-products", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function createCatalogCategory(token, payload) {
-  return request('/api/auth/me/catalog/categories', {
-    method: 'POST',
+  return request("/api/auth/me/catalog/categories", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function deleteCatalogCategory(token, categoryId) {
   return request(`/api/auth/me/catalog/categories/${categoryId}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function reorderCatalogCategories(token, categoryIds) {
-  return request('/api/auth/me/catalog/categories/order', {
-    method: 'PUT',
+  return request("/api/auth/me/catalog/categories/order", {
+    method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ category_ids: categoryIds }),
-  })
+  });
 }
 
-export function updateCatalogCategoryProductSort(token, categoryId, productSortMode) {
-  return request(`/api/auth/me/catalog/categories/${encodeURIComponent(categoryId)}/product-sort`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${token}`,
+export function updateCatalogCategoryProductSort(
+  token,
+  categoryId,
+  productSortMode,
+) {
+  return request(
+    `/api/auth/me/catalog/categories/${encodeURIComponent(categoryId)}/product-sort`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ product_sort_mode: productSortMode }),
     },
-    body: JSON.stringify({ product_sort_mode: productSortMode }),
-  })
+  );
 }
 
 export function reorderCatalogProducts(token, categoryId, productIds) {
   return request(
     `/api/auth/me/catalog/categories/${encodeURIComponent(categoryId)}/products/order`,
     {
-      method: 'PUT',
+      method: "PUT",
       headers: {
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ product_ids: productIds }),
     },
-  )
+  );
 }
 
 export function updateCatalogTheme(token, catalogTheme) {
-  return request('/api/auth/me/catalog/theme', {
-    method: 'PATCH',
+  return request("/api/auth/me/catalog/theme", {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ catalog_theme: catalogTheme }),
-  })
+  });
 }
 
 export function fetchCatalogCurrencies(token) {
-  return request('/api/auth/me/catalog/currencies', {
+  return request("/api/auth/me/catalog/currencies", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export async function createCatalogProduct(token, formData) {
   const response = await fetch(`${getApiBase()}/api/auth/me/catalog/products`, {
-    method: 'POST',
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: formData,
-  })
+  });
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}))
-    const parsed = parseApiErrorDetail(data.detail)
-    throw new ApiError(parsed.message, { code: parsed.code, data: parsed.data })
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
+    throw new ApiError(parsed.message, {
+      code: parsed.code,
+      data: parsed.data,
+    });
   }
 
-  return response.json()
+  return response.json();
 }
 
 export async function updateCatalogProduct(token, productId, formData) {
-  const response = await fetch(`${getApiBase()}/api/auth/me/catalog/products/${productId}`, {
-    method: 'PATCH',
-    headers: {
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${getApiBase()}/api/auth/me/catalog/products/${productId}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     },
-    body: formData,
-  })
+  );
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}))
-    const parsed = parseApiErrorDetail(data.detail)
-    throw new ApiError(parsed.message, { code: parsed.code, data: parsed.data })
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
+    throw new ApiError(parsed.message, {
+      code: parsed.code,
+      data: parsed.data,
+    });
   }
 
-  return response.json()
+  return response.json();
 }
 
 export function deleteCatalogProduct(token, productId) {
   return request(`/api/auth/me/catalog/products/${productId}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 function appendAdditionalMunicipalities(params, additionalMunicipalityIds) {
-  if (!additionalMunicipalityIds?.length) return
+  if (!additionalMunicipalityIds?.length) return;
   for (const municipalityId of additionalMunicipalityIds) {
-    params.append('municipios_adicionales', municipalityId)
+    params.append("municipios_adicionales", municipalityId);
   }
 }
 
@@ -759,16 +845,16 @@ export function fetchMarketplaceFeed({
     province_id: provinceId,
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
-  })
-  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
-  return request(`/api/marketplace/feed?${params}`)
+  });
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds);
+  return request(`/api/marketplace/feed?${params}`);
 }
 
 export function fetchMarketplaceBusinesses({
   provinceId,
   municipalityId,
   additionalMunicipalityIds,
-  query = '',
+  query = "",
   categoryId,
   limit = 20,
   offset = 0,
@@ -778,22 +864,22 @@ export function fetchMarketplaceBusinesses({
     municipality_id: municipalityId,
     limit: String(limit),
     offset: String(offset),
-  })
+  });
   if (query.trim()) {
-    params.set('q', query.trim())
+    params.set("q", query.trim());
   }
   if (categoryId) {
-    params.set('category_id', categoryId)
+    params.set("category_id", categoryId);
   }
-  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
-  return request(`/api/marketplace/businesses?${params}`)
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds);
+  return request(`/api/marketplace/businesses?${params}`);
 }
 
 export function fetchMarketplaceSearch({
   provinceId,
   municipalityId,
   additionalMunicipalityIds,
-  query = '',
+  query = "",
   globalCategoryId,
   limit = 20,
   offset = 0,
@@ -804,16 +890,16 @@ export function fetchMarketplaceSearch({
     q: query,
     limit: String(limit),
     offset: String(offset),
-  })
+  });
   if (globalCategoryId) {
-    params.set('global_category_id', globalCategoryId)
+    params.set("global_category_id", globalCategoryId);
   }
-  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
-  return request(`/api/marketplace/search?${params}`)
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds);
+  return request(`/api/marketplace/search?${params}`);
 }
 
 export function fetchMarketplaceStore(storeRef) {
-  return request(`/api/marketplace/stores/${encodeURIComponent(storeRef)}`)
+  return request(`/api/marketplace/stores/${encodeURIComponent(storeRef)}`);
 }
 
 export function fetchMarketplaceStoreCatalog({
@@ -826,8 +912,10 @@ export function fetchMarketplaceStoreCatalog({
     province_id: provinceId,
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
-  })
-  return request(`/api/marketplace/stores/${encodeURIComponent(storeSlug)}/catalog?${params}`)
+  });
+  return request(
+    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/catalog?${params}`,
+  );
 }
 
 export function fetchMarketplaceGestorStoreCatalog({
@@ -841,10 +929,10 @@ export function fetchMarketplaceGestorStoreCatalog({
     province_id: provinceId,
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
-  })
+  });
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/catalog?${params}`,
-  )
+  );
 }
 
 export function fetchMarketplaceStoreCategoryProducts({
@@ -860,10 +948,10 @@ export function fetchMarketplaceStoreCategoryProducts({
     municipality_id: municipalityId,
     limit: String(limit),
     offset: String(offset),
-  })
+  });
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
-  )
+  );
 }
 
 export function fetchMarketplaceGestorStoreCategoryProducts({
@@ -880,57 +968,61 @@ export function fetchMarketplaceGestorStoreCategoryProducts({
     municipality_id: municipalityId,
     limit: String(limit),
     offset: String(offset),
-  })
+  });
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
-  )
+  );
 }
 
 export function createMarketplaceOrder(payload) {
-  return request('/api/marketplace/orders', {
-    method: 'POST',
+  return request("/api/marketplace/orders", {
+    method: "POST",
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function fetchSellerOrders(token) {
-  return request('/api/auth/me/orders', {
+  return request("/api/auth/me/orders", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function createSellerManualOrder(token, payload) {
-  return request('/api/auth/me/orders', {
-    method: 'POST',
+  return request("/api/auth/me/orders", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function updateSellerOrder(token, orderId, payload) {
   return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}`, {
-    method: 'PATCH',
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function deleteSellerOrder(token, orderId) {
   return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
-export async function downloadSellerOrderInvoice(token, orderId, type = 'store') {
+export async function downloadSellerOrderInvoice(
+  token,
+  orderId,
+  type = "store",
+) {
   const response = await fetch(
     `${getApiBase()}/api/auth/me/orders/${encodeURIComponent(orderId)}/invoice.pdf?type=${encodeURIComponent(type)}`,
     {
@@ -938,20 +1030,24 @@ export async function downloadSellerOrderInvoice(token, orderId, type = 'store')
         Authorization: `Bearer ${token}`,
       },
     },
-  )
+  );
 
   if (!response.ok) {
-    const data = await response.json().catch(() => ({}))
-    const parsed = parseApiErrorDetail(data.detail)
-    throw new ApiError(parsed.message, { code: parsed.code, data: parsed.data })
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
+    throw new ApiError(parsed.message, {
+      code: parsed.code,
+      data: parsed.data,
+    });
   }
 
-  const blob = await response.blob()
-  const disposition = response.headers.get('Content-Disposition') ?? ''
-  const match = disposition.match(/filename="([^"]+)"/)
-  const filename = match?.[1] ?? `pedido-${orderId.slice(-6).toUpperCase()}-${type}.pdf`
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/);
+  const filename =
+    match?.[1] ?? `pedido-${orderId.slice(-6).toUpperCase()}-${type}.pdf`;
 
-  await downloadBlob(blob, filename, 'application/pdf')
+  await downloadBlob(blob, filename, "application/pdf");
 }
 
 export function fetchMarketplaceCategoryProducts({
@@ -968,101 +1064,106 @@ export function fetchMarketplaceCategoryProducts({
     global_category_id: globalCategoryId,
     limit: String(limit),
     offset: String(offset),
-  })
-  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
-  return request(`/api/marketplace/products?${params}`)
+  });
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds);
+  return request(`/api/marketplace/products?${params}`);
 }
 
-export function syncBuyerJaba({ items, provinceId, municipalityId, additionalMunicipalityIds }) {
+export function syncBuyerJaba({
+  items,
+  provinceId,
+  municipalityId,
+  additionalMunicipalityIds,
+}) {
   const body = {
     items,
     province_id: provinceId ?? undefined,
     municipality_id: municipalityId ?? undefined,
-  }
+  };
   if (additionalMunicipalityIds?.length) {
-    body.municipios_adicionales = additionalMunicipalityIds
+    body.municipios_adicionales = additionalMunicipalityIds;
   }
-  return request('/api/marketplace/jaba/sync', {
-    method: 'POST',
+  return request("/api/marketplace/jaba/sync", {
+    method: "POST",
     body: JSON.stringify(body),
-  })
+  });
 }
 
 /* —— Gestores de venta (panel del negocio) —— */
 
 export function fetchSellerGestores(token) {
-  return request('/api/auth/me/gestores', {
+  return request("/api/auth/me/gestores", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function createSellerGestor(token, username) {
-  return request('/api/auth/me/gestores', {
-    method: 'POST',
+  return request("/api/auth/me/gestores", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ username }),
-  })
+  });
 }
 
 export function deleteSellerGestor(token, gestorId) {
   return request(`/api/auth/me/gestores/${encodeURIComponent(gestorId)}`, {
-    method: 'DELETE',
+    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchSellerGestorCatalogAccess(token) {
-  return request('/api/auth/me/gestores/catalog-access', {
+  return request("/api/auth/me/gestores/catalog-access", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function updateSellerGestorCatalogAccess(token, payload) {
-  return request('/api/auth/me/gestores/catalog-access', {
-    method: 'PUT',
+  return request("/api/auth/me/gestores/catalog-access", {
+    method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  })
+  });
 }
 
 export function fetchSellerGestorCheckoutPhones(token) {
-  return request('/api/auth/me/gestores/checkout-phones', {
+  return request("/api/auth/me/gestores/checkout-phones", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function updateSellerGestorCheckoutPhones(token, payload) {
   const body =
-    payload && typeof payload === 'object' && !Array.isArray(payload)
+    payload && typeof payload === "object" && !Array.isArray(payload)
       ? payload
-      : { gestor_ids: payload, include_store_phone: true }
-  return request('/api/auth/me/gestores/checkout-phones', {
-    method: 'PUT',
+      : { gestor_ids: payload, include_store_phone: true };
+  return request("/api/auth/me/gestores/checkout-phones", {
+    method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(body),
-  })
+  });
 }
 
 export function fetchSellerGestorNetworkProducts(token) {
-  return request('/api/auth/me/gestores/network-products', {
+  return request("/api/auth/me/gestores/network-products", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 /* —— Auth y panel del gestor —— */
@@ -1071,45 +1172,45 @@ export function gestorLogin({ store_name, username, password }) {
   const body = {
     store_name,
     username,
-  }
+  };
   if (password) {
-    body.password = password
+    body.password = password;
   }
-  return request('/api/gestores/login', {
-    method: 'POST',
+  return request("/api/gestores/login", {
+    method: "POST",
     body: JSON.stringify(body),
-  })
+  });
 }
 
 export function gestorSetup({ setup_token, password, phone }) {
-  return request('/api/gestores/setup', {
-    method: 'POST',
+  return request("/api/gestores/setup", {
+    method: "POST",
     body: JSON.stringify({ setup_token, password, phone }),
-  })
+  });
 }
 
 export function fetchGestorMe(token) {
-  return request('/api/gestores/me', {
+  return request("/api/gestores/me", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function fetchGestorAllowedProducts(token) {
-  return request('/api/gestores/me/allowed-products', {
+  return request("/api/gestores/me/allowed-products", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 }
 
 export function updateGestorSelectedProducts(token, products) {
-  return request('/api/gestores/me/selected-products', {
-    method: 'PUT',
+  return request("/api/gestores/me/selected-products", {
+    method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ products }),
-  })
+  });
 }

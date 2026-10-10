@@ -5,6 +5,7 @@ import { convertBetweenCurrencies } from '../../lib/displayPrice'
 import { loadExchangeRates, getCupPerUnit } from '../../lib/exchangeRates'
 import { formatPrice, parseCupInput } from '../../lib/money'
 import SellerModalPortal from './SellerModalPortal'
+import SellerSelect from './SellerSelect'
 import {
   sellerAlertError,
   sellerAlertSuccess,
@@ -353,23 +354,20 @@ export default function SellerOrderDetailModal({
             <label htmlFor="payment-currency" className={sellerLabel}>
               Moneda de pago
             </label>
-            <select
+            <SellerSelect
               id="payment-currency"
+              ariaLabel="Moneda de pago"
               value={paymentCurrency}
-              onChange={(event) => {
-                setPaymentCurrency(event.target.value)
+              disabled={!isPending}
+              onChange={(next) => {
+                setPaymentCurrency(next)
                 setLocalError('')
               }}
-              disabled={!isPending}
-              className={sellerInput}
-            >
-              <option value="">Seleccionar…</option>
-              {PAYMENT_CURRENCIES.map((currency) => (
-                <option key={currency} value={currency}>
-                  {currency}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: 'Seleccionar…' },
+                ...PAYMENT_CURRENCIES.map((currency) => ({ value: currency, label: currency })),
+              ]}
+            />
             {order.payment_currency && !paymentDirty ? (
               <p className={`mt-1.5 ${sellerHint}`}>
                 El comprador pidió en {order.payment_currency}; los precios del pedido ya están en esa moneda.
@@ -431,16 +429,16 @@ export default function SellerOrderDetailModal({
                 <label htmlFor="delivery-currency" className={sellerLabel}>
                   Moneda
                 </label>
-                <select
+                <SellerSelect
                   id="delivery-currency"
+                  ariaLabel="Moneda del domicilio"
                   value={deliveryCurrency}
-                  onChange={(event) => setDeliveryCurrency(event.target.value)}
-                  className={sellerInput}
-                >
-                  <option value="CUP">CUP</option>
-                  <option value="USD">USD</option>
-                  <option value="MLC">MLC</option>
-                </select>
+                  onChange={setDeliveryCurrency}
+                  options={['CUP', 'USD', 'MLC'].map((currency) => ({
+                    value: currency,
+                    label: currency,
+                  }))}
+                />
               </div>
               <p className={`col-span-2 ${sellerHint}`}>
                 Agrega el costo del domicilio antes de marcar el pedido como realizado.

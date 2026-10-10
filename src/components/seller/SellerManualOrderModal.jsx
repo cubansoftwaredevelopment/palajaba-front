@@ -1,19 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { fetchSellerCatalog } from '../../lib/api'
+import { searchSellerOrderedProducts } from '../../lib/api'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { formatPrice } from '../../lib/money'
 import {
   buildManualOrderPayload,
   createManualOrderLineItem,
-  filterProductsForManualOrder,
-  flattenCatalogProducts,
   getProductSearchStatus,
   inferManualOrderPaymentCurrency,
   PAYMENT_CURRENCIES,
   validateManualOrderDraft,
 } from '../../lib/sellerManualOrder'
 import SellerModalPortal from './SellerModalPortal'
+import SellerSelect from './SellerSelect'
 import {
   sellerAlertError,
   sellerBtnPrimary,
@@ -57,9 +56,11 @@ function QuantityStepper({ value, onChange, max = 99 }) {
 }
 
 export default function SellerManualOrderModal({ onClose, onCreated }) {
-  const [catalogLoading, setCatalogLoading] = useState(true)
-  const [catalogError, setCatalogError] = useState('')
-  const [products, setProducts] = useState([])
+  const [searchLoading, setSearchLoading] = useState(true)
+  const [searchError, setSearchError] = useState('')
+  const [suggestions, setSuggestions] = useState([])
+  const [searchTotal, setSearchTotal] = useState(0)
+  const [hasOrderedProducts, setHasOrderedProducts] = useState(false)
   const [lineItems, setLineItems] = useState([])
   const [paymentCurrency, setPaymentCurrency] = useState('')
   const [withDelivery, setWithDelivery] = useState(false)
@@ -76,31 +77,31 @@ export default function SellerManualOrderModal({ onClose, onCreated }) {
 
   useEffect(() => {
     let cancelled = false
-
-    async function loadCatalog() {
-      setCatalogLoading(true)
-      setCatalogError('')
+    const handle = setTimeout(async () => {
+      setSearchLoading(true)
+      setSearchError('')
       try {
-        const token = getSellerToken()
-        const data = await fetchSellerCatalog(token)
-        if (!cancelled) {
-          setProducts(flattenCatalogProducts(data))
-        }
+        const data = await searchSellerOrderedProducts(getSellerToken(), productSearch)
+        if (cancelled) return
+        setSuggestions(Array.isArray(data?.products) ? data.products : [])
+        setSearchTotal(Number(data?.total) || 0)
+        setHasOrderedProducts(Boolean(data?.has_ordered_products))
       } catch {
-        if (!cancelled) {
-          setProducts([])
-          setCatalogError('No pudimos cargar tu catálogo.')
-        }
+        if (cancelled) return
+        setSuggestions([])
+        setSearchTotal(0)
+        setHasOrderedProducts(false)
+        setSearchError('No pudimos buscar productos.')
       } finally {
-        if (!cancelled) setCatalogLoading(false)
+        if (!cancelled) setSearchLoading(false)
       }
-    }
+    }, 250)
 
-    loadCatalog()
     return () => {
       cancelled = true
+      clearTimeout(handle)
     }
-  }, [])
+  }, [productSearch])
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -116,26 +117,25 @@ export default function SellerManualOrderModal({ onClose, onCreated }) {
   }, [onClose])
 
   const productsById = useMemo(
-    () => Object.fromEntries(products.map((product) => [product.id, product])),
-    [products],
+    () => Object.fromEntries(suggestions.map((product) => [product.id, product])),
+    [suggestions],
   )
 
-  const availableProducts = useMemo(
-    () => products.filter((product) => !lineItems.some((item) => item.product_id === product.id)),
-    [lineItems, products],
-  )
-
-  const filteredProducts = useMemo(
-    () => filterProductsForManualOrder(availableProducts, productSearch),
-    [availableProducts, productSearch],
+  const visibleSuggestions = useMemo(
+    () => suggestions.filter((product) => !lineItems.some((item) => item.product_id === product.id)),
+    [lineItems, suggestions],
   )
 
   const productSearchStatus = useMemo(
-    () => getProductSearchStatus(availableProducts, productSearch),
-    [availableProducts, productSearch],
+    () =>
+      getProductSearchStatus({
+        query: productSearch,
+        total: searchTotal,
+        shown: suggestions.length,
+        hasOrderedProducts,
+      }),
+    [hasOrderedProducts, productSearch, searchTotal, suggestions.length],
   )
-
-  const productPickerDisabled = catalogLoading || Boolean(catalogError)
 
   function handleAddProduct(productId) {
     const product = productsById[productId]
@@ -170,6 +170,10 @@ export default function SellerManualOrderModal({ onClose, onCreated }) {
     if (withDelivery) {
       if (!delivery.recipient_name.trim() || !delivery.address.trim() || !delivery.phone_primary.trim()) {
         setError('Completa nombre, dirección y teléfono del domicilio.')
+        return
+      }
+      if (delivery.phone_primary.trim().length < 8) {
+        setError('Ingresa un teléfono de contacto con al menos 8 caracteres.')
         return
       }
     }
@@ -248,13 +252,12 @@ export default function SellerManualOrderModal({ onClose, onCreated }) {
                   className={sellerModalInput}
                   placeholder="Nombre o categoría…"
                   value={productSearch}
-                  disabled={productPickerDisabled}
                   onChange={(event) => setProductSearch(event.target.value)}
                   autoComplete="off"
                 />
-                {catalogLoading ? <p className={sellerHint}>Cargando catálogo…</p> : null}
-                {catalogError ? <p className={sellerAlertError}>{catalogError}</p> : null}
-                {!catalogLoading && !catalogError && productSearchStatus.message ? (
+                {searchLoading ? <p className={sellerHint}>Buscando productos…</p> : null}
+                {searchError ? <p className={sellerAlertError}>{searchError}</p> : null}
+                {!searchLoading && !searchError && productSearchStatus.message ? (
                   <p
                     className={
                       productSearchStatus.type === 'no-results'
@@ -265,9 +268,9 @@ export default function SellerManualOrderModal({ onClose, onCreated }) {
                     {productSearchStatus.message}
                   </p>
                 ) : null}
-                {!catalogLoading && !catalogError ? (
+                {!searchLoading && !searchError && visibleSuggestions.length > 0 ? (
                   <ul className="max-h-52 space-y-1.5 overflow-y-auto overscroll-contain rounded-xl border border-brand-green/10 bg-brand-green/[0.02] p-1.5">
-                    {filteredProducts.map((product) => (
+                    {visibleSuggestions.map((product) => (
                       <li key={product.id}>
                         <button
                           type="button"
@@ -338,19 +341,17 @@ export default function SellerManualOrderModal({ onClose, onCreated }) {
                 <label htmlFor="manual-order-payment-currency" className={sellerLabel}>
                   Moneda de pago
                 </label>
-                <select
+                <SellerSelect
                   id="manual-order-payment-currency"
-                  className={sellerModalInput}
+                  ariaLabel="Moneda de pago"
+                  modal
                   value={paymentCurrency}
-                  onChange={(event) => setPaymentCurrency(event.target.value)}
-                >
-                  <option value="">Inferir según productos</option>
-                  {PAYMENT_CURRENCIES.map((currency) => (
-                    <option key={currency} value={currency}>
-                      {currency}
-                    </option>
-                  ))}
-                </select>
+                  onChange={setPaymentCurrency}
+                  options={[
+                    { value: '', label: 'Inferir según productos' },
+                    ...PAYMENT_CURRENCIES.map((currency) => ({ value: currency, label: currency })),
+                  ]}
+                />
               </div>
 
               <div className={`${sellerSection} space-y-3`}>

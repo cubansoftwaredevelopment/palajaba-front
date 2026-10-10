@@ -4,11 +4,9 @@ import { test } from 'node:test'
 import {
   buildManualOrderPayload,
   createManualOrderLineItem,
-  filterProductsForManualOrder,
   flattenCatalogProducts,
   getProductSearchStatus,
   inferManualOrderPaymentCurrency,
-  productMatchesSearch,
   validateManualOrderDraft,
 } from '../../src/lib/sellerManualOrder.js'
 
@@ -85,26 +83,25 @@ test('inferManualOrderPaymentCurrency infiere moneda única', () => {
   assert.equal(inferManualOrderPaymentCurrency(lineItems), 'USD')
 })
 
-test('filterProductsForManualOrder busca por nombre y categoría', () => {
-  const products = [
-    { id: '1', name: 'Arroz 1kg', category_name: 'Despensa' },
-    { id: '2', name: 'Aceite', category_name: 'Condimentos' },
-    { id: '3', name: 'Frijoles', category_name: 'Despensa' },
-  ]
+test('getProductSearchStatus distingue pedidos vacíos, vista previa y sin coincidencias', () => {
+  const none = getProductSearchStatus({ hasOrderedProducts: false, total: 0, shown: 0 })
+  assert.equal(none.type, 'empty')
+  assert.match(none.message, /pedidos/)
 
-  assert.equal(filterProductsForManualOrder(products, 'arroz').length, 1)
-  assert.equal(filterProductsForManualOrder(products, 'despensa').length, 2)
-  assert.equal(productMatchesSearch(products[1], 'cond'), true)
-})
-
-test('getProductSearchStatus avisa cuando hay que buscar en catálogos grandes', () => {
-  const products = Array.from({ length: 20 }, (_, index) => ({
-    id: String(index),
-    name: `Producto ${index}`,
-    category_name: 'General',
-  }))
-
-  const preview = getProductSearchStatus(products, '')
+  const preview = getProductSearchStatus({
+    hasOrderedProducts: true,
+    total: 20,
+    shown: 12,
+  })
   assert.equal(preview.type, 'preview')
   assert.match(preview.message, /Busca por nombre/)
+
+  const missing = getProductSearchStatus({
+    query: 'arroz',
+    hasOrderedProducts: true,
+    total: 0,
+    shown: 0,
+  })
+  assert.equal(missing.type, 'no-results')
+  assert.match(missing.message, /No encontramos productos/)
 })
