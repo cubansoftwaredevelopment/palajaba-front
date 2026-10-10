@@ -11,6 +11,7 @@ import ProfileProgressBar from '../components/seller/ProfileProgressBar'
 import SellerLocationPreview from '../components/seller/SellerLocationPreview'
 import SellerProfileAvatarUpload from '../components/seller/SellerProfileAvatarUpload'
 import SellerSection from '../components/seller/SellerSection'
+import SellerSocialLinksEditor from '../components/seller/SellerSocialLinksEditor'
 import {
   sellerAlertError,
   sellerBtnGhost,
@@ -21,7 +22,6 @@ import {
   sellerFormGrid,
   sellerFormFull,
   sellerFormActions,
-  sellerInput,
   sellerPageWrap,
   sellerStickyBar,
   sellerSubtitle,
@@ -37,6 +37,7 @@ import { getUserFacingMessage } from '../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../lib/imageUpload'
 import { dedupeDeliveryAreas } from '../lib/businessArea'
 import { getSellerToken, updateSellerProfileCache } from '../lib/sellerAuth'
+import { socialLinksError, socialLinksFromProfile, socialLinksPayload } from '../lib/socialLinks'
 
 export default function SellerCompleteProfile() {
   const navigate = useNavigate()
@@ -49,8 +50,7 @@ export default function SellerCompleteProfile() {
   const [location, setLocation] = useState(profile?.business_location ?? null)
   const [showMap, setShowMap] = useState(false)
   const [biography, setBiography] = useState(profile?.biography ?? '')
-  const [instagram, setInstagram] = useState(profile?.social_instagram ?? '')
-  const [facebook, setFacebook] = useState(profile?.social_facebook ?? '')
+  const [socialLinks, setSocialLinks] = useState(() => socialLinksFromProfile(profile))
   const [selectedCategories, setSelectedCategories] = useState(profile?.category_ids ?? [])
   const [businessProvinceId, setBusinessProvinceId] = useState(
     profile?.business_area?.province_id ?? '',
@@ -138,14 +138,18 @@ export default function SellerCompleteProfile() {
       setError('Selecciona la provincia y el municipio de tu negocio.')
       return
     }
+    const socialError = socialLinksError(socialLinks)
+    if (socialError) {
+      setError(socialError)
+      return
+    }
 
     setLoading(true)
     try {
       const token = getSellerToken()
       const payload = {
         biography: biography.trim() || null,
-        social_instagram: instagram.trim() || null,
-        social_facebook: facebook.trim() || null,
+        social_links: socialLinksPayload(socialLinks),
         category_ids: selectedCategories,
         offers_delivery: offersDelivery,
         gestores_enabled: Boolean(profile?.gestores_enabled),
@@ -267,24 +271,7 @@ export default function SellerCompleteProfile() {
           </SellerSection>
 
           <SellerSection label="Redes sociales" optional className={sellerFormFull}>
-            <div className="grid grid-cols-1 gap-2 lg:grid-cols-2 lg:gap-3">
-              <input
-                type="text"
-                value={instagram}
-                onChange={(e) => setInstagram(e.target.value)}
-                placeholder="Instagram · @tu_tienda"
-                className={sellerInput}
-                aria-label="Instagram"
-              />
-              <input
-                type="text"
-                value={facebook}
-                onChange={(e) => setFacebook(e.target.value)}
-                placeholder="Facebook · tu página"
-                className={sellerInput}
-                aria-label="Facebook"
-              />
-            </div>
+            <SellerSocialLinksEditor links={socialLinks} onChange={setSocialLinks} />
           </SellerSection>
 
           <SellerSection label="Categorías" required hint="Puedes elegir más de una." className={sellerFormFull}>

@@ -46,7 +46,7 @@ const PANELS = Object.freeze({
   [PROFILE_PANEL_IDS.social]: {
     id: PROFILE_PANEL_IDS.social,
     label: 'Redes sociales',
-    description: 'Instagram y Facebook',
+    description: 'Enlaces que verán tus clientes',
     kind: 'form',
     icon: 'social',
   },

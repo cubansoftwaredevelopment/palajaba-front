@@ -14,6 +14,7 @@ import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
 import SellerProfileMenuList from '../../components/seller/SellerProfileMenuList'
 import SellerSection from '../../components/seller/SellerSection'
+import SellerSocialLinksEditor from '../../components/seller/SellerSocialLinksEditor'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
 import {
   sellerAlertError,
@@ -25,9 +26,6 @@ import {
   sellerFocusRing,
   sellerFormActions,
   sellerHint,
-  sellerInputBare,
-  sellerInputPrefix,
-  sellerInputPrefixWrap,
   sellerLabel,
   sellerPageWrap,
   sellerSectionGap,
@@ -46,6 +44,12 @@ import {
   sameDeliveryAreas,
 } from '../../lib/businessArea'
 import { beginSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
+import {
+  socialLinksError,
+  socialLinksFromProfile,
+  socialLinksPayload,
+  socialLinksSignature,
+} from '../../lib/socialLinks'
 import {
   PROFILE_PANEL_IDS,
   closeProfilePanel,
@@ -76,27 +80,6 @@ function sameLocation(a, b) {
     a.lat === b.lat &&
     a.lng === b.lng &&
     normalizeText(a.label) === normalizeText(b.label)
-  )
-}
-
-function SocialField({ id, label, prefix, value, onChange, placeholder }) {
-  return (
-    <div>
-      <label htmlFor={id} className={sellerLabel}>
-        {label}
-      </label>
-      <div className={`mt-1.5 ${sellerInputPrefixWrap}`}>
-        {prefix && <span className={sellerInputPrefix}>{prefix}</span>}
-        <input
-          id={id}
-          type="text"
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          className={sellerInputBare}
-        />
-      </div>
-    </div>
   )
 }
 
@@ -132,8 +115,7 @@ export default function SellerProfile() {
   const [location, setLocation] = useState(profile?.business_location ?? null)
   const [showMap, setShowMap] = useState(false)
   const [biography, setBiography] = useState(profile?.biography ?? '')
-  const [instagram, setInstagram] = useState(profile?.social_instagram ?? '')
-  const [facebook, setFacebook] = useState(profile?.social_facebook ?? '')
+  const [socialLinks, setSocialLinks] = useState(() => socialLinksFromProfile(profile))
   const [selectedCategories, setSelectedCategories] = useState(profile?.category_ids ?? [])
   const [businessProvinceId, setBusinessProvinceId] = useState(
     profile?.business_area?.province_id ?? '',
@@ -240,14 +222,18 @@ export default function SellerProfile() {
       setError('Selecciona la provincia y el municipio de tu negocio.')
       return
     }
+    const socialError = socialLinksError(socialLinks)
+    if (socialError) {
+      setError(socialError)
+      return
+    }
 
     setLoading(true)
     try {
       const token = getSellerToken()
       const payload = {
         biography: biography.trim() || null,
-        social_instagram: instagram.trim() || null,
-        social_facebook: facebook.trim() || null,
+        social_links: socialLinksPayload(socialLinks),
         category_ids: selectedCategories,
         offers_delivery: offersDelivery,
         gestores_enabled: gestoresEnabled,
@@ -275,8 +261,7 @@ export default function SellerProfile() {
 
     return (
       normalizeText(biography) !== normalizeText(profile.biography) ||
-      normalizeText(instagram) !== normalizeText(profile.social_instagram) ||
-      normalizeText(facebook) !== normalizeText(profile.social_facebook) ||
+      socialLinksSignature(socialLinks) !== socialLinksSignature(socialLinksFromProfile(profile)) ||
       offersDelivery !== (profile.offers_delivery ?? false) ||
       gestoresEnabled !== Boolean(profile.gestores_enabled) ||
       !sameStringArray(selectedCategories, profile.category_ids) ||
@@ -293,8 +278,7 @@ export default function SellerProfile() {
   }, [
     profile,
     biography,
-    instagram,
-    facebook,
+    socialLinks,
     offersDelivery,
     gestoresEnabled,
     selectedCategories,
@@ -322,7 +306,11 @@ export default function SellerProfile() {
   )
 
   const identityFields = (
-    <SellerSection label="Biografía" optional>
+    <div>
+      <p className={`mb-2.5 ${sellerLabel}`}>
+        <span className="underline decoration-brand-carmelita/80 underline-offset-4">Biografía</span>
+        <span className="ml-1.5 font-normal text-brand-carmelita/70">(opcional)</span>
+      </p>
       <textarea
         value={biography}
         onChange={(e) => {
@@ -333,11 +321,12 @@ export default function SellerProfile() {
         maxLength={BIO_MAX}
         placeholder="Ej.: Panadería artesanal en el Vedado. Panes dulces y salados hechos cada mañana."
         className={sellerTextarea}
+        aria-label="Biografía"
       />
       <p className={`mt-1.5 ${sellerCharCounter}`}>
         {biography.length}/{BIO_MAX}
       </p>
-    </SellerSection>
+    </div>
   )
 
   const locationFields = (
@@ -492,31 +481,13 @@ export default function SellerProfile() {
   )
 
   const socialFields = (
-    <SellerSection optional>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <SocialField
-          id="profile-instagram"
-          label="Instagram"
-          prefix="@"
-          value={instagram}
-          onChange={(e) => {
-            setInstagram(e.target.value)
-            markDirty()
-          }}
-          placeholder="tu_tienda"
-        />
-        <SocialField
-          id="profile-facebook"
-          label="Facebook"
-          value={facebook}
-          onChange={(e) => {
-            setFacebook(e.target.value)
-            markDirty()
-          }}
-          placeholder="Nombre de tu página"
-        />
-      </div>
-    </SellerSection>
+    <SellerSocialLinksEditor
+      links={socialLinks}
+      onChange={(nextLinks) => {
+        setSocialLinks(nextLinks)
+        markDirty()
+      }}
+    />
   )
 
   function renderActivePanelBody() {

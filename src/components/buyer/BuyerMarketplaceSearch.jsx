@@ -1,9 +1,183 @@
+import { useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import StatePanel from '../ui/StatePanel'
 import LoadingState from '../ui/LoadingState'
 import DeadState from '../ui/DeadState'
 import BuyerProductCard from './BuyerProductCard'
 import BuyerBusinessCard from './BuyerBusinessCard'
 import { buyerBusinessList, buyerProductGrid, buyerSearchInput } from './buyerStyles'
+
+function BuyerCategorySelect({
+  id,
+  label,
+  value,
+  options,
+  onChange,
+  disabled = false,
+}) {
+  const listId = useId()
+  const rootRef = useRef(null)
+  const panelRef = useRef(null)
+  const triggerRef = useRef(null)
+  const [open, setOpen] = useState(false)
+  const [panelStyle, setPanelStyle] = useState(null)
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  const selectedIndex = options.findIndex((option) => option.value === value)
+  const selected = selectedIndex >= 0 ? options[selectedIndex] : options[0]
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    function updatePosition() {
+      const trigger = triggerRef.current
+      if (!trigger) return
+      const rect = trigger.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom
+      const openUp = spaceBelow < 220 && rect.top > spaceBelow
+      setPanelStyle({
+        position: 'fixed',
+        left: rect.left,
+        width: rect.width,
+        zIndex: 40,
+        ...(openUp
+          ? { bottom: window.innerHeight - rect.top + 6 }
+          : { top: rect.bottom + 6 }),
+      })
+    }
+
+    updatePosition()
+    window.addEventListener('resize', updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    return () => {
+      window.removeEventListener('resize', updatePosition)
+      window.removeEventListener('scroll', updatePosition, true)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    function handlePointerDown(event) {
+      const target = event.target
+      if (rootRef.current?.contains(target) || panelRef.current?.contains(target)) return
+      setOpen(false)
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') setOpen(false)
+    }
+
+    document.addEventListener('mousedown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open])
+
+  function openList() {
+    if (disabled) return
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0)
+    setOpen(true)
+  }
+
+  function choose(option) {
+    onChange(option.value)
+    setOpen(false)
+    triggerRef.current?.focus()
+  }
+
+  function handleTriggerKeyDown(event) {
+    if (disabled) return
+    if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      if (!open) openList()
+      else if (event.key === 'ArrowDown') {
+        setActiveIndex((current) => Math.min(options.length - 1, current + 1))
+      } else if (options[activeIndex]) {
+        choose(options[activeIndex])
+      }
+      return
+    }
+    if (!open) return
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setActiveIndex((current) => Math.max(0, current - 1))
+    }
+  }
+
+  return (
+    <div ref={rootRef} className="relative min-w-0">
+      <button
+        ref={triggerRef}
+        id={id}
+        type="button"
+        disabled={disabled}
+        onClick={() => (open ? setOpen(false) : openList())}
+        onKeyDown={handleTriggerKeyDown}
+        className={`${buyerSearchInput} flex items-center justify-between gap-2 text-left disabled:cursor-not-allowed disabled:opacity-60`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-label={label}
+      >
+        <span className="truncate font-semibold text-brand-green">{selected?.label}</span>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className={`shrink-0 text-brand-carmelita/70 transition-transform ${open ? 'rotate-180' : ''}`}
+          aria-hidden
+        >
+          <path
+            fillRule="evenodd"
+            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
+
+      {open && panelStyle
+        ? createPortal(
+            <ul
+              ref={panelRef}
+              id={listId}
+              role="listbox"
+              aria-label={label}
+              style={panelStyle}
+              className="max-h-64 overflow-y-auto rounded-2xl border border-brand-green/15 bg-brand-white py-1 shadow-[0_12px_32px_rgba(89,128,44,0.16)]"
+            >
+              {options.map((option, index) => {
+                const active = index === activeIndex
+                const isSelected = option.value === value
+                return (
+                  <li key={option.value || 'all'} role="presentation">
+                    <button
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onMouseEnter={() => setActiveIndex(index)}
+                      onClick={() => choose(option)}
+                      className={`flex w-full px-4 py-2.5 text-left text-sm text-brand-green touch-manipulation ${
+                        active || isSelected
+                          ? 'bg-brand-green/10 font-semibold'
+                          : 'active:bg-brand-yellow/15 lg:hover:bg-brand-green/[0.04]'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  </li>
+                )
+              })}
+            </ul>,
+            document.body,
+          )
+        : null}
+    </div>
+  )
+}
 
 export default function BuyerMarketplaceSearch({
   categories,
@@ -45,23 +219,17 @@ export default function BuyerMarketplaceSearch({
         />
       </div>
 
-      <label className="sr-only" htmlFor="buyer-marketplace-category">
-        {categoryLabel}
-      </label>
-      <select
+      <BuyerCategorySelect
         id="buyer-marketplace-category"
+        label={categoryLabel}
         value={categoryId}
-        onChange={(event) => onCategoryChange(event.target.value)}
         disabled={categoriesLoading}
-        className={buyerSearchInput}
-      >
-        <option value="">{allCategoriesLabel}</option>
-        {categories.map((category) => (
-          <option key={category.id} value={category.id}>
-            {category.name}
-          </option>
-        ))}
-      </select>
+        onChange={onCategoryChange}
+        options={[
+          { value: '', label: allCategoriesLabel },
+          ...categories.map((category) => ({ value: category.id, label: category.name })),
+        ]}
+      />
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { resolveMediaUrl } from '../../lib/media'
 import { buildWhatsAppContactUrl } from '../../lib/whatsappOrder'
 import BuyerModalPortal from './BuyerModalPortal'
 import BuyerStoreBio from './BuyerStoreBio'
+import { socialLinkLabel, socialLinkUrl, socialLinksFromProfile } from '../../lib/socialLinks'
 import {
   buyerStoreMapModal,
   buyerStoreMapModalBody,
@@ -18,20 +19,9 @@ import {
   buyerStorePageMetaLabel,
   buyerStorePageMetaValue,
   buyerStorePageName,
-  buyerStorePageSecondaryBtn,
   buyerStorePageSocialLink,
   buyerStorePageWhatsAppBtn,
 } from './buyerStyles'
-
-function socialUrl(value, platform) {
-  const trimmed = value?.trim()
-  if (!trimmed) return null
-  if (/^https?:\/\//i.test(trimmed)) return trimmed
-
-  const handle = trimmed.replace(/^@/, '')
-  if (platform === 'instagram') return `https://instagram.com/${handle}`
-  return `https://facebook.com/${handle}`
-}
 
 function formatArea(area) {
   if (!area) return null
@@ -93,16 +83,32 @@ function FacebookIcon() {
   )
 }
 
+function LinkIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="M10 13a5 5 0 0 0 7.07.07l1.41-1.41a5 5 0 0 0-7.07-7.07L10 5" />
+      <path d="M14 11a5 5 0 0 0-7.07-.07L5.5 12.34a5 5 0 0 0 7.07 7.07L14 19" />
+    </svg>
+  )
+}
+
+function SocialIcon({ platform }) {
+  if (platform === 'instagram') return <InstagramIcon />
+  if (platform === 'facebook') return <FacebookIcon />
+  return <LinkIcon />
+}
+
 export default function BuyerStoreProfileHeader({ catalog }) {
   const store = catalog.store
   const photoSrc = resolveMediaUrl(store.profile_photo_url)
   const initials = store.store_name?.trim().slice(0, 2).toUpperCase() || '?'
   const businessArea = formatArea(catalog.business_area)
-  const instagram = socialUrl(catalog.social_instagram, 'instagram')
-  const facebook = socialUrl(catalog.social_facebook, 'facebook')
+  const socialLinks = socialLinksFromProfile(catalog)
+    .map((link) => ({ ...link, href: socialLinkUrl(link), name: socialLinkLabel(link) }))
+    .filter((link) => link.href)
   const whatsapp = buildWhatsAppContactUrl(store.phone)
   const hasMap = Boolean(catalog.business_location)
-  const hasActions = Boolean(whatsapp || hasMap || instagram || facebook)
+  const hasActions = Boolean(whatsapp || hasMap || socialLinks.length)
   const [mapOpen, setMapOpen] = useState(false)
 
   useEffect(() => {
@@ -181,30 +187,19 @@ export default function BuyerStoreProfileHeader({ catalog }) {
                 <span className="hidden sm:inline">Ver mapa</span>
               </button>
             ) : null}
-            {instagram ? (
+            {socialLinks.map((link) => (
               <a
-                href={instagram}
+                key={link.id}
+                href={link.href}
                 target="_blank"
                 rel="noreferrer"
-                className={buyerStorePageSocialLink}
-                aria-label="Instagram"
+                className={`${buyerStorePageSocialLink} !w-auto gap-1.5 px-3.5 text-xs font-semibold`}
+                aria-label={link.name}
               >
-                <InstagramIcon />
-                <span className="hidden sm:inline">Instagram</span>
+                <SocialIcon platform={link.platform} />
+                <span>{link.name}</span>
               </a>
-            ) : null}
-            {facebook ? (
-              <a
-                href={facebook}
-                target="_blank"
-                rel="noreferrer"
-                className={buyerStorePageSecondaryBtn}
-                aria-label="Facebook"
-              >
-                <FacebookIcon />
-                <span className="hidden sm:inline">Facebook</span>
-              </a>
-            ) : null}
+            ))}
           </div>
         ) : null}
       </section>
