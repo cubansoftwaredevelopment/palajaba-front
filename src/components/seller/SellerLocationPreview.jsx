@@ -6,6 +6,7 @@ import { addSellerMapTiles, sellerMapMarkerIcon, SELLER_MAP_LOCATION_ZOOM, SELLE
 export default function SellerLocationPreview({
   location,
   interactive = false,
+  viewOnly = false,
   mapClassName = '',
 }) {
   const mapRef = useRef(null)
@@ -19,47 +20,54 @@ export default function SellerLocationPreview({
       mapInstanceRef.current = null
     }
 
+    const canExplore = interactive || viewOnly
     const center = [location.lat, location.lng]
     const map = L.map(mapRef.current, {
-      zoomControl: interactive,
+      zoomControl: canExplore,
       attributionControl: interactive,
-      scrollWheelZoom: interactive,
-      doubleClickZoom: interactive,
-      dragging: interactive,
-      touchZoom: interactive,
+      scrollWheelZoom: canExplore,
+      doubleClickZoom: canExplore,
+      dragging: canExplore,
+      touchZoom: canExplore,
       boxZoom: interactive,
-      keyboard: interactive,
+      keyboard: canExplore,
     }).setView(
       center,
-      interactive ? SELLER_MAP_LOCATION_ZOOM : SELLER_MAP_PREVIEW_ZOOM,
+      canExplore ? SELLER_MAP_LOCATION_ZOOM : SELLER_MAP_PREVIEW_ZOOM,
     )
 
     addSellerMapTiles(map)
     L.marker(center, { icon: sellerMapMarkerIcon }).addTo(map)
 
     mapInstanceRef.current = map
-    const timer = setTimeout(() => map.invalidateSize(), interactive ? 150 : 80)
+    const timer = setTimeout(() => map.invalidateSize(), canExplore ? 150 : 80)
+    const lateTimer = setTimeout(() => map.invalidateSize(), 320)
+    const observer = new ResizeObserver(() => map.invalidateSize())
+    observer.observe(mapRef.current)
 
     return () => {
+      observer.disconnect()
       clearTimeout(timer)
+      clearTimeout(lateTimer)
       map.remove()
       mapInstanceRef.current = null
     }
-  }, [interactive, location?.lat, location?.lng])
+  }, [interactive, viewOnly, location?.lat, location?.lng])
 
   if (!location) return null
 
-  const mapHeightClass = interactive
+  const fills = interactive || viewOnly
+  const mapHeightClass = fills
     ? mapClassName || 'h-full min-h-[52dvh]'
     : mapClassName || 'h-44 w-full sm:h-52'
 
   return (
     <div
       className={`seller-location-preview relative isolate z-0 overflow-hidden rounded-2xl border border-brand-green/12 bg-brand-green/[0.03] shadow-[0_4px_20px_rgba(89,128,44,0.1)] ${
-        interactive ? 'seller-location-preview--interactive flex min-h-0 flex-1 flex-col' : ''
+        fills ? 'seller-location-preview--interactive flex h-full min-h-0 flex-1 flex-col' : ''
       }`}
     >
-      <div className={`relative overflow-hidden ${interactive ? 'min-h-0 flex-1' : ''}`}>
+      <div className={`relative overflow-hidden ${fills ? 'min-h-0 flex-1' : ''}`}>
         <div
           ref={mapRef}
           className={`relative z-0 w-full ${mapHeightClass}`}
@@ -87,7 +95,11 @@ export default function SellerLocationPreview({
         <p className="min-w-0 flex-1 truncate text-sm font-medium text-brand-green">
           {location.label || 'Ubicación marcada en el mapa'}
         </p>
-        {interactive ? (
+        {viewOnly ? (
+          <span className="shrink-0 text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70">
+            Solo lectura
+          </span>
+        ) : interactive ? (
           <span className="hidden shrink-0 text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70 sm:inline">
             Arrastra · Zoom
           </span>

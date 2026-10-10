@@ -5,6 +5,7 @@ import { convertBetweenCurrencies } from '../../lib/displayPrice'
 import { loadExchangeRates, getCupPerUnit } from '../../lib/exchangeRates'
 import { formatPrice, parseCupInput } from '../../lib/money'
 import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
+import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
 import SellerSelect from './SellerSelect'
 import {
@@ -85,6 +86,7 @@ export default function SellerOrderDetailModal({
   const [paymentCurrency, setPaymentCurrency] = useState(order.payment_currency ?? '')
   const [localError, setLocalError] = useState('')
   const [confirmCancel, setConfirmCancel] = useState(false)
+  const [mapOpen, setMapOpen] = useState(false)
   const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
 
   useEffect(() => {
@@ -100,11 +102,17 @@ export default function SellerOrderDetailModal({
     setPaymentCurrency(order.payment_currency ?? '')
     setLocalError('')
     setConfirmCancel(false)
+    setMapOpen(false)
   }, [order])
 
   useEffect(() => {
     function onKeyDown(event) {
-      if (event.key === 'Escape') onClose()
+      if (event.key !== 'Escape') return
+      if (mapOpen) {
+        setMapOpen(false)
+        return
+      }
+      onClose()
     }
 
     document.addEventListener('keydown', onKeyDown)
@@ -113,7 +121,7 @@ export default function SellerOrderDetailModal({
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = ''
     }
-  }, [onClose])
+  }, [onClose, mapOpen])
 
   const isPending = order.status === 'pending_confirmation'
   const canEditItems = isPending
@@ -406,16 +414,24 @@ export default function SellerOrderDetailModal({
                   {order.delivery.phone_secondary ? `, ${order.delivery.phone_secondary}` : ''}
                 </div>
                 {deliveryMapUrl ? (
-                  <div>
-                    <span className="font-semibold text-brand-green">Ubicación:</span>{' '}
-                    <a
-                      href={deliveryMapUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-semibold text-brand-green underline-offset-2 active:opacity-80 lg:hover:underline"
-                    >
-                      Ver en OpenStreetMap
-                    </a>
+                  <div className="pt-2">
+                    <p className="mb-1.5 font-semibold text-brand-green">Ubicación del pedido</p>
+                    <div className="relative">
+                      <SellerLocationPreview
+                        location={{
+                          lat: Number(order.delivery.latitude),
+                          lng: Number(order.delivery.longitude),
+                          label: 'Ubicación del pedido',
+                        }}
+                        mapClassName="h-48 w-full"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMapOpen(true)}
+                        className="absolute inset-0 z-20 rounded-2xl"
+                        aria-label="Abrir mapa en pantalla completa"
+                      />
+                    </div>
                   </div>
                 ) : null}
                 {order.delivery.notes ? (
@@ -470,14 +486,12 @@ export default function SellerOrderDetailModal({
             </p>
           ) : null}
 
-          <div
-            className={`mt-4 grid grid-cols-1 gap-2 ${order.delivery_requested ? 'sm:grid-cols-2' : ''}`}
-          >
+          <div className="mt-4 flex gap-2">
             <button
               type="button"
               onClick={() => handleDownload('store')}
               disabled={Boolean(downloading) || saving}
-              className={sellerBtnSecondary}
+              className={`${sellerBtnSecondary} min-w-0 flex-1 px-3 text-center leading-tight`}
             >
               {downloading === 'store' ? 'Generando…' : 'Factura tienda'}
             </button>
@@ -486,7 +500,7 @@ export default function SellerOrderDetailModal({
                 type="button"
                 onClick={() => handleDownload('transporter')}
                 disabled={Boolean(downloading) || saving}
-                className={sellerBtnSecondary}
+                className={`${sellerBtnSecondary} min-w-0 flex-1 px-3 text-center leading-tight`}
               >
                 {downloading === 'transporter' ? 'Generando…' : 'Hoja transportista'}
               </button>
@@ -533,29 +547,39 @@ export default function SellerOrderDetailModal({
           ) : null}
         </div>
 
-        <div className="shrink-0 flex flex-col gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
+        <div className="shrink-0 flex gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={cancelling}
+            className={`${sellerBtnSecondary} min-w-0 flex-1 px-3 text-center leading-tight`}
+          >
+            Cerrar
+          </button>
           {isPending && hasPendingChanges ? (
             <button
               type="button"
               onClick={handleSaveChanges}
               disabled={saving}
-              className={sellerBtnSecondary}
+              className={`${sellerBtnSecondary} min-w-0 flex-1 px-3 text-center leading-tight`}
             >
               {saving ? 'Guardando…' : 'Guardar cambios'}
             </button>
           ) : null}
           {isPending ? (
-            <button type="button" onClick={handleComplete} disabled={saving || cancelling} className={sellerBtnPrimary}>
+            <button
+              type="button"
+              onClick={handleComplete}
+              disabled={saving || cancelling}
+              className={`${sellerBtnPrimary} min-w-0 flex-1 px-3 text-center leading-tight`}
+            >
               {saving ? 'Guardando…' : 'Marcar realizada'}
             </button>
           ) : (
-            <span className={`flex items-center justify-center rounded-xl px-3 py-2.5 text-center text-xs font-semibold ${sellerAlertSuccess}`}>
+            <span className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-center text-xs font-semibold leading-tight ${sellerAlertSuccess}`}>
               Pedido cerrado
             </span>
           )}
-          <button type="button" onClick={onClose} disabled={cancelling} className={sellerBtnSecondary}>
-            Cerrar
-          </button>
         </div>
 
         {confirmCancel ? (
@@ -617,6 +641,36 @@ export default function SellerOrderDetailModal({
         ) : null}
         </div>
       </div>
+      {mapOpen && deliveryMapUrl ? (
+        <div
+          className="fixed inset-0 z-[210] flex flex-col bg-brand-white"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Ubicación del pedido"
+        >
+          <div className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-4 py-3 pt-[max(0.75rem,var(--safe-top))]">
+            <p className="font-display text-base font-bold text-brand-green">Ubicación del pedido</p>
+            <button
+              type="button"
+              onClick={() => setMapOpen(false)}
+              className={`${sellerBtnSecondary} !w-auto px-4`}
+            >
+              Cerrar
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col p-3 pb-[max(0.75rem,var(--safe-bottom))]">
+            <SellerLocationPreview
+              viewOnly
+              location={{
+                lat: Number(order.delivery.latitude),
+                lng: Number(order.delivery.longitude),
+                label: 'Ubicación del pedido',
+              }}
+              mapClassName="h-full min-h-0 w-full"
+            />
+          </div>
+        </div>
+      ) : null}
     </SellerModalPortal>
   )
 }

@@ -1,3 +1,6 @@
+import { Capacitor } from '@capacitor/core'
+import { Directory, Filesystem } from '@capacitor/filesystem'
+import { Share } from '@capacitor/share'
 import { isNativeAppShell } from './nativeApp'
 
 function readBlobAsBase64(blob) {
@@ -17,6 +20,40 @@ function readBlobAsBase64(blob) {
   })
 }
 
+function safeFileName(filename) {
+  const cleaned = String(filename || 'documento.pdf').replace(/[^\w.\-]+/g, '_')
+  return cleaned.toLowerCase().endsWith('.pdf') ? cleaned : `${cleaned}.pdf`
+}
+
+function isShareCancel(error) {
+  const message = String(error?.message || error || '').toLowerCase()
+  return message.includes('cancel') || message.includes('abort')
+}
+
+async function downloadBlobOnCapacitor(blob, filename) {
+  const path = safeFileName(filename)
+  const data = await readBlobAsBase64(blob)
+  await Filesystem.writeFile({
+    path,
+    data,
+    directory: Directory.Cache,
+  })
+  const { uri } = await Filesystem.getUri({
+    path,
+    directory: Directory.Cache,
+  })
+  try {
+    await Share.share({
+      title: filename,
+      files: [uri],
+      dialogTitle: 'Abrir o guardar',
+    })
+  } catch (error) {
+    if (isShareCancel(error)) return
+    throw error
+  }
+}
+
 export async function downloadBlob(blob, filename, mimeType = blob.type || 'application/octet-stream') {
   if (isNativeAppShell()) {
     const base64 = await readBlobAsBase64(blob)
@@ -31,6 +68,11 @@ export async function downloadBlob(blob, filename, mimeType = blob.type || 'appl
     return
   }
 
+  if (Capacitor.isNativePlatform()) {
+    await downloadBlobOnCapacitor(blob, filename)
+    return
+  }
+
   const url = URL.createObjectURL(blob)
   try {
     const link = document.createElement('a')
@@ -41,6 +83,6 @@ export async function downloadBlob(blob, filename, mimeType = blob.type || 'appl
     link.click()
     document.body.removeChild(link)
   } finally {
-    URL.revokeObjectURL(url)
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500)
   }
 }

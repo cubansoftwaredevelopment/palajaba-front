@@ -39,12 +39,9 @@ export function saveBuyerDeliveryDefaults(data) {
   )
 }
 
-export function validateDeliveryForm(form) {
+export function validateDeliveryContact(form) {
   const recipientName = form.recipient_name?.trim()
   if (!recipientName) return 'Indica quién recibirá el pedido.'
-
-  const address = form.address?.trim()
-  if (!address) return 'Indica la dirección de entrega.'
 
   const phoneDigits = String(form.phone_primary ?? '').replace(/\D/g, '')
   if (phoneDigits.length !== 8) return 'Ingresa un teléfono de contacto válido (8 dígitos).'
@@ -55,6 +52,16 @@ export function validateDeliveryForm(form) {
   }
 
   return null
+}
+
+export function validateDeliveryAddress(form) {
+  const address = form.address?.trim()
+  if (!address) return 'Indica la dirección de entrega.'
+  return null
+}
+
+export function validateDeliveryForm(form) {
+  return validateDeliveryContact(form) || validateDeliveryAddress(form)
 }
 
 export function validatePickupForm(form) {

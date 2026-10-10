@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import PhoneField from '../auth/PhoneField'
 import { alertErrorClass } from '../auth/formStyles'
 import {
@@ -16,6 +16,7 @@ import {
   buyerDeliveryOverlay,
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
+import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 
 function WhatsAppIcon() {
   return (
@@ -32,6 +33,12 @@ export default function BuyerPickupCheckoutModal({
   onConfirm,
 }) {
   const titleId = useId()
+  const open = Boolean(checkout)
+  const shownCheckoutRef = useRef(checkout)
+  if (checkout) shownCheckoutRef.current = checkout
+  const shownCheckout = checkout ?? shownCheckoutRef.current
+  const { present, closing } = useOrderModalPresence(open)
+  const motionClass = orderModalMotionClass(closing)
   const [form, setForm] = useState(() => {
     const defaults = getBuyerDeliveryDefaults()
     return {
@@ -59,7 +66,7 @@ export default function BuyerPickupCheckoutModal({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [checkout, onClose])
 
-  if (!checkout) return null
+  if (!present || !shownCheckout) return null
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -95,18 +102,18 @@ export default function BuyerPickupCheckoutModal({
     <>
       <button
         type="button"
-        className={buyerDeliveryOverlay}
+        className={`${buyerDeliveryOverlay} ${motionClass}`}
         aria-label="Cerrar formulario de recogida"
         onClick={onClose}
       />
 
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={buyerDeliveryModal}>
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} ${motionClass}`}>
         <div className={buyerDeliveryModalHeader}>
           <h2 id={titleId} className="font-display text-lg font-bold text-brand-green">
             Recoger en la tienda
           </h2>
           <p className="mt-1 text-xs font-medium text-brand-carmelita">
-            {checkout.storeName} · la tienda sabrá quién va a recoger
+            {shownCheckout.storeName} · la tienda sabrá quién va a recoger
           </p>
         </div>
 

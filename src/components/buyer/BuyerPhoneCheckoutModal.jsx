@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import {
   buyerDeliveryModal,
   buyerDeliveryModalBody,
@@ -7,6 +7,7 @@ import {
   buyerDeliveryOverlay,
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
+import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 
 export default function BuyerPhoneCheckoutModal({
   picker,
@@ -15,7 +16,13 @@ export default function BuyerPhoneCheckoutModal({
   onConfirm,
 }) {
   const titleId = useId()
-  const phones = picker?.phones ?? []
+  const open = Boolean(picker)
+  const shownPickerRef = useRef(picker)
+  if (picker) shownPickerRef.current = picker
+  const shownPicker = picker ?? shownPickerRef.current
+  const { present, closing } = useOrderModalPresence(open)
+  const motionClass = orderModalMotionClass(closing)
+  const phones = shownPicker?.phones ?? []
   const [selectedKey, setSelectedKey] = useState(() => phones[0]?.key ?? '')
 
   useEffect(() => {
@@ -31,7 +38,7 @@ export default function BuyerPhoneCheckoutModal({
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [picker, onClose])
 
-  if (!picker) return null
+  if (!present || !shownPicker) return null
 
   const selected = phones.find((item) => item.key === selectedKey) ?? phones[0]
 
@@ -41,7 +48,7 @@ export default function BuyerPhoneCheckoutModal({
   }
 
   return (
-    <div className={buyerDeliveryOverlay} role="presentation" onClick={onClose}>
+    <div className={`${buyerDeliveryOverlay} ${motionClass}`} role="presentation" onClick={onClose}>
       <div
         className={buyerDeliveryModal}
         role="dialog"

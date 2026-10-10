@@ -10,6 +10,9 @@ import { test } from 'node:test'
 import {
   isPickupFulfillment,
   toApiDelivery,
+  validateDeliveryAddress,
+  validateDeliveryContact,
+  validateDeliveryForm,
   validatePickupForm,
 } from '../../src/lib/buyerDelivery.js'
 import { buildOpenStreetMapUrl } from '../../src/lib/openStreetMap.js'
@@ -38,6 +41,13 @@ test('toApiDelivery omite recogida para no marcar domicilio en el backend', () =
   }
   assert.equal(isPickupFulfillment(delivery), false)
   assert.deepEqual(toApiDelivery(delivery), delivery)
+})
+
+test('el domicilio valida contacto y dirección por separado', () => {
+  const contact = { recipient_name: 'Ana', phone_primary: '51234567', phone_secondary: '' }
+  assert.equal(validateDeliveryContact(contact), null)
+  assert.equal(validateDeliveryAddress({ address: '' }), 'Indica la dirección de entrega.')
+  assert.equal(validateDeliveryForm({ ...contact, address: 'Calle 1' }), null)
 })
 
 test('buildOpenStreetMapUrl arma el punto y rechaza coordenadas inválidas', () => {
