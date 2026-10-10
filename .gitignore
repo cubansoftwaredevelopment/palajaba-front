@@ -10,7 +10,12 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+apk
 *.local
+
+# Credenciales de Firebase de la app. No subir.
+android/app/google-services.json
+ios/App/App/GoogleService-Info.plist
 
 # Variables de entorno y secretos (NUNCA subir a GitHub)
 .env
@@ -29,3 +34,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+android/
+ios/

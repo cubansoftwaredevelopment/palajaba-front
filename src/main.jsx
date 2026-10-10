@@ -4,6 +4,7 @@ import '@fontsource/libre-baskerville/latin-400.css'
 import '@fontsource/libre-baskerville/latin-700.css'
 import './index.css'
 import App from './App.jsx'
+import { LiveLocationProvider } from './live/context/LiveLocationContext.jsx'
 
 const rootEl = document.getElementById('root')
 if (!rootEl) {
@@ -16,6 +17,8 @@ if (rootEl.querySelector('.seo-prerender, .seo-store-page')) {
 
 createRoot(rootEl).render(
   <StrictMode>
-    <App />
+    <LiveLocationProvider>
+      <App />
+    </LiveLocationProvider>
   </StrictMode>,
 )

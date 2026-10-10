@@ -15,6 +15,8 @@ import {
 import { clearSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
 import { getSellerDefaultPath, getSellerNavItems, sellerHasGestores } from '../../lib/planAccess'
 import { requestSellerOrdersRefresh } from '../../lib/sellerOrdersRefresh'
+import { SELLER_LIVE_POLL_MS } from '../../live/constants'
+import { connectSellerEvents, startSellerPush, stopSellerPush } from '../../live/utils'
 import { isSessionError, resolveUserFacingError } from '../../lib/userFacingError'
 
 export default function SellerLayout() {
@@ -40,7 +42,8 @@ export default function SellerLayout() {
     return data
   }, [])
 
-  function confirmLogout() {
+  async function confirmLogout() {
+    await stopSellerPush()
     clearSellerMarketplaceVisit()
     clearSellerSession()
     setShowLogoutConfirm(false)
@@ -165,12 +168,32 @@ export default function SellerLayout() {
       }
     }
 
-    const intervalId = window.setInterval(refreshUnreadCount, 45_000)
+    const intervalId = window.setInterval(refreshUnreadCount, SELLER_LIVE_POLL_MS)
     document.addEventListener('visibilitychange', handleVisible)
+
+    const token = getSellerToken()
+    if (token) startSellerPush(token)
+    const stopEvents = token
+      ? connectSellerEvents(token, (notification) => {
+          setNotifications((current) => {
+            if (current.some((item) => item.id === notification.id)) return current
+            return [notification, ...current]
+          })
+          if (!notification.read_at) {
+            setNotificationCount((count) => {
+              const next = count + 1
+              previousNotificationCountRef.current = next
+              return next
+            })
+          }
+          if (notification.kind === 'new_order') requestSellerOrdersRefresh()
+        })
+      : () => {}
 
     return () => {
       window.clearInterval(intervalId)
       document.removeEventListener('visibilitychange', handleVisible)
+      stopEvents()
     }
   }, [profile?.profile_completed])
 

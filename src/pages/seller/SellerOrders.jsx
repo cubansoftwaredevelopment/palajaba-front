@@ -17,6 +17,7 @@ import {
   updateSellerOrder,
 } from '../../lib/api'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { SELLER_LIVE_POLL_MS } from '../../live/constants'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
@@ -91,7 +92,7 @@ export default function SellerOrders() {
     }
 
     window.addEventListener(SELLER_ORDERS_REFRESH_EVENT, refreshSilently)
-    const intervalId = window.setInterval(refreshSilently, 45_000)
+    const intervalId = window.setInterval(refreshSilently, SELLER_LIVE_POLL_MS)
     document.addEventListener('visibilitychange', handleVisible)
 
     return () => {
