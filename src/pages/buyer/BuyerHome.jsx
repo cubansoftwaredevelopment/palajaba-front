@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import BuyerAdditionalMunicipalitiesFilter from '../../components/buyer/BuyerAdditionalMunicipalitiesFilter'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
@@ -23,9 +23,10 @@ import {
 import { getBuyerLocation, getAdditionalMunicipalities, hasCompleteBuyerLocation, setAdditionalMunicipalities, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
 import { recordMarketplaceVisit } from '../../lib/marketplaceVisit'
 import { resolveUserFacingError } from '../../lib/userFacingError'
-import { MARKETPLACE_LABEL } from '../../constants/branding'
+import { LOADING_MASCOT, MARKETPLACE_LABEL } from '../../constants/branding'
 
 const PAGE_SIZE = 20
+const SECTION_PAGE_SIZE = 4
 const SEARCH_DEBOUNCE_MS = 300
 
 export default function BuyerHome() {
@@ -40,7 +41,10 @@ function BuyerHomeContent() {
   const location = getBuyerLocation()
   const [feed, setFeed] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState(null)
+  const loadingMoreRef = useRef(false)
+  const sentinelRef = useRef(null)
   const [categories, setCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -81,9 +85,15 @@ function BuyerHomeContent() {
 
   const searchActive = useMarketplaceSearchActive(debouncedQuery, searchCategoryId)
 
-  const loadFeed = useCallback(async () => {
-    setLoading(true)
-    setLoadError(null)
+  const loadFeed = useCallback(async ({ offset = 0, append = false } = {}) => {
+    if (append) {
+      if (loadingMoreRef.current) return
+      loadingMoreRef.current = true
+      setLoadingMore(true)
+    } else {
+      setLoading(true)
+      setLoadError(null)
+    }
 
     try {
       const data = await fetchMarketplaceFeed({
@@ -91,18 +101,37 @@ function BuyerHomeContent() {
         municipalityId: location.municipality.id,
         additionalMunicipalityIds,
         limitPerCategory: PAGE_SIZE,
+        limit: SECTION_PAGE_SIZE,
+        offset,
       })
-      setFeed(data)
+      setFeed((current) => {
+        if (!append || !current) return data
+        const seen = new Set(current.sections.map((section) => section.category_id))
+        return {
+          ...data,
+          sections: [
+            ...current.sections,
+            ...data.sections.filter((section) => !seen.has(section.category_id)),
+          ],
+        }
+      })
     } catch (err) {
-      setLoadError(
-        resolveUserFacingError(err, {
-          contextTitle: `No se pudo cargar el ${MARKETPLACE_LABEL.toLowerCase()}`,
-          fallbackMessage: 'No pudimos mostrar los productos de tu zona. Inténtalo de nuevo.',
-        }),
-      )
-      setFeed(null)
+      if (!append) {
+        setLoadError(
+          resolveUserFacingError(err, {
+            contextTitle: `No se pudo cargar el ${MARKETPLACE_LABEL.toLowerCase()}`,
+            fallbackMessage: 'No pudimos mostrar los productos de tu zona. Inténtalo de nuevo.',
+          }),
+        )
+        setFeed(null)
+      }
     } finally {
-      setLoading(false)
+      if (append) {
+        loadingMoreRef.current = false
+        setLoadingMore(false)
+      } else {
+        setLoading(false)
+      }
     }
   }, [additionalMunicipalityIds, location.municipality.id, location.province.id])
 
@@ -207,6 +236,24 @@ function BuyerHomeContent() {
 
   const sections = feed?.sections ?? []
   const hasProducts = (feed?.total_products ?? 0) > 0
+  const hasMoreSections = Boolean(feed?.has_more)
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    if (!sentinel || !hasMoreSections || loading || loadingMore || searchActive) return undefined
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadFeed({ offset: sections.length, append: true })
+        }
+      },
+      { rootMargin: '240px', threshold: 0.1 },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMoreSections, loadFeed, loading, loadingMore, searchActive, sections.length])
 
   return (
     <BuyerShell
@@ -315,6 +362,24 @@ function BuyerHomeContent() {
               }
             />
           ))}
+          {hasMoreSections ? (
+            <div
+              ref={sentinelRef}
+              className="flex min-h-16 items-center justify-center py-4"
+              aria-hidden={!loadingMore}
+            >
+              {loadingMore ? (
+                <img
+                  src={LOADING_MASCOT.src}
+                  alt=""
+                  className="h-14 w-14 animate-levitate object-contain sm:h-10 sm:w-10"
+                  width={56}
+                  height={56}
+                  decoding="async"
+                />
+              ) : null}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </BuyerShell>

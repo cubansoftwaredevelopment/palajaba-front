@@ -840,11 +840,15 @@ export function fetchMarketplaceFeed({
   municipalityId,
   additionalMunicipalityIds,
   limitPerCategory = 20,
+  limit = 4,
+  offset = 0,
 }) {
   const params = new URLSearchParams({
     province_id: provinceId,
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
+    limit: String(limit),
+    offset: String(offset),
   });
   appendAdditionalMunicipalities(params, additionalMunicipalityIds);
   return request(`/api/marketplace/feed?${params}`);
