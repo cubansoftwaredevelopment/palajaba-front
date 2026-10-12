@@ -42,13 +42,16 @@ function withChange(points) {
     const current = bucketOf(point)
     const previous = index === 0 ? null : bucketOf(points[index - 1])
     const { change, direction, based } = percentChange(current, previous)
+    const open = previous == null ? current : previous
+    const close = current
     return {
       ...point,
-      open: 0,
-      close: change,
-      high: Math.max(0, change),
-      low: Math.min(0, change),
+      open,
+      close,
+      high: Math.max(open, close),
+      low: Math.min(open, close),
       bucket: current,
+      change,
       direction,
       based,
     }
@@ -103,7 +106,7 @@ function CandleShape(props) {
 function changeCaption(point) {
   if (!point.based && point.direction === 'flat') return 'Sin vela anterior'
   if (!point.based) return 'La vela anterior fue 0'
-  return `Cambio: ${formatPercent(point.close ?? 0)}`
+  return `Cambio: ${formatPercent(point.change ?? 0)}`
 }
 
 function CandleTooltip({ active, payload, formatValue, level, change }) {
@@ -149,10 +152,11 @@ export default function AdminCandleChart({ points, formatValue, formatTick, leve
   }))
   if (!rows.length) return null
 
-  const changes = rows.map((point) => Number(point.close ?? 0))
-  const yMin = Math.min(0, ...changes)
-  const yMax = Math.max(0, ...changes)
-  const yPad = Math.max((yMax - yMin) * 0.12, 8)
+  const lows = rows.map((point) => Number(point.low ?? 0))
+  const highs = rows.map((point) => Number(point.high ?? 0))
+  const yMin = Math.min(...lows)
+  const yMax = Math.max(...highs)
+  const yPad = Math.max((yMax - yMin) * 0.15, Math.abs(yMax) * 0.04, 1)
 
   const times = rows.map((point) => point.time)
   const min = Math.min(...times)
@@ -177,7 +181,7 @@ export default function AdminCandleChart({ points, formatValue, formatTick, leve
             minTickGap={28}
           />
           <YAxis
-            tickFormatter={change ? formatPercent : formatTick}
+            tickFormatter={formatTick}
             domain={change ? [yMin - yPad, yMax + yPad] : undefined}
             tick={{ fill: '#a1a1aa', fontSize: 11 }}
             axisLine={false}

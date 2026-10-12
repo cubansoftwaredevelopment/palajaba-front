@@ -3,30 +3,102 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { addSellerMapTiles, SELLER_MAP_DEFAULT_CENTER, SELLER_MAP_DEFAULT_ZOOM } from '../../lib/sellerMap'
 
-function pinIcon(color) {
-  const html = `
-    <svg width="32" height="42" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block">
-      <path d="M18 0C10.82 0 5 5.82 5 13c0 9.75 13 35 13 35s13-25.25 13-35C31 5.82 25.18 0 18 0z" fill="${color}" stroke="#fdfbf2" stroke-width="2"/>
-      <circle cx="18" cy="13" r="5.5" fill="#fdfbf2"/>
-    </svg>
-  `
-  return L.divIcon({
-    className: 'admin-device-pin',
-    html,
-    iconSize: [32, 42],
-    iconAnchor: [16, 42],
-    popupAnchor: [0, -36],
-  })
+const BUYER_LOGO = '/images/states/loading.png'
+
+const STORE_SVG = `
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M4 10 6 4h12l2 6" stroke="#59802c" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M4 10h16v9H4z" stroke="#59802c" stroke-width="1.8"/>
+    <path d="M10 19v-5h4v5" stroke="#59802c" stroke-width="1.8"/>
+  </svg>
+`
+
+const GESTOR_SVG = `
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <circle cx="12" cy="8" r="3.2" stroke="#18181b" stroke-width="1.8"/>
+    <path d="M5.5 19.5c1.2-3.2 3.4-4.8 6.5-4.8s5.3 1.6 6.5 4.8" stroke="#18181b" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+`
+
+const ANDROID_SVG = `
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="#8fdb6a" aria-hidden="true">
+    <path d="M7 8.5h10a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2h-1v2h-2v-2H10v2H8v-2H7a2 2 0 0 1-2-2v-7.5a2 2 0 0 1 2-2z"/>
+    <circle cx="9" cy="12.5" r="1" fill="#18181b"/>
+    <circle cx="15" cy="12.5" r="1" fill="#18181b"/>
+    <path d="M8 6.5 6.5 4M16 6.5 17.5 4" stroke="#8fdb6a" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+`
+
+const COMPUTER_SVG = `
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="3" y="4" width="18" height="12" rx="1.5" stroke="#fdfbf2" stroke-width="1.8"/>
+    <path d="M8 20h8M12 16v4" stroke="#fdfbf2" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+`
+
+const PHONE_SVG = `
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect x="7" y="2.5" width="10" height="19" rx="2" stroke="#fdfbf2" stroke-width="1.8"/>
+    <path d="M11 18.5h2" stroke="#fdfbf2" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+`
+
+const icons = new Map()
+
+function roleOf(marker) {
+  if (marker.session_kind === 'seller') return 'seller'
+  if (marker.session_kind === 'gestor') return 'gestor'
+  return 'buyer'
 }
 
-const ACTIVE_ICON = pinIcon('#59802c')
-const SESSION_ICON = pinIcon('#d97706')
+function platformOf(marker) {
+  if (marker.platform === 'android' || marker.platform === 'ios' || marker.platform === 'web') {
+    return marker.platform
+  }
+  return 'web'
+}
+
+function faceHtml(role) {
+  if (role === 'seller') return STORE_SVG
+  if (role === 'gestor') return GESTOR_SVG
+  return `<img src="${BUYER_LOGO}" alt="" width="40" height="40" />`
+}
+
+function badgeHtml(platform) {
+  if (platform === 'android') return ANDROID_SVG
+  if (platform === 'ios') return PHONE_SVG
+  return COMPUTER_SVG
+}
+
+function markerIcon(marker) {
+  const role = roleOf(marker)
+  const platform = platformOf(marker)
+  const key = `${role}:${platform}`
+  const cached = icons.get(key)
+  if (cached) return cached
+  const icon = L.divIcon({
+    className: 'admin-device-pin',
+    html: `<div class="admin-device-marker"><div class="admin-device-marker__face">${faceHtml(role)}</div><span class="admin-device-marker__badge">${badgeHtml(platform)}</span></div>`,
+    iconSize: [44, 44],
+    iconAnchor: [22, 22],
+    tooltipAnchor: [0, -24],
+  })
+  icons.set(key, icon)
+  return icon
+}
 
 function markerLabel(marker) {
-  if (marker.session_kind === 'seller') return 'Sesión de tienda'
-  if (marker.session_kind === 'gestor') return 'Sesión de gestor'
-  if (marker.signed_in) return 'Sesión iniciada'
-  return marker.active ? 'Activo' : 'Usó la app'
+  const role = marker.session_kind === 'seller'
+    ? 'Vendedor'
+    : marker.session_kind === 'gestor'
+      ? 'Gestor'
+      : 'Comprador'
+  const place = marker.platform === 'android'
+    ? 'Android'
+    : marker.platform === 'ios'
+      ? 'iPhone'
+      : 'Navegador'
+  return `${role} · ${place}${marker.active ? ' · Activo' : ''}`
 }
 
 export default function AdminDeviceMap({ markers, frameKey }) {
@@ -70,8 +142,7 @@ export default function AdminDeviceMap({ markers, frameKey }) {
       if (marker.lat == null || marker.lng == null) continue
       const latLng = [marker.lat, marker.lng]
       points.push(latLng)
-      const icon = marker.signed_in || marker.session_kind ? SESSION_ICON : ACTIVE_ICON
-      L.marker(latLng, { icon }).bindTooltip(markerLabel(marker), { direction: 'top' }).addTo(layer)
+      L.marker(latLng, { icon: markerIcon(marker) }).bindTooltip(markerLabel(marker), { direction: 'top' }).addTo(layer)
     }
     if (points.length && fittedKey.current !== frameKey) {
       map.fitBounds(L.latLngBounds(points), { padding: [24, 24], maxZoom: 15 })

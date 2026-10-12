@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { clearAdminToken, getAdminToken } from '../../lib/adminAuth'
 import { getUserFacingMessage, isSessionError } from '../../lib/userFacingError'
@@ -47,6 +47,8 @@ export function AdminStatisticsProvider({ children }) {
   const [topBusinessesError, setTopBusinessesError] = useState('')
   const [ordersLocationsError, setOrdersLocationsError] = useState('')
   const [devicesError, setDevicesError] = useState('')
+  const [pulling, setPulling] = useState(false)
+  const pullSeq = useRef(0)
 
   const handleSessionError = useCallback(
     (err) => {
@@ -64,6 +66,9 @@ export function AdminStatisticsProvider({ children }) {
 
   const loadAll = useCallback(
     async ({ silent = false } = {}) => {
+      const pullId = pullSeq.current + 1
+      pullSeq.current = pullId
+      setPulling(true)
       if (!silent) {
         setError('')
         setRevenueError('')
@@ -95,7 +100,12 @@ export function AdminStatisticsProvider({ children }) {
         () => fetchAdminDeviceStats(token, query),
       ]
 
-      const results = await Promise.allSettled(jobs.map((run) => run()))
+      let results
+      try {
+        results = await Promise.allSettled(jobs.map((run) => run()))
+      } finally {
+        if (pullSeq.current === pullId) setPulling(false)
+      }
       if (results.some((result) => result.status === 'rejected' && handleSessionError(result.reason))) {
         return
       }
@@ -173,6 +183,7 @@ export function AdminStatisticsProvider({ children }) {
       topBusinessesError,
       ordersLocationsError,
       devicesError,
+      pulling,
       periodLabel: periodLabel(stats),
       multiDay: isMultiDayRange(range, deviceStats?.points?.length ?? 0),
     }),
@@ -202,6 +213,7 @@ export function AdminStatisticsProvider({ children }) {
       topBusinessesError,
       ordersLocationsError,
       devicesError,
+      pulling,
     ],
   )
 

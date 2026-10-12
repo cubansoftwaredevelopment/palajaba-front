@@ -438,6 +438,49 @@
     color: #18181b;
   }
 
+  .admin-device-pin {
+    background: transparent !important;
+    border: none !important;
+  }
+
+  .admin-device-marker {
+    position: relative;
+    width: 44px;
+    height: 44px;
+  }
+
+  .admin-device-marker__face {
+    display: flex;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 12px;
+    background: #fdfbf2;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  }
+
+  .admin-device-marker__face img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+  }
+
+  .admin-device-marker__badge {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    display: flex;
+    width: 18px;
+    height: 18px;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid #fdfbf2;
+    border-radius: 999px;
+    background: #18181b;
+  }
+
   .seller-shell-viewport {
     height: 100dvh;
     max-height: 100dvh;

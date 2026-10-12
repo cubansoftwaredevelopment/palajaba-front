@@ -21,7 +21,15 @@ function readDeviceId() {
 function sessionKind() {
   if (getSellerToken()) return 'seller'
   if (getGestorToken()) return 'gestor'
-  return null
+  return 'buyer'
+}
+
+function devicePlatform() {
+  if (Capacitor.isNativePlatform()) {
+    const platform = Capacitor.getPlatform()
+    if (platform === 'android' || platform === 'ios') return platform
+  }
+  return 'web'
 }
 
 export default function AppDevicePresence() {
@@ -30,9 +38,7 @@ export default function AppDevicePresence() {
   coordsRef.current = coords
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) return undefined
-    const platform = Capacitor.getPlatform()
-    if (platform !== 'android' && platform !== 'ios') return undefined
+    const platform = devicePlatform()
 
     let stopped = false
     let timer = 0
@@ -75,15 +81,17 @@ export default function AppDevicePresence() {
 
     start()
     document.addEventListener('visibilitychange', onVisibility)
-    import('@capacitor/app').then(({ App }) => {
-      if (stopped) return
-      App.addListener('appStateChange', ({ isActive }) => {
-        if (!isActive) stop()
-        else start()
-      }).then((handle) => {
-        removeAppListener = () => handle.remove()
+    if (Capacitor.isNativePlatform()) {
+      import('@capacitor/app').then(({ App }) => {
+        if (stopped) return
+        App.addListener('appStateChange', ({ isActive }) => {
+          if (!isActive) stop()
+          else start()
+        }).then((handle) => {
+          removeAppListener = () => handle.remove()
+        })
       })
-    })
+    }
 
     return () => {
       stopped = true

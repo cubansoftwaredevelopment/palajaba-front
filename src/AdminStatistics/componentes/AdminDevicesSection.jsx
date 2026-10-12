@@ -39,9 +39,9 @@ export default function AdminDevicesSection({ data, loading, error, multiDay }) 
   return (
     <section className={adminCard}>
       <div className="mb-4">
-        <h3 className="text-sm font-medium text-zinc-50">Dispositivos de la app</h3>
+        <h3 className="text-sm font-medium text-zinc-50">Dispositivos</h3>
         <p className={`mt-1.5 text-xs leading-relaxed ${adminSubtle}`}>
-          Teléfonos con la app nativa. Un dispositivo activo avisó en los últimos 90 segundos.
+          App y navegadores. Un dispositivo activo avisó en los últimos 90 segundos.
         </p>
       </div>
 
@@ -89,7 +89,7 @@ export default function AdminDevicesSection({ data, loading, error, multiDay }) 
             />
           ) : (
             <p className={`rounded-xl border border-zinc-800/80 bg-zinc-900/40 px-4 py-8 text-center text-sm ${adminSubtle}`}>
-              Nadie usó la app en este periodo.
+              Nadie usó la app ni el navegador en este periodo.
             </p>
           )}
 
@@ -102,12 +102,29 @@ export default function AdminDevicesSection({ data, loading, error, multiDay }) 
             ) : null}
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-zinc-400">
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#59802c]" />
-                {data.live ? 'Activo' : 'Sin sesión'}
+                <img src="/images/states/loading.png" alt="" className="h-4 w-4 rounded-full object-cover" />
+                Comprador
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#d97706]" />
-                Sesión iniciada
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 10 6 4h12l2 6" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" />
+                  <path d="M4 10h16v9H4z" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M10 19v-5h4v5" stroke="currentColor" strokeWidth="1.8" />
+                </svg>
+                Vendedor
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M7 8.5h10a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2h-1v2h-2v-2H10v2H8v-2H7a2 2 0 0 1-2-2v-7.5a2 2 0 0 1 2-2z" />
+                </svg>
+                Android
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M8 20h8M12 16v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                Navegador
               </span>
             </div>
             <div className="mt-3">

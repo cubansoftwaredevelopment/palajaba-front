@@ -4,6 +4,7 @@ import AdminOrdersChart from '../componentes/AdminOrdersChart'
 import AdminOrdersLocationChart from '../componentes/AdminOrdersLocationChart'
 import AdminRevenueChart from '../componentes/AdminRevenueChart'
 import AdminSalesChart from '../componentes/AdminSalesChart'
+import AdminStatsPullToast from '../componentes/AdminStatsPullToast'
 import AdminStatsRangeControls from '../componentes/AdminStatsRangeControls'
 import AdminTopBusinessesChart from '../componentes/AdminTopBusinessesChart'
 import AdminTrafficChart from '../componentes/AdminTrafficChart'
@@ -79,6 +80,7 @@ function AdminStatsView() {
     topBusinessesError,
     ordersLocationsError,
     devicesError,
+    pulling,
     multiDay,
   } = useAdminStatistics()
 
@@ -209,8 +211,9 @@ function AdminStatsView() {
           </div>
         </>
       )}
-    </main>
-  )
+      {pulling ? <AdminStatsPullToast /> : null}
+      </main>
+    )
 }
 
 export default function AdminStats() {
