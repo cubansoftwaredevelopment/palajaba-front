@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 
 import { formatChangePercent } from '../../lib/sellerStatsTrend'
-import { adminMuted } from './adminStyles'
+import { adminMuted } from '../../components/admin/adminStyles'
 
 function TrendArrow({ direction }) {
   if (direction === 'up') {

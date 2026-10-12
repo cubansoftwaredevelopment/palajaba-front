@@ -22,7 +22,7 @@ import RegisterForm from './pages/RegisterForm'
 import RegisterSuccess from './pages/RegisterSuccess'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
-import AdminStats from './pages/AdminStats'
+import AdminStats from './AdminStatistics/pages/AdminStats'
 import AdminNotifications from './pages/AdminNotifications'
 import AdminFeedback from './pages/AdminFeedback'
 import AdminDiscountCodes from './pages/AdminDiscountCodes'
@@ -38,6 +38,7 @@ import PublicStoreRoute from './components/buyer/PublicStoreRoute'
 import RedirectLegacyStoreRoute from './components/buyer/RedirectLegacyStoreRoute'
 import DownloadAppPage from './pages/DownloadAppPage'
 import Remesas from './pages/Remesas'
+import AppDevicePresence from './lib/appDevicePresence'
 
 const router = createBrowserRouter([
   {
@@ -141,7 +142,12 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return <RouterProvider router={router} />
+  return (
+    <>
+      <AppDevicePresence />
+      <RouterProvider router={router} />
+    </>
+  )
 }
 
 export default App

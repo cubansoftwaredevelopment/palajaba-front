@@ -10,19 +10,14 @@ import {
   YAxis,
 } from 'recharts'
 
-import { adminCard, adminChoice, adminMuted, adminSubtle } from './adminStyles'
+import { adminCard, adminMuted, adminSubtle } from '../../components/admin/adminStyles'
 
 const CHART_COLOR = '#59802c'
 const CHART_COLOR_DIM = '#59802c99'
-const GRANULARITY_OPTIONS = [
-  { id: 'daily', label: 'Diario' },
-  { id: 'weekly', label: 'Semanal' },
-  { id: 'monthly', label: 'Mensual' },
-]
 
-function formatOrders(count) {
+function formatVisits(count) {
   const n = Math.round(count)
-  return `${n.toLocaleString('es')} pedido${n === 1 ? '' : 's'}`
+  return `${n.toLocaleString('es')} visitante${n === 1 ? '' : 's'}`
 }
 
 function LocationTooltip({ active, payload }) {
@@ -36,22 +31,16 @@ function LocationTooltip({ active, payload }) {
         {item.fullLabel}
       </p>
       <p className="mt-0.5 text-sm font-semibold tabular-nums text-brand-green">
-        {formatOrders(item.count)}
+        {formatVisits(item.count)}
       </p>
     </div>
   )
 }
 
-export default function AdminOrdersLocationChart({
-  granularity,
-  onGranularityChange,
-  data,
-  loading,
-  error,
-}) {
+export default function AdminTrafficLocationChart({ data, loading, error }) {
   const provinces = data?.provinces ?? []
   const municipalities = data?.municipalities ?? []
-  const hasData = (data?.total_orders ?? 0) > 0
+  const hasData = (data?.total_visits ?? 0) > 0
 
   const provinceChart = useMemo(
     () =>
@@ -68,24 +57,10 @@ export default function AdminOrdersLocationChart({
   return (
     <section className={adminCard}>
       <div className="mb-4">
-        <h3 className="text-sm font-medium text-zinc-50">Pedidos por zona</h3>
+        <h3 className="text-sm font-medium text-zinc-50">De dónde vienen</h3>
         <p className={`mt-1.5 text-xs leading-relaxed ${adminSubtle}`}>
-          Según la provincia/municipio del negocio (perfil de la tienda)
-          {data?.period_label ? ` · ${data.period_label}` : ''}.
+          Provincia y municipio que eligieron al entrar a comprar este mes.
         </p>
-      </div>
-
-      <div className="mb-4 grid grid-cols-3 gap-2">
-        {GRANULARITY_OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => onGranularityChange(option.id)}
-            className={adminChoice(granularity === option.id)}
-          >
-            {option.label}
-          </button>
-        ))}
       </div>
 
       {loading && !data ? (
@@ -103,21 +78,16 @@ export default function AdminOrdersLocationChart({
 
       {!loading && !error && !hasData ? (
         <p className={`rounded-xl border border-zinc-800/80 bg-zinc-900/40 px-4 py-8 text-center text-sm ${adminSubtle}`}>
-          Aún no hay pedidos con ubicación de negocio en este periodo.
+          Aún no hay visitas con ubicación este mes.
         </p>
       ) : null}
 
       {!loading && !error && hasData ? (
         <>
           <p className="mb-3 text-xl font-semibold tabular-nums text-zinc-50">
-            {(data.total_orders ?? 0).toLocaleString('es')}
-            <span className={`ml-2 text-xs font-normal ${adminMuted}`}>pedidos</span>
+            {(data.total_visits ?? 0).toLocaleString('es')}
+            <span className={`ml-2 text-xs font-normal ${adminMuted}`}>visitantes</span>
           </p>
-          {(data.without_location ?? 0) > 0 ? (
-            <p className={`mb-3 text-xs ${adminMuted}`}>
-              {data.without_location} sin provincia de negocio configurada.
-            </p>
-          ) : null}
 
           {provinceChart.length > 0 ? (
             <div className="mb-6 w-full min-w-0" style={{ height: chartHeight }}>

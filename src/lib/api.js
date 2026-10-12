@@ -70,7 +70,7 @@ export async function parseApiError(response) {
   return parseApiErrorDetail(data.detail).message;
 }
 
-async function request(path, options = {}) {
+export async function request(path, options = {}) {
   const headers = { ...options.headers };
   const hasBody = options.body != null && options.body !== "";
   if (
@@ -275,116 +275,10 @@ export function deleteRegistration(token, id) {
   });
 }
 
-export function fetchAdminStats(token, { year, month } = {}) {
-  const params = new URLSearchParams();
-  if (year != null) params.set("year", String(year));
-  if (month != null) params.set("month", String(month));
-  const query = params.toString() ? `?${params.toString()}` : "";
-
-  return request(`/api/admin/stats/summary${query}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchAdminBusinessesByProvince(token) {
-  return request("/api/admin/stats/businesses-by-province", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchAdminRevenueChart(
-  token,
-  { granularity, year, month } = {},
-) {
-  const params = new URLSearchParams({ granularity });
-  if (year != null) params.set("year", String(year));
-  if (month != null) params.set("month", String(month));
-
-  return request(`/api/admin/stats/revenue?${params.toString()}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchAdminTrafficChart(
-  token,
-  { granularity, year, month } = {},
-) {
-  const params = new URLSearchParams({ granularity });
-  if (year != null) params.set("year", String(year));
-  if (month != null) params.set("month", String(month));
-
-  return request(`/api/admin/stats/traffic?${params.toString()}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchAdminTrafficLocations(token, { year, month } = {}) {
-  const params = new URLSearchParams();
-  if (year != null) params.set("year", String(year));
-  if (month != null) params.set("month", String(month));
-  const query = params.toString() ? `?${params.toString()}` : "";
-
-  return request(`/api/admin/stats/traffic/locations${query}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchAdminTrafficPatterns(token, { year, month } = {}) {
-  const params = new URLSearchParams();
-  if (year != null) params.set("year", String(year));
-  if (month != null) params.set("month", String(month));
-  const query = params.toString() ? `?${params.toString()}` : "";
-
-  return request(`/api/admin/stats/traffic/patterns${query}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchAdminOrdersChart(
-  token,
-  { granularity, year, month } = {},
-) {
-  const params = new URLSearchParams({ granularity });
-  if (year != null) params.set("year", String(year));
-  if (month != null) params.set("month", String(month));
-
-  return request(`/api/admin/stats/orders?${params.toString()}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchAdminOrdersTopBusinesses(token, { granularity } = {}) {
-  const params = new URLSearchParams({ granularity });
-  return request(
-    `/api/admin/stats/orders/top-businesses?${params.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-}
-
-export function fetchAdminOrdersLocations(token, { granularity } = {}) {
-  const params = new URLSearchParams({ granularity });
-  return request(`/api/admin/stats/orders/locations?${params.toString()}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+export function recordAppDevicePresence(payload) {
+  return request("/api/marketplace/devices/presence", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }
 

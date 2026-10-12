@@ -10,15 +10,10 @@ import {
   YAxis,
 } from 'recharts'
 
-import { adminCard, adminChoice, adminMuted, adminSubtle } from './adminStyles'
+import { adminCard, adminMuted, adminSubtle } from '../../components/admin/adminStyles'
 
 const CHART_COLOR = '#59802c'
 const CHART_COLOR_DIM = '#59802c99'
-const GRANULARITY_OPTIONS = [
-  { id: 'daily', label: 'Diario' },
-  { id: 'weekly', label: 'Semanal' },
-  { id: 'monthly', label: 'Mensual' },
-]
 
 function shortenName(name, maxLength = 18) {
   if (!name || name.length <= maxLength) return name
@@ -52,13 +47,7 @@ function BusinessTooltip({ active, payload }) {
   )
 }
 
-export default function AdminTopBusinessesChart({
-  granularity,
-  onGranularityChange,
-  data,
-  loading,
-  error,
-}) {
+export default function AdminTopBusinessesChart({ data, loading, error }) {
   const businesses = data?.businesses ?? []
   const hasData = businesses.length > 0
 
@@ -81,19 +70,6 @@ export default function AdminTopBusinessesChart({
           Tiendas con más pedidos completados
           {data?.period_label ? ` · ${data.period_label}` : ''}.
         </p>
-      </div>
-
-      <div className="mb-4 grid grid-cols-3 gap-2">
-        {GRANULARITY_OPTIONS.map((option) => (
-          <button
-            key={option.id}
-            type="button"
-            onClick={() => onGranularityChange(option.id)}
-            className={adminChoice(granularity === option.id)}
-          >
-            {option.label}
-          </button>
-        ))}
       </div>
 
       {loading && !data ? (

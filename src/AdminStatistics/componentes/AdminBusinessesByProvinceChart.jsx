@@ -10,7 +10,7 @@ import {
   YAxis,
 } from 'recharts'
 
-import { adminCard, adminMuted, adminSubtle } from './adminStyles'
+import { adminCard, adminMuted, adminSubtle } from '../../components/admin/adminStyles'
 
 const CHART_COLOR = '#59802c'
 const CHART_COLOR_DIM = '#59802c99'
