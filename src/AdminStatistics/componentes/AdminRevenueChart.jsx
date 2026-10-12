@@ -18,7 +18,8 @@ export default function AdminRevenueChart({ chart, loading, error }) {
       <div className="mb-4">
         <h3 className="text-sm font-medium text-zinc-50">Dinero recaudado</h3>
         <p className={`mt-1.5 text-xs leading-relaxed ${adminSubtle}`}>
-          Pagos de suscripción registrados al aprobar o renovar tiendas.
+          Pagos de suscripción registrados al aprobar o renovar tiendas. Cada vela es el % de cambio
+          frente a la anterior.
         </p>
       </div>
 
@@ -61,6 +62,7 @@ export default function AdminRevenueChart({ chart, loading, error }) {
           </div>
           <AdminCandleChart
             points={points.map((point) => ({ ...point, count: point.amount }))}
+            change
             formatValue={(value) => formatPrice(value, 'CUP')}
             formatTick={formatRevenueTick}
           />

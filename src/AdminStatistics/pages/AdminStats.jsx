@@ -12,7 +12,6 @@ import AdminTrafficPatternsChart from '../componentes/AdminTrafficPatternsChart'
 import {
   adminAlertError,
   adminCard,
-  adminCardHighlight,
   adminMuted,
   adminSubtle,
 } from '../../components/admin/adminStyles'
@@ -80,39 +79,11 @@ function AdminStatsView() {
     topBusinessesError,
     ordersLocationsError,
     devicesError,
-    periodLabel,
     multiDay,
   } = useAdminStatistics()
 
   return (
     <main className="mx-auto max-w-3xl px-4 pt-6 sm:px-6">
-      <section className={`mb-6 ${adminCardHighlight}`}>
-        <div className="flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-green/10 text-brand-green">
-            <svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              className="text-brand-green"
-              aria-hidden="true"
-            >
-              <path d="M3 3v18h18" />
-              <path d="M7 16V9M12 16V5M17 16v-3" />
-            </svg>
-          </div>
-          <div>
-            <h2 className="font-medium text-zinc-50">Resumen de la plataforma</h2>
-            <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
-              Pagos, tráfico del marketplace, tiendas activas y pedidos.
-              Los pagos del mes suman los montos aprobados en {periodLabel || 'este mes'}.
-            </p>
-          </div>
-        </div>
-      </section>
-
       {error && (
         <p className={`mb-4 ${adminAlertError}`} role="alert">
           {error}

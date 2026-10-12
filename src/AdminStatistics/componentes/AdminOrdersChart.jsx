@@ -21,8 +21,8 @@ export default function AdminOrdersChart({ chart, loading, error }) {
       <div className="mb-4">
         <h3 className="text-sm font-medium text-zinc-50">Pedidos completados</h3>
         <p className={`mt-1.5 text-xs leading-relaxed ${adminSubtle}`}>
-          Volumen de pedidos confirmados en la plataforma (sin pendientes). Cada vela acumula el
-          total del periodo.
+          Volumen de pedidos confirmados en la plataforma (sin pendientes). Cada vela es el % de
+          cambio frente a la anterior.
         </p>
       </div>
 
@@ -58,6 +58,7 @@ export default function AdminOrdersChart({ chart, loading, error }) {
           </div>
           <AdminCandleChart
             points={points}
+            change
             formatValue={formatOrders}
             formatTick={formatCountTick}
           />

@@ -18,7 +18,7 @@ export default function AdminSalesChart({ chart, loading, error }) {
         <h3 className="text-sm font-medium text-zinc-50">Monto vendido</h3>
         <p className={`mt-1.5 text-xs leading-relaxed ${adminSubtle}`}>
           Cobros de pedidos completados, convertidos a CUP. Si una moneda no tiene tasa, ese pedido
-          no entra en la suma.
+          no entra en la suma. Cada vela es el % de cambio frente a la anterior.
         </p>
       </div>
 
@@ -57,6 +57,7 @@ export default function AdminSalesChart({ chart, loading, error }) {
           </div>
           <AdminCandleChart
             points={points}
+            change
             formatValue={(value) => formatPrice(value, 'CUP')}
             formatTick={formatMoneyTick}
           />

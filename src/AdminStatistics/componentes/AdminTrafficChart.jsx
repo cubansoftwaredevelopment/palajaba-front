@@ -23,6 +23,7 @@ export default function AdminTrafficChart({ chart, loading, error }) {
         <h3 className="text-sm font-medium text-zinc-50">Tráfico del marketplace</h3>
         <p className={`mt-1.5 text-xs leading-relaxed ${adminSubtle}`}>
           Visitantes únicos por sesión en /comprar (home). Un mismo visitante cuenta una vez al día.
+          Cada vela es el % de cambio frente a la anterior.
         </p>
       </div>
 
@@ -58,6 +59,7 @@ export default function AdminTrafficChart({ chart, loading, error }) {
           </div>
           <AdminCandleChart
             points={points}
+            change
             formatValue={formatVisits}
             formatTick={formatCountTick}
           />
