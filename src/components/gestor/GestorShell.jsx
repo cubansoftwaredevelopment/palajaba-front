@@ -20,7 +20,7 @@ export default function GestorShell({
         aria-hidden="true"
       />
 
-      <header className="relative z-10 shrink-0 border-b border-brand-green/8 bg-brand-white/90 backdrop-blur-sm">
+      <header className="relative z-10 shrink-0 border-b border-brand-green/8 bg-brand-white/90 pt-[var(--safe-top)] backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-4 py-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-3">
             <Logo className="h-8 w-auto shrink-0" />
@@ -57,7 +57,7 @@ export default function GestorShell({
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 py-5 sm:px-5 sm:py-6">
+      <div className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 pt-5 pb-[max(1.25rem,var(--safe-bottom))] sm:px-5 sm:pt-6 sm:pb-[max(1.5rem,var(--safe-bottom))]">
         {children}
       </div>
     </main>

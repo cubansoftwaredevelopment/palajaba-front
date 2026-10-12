@@ -43,7 +43,7 @@ export default function BuyerShell({
         aria-hidden="true"
       />
 
-      <header className="relative z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/90 backdrop-blur-sm">
+      <header className="relative z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/90 pt-[var(--safe-top)] backdrop-blur-sm">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-4 lg:px-10 lg:py-5">
           {headerStart ? (
             <div className="min-w-0 flex-1 pr-4">{headerStart}</div>

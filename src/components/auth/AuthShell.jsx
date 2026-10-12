@@ -32,7 +32,7 @@ export default function AuthShell({
       />
 
       {!hideHeader ? (
-        <header className="relative z-10 shrink-0 border-b border-brand-green/8 bg-brand-white/90 backdrop-blur-sm">
+        <header className="relative z-10 shrink-0 border-b border-brand-green/8 bg-brand-white/90 pt-[var(--safe-top)] backdrop-blur-sm">
           <div
             className={`mx-auto flex w-full max-w-5xl items-center px-5 py-4 lg:px-10 lg:py-4 ${
               hideLogo ? 'justify-start' : 'justify-between'

@@ -4,7 +4,7 @@ export const sellerShell =
   'relative flex min-h-dvh flex-col bg-brand-white lg:h-dvh lg:flex-row lg:overflow-hidden'
 
 export const sellerHeader =
-  'z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 py-3 backdrop-blur-md sm:px-5 lg:px-8 lg:py-4'
+  'z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 pt-[max(0.75rem,var(--safe-top))] pb-3 backdrop-blur-md sm:px-5 lg:px-8 lg:pt-[max(1rem,var(--safe-top))] lg:pb-4'
 
 export const sellerHeaderInner =
   'mx-auto flex w-full max-w-md items-center gap-2.5 sm:gap-3 lg:max-w-none'
