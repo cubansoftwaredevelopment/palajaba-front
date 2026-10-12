@@ -34,6 +34,9 @@ function buildFulfillmentSection(fulfillment) {
       `Recoge: ${fulfillment.recipient_name}`,
       `Contacto: ${phones.join(', ')}`,
     ]
+    if (fulfillment.notes?.trim()) {
+      lines.push(`Detalles: ${fulfillment.notes.trim()}`)
+    }
     return lines.join('\n')
   }
 

@@ -48,7 +48,6 @@ export default function BuyerDeliveryCheckoutModal({
   checkoutSubmitting = false,
   onClose,
   onConfirm,
-  onPickup,
 }) {
   const titleId = useId()
   const location = getBuyerLocation()
@@ -56,6 +55,7 @@ export default function BuyerDeliveryCheckoutModal({
   const [point, setPoint] = useState(null)
   const [mapSession, setMapSession] = useState(0)
   const [step, setStep] = useState(1)
+  const [pickup, setPickup] = useState(false)
   const open = Boolean(checkout)
   const shownCheckoutRef = useRef(checkout)
   if (checkout) shownCheckoutRef.current = checkout
@@ -68,6 +68,7 @@ export default function BuyerDeliveryCheckoutModal({
     if (open) {
       setMapSession((current) => current + 1)
       setPoint(null)
+      setPickup(false)
       setStep(1)
     }
   }
@@ -98,6 +99,7 @@ export default function BuyerDeliveryCheckoutModal({
 
   function goBack() {
     setError('')
+    if (step === 3) setPickup(false)
     setStep((current) => Math.max(1, current - 1))
   }
 
@@ -111,13 +113,16 @@ export default function BuyerDeliveryCheckoutModal({
     setStep(2)
   }
 
-  function goNextFromAddress(skipMap) {
-    const validationError = validateDeliveryAddress(form)
-    if (validationError) {
-      setError(validationError)
-      return
+  function goNextFromAddress(skipLocation) {
+    if (!skipLocation) {
+      const validationError = validateDeliveryAddress(form)
+      if (validationError) {
+        setError(validationError)
+        return
+      }
     }
-    if (skipMap) setPoint(null)
+    if (skipLocation) setPoint(null)
+    setPickup(skipLocation)
     setError('')
     setStep(3)
   }
@@ -130,6 +135,24 @@ export default function BuyerDeliveryCheckoutModal({
     }
     if (step === 2) {
       goNextFromAddress(false)
+      return
+    }
+
+    if (pickup) {
+      const validationError = validateDeliveryContact(form)
+      if (validationError) {
+        setError(validationError)
+        return
+      }
+
+      saveBuyerDeliveryDefaults(form)
+      await onConfirm({
+        mode: 'pickup',
+        recipient_name: form.recipient_name.trim(),
+        phone_primary: form.phone_primary,
+        phone_secondary: form.phone_secondary,
+        notes: form.notes.trim(),
+      })
       return
     }
 
@@ -153,11 +176,6 @@ export default function BuyerDeliveryCheckoutModal({
 
     saveBuyerDeliveryDefaults(form)
     await onConfirm(delivery)
-  }
-
-  async function handlePickup() {
-    if (checkoutSubmitting) return
-    await onPickup?.()
   }
 
   const zoneHint =
@@ -205,7 +223,7 @@ export default function BuyerDeliveryCheckoutModal({
                 {STEP_TITLES[step - 1]}
               </h2>
               <p className="mt-1 text-xs font-medium text-brand-carmelita">
-                {shownCheckout.storeName} · pedido a domicilio
+                {shownCheckout.storeName} · {pickup ? 'recoger en la tienda' : 'pedido a domicilio'}
               </p>
             </div>
           </div>
@@ -299,13 +317,19 @@ export default function BuyerDeliveryCheckoutModal({
                 <p className="font-bold">{form.recipient_name.trim()}</p>
                 <p className="mt-1 text-brand-carmelita">{primaryPhone}</p>
                 {secondaryPhone ? <p className="text-brand-carmelita">{secondaryPhone}</p> : null}
-                <p className="mt-3">{form.address.trim()}</p>
+                {pickup ? (
+                  <p className="mt-3 font-semibold">Recoger en la tienda</p>
+                ) : (
+                  <p className="mt-3">{form.address.trim()}</p>
+                )}
                 {form.notes.trim() ? (
                   <p className="mt-2 text-brand-carmelita">{form.notes.trim()}</p>
                 ) : null}
-                <p className="mt-3 text-xs text-brand-carmelita">
-                  {point ? 'El punto del mapa se envía por WhatsApp.' : 'Sin punto en el mapa.'}
-                </p>
+                {pickup ? null : (
+                  <p className="mt-3 text-xs text-brand-carmelita">
+                    {point ? 'El punto del mapa se envía por WhatsApp.' : 'Sin punto en el mapa.'}
+                  </p>
+                )}
               </div>
             ) : null}
 
@@ -326,7 +350,7 @@ export default function BuyerDeliveryCheckoutModal({
                   onClick={() => goNextFromAddress(true)}
                   className={`${buyerJabaSecondaryBtn} min-w-0 flex-1`}
                 >
-                  Saltar
+                  Recoger en la tienda
                 </button>
                 <button type="submit" className={`${buyerJabaPrimaryBtn} min-w-0 flex-1`}>
                   Siguiente
@@ -335,26 +359,14 @@ export default function BuyerDeliveryCheckoutModal({
             ) : null}
 
             {step === 3 ? (
-              <div className="flex w-full items-center gap-2">
-                {onPickup ? (
-                  <button
-                    type="button"
-                    onClick={handlePickup}
-                    disabled={checkoutSubmitting}
-                    className={`${buyerJabaSecondaryBtn} min-w-0 flex-1 px-3 text-center leading-tight`}
-                  >
-                    Recoger en la tienda
-                  </button>
-                ) : null}
-                <button
-                  type="submit"
-                  disabled={checkoutSubmitting}
-                  className={`${buyerJabaWhatsAppBtn} min-w-0 flex-1 px-3 text-center leading-tight`}
-                >
-                  <WhatsAppIcon />
-                  {checkoutSubmitting ? 'Registrando pedido…' : 'Enviar por WhatsApp'}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={checkoutSubmitting}
+                className={`${buyerJabaWhatsAppBtn} w-full px-3 text-center leading-tight`}
+              >
+                <WhatsAppIcon />
+                {checkoutSubmitting ? 'Registrando pedido…' : 'Enviar por WhatsApp'}
+              </button>
             ) : null}
 
           </div>

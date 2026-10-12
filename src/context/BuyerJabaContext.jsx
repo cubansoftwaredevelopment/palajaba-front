@@ -341,13 +341,6 @@ export function BuyerJabaProvider({ children }) {
     setPickupCheckout(null)
   }, [])
 
-  const switchDeliveryToPickup = useCallback(() => {
-    if (!deliveryCheckout) return false
-    setPickupCheckout(deliveryCheckout)
-    setDeliveryCheckout(null)
-    return true
-  }, [deliveryCheckout])
-
   const closePhonePicker = useCallback(() => {
     setPhonePicker(null)
   }, [])
@@ -476,7 +469,6 @@ export function BuyerJabaProvider({ children }) {
         checkoutSubmitting={Boolean(checkoutSubmittingStoreId)}
         onClose={closeDeliveryCheckout}
         onConfirm={confirmDeliveryCheckout}
-        onPickup={switchDeliveryToPickup}
       />
       <BuyerPickupCheckoutModal
         checkout={activeCheckoutModal === 'pickup' ? pickupCheckout : null}
