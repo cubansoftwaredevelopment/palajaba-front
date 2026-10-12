@@ -7,6 +7,10 @@ import AdminSalesChart from '../componentes/AdminSalesChart'
 import AdminStatsPullToast from '../componentes/AdminStatsPullToast'
 import AdminStatsRangeControls from '../componentes/AdminStatsRangeControls'
 import AdminTopBusinessesChart from '../componentes/AdminTopBusinessesChart'
+import {
+  AdminTopPopularProductsChart,
+  AdminTopSoldProductsChart,
+} from '../componentes/AdminTopProductsCharts'
 import AdminTrafficChart from '../componentes/AdminTrafficChart'
 import AdminTrafficLocationChart from '../componentes/AdminTrafficLocationChart'
 import AdminTrafficPatternsChart from '../componentes/AdminTrafficPatternsChart'
@@ -66,6 +70,8 @@ function AdminStatsView() {
     ordersChart,
     salesChart,
     topBusinesses,
+    topSoldProducts,
+    topPopularProducts,
     ordersLocations,
     deviceStats,
     loading,
@@ -78,6 +84,8 @@ function AdminStatsView() {
     ordersError,
     salesError,
     topBusinessesError,
+    topSoldError,
+    topPopularError,
     ordersLocationsError,
     devicesError,
     pulling,
@@ -171,6 +179,22 @@ function AdminStatsView() {
               data={topBusinesses}
               loading={chartsLoading}
               error={topBusinessesError}
+            />
+          </div>
+
+          <div className="mt-4">
+            <AdminTopSoldProductsChart
+              data={topSoldProducts}
+              loading={chartsLoading}
+              error={topSoldError}
+            />
+          </div>
+
+          <div className="mt-4">
+            <AdminTopPopularProductsChart
+              data={topPopularProducts}
+              loading={chartsLoading}
+              error={topPopularError}
             />
           </div>
 

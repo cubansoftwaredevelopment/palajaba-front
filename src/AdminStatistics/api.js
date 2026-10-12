@@ -106,6 +106,22 @@ export function fetchAdminOrdersTopBusinesses(token, { granularity, start, end }
   })
 }
 
+export function fetchAdminTopSoldProducts(token, { granularity, start, end } = {}) {
+  const params = new URLSearchParams({ granularity })
+  appendChartWindow(params, { start, end })
+  return request(`/api/admin/stats/products/sold?${params.toString()}`, {
+    headers: authHeaders(token),
+  })
+}
+
+export function fetchAdminTopPopularProducts(token, { granularity, start, end } = {}) {
+  const params = new URLSearchParams({ granularity })
+  appendChartWindow(params, { start, end })
+  return request(`/api/admin/stats/products/popular?${params.toString()}`, {
+    headers: authHeaders(token),
+  })
+}
+
 export function fetchAdminOrdersLocations(token, { granularity, start, end } = {}) {
   const params = new URLSearchParams({ granularity })
   appendChartWindow(params, { start, end })

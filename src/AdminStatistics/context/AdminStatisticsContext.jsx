@@ -10,6 +10,8 @@ import {
   fetchAdminOrdersLocations,
   fetchAdminOrdersTopBusinesses,
   fetchAdminRevenueChart,
+  fetchAdminTopPopularProducts,
+  fetchAdminTopSoldProducts,
   fetchAdminStats,
   fetchAdminTrafficChart,
   fetchAdminTrafficLocations,
@@ -33,6 +35,8 @@ export function AdminStatisticsProvider({ children }) {
   const [ordersChart, setOrdersChart] = useState(null)
   const [salesChart, setSalesChart] = useState(null)
   const [topBusinesses, setTopBusinesses] = useState(null)
+  const [topSoldProducts, setTopSoldProducts] = useState(null)
+  const [topPopularProducts, setTopPopularProducts] = useState(null)
   const [ordersLocations, setOrdersLocations] = useState(null)
   const [deviceStats, setDeviceStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -45,6 +49,8 @@ export function AdminStatisticsProvider({ children }) {
   const [ordersError, setOrdersError] = useState('')
   const [salesError, setSalesError] = useState('')
   const [topBusinessesError, setTopBusinessesError] = useState('')
+  const [topSoldError, setTopSoldError] = useState('')
+  const [topPopularError, setTopPopularError] = useState('')
   const [ordersLocationsError, setOrdersLocationsError] = useState('')
   const [devicesError, setDevicesError] = useState('')
   const [pulling, setPulling] = useState(false)
@@ -78,6 +84,8 @@ export function AdminStatisticsProvider({ children }) {
         setOrdersError('')
         setSalesError('')
         setTopBusinessesError('')
+        setTopSoldError('')
+        setTopPopularError('')
         setOrdersLocationsError('')
         setDevicesError('')
         setChartsLoading(true)
@@ -96,6 +104,8 @@ export function AdminStatisticsProvider({ children }) {
         () => fetchAdminOrdersChart(token, query),
         () => fetchAdminOrderSalesChart(token, query),
         () => fetchAdminOrdersTopBusinesses(token, query),
+        () => fetchAdminTopSoldProducts(token, query),
+        () => fetchAdminTopPopularProducts(token, query),
         () => fetchAdminOrdersLocations(token, query),
         () => fetchAdminDeviceStats(token, query),
       ]
@@ -131,8 +141,10 @@ export function AdminStatisticsProvider({ children }) {
       apply(6, setOrdersChart, setOrdersError, 'No pudimos cargar el análisis de pedidos.')
       apply(7, setSalesChart, setSalesError, 'No pudimos cargar el monto vendido.')
       apply(8, setTopBusinesses, setTopBusinessesError, 'No pudimos cargar el análisis de pedidos.')
-      apply(9, setOrdersLocations, setOrdersLocationsError, 'No pudimos cargar el análisis de pedidos.')
-      apply(10, setDeviceStats, setDevicesError, 'No pudimos cargar los dispositivos.')
+      apply(9, setTopSoldProducts, setTopSoldError, 'No pudimos cargar los productos más vendidos.')
+      apply(10, setTopPopularProducts, setTopPopularError, 'No pudimos cargar los productos más populares.')
+      apply(11, setOrdersLocations, setOrdersLocationsError, 'No pudimos cargar el análisis de pedidos.')
+      apply(12, setDeviceStats, setDevicesError, 'No pudimos cargar los dispositivos.')
 
       if (!silent) {
         setLoading(false)
@@ -169,6 +181,8 @@ export function AdminStatisticsProvider({ children }) {
       ordersChart,
       salesChart,
       topBusinesses,
+      topSoldProducts,
+      topPopularProducts,
       ordersLocations,
       deviceStats,
       loading,
@@ -181,6 +195,8 @@ export function AdminStatisticsProvider({ children }) {
       ordersError,
       salesError,
       topBusinessesError,
+      topSoldError,
+      topPopularError,
       ordersLocationsError,
       devicesError,
       pulling,
@@ -199,6 +215,8 @@ export function AdminStatisticsProvider({ children }) {
       ordersChart,
       salesChart,
       topBusinesses,
+      topSoldProducts,
+      topPopularProducts,
       ordersLocations,
       deviceStats,
       loading,
@@ -211,6 +229,8 @@ export function AdminStatisticsProvider({ children }) {
       ordersError,
       salesError,
       topBusinessesError,
+      topSoldError,
+      topPopularError,
       ordersLocationsError,
       devicesError,
       pulling,
