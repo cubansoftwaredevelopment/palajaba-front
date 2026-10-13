@@ -10,7 +10,7 @@ import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatDateTime } from '../lib/dates'
 import LoadingState from '../components/ui/LoadingState'
 
-export default function AdminNotifications() {
+export default function AdminNotifications({ embedded = false }) {
   const navigate = useNavigate()
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
@@ -55,7 +55,7 @@ export default function AdminNotifications() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6">
+    <div className={embedded ? '' : 'mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6'}>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
           Envía avisos a todos, por plan/facturación, o a un negocio concreto.

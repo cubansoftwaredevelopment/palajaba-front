@@ -371,6 +371,14 @@ export function submitSellerFeedback(token, payload) {
   });
 }
 
+export function fetchAdminProducts(token) {
+  return request("/api/admin/products", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export function fetchAdminFeedback(token, filter = "all") {
   const params = new URLSearchParams();
   if (filter && filter !== "all") params.set("filter", filter);

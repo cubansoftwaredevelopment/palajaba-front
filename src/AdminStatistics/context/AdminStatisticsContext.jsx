@@ -4,6 +4,7 @@ import { clearAdminToken, getAdminToken } from '../../lib/adminAuth'
 import { getUserFacingMessage, isSessionError } from '../../lib/userFacingError'
 import {
   fetchAdminBusinessesByProvince,
+  fetchAdminDeliveryMap,
   fetchAdminDeviceStats,
   fetchAdminOrderSalesChart,
   fetchAdminOrdersChart,
@@ -38,6 +39,7 @@ export function AdminStatisticsProvider({ children }) {
   const [topSoldProducts, setTopSoldProducts] = useState(null)
   const [topPopularProducts, setTopPopularProducts] = useState(null)
   const [ordersLocations, setOrdersLocations] = useState(null)
+  const [deliveryMap, setDeliveryMap] = useState(null)
   const [deviceStats, setDeviceStats] = useState(null)
   const [loading, setLoading] = useState(true)
   const [chartsLoading, setChartsLoading] = useState(true)
@@ -52,6 +54,7 @@ export function AdminStatisticsProvider({ children }) {
   const [topSoldError, setTopSoldError] = useState('')
   const [topPopularError, setTopPopularError] = useState('')
   const [ordersLocationsError, setOrdersLocationsError] = useState('')
+  const [deliveryMapError, setDeliveryMapError] = useState('')
   const [devicesError, setDevicesError] = useState('')
   const [pulling, setPulling] = useState(false)
   const pullSeq = useRef(0)
@@ -87,6 +90,7 @@ export function AdminStatisticsProvider({ children }) {
         setTopSoldError('')
         setTopPopularError('')
         setOrdersLocationsError('')
+        setDeliveryMapError('')
         setDevicesError('')
         setChartsLoading(true)
       }
@@ -107,6 +111,7 @@ export function AdminStatisticsProvider({ children }) {
         () => fetchAdminTopSoldProducts(token, query),
         () => fetchAdminTopPopularProducts(token, query),
         () => fetchAdminOrdersLocations(token, query),
+        () => fetchAdminDeliveryMap(token, query),
         () => fetchAdminDeviceStats(token, query),
       ]
 
@@ -144,7 +149,8 @@ export function AdminStatisticsProvider({ children }) {
       apply(9, setTopSoldProducts, setTopSoldError, 'No pudimos cargar los productos más vendidos.')
       apply(10, setTopPopularProducts, setTopPopularError, 'No pudimos cargar los productos más populares.')
       apply(11, setOrdersLocations, setOrdersLocationsError, 'No pudimos cargar el análisis de pedidos.')
-      apply(12, setDeviceStats, setDevicesError, 'No pudimos cargar los dispositivos.')
+      apply(12, setDeliveryMap, setDeliveryMapError, 'No pudimos cargar el mapa de domicilios.')
+      apply(13, setDeviceStats, setDevicesError, 'No pudimos cargar los dispositivos.')
 
       if (!silent) {
         setLoading(false)
@@ -184,6 +190,7 @@ export function AdminStatisticsProvider({ children }) {
       topSoldProducts,
       topPopularProducts,
       ordersLocations,
+      deliveryMap,
       deviceStats,
       loading,
       chartsLoading,
@@ -198,6 +205,7 @@ export function AdminStatisticsProvider({ children }) {
       topSoldError,
       topPopularError,
       ordersLocationsError,
+      deliveryMapError,
       devicesError,
       pulling,
       periodLabel: periodLabel(stats),
@@ -218,6 +226,7 @@ export function AdminStatisticsProvider({ children }) {
       topSoldProducts,
       topPopularProducts,
       ordersLocations,
+      deliveryMap,
       deviceStats,
       loading,
       chartsLoading,
@@ -232,6 +241,7 @@ export function AdminStatisticsProvider({ children }) {
       topSoldError,
       topPopularError,
       ordersLocationsError,
+      deliveryMapError,
       devicesError,
       pulling,
     ],

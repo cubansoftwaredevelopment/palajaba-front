@@ -29,7 +29,7 @@ function filterTabClass(active) {
   }`
 }
 
-export default function AdminFeedback() {
+export default function AdminFeedback({ embedded = false }) {
   const navigate = useNavigate()
   const [filter, setFilter] = useState('all')
   const [items, setItems] = useState([])
@@ -107,7 +107,7 @@ export default function AdminFeedback() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6">
+    <div className={embedded ? '' : 'mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6'}>
       <p className={`mb-4 text-sm leading-relaxed ${adminSubtle}`}>
         Quejas y sugerencias enviadas desde el perfil de las tiendas.
       </p>

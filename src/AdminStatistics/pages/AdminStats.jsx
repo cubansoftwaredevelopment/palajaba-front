@@ -1,4 +1,5 @@
 import AdminBusinessesByProvinceChart from '../componentes/AdminBusinessesByProvinceChart'
+import AdminDeliveryMapSection from '../componentes/AdminDeliveryMapSection'
 import AdminDevicesSection from '../componentes/AdminDevicesSection'
 import AdminOrdersChart from '../componentes/AdminOrdersChart'
 import AdminOrdersLocationChart from '../componentes/AdminOrdersLocationChart'
@@ -73,6 +74,7 @@ function AdminStatsView() {
     topSoldProducts,
     topPopularProducts,
     ordersLocations,
+    deliveryMap,
     deviceStats,
     loading,
     chartsLoading,
@@ -87,6 +89,7 @@ function AdminStatsView() {
     topSoldError,
     topPopularError,
     ordersLocationsError,
+    deliveryMapError,
     devicesError,
     pulling,
     multiDay,
@@ -203,6 +206,14 @@ function AdminStatsView() {
               data={ordersLocations}
               loading={chartsLoading}
               error={ordersLocationsError}
+            />
+          </div>
+
+          <div className="mt-4">
+            <AdminDeliveryMapSection
+              data={deliveryMap}
+              loading={chartsLoading}
+              error={deliveryMapError}
             />
           </div>
 

@@ -23,8 +23,8 @@ import RegisterSuccess from './pages/RegisterSuccess'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminStats from './AdminStatistics/pages/AdminStats'
-import AdminNotifications from './pages/AdminNotifications'
-import AdminFeedback from './pages/AdminFeedback'
+import AdminInbox from './pages/AdminInbox'
+import AdminProducts from './pages/AdminProducts'
 import AdminDiscountCodes from './pages/AdminDiscountCodes'
 import AdminSettings from './pages/AdminSettings'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
@@ -111,8 +111,9 @@ const router = createBrowserRouter([
               { path: 'estadisticas', element: <AdminStats /> },
               { path: 'solicitudes', element: <AdminDashboard /> },
               { path: 'descuentos', element: <AdminDiscountCodes /> },
-              { path: 'mensajes', element: <AdminFeedback /> },
-              { path: 'notificaciones', element: <AdminNotifications /> },
+              { path: 'mensajes', element: <AdminInbox /> },
+              { path: 'notificaciones', element: <Navigate to="/admin/mensajes" replace /> },
+              { path: 'productos', element: <AdminProducts /> },
               { path: 'configuracion', element: <AdminSettings /> },
             ],
           },

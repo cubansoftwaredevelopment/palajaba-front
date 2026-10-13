@@ -129,3 +129,11 @@ export function fetchAdminOrdersLocations(token, { granularity, start, end } = {
     headers: authHeaders(token),
   })
 }
+
+export function fetchAdminDeliveryMap(token, { granularity, start, end } = {}) {
+  const params = new URLSearchParams({ granularity })
+  appendChartWindow(params, { start, end })
+  return request(`/api/admin/stats/orders/delivery-map?${params.toString()}`, {
+    headers: authHeaders(token),
+  })
+}

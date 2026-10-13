@@ -11,10 +11,10 @@ import LogoutConfirmModal from './LogoutConfirmModal'
 function NotificationsLink({ active }) {
   return (
     <Link
-      to="/admin/notificaciones"
+      to="/admin/mensajes"
       className={active ? adminIconButtonActive : adminIconButton}
-      aria-label="Notificaciones a vendedores"
-      title="Avisos a vendedores"
+      aria-label="Mensajes y avisos"
+      title="Mensajes/Avisos"
     >
       <svg
         width="20"
@@ -89,7 +89,7 @@ export default function AdminLayout() {
   }
 
   const title = ADMIN_PAGE_TITLES[location.pathname] ?? 'Panel'
-  const onNotificationsPage = location.pathname === '/admin/notificaciones'
+  const onNotificationsPage = location.pathname === '/admin/mensajes'
 
   function confirmLogout() {
     clearAdminToken()
