@@ -107,7 +107,7 @@ export default function AdminFeedback({ embedded = false }) {
   }
 
   return (
-    <div className={embedded ? '' : 'mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6'}>
+    <div className={embedded ? '' : 'mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 lg:px-8'}>
       <p className={`mb-4 text-sm leading-relaxed ${adminSubtle}`}>
         Quejas y sugerencias enviadas desde el perfil de las tiendas.
       </p>

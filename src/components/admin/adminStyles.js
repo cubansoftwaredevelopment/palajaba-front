@@ -4,7 +4,9 @@ export const adminPage =
   'admin-theme relative min-h-dvh overflow-x-hidden bg-[var(--admin-canvas)] text-zinc-100'
 
 export const adminHeader =
-  'sticky top-0 z-20 border-b border-zinc-800/80 bg-[var(--admin-header)] pt-[var(--safe-top)]'
+  'fixed inset-x-0 top-0 z-30 border-b border-zinc-800/80 bg-[var(--admin-header)] pt-[var(--safe-top)]'
+
+export const adminSection = 'w-full px-4 py-5 sm:px-6 lg:px-8'
 
 export const adminInput =
   'w-full min-h-11 rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-4 py-3 text-base text-zinc-100 placeholder:text-zinc-600 transition-colors focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/15'

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Logo from '../Logo'
 import { ADMIN_PAGE_TITLES } from '../../constants/adminNav'
@@ -7,6 +7,23 @@ import { readAdminTheme, writeAdminTheme } from './adminTheme'
 import { adminHeader, adminMuted, adminPage, adminIconButton, adminIconButtonActive } from './adminStyles'
 import AdminNav from './AdminNav'
 import LogoutConfirmModal from './LogoutConfirmModal'
+
+function MenuButton({ open, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={adminIconButton}
+      aria-label="Abrir menú"
+      aria-expanded={open}
+      aria-controls="admin-nav"
+    >
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+        <path d="M4 7h16M4 12h16M4 17h16" />
+      </svg>
+    </button>
+  )
+}
 
 function NotificationsLink({ active }) {
   return (
@@ -80,6 +97,7 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [navOpen, setNavOpen] = useState(false)
   const [theme, setTheme] = useState(readAdminTheme)
 
   function toggleTheme() {
@@ -90,6 +108,10 @@ export default function AdminLayout() {
 
   const title = ADMIN_PAGE_TITLES[location.pathname] ?? 'Panel'
   const onNotificationsPage = location.pathname === '/admin/mensajes'
+
+  useEffect(() => {
+    setNavOpen(false)
+  }, [location.pathname])
 
   function confirmLogout() {
     clearAdminToken()
@@ -105,8 +127,9 @@ export default function AdminLayout() {
       </div>
 
       <header className={adminHeader}>
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-3 px-4 py-3.5 sm:px-6">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex w-full items-center justify-between gap-3 px-4 py-3.5 sm:px-6 lg:px-8">
+          <div className="flex min-w-0 items-center gap-2">
+            <MenuButton open={navOpen} onClick={() => setNavOpen(true)} />
             <Logo
               variant={theme === 'light' ? 'default' : 'admin'}
               className="h-12 w-12 shrink-0 sm:h-14 sm:w-14"
@@ -127,11 +150,11 @@ export default function AdminLayout() {
         </div>
       </header>
 
-      <div className="relative pb-24">
+      <div className="relative min-w-0 pt-[calc(var(--safe-top)+4.75rem)] sm:pt-[calc(var(--safe-top)+5.25rem)]">
         <Outlet />
       </div>
 
-      <AdminNav />
+      <AdminNav open={navOpen} onClose={() => setNavOpen(false)} />
 
       {showLogoutConfirm && (
         <LogoutConfirmModal

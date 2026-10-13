@@ -55,7 +55,7 @@ export default function AdminNotifications({ embedded = false }) {
   }
 
   return (
-    <div className={embedded ? '' : 'mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6'}>
+    <div className={embedded ? '' : 'mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 lg:px-8'}>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
           Envía avisos a todos, por plan/facturación, o a un negocio concreto.

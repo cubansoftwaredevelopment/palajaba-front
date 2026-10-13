@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adminAlertError, adminInput, adminMuted, adminSubtle } from '../components/admin/adminStyles'
+import { adminAlertError, adminInput, adminMuted, adminSection, adminSubtle } from '../components/admin/adminStyles'
 import LoadingState from '../components/ui/LoadingState'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { fetchAdminProducts } from '../lib/api'
 import { formatPrice } from '../lib/money'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
+
+const PAGE_SIZE = 25
 
 const EMPTY_FILTERS = {
   name: '',
@@ -37,7 +39,7 @@ function LocationChips({ locations }) {
   }
   return (
     <div
-      className="flex min-w-44 flex-wrap gap-1 rounded-xl border border-brand-green/20 bg-zinc-950/40 p-1.5"
+      className="flex w-full min-w-0 flex-wrap gap-1 rounded-xl border border-brand-green/20 bg-zinc-950/40 p-1.5"
       aria-readonly="true"
     >
       {locations.map((label) => (
@@ -58,6 +60,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     let cancelled = false
@@ -105,16 +108,26 @@ export default function AdminProducts() {
     [filters, products],
   )
 
+  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const pageStart = visible.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE
+  const pageItems = visible.slice(pageStart, pageStart + PAGE_SIZE)
+
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }))
+    setPage(1)
   }
 
   const filterInput = `${adminInput} min-h-9 px-2 py-1.5 text-xs`
 
   return (
-    <div className="w-full px-4 pb-28 pt-5 sm:px-6">
+    <div className={adminSection}>
       <p className={`mb-4 text-sm leading-relaxed ${adminSubtle}`}>
-        {loading ? 'Cargando productos…' : `${visible.length} de ${products.length} productos`}
+        {loading
+          ? 'Cargando productos…'
+          : visible.length === 0
+            ? `0 de ${products.length} productos`
+            : `${pageStart + 1}–${pageStart + pageItems.length} de ${visible.length} productos`}
       </p>
 
       {error ? (
@@ -127,7 +140,16 @@ export default function AdminProducts() {
 
       {!loading && !error ? (
         <div className="overflow-x-auto rounded-2xl border border-brand-green/10">
-          <table className="w-full min-w-[64rem] border-collapse text-left text-sm">
+          <table className="w-full min-w-[48rem] table-fixed border-collapse text-left text-sm xl:min-w-full">
+            <colgroup>
+              <col className="w-[18%]" />
+              <col className="w-[13%]" />
+              <col className="w-[15%]" />
+              <col className="w-[10%]" />
+              <col className="w-[9%]" />
+              <col className="w-[11%]" />
+              <col />
+            </colgroup>
             <thead>
               <tr className="border-b border-zinc-800 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-400">
                 <th className="px-3 py-2">Nombre</th>
@@ -212,18 +234,18 @@ export default function AdminProducts() {
               </tr>
             </thead>
             <tbody>
-              {visible.length === 0 ? (
+              {pageItems.length === 0 ? (
                 <tr>
                   <td colSpan={7} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                     Ningún producto coincide con estos filtros.
                   </td>
                 </tr>
               ) : (
-                visible.map((product) => (
+                pageItems.map((product) => (
                   <tr key={product.id} className="border-b border-zinc-800/80 align-top">
-                    <td className="px-3 py-3 font-medium text-zinc-50">{product.name}</td>
-                    <td className="px-3 py-3 text-zinc-300">{product.category_name}</td>
-                    <td className="px-3 py-3 text-zinc-300">{product.store_name}</td>
+                    <td className="px-3 py-3 font-medium break-words text-zinc-50">{product.name}</td>
+                    <td className="px-3 py-3 break-words text-zinc-300">{product.category_name}</td>
+                    <td className="px-3 py-3 break-words text-zinc-300">{product.store_name}</td>
                     <td className="px-3 py-3 tabular-nums text-zinc-100">
                       {formatPrice(product.price, product.currency)}
                     </td>
@@ -239,6 +261,32 @@ export default function AdminProducts() {
               )}
             </tbody>
           </table>
+        </div>
+      ) : null}
+
+      {!loading && !error && visible.length > 0 ? (
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className={`text-sm ${adminSubtle}`}>
+            Página {currentPage} de {pageCount}
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              className="inline-flex min-h-9 items-center rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-3 text-xs font-medium text-zinc-100 disabled:opacity-40"
+              disabled={currentPage <= 1}
+              onClick={() => setPage(currentPage - 1)}
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              className="inline-flex min-h-9 items-center rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-3 text-xs font-medium text-zinc-100 disabled:opacity-40"
+              disabled={currentPage >= pageCount}
+              onClick={() => setPage(currentPage + 1)}
+            >
+              Siguiente
+            </button>
+          </div>
         </div>
       ) : null}
     </div>

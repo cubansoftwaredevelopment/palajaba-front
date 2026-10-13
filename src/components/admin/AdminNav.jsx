@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { ADMIN_NAV } from '../../constants/adminNav'
 import { adminFocusRing } from './adminStyles'
@@ -23,12 +24,6 @@ const NAV_ICONS = {
       <circle cx="17.5" cy="17.5" r="2.5" />
     </svg>
   ),
-  notificaciones: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  ),
   mensajes: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
@@ -49,38 +44,72 @@ const NAV_ICONS = {
 }
 
 function navLinkClass(isActive) {
-  return `flex min-w-0 flex-1 basis-0 flex-col items-center gap-0.5 px-1 py-2.5 text-[0.65rem] font-medium transition-colors sm:gap-1 sm:py-3 sm:text-xs ${adminFocusRing} ${
-    isActive ? 'text-brand-green' : 'text-zinc-500 hover:text-zinc-300'
+  return `flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors ${adminFocusRing} ${
+    isActive ? 'bg-brand-green/15 text-brand-green' : 'text-zinc-300 hover:bg-zinc-800/80 hover:text-zinc-50'
   }`
 }
 
-function iconShellClass(isActive) {
-  return `flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-all sm:h-9 sm:w-9 ${
-    isActive
-      ? 'bg-brand-green/15 text-brand-green ring-1 ring-brand-green/25 shadow-[0_0_20px_rgba(89,128,44,0.15)]'
-      : 'text-current'
-  }`
-}
+export default function AdminNav({ open, onClose }) {
+  useEffect(() => {
+    if (!open) return undefined
+    function handleKeyDown(event) {
+      if (event.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open, onClose])
 
-export default function AdminNav() {
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 z-20 w-full max-w-[100dvw] border-t border-brand-green/10 bg-[color-mix(in_srgb,var(--admin-canvas)_92%,transparent)] shadow-[0_-8px_32px_rgba(0,0,0,0.12)] backdrop-blur-md"
-      style={{ paddingBottom: 'max(0.375rem, var(--safe-bottom))' }}
-      aria-label="Secciones del panel"
+    <div
+      id="admin-nav"
+      className={`fixed inset-0 z-40 ${open ? '' : 'pointer-events-none'}`}
+      aria-hidden={!open}
+      inert={!open}
     >
-      <div className="mx-auto flex w-full min-w-0 max-w-3xl px-0.5">
-        {ADMIN_NAV.map((item) => (
-          <NavLink key={item.id} to={item.path} className={({ isActive }) => navLinkClass(isActive)}>
-            {({ isActive }) => (
-              <>
-                <span className={iconShellClass(isActive)}>{NAV_ICONS[item.id]}</span>
-                <span className="w-full truncate text-center">{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </div>
-    </nav>
+      <button
+        type="button"
+        className={`absolute inset-0 bg-black/45 transition-opacity ${open ? 'opacity-100' : 'opacity-0'}`}
+        aria-label="Cerrar menú"
+        tabIndex={open ? 0 : -1}
+        onClick={onClose}
+      />
+      <nav
+        className={`absolute inset-y-0 left-0 flex w-[min(18rem,88vw)] flex-col border-r border-brand-green/15 bg-[var(--admin-header)] shadow-[8px_0_32px_rgba(0,0,0,0.28)] transition-transform duration-200 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{
+          paddingTop: 'max(1rem, var(--safe-top))',
+          paddingBottom: 'max(1rem, var(--safe-bottom))',
+        }}
+        aria-label="Secciones del panel"
+      >
+        <div className="flex items-center justify-between px-4 pb-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-400">Menú</p>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`inline-flex h-9 w-9 items-center justify-center rounded-xl text-zinc-300 hover:bg-zinc-800 ${adminFocusRing}`}
+            aria-label="Cerrar menú"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+              <path d="M6 6l12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-3">
+          {ADMIN_NAV.map((item) => (
+            <NavLink key={item.id} to={item.path} className={({ isActive }) => navLinkClass(isActive)} onClick={onClose}>
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center">{NAV_ICONS[item.id]}</span>
+              <span className="min-w-0 truncate">{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </nav>
+    </div>
   )
 }

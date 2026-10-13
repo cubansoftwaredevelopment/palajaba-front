@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom'
-import { adminFocusRing } from '../components/admin/adminStyles'
+import { adminFocusRing, adminSection } from '../components/admin/adminStyles'
 import AdminFeedback from './AdminFeedback'
 import AdminNotifications from './AdminNotifications'
 
@@ -25,7 +25,7 @@ export default function AdminInbox() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-28 pt-5 sm:px-6">
+    <div className={adminSection}>
       <div className="mb-4 grid grid-cols-2 gap-2" role="tablist" aria-label="Mensajes y avisos">
         {TABS.map((item) => (
           <button

@@ -12,6 +12,7 @@ import {
   adminFocusRing,
   adminInput,
   adminMuted,
+  adminSection,
   adminSubtle,
 } from '../components/admin/adminStyles'
 import {
@@ -189,7 +190,7 @@ export default function AdminDiscountCodes() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6">
+    <div className={adminSection}>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <p className={`text-sm leading-relaxed ${adminSubtle}`}>

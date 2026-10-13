@@ -3,7 +3,7 @@ import { LOADING_MASCOT } from '../../constants/branding'
 export default function AdminStatsPullToast() {
   return (
     <div
-      className="pointer-events-none fixed bottom-24 left-1/2 z-50 -translate-x-1/2"
+      className="pointer-events-none fixed bottom-[max(1.5rem,var(--safe-bottom))] left-1/2 z-50 -translate-x-1/2"
       aria-live="polite"
     >
       <div

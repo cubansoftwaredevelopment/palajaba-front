@@ -8,6 +8,7 @@ import {
   adminInput,
   adminLabel,
   adminMuted,
+  adminSection,
   adminSubtle,
 } from '../components/admin/adminStyles'
 import { fetchAdminSettings, updateAdminSettings } from '../lib/api'
@@ -73,7 +74,7 @@ export default function AdminSettings() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-5 pb-28 sm:px-6">
+    <div className={adminSection}>
       <p className={`mb-5 text-sm leading-relaxed ${adminSubtle}`}>
         Este número recibe los mensajes de WhatsApp cuando un vendedor quiere renovar su plan.
       </p>

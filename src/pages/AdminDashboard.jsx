@@ -1,46 +1,46 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AdminButton from '../components/admin/AdminButton'
 import ConfirmDialog from '../components/admin/ConfirmDialog'
-import RegistrationDetailModal from '../components/admin/RegistrationDetailModal'
-import RegistrationRow from '../components/admin/RegistrationRow'
 import PaymentModal from '../components/admin/PaymentModal'
+import RegistrationActionsMenu from '../components/admin/RegistrationActionsMenu'
 import SubscriptionModal from '../components/admin/SubscriptionModal'
 import {
   adminAlertError,
+  adminBadgeApproved,
+  adminBadgeExpired,
+  adminBadgePending,
+  adminBadgeRejected,
   adminInput,
-  adminMuted,
+  adminSection,
   adminSubtle,
 } from '../components/admin/adminStyles'
-import { FILTER_TABS, REJECTION_REASON } from '../constants/admin'
+import { BILLING_LABELS, PLAN_TIER_LABELS, REJECTION_REASON, STATUS_LABELS } from '../constants/admin'
+import { normalizePlanTier } from '../constants/plan'
 import { fetchRegistrations, rejectRegistration, deleteRegistration } from '../lib/api'
+import { formatDateTime } from '../lib/dates'
+import { formatPrice } from '../lib/money'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import LoadingState from '../components/ui/LoadingState'
 
-function StatCard({ label, value, active, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-xl border px-4 py-3 text-left transition-all ${
-        active
-          ? 'border-brand-green/40 bg-brand-green/12 text-brand-green shadow-[0_0_24px_rgba(89,128,44,0.12)] ring-1 ring-brand-green/25'
-          : 'border-brand-green/8 bg-zinc-900/45 text-zinc-300 hover:border-brand-green/20 hover:bg-zinc-900/70'
-      }`}
-    >
-      <p className={`text-2xl font-semibold tabular-nums ${active ? 'text-brand-green' : 'text-zinc-50'}`}>
-        {value}
-      </p>
-      <p
-        className={`text-xs font-medium uppercase tracking-wide ${
-          active ? 'text-brand-green/80' : 'text-zinc-500'
-        }`}
-      >
-        {label}
-      </p>
-    </button>
-  )
+const PAGE_SIZE = 25
+
+const EMPTY_FILTERS = {
+  store: '',
+  phone: '',
+  transfer: '',
+  status: 'all',
+  approved: '',
+  plan: 'all',
+  billing: 'all',
+  sales: '',
+}
+
+const STATUS_BADGES = {
+  pending: adminBadgePending,
+  approved: adminBadgeApproved,
+  rejected: adminBadgeRejected,
+  expired: adminBadgeExpired,
 }
 
 function Toast({ message, type, onClose }) {
@@ -51,7 +51,7 @@ function Toast({ message, type, onClose }) {
 
   return (
     <div
-      className={`admin-theme fixed bottom-24 left-1/2 z-50 flex max-w-sm -translate-x-1/2 items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium shadow-xl sm:bottom-6 ${
+      className={`admin-theme fixed bottom-[max(1.5rem,var(--safe-bottom))] left-1/2 z-50 flex max-w-sm -translate-x-1/2 items-center gap-3 rounded-xl border px-4 py-3 text-sm font-medium shadow-xl ${
         type === 'success'
           ? 'border-brand-green/30 bg-zinc-900/95 text-zinc-100'
           : 'border-brand-carmelita/25 bg-zinc-950/95 text-zinc-300'
@@ -71,51 +71,52 @@ function Toast({ message, type, onClose }) {
   )
 }
 
+function includesText(value, query) {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return true
+  return String(value ?? '').toLowerCase().includes(needle)
+}
+
+function subscriptionTime(item) {
+  const period = BILLING_LABELS[item.billing_period] ?? item.billing_period
+  if (item.subscription_starts_at && item.subscription_ends_at) {
+    return `${period} · ${formatDateTime(item.subscription_starts_at)} – ${formatDateTime(item.subscription_ends_at)}`
+  }
+  if (item.subscription_ends_at) return `${period} · hasta ${formatDateTime(item.subscription_ends_at)}`
+  return period
+}
+
+function matchesSales(item, query) {
+  const needle = query.trim().toLowerCase().replace(',', '.')
+  if (!needle) return true
+  const amount = String(item.sales_total_cup ?? 0)
+  const label = formatPrice(item.sales_total_cup ?? 0, 'CUP').toLowerCase()
+  return amount.includes(needle) || label.includes(needle)
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const [filter, setFilter] = useState('pending')
   const [registrations, setRegistrations] = useState([])
-  const [counts, setCounts] = useState({ pending: 0, approved: 0, expired: 0, rejected: 0, all: 0 })
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
-  const [search, setSearch] = useState('')
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
+  const [page, setPage] = useState(1)
   const [actionId, setActionId] = useState(null)
-  const [detailTarget, setDetailTarget] = useState(null)
+  const [openActionsId, setOpenActionsId] = useState(null)
   const [subscriptionModal, setSubscriptionModal] = useState(null)
   const [paymentModal, setPaymentModal] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
-  const loadCounts = useCallback(async (token) => {
-    const [pending, approved, expired, rejected, all] = await Promise.all([
-      fetchRegistrations(token, 'pending'),
-      fetchRegistrations(token, 'approved'),
-      fetchRegistrations(token, 'expired'),
-      fetchRegistrations(token, 'rejected'),
-      fetchRegistrations(token, 'all'),
-    ])
-    setCounts({
-      pending: pending.length,
-      approved: approved.length,
-      expired: expired.length,
-      rejected: rejected.length,
-      all: all.length,
-    })
-  }, [])
 
   const loadRegistrations = useCallback(
     async (showFullLoader = true) => {
       if (showFullLoader) setLoading(true)
-      else setRefreshing(true)
       setError('')
 
       try {
         const token = getAdminToken()
-        const [data] = await Promise.all([
-          fetchRegistrations(token, filter),
-          loadCounts(token),
-        ])
+        const data = await fetchRegistrations(token, 'all')
         setRegistrations(data)
       } catch (err) {
         if (isSessionError(err)) {
@@ -126,10 +127,9 @@ export default function AdminDashboard() {
         setError(getUserFacingMessage(err, 'No pudimos cargar las solicitudes. Inténtalo de nuevo.'))
       } finally {
         setLoading(false)
-        setRefreshing(false)
       }
     },
-    [filter, navigate, loadCounts],
+    [navigate],
   )
 
   useEffect(() => {
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
       const token = getAdminToken()
       const result = await deleteRegistration(token, deleteTarget.id)
       setDeleteTarget(null)
-      setDetailTarget(null)
+      setOpenActionsId(null)
       handleMutationSuccess(result?.message ?? 'Tienda eliminada.')
     } catch (err) {
       setError(getUserFacingMessage(err, 'No pudimos eliminar la tienda. Inténtalo de nuevo.'))
@@ -174,63 +174,51 @@ export default function AdminDashboard() {
     }
   }
 
-  const filteredRegistrations = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (!query) return registrations
-    return registrations.filter((item) =>
-      [item.store_name, item.phone, item.transfer_id, item.status]
-        .join(' ')
-        .toLowerCase()
-        .includes(query),
-    )
-  }, [registrations, search])
+  const filteredRegistrations = useMemo(
+    () =>
+      registrations.filter((item) => {
+        if (!includesText(item.store_name, filters.store)) return false
+        if (!includesText(item.phone, filters.phone)) return false
+        const transferLabel = item.is_launch_promo
+          ? `Promoción ${item.transfer_id}`
+          : item.transfer_id
+        if (!includesText(transferLabel, filters.transfer)) return false
+        if (filters.status !== 'all' && item.status !== filters.status) return false
+        if (!includesText(item.approved_at ? formatDateTime(item.approved_at) : '', filters.approved)) return false
+        if (filters.plan !== 'all' && normalizePlanTier(item.plan_tier) !== filters.plan) return false
+        if (filters.billing !== 'all' && item.billing_period !== filters.billing) return false
+        if (!matchesSales(item, filters.sales)) return false
+        return true
+      }),
+    [filters, registrations],
+  )
+
+  const pageCount = Math.max(1, Math.ceil(filteredRegistrations.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const pageStart = filteredRegistrations.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE
+  const pageItems = filteredRegistrations.slice(pageStart, pageStart + PAGE_SIZE)
+
+  function updateFilter(field, value) {
+    setFilters((current) => ({ ...current, [field]: value }))
+    setPage(1)
+  }
+
+  const filterInput = `${adminInput} min-h-9 px-2 py-1.5 text-xs`
+
+  function closeActions() {
+    setOpenActionsId(null)
+  }
 
   return (
     <>
-      <main className="mx-auto max-w-3xl px-4 pb-6 pt-6 sm:px-6">
-        <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-          {FILTER_TABS.map((tab) => (
-            <StatCard
-              key={tab.id}
-              label={tab.label}
-              value={counts[tab.id] ?? 0}
-              active={filter === tab.id}
-              onClick={() => setFilter(tab.id)}
-            />
-          ))}
-        </div>
-
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <svg
-              className={`pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 ${adminMuted}`}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              aria-hidden="true"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.3-4.3" />
-            </svg>
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar tienda, teléfono o ID…"
-              className={`${adminInput} py-3 pl-11`}
-              aria-label="Buscar solicitudes"
-            />
-          </div>
-          <AdminButton
-            variant="secondary"
-            onClick={() => loadRegistrations(false)}
-            disabled={loading || refreshing}
-            className="!w-auto shrink-0 px-5"
-          >
-            {refreshing ? '…' : 'Actualizar'}
-          </AdminButton>
-        </div>
+      <main className={adminSection}>
+        <p className={`mb-4 text-sm leading-relaxed ${adminSubtle}`}>
+          {loading
+            ? 'Cargando solicitudes…'
+            : filteredRegistrations.length === 0
+              ? `0 de ${registrations.length} negocios`
+              : `${pageStart + 1}–${pageStart + pageItems.length} de ${filteredRegistrations.length} negocios`}
+        </p>
 
         {error && (
           <p className={`mb-4 ${adminAlertError}`} role="alert">
@@ -238,69 +226,209 @@ export default function AdminDashboard() {
           </p>
         )}
 
-        <div className="flex flex-col gap-2">
-          {loading ? (
-            <LoadingState variant="admin" message="Cargando solicitudes…" className="rounded-2xl border border-brand-green/8 bg-zinc-900/30 py-14" />
-          ) : null}
+        {loading ? <LoadingState variant="admin" message="Cargando solicitudes…" /> : null}
 
-          {!loading && filteredRegistrations.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-brand-green/15 bg-zinc-900/30 px-6 py-14 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-brand-green/15 bg-brand-green/10">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-brand-green/70" aria-hidden="true">
-                  <path d="M3 7h18M3 12h18M3 17h18" />
-                </svg>
-              </div>
-              <p className="font-medium text-zinc-50">
-                {search ? 'Sin resultados' : 'Nada por aquí'}
-              </p>
-              <p className={`mt-1 text-sm ${adminSubtle}`}>
-                {search ? 'Prueba otro término.' : 'Las nuevas solicitudes aparecerán aquí.'}
-              </p>
+        {!loading ? (
+          <div className="overflow-x-auto rounded-2xl border border-brand-green/10">
+            <table className="w-full min-w-[72rem] border-collapse text-left text-sm xl:min-w-full">
+              <thead>
+                <tr className="border-b border-zinc-800 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-400">
+                  <th className="px-3 py-2">Negocio</th>
+                  <th className="px-3 py-2">Teléfono</th>
+                  <th className="px-3 py-2">ID transferencia</th>
+                  <th className="px-3 py-2">Suscripción</th>
+                  <th className="px-3 py-2">Aprobada</th>
+                  <th className="px-3 py-2">Plan</th>
+                  <th className="px-3 py-2">Tiempo de suscripción</th>
+                  <th className="px-3 py-2">Vendido</th>
+                  <th className="px-3 py-2">Acciones</th>
+                </tr>
+                <tr className="border-b border-zinc-800 bg-zinc-950/40">
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.store}
+                      onChange={(event) => updateFilter('store', event.target.value)}
+                      className={filterInput}
+                      placeholder="Filtrar negocio"
+                      aria-label="Filtrar por negocio"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.phone}
+                      onChange={(event) => updateFilter('phone', event.target.value)}
+                      className={filterInput}
+                      placeholder="Filtrar teléfono"
+                      aria-label="Filtrar por teléfono"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.transfer}
+                      onChange={(event) => updateFilter('transfer', event.target.value)}
+                      className={filterInput}
+                      placeholder="Filtrar ID"
+                      aria-label="Filtrar por ID de transferencia"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <select
+                      value={filters.status}
+                      onChange={(event) => updateFilter('status', event.target.value)}
+                      className={filterInput}
+                      aria-label="Filtrar por estado de suscripción"
+                    >
+                      <option value="all">Todas</option>
+                      <option value="pending">Pendiente</option>
+                      <option value="approved">Aprobada</option>
+                      <option value="expired">Vencida</option>
+                      <option value="rejected">Rechazada</option>
+                    </select>
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.approved}
+                      onChange={(event) => updateFilter('approved', event.target.value)}
+                      className={filterInput}
+                      placeholder="Filtrar fecha"
+                      aria-label="Filtrar por fecha de aprobación"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <select
+                      value={filters.plan}
+                      onChange={(event) => updateFilter('plan', event.target.value)}
+                      className={filterInput}
+                      aria-label="Filtrar por plan"
+                    >
+                      <option value="all">Todos</option>
+                      <option value="standard">Básico</option>
+                      <option value="premium">Premium</option>
+                    </select>
+                  </th>
+                  <th className="px-2 py-2">
+                    <select
+                      value={filters.billing}
+                      onChange={(event) => updateFilter('billing', event.target.value)}
+                      className={filterInput}
+                      aria-label="Filtrar por tiempo de suscripción"
+                    >
+                      <option value="all">Todos</option>
+                      <option value="monthly">Mensual</option>
+                      <option value="yearly">Anual</option>
+                    </select>
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.sales}
+                      onChange={(event) => updateFilter('sales', event.target.value)}
+                      className={filterInput}
+                      placeholder="Filtrar monto"
+                      aria-label="Filtrar por vendido"
+                      inputMode="decimal"
+                    />
+                  </th>
+                  <th className="px-2 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {pageItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                      Ningún negocio coincide con estos filtros.
+                    </td>
+                  </tr>
+                ) : (
+                  pageItems.map((item) => (
+                    <tr key={item.id} className="border-b border-zinc-800/80 align-top">
+                      <td className="px-3 py-3 font-medium break-words text-zinc-50">{item.store_name}</td>
+                      <td className="px-3 py-3 whitespace-nowrap text-zinc-300">{item.phone}</td>
+                      <td className="px-3 py-3 font-mono text-xs break-all text-zinc-300">
+                        {item.is_launch_promo ? 'Promoción' : item.transfer_id}
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className={STATUS_BADGES[item.status] ?? adminBadgePending}>
+                          {STATUS_LABELS[item.status] ?? item.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap text-zinc-300">
+                        {item.approved_at ? formatDateTime(item.approved_at) : '—'}
+                      </td>
+                      <td className="px-3 py-3 text-zinc-300">
+                        {PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}
+                      </td>
+                      <td className="px-3 py-3 text-zinc-300">{subscriptionTime(item)}</td>
+                      <td className="px-3 py-3 tabular-nums text-zinc-100">
+                        {formatPrice(item.sales_total_cup ?? 0, 'CUP')}
+                      </td>
+                      <td className="px-3 py-3">
+                        <RegistrationActionsMenu
+                          item={item}
+                          open={openActionsId === item.id}
+                          onToggle={() =>
+                            setOpenActionsId((current) => (current === item.id ? null : item.id))
+                          }
+                          onClose={closeActions}
+                          onApprove={(reg) => {
+                            closeActions()
+                            setSubscriptionModal({ registration: reg, mode: 'approve' })
+                          }}
+                          onReject={(reg) => {
+                            closeActions()
+                            setRejectTarget(reg)
+                          }}
+                          onEditSubscription={(reg) => {
+                            closeActions()
+                            setSubscriptionModal({ registration: reg, mode: 'edit' })
+                          }}
+                          onEditPayment={(reg) => {
+                            closeActions()
+                            setPaymentModal(reg)
+                          }}
+                          onRenew={(reg) => {
+                            closeActions()
+                            setSubscriptionModal({ registration: reg, mode: 'renew' })
+                          }}
+                          onDelete={(reg) => {
+                            closeActions()
+                            setDeleteTarget(reg)
+                          }}
+                        />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        ) : null}
+
+        {!loading && filteredRegistrations.length > 0 ? (
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <p className={`text-sm ${adminSubtle}`}>
+              Página {currentPage} de {pageCount}
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="inline-flex min-h-9 items-center rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-3 text-xs font-medium text-zinc-100 disabled:opacity-40"
+                disabled={currentPage <= 1}
+                onClick={() => setPage(currentPage - 1)}
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                className="inline-flex min-h-9 items-center rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-3 text-xs font-medium text-zinc-100 disabled:opacity-40"
+                disabled={currentPage >= pageCount}
+                onClick={() => setPage(currentPage + 1)}
+              >
+                Siguiente
+              </button>
             </div>
-          )}
-
-          {!loading &&
-            filteredRegistrations.map((item) => (
-              <RegistrationRow
-                key={item.id}
-                item={item}
-                onViewDetails={setDetailTarget}
-              />
-            ))}
-        </div>
+          </div>
+        ) : null}
       </main>
-
-      {detailTarget && (
-        <RegistrationDetailModal
-          item={detailTarget}
-          actionId={actionId}
-          onClose={() => setDetailTarget(null)}
-          onApprove={(reg) => {
-            setDetailTarget(null)
-            setSubscriptionModal({ registration: reg, mode: 'approve' })
-          }}
-          onReject={(reg) => {
-            setDetailTarget(null)
-            setRejectTarget(reg)
-          }}
-          onEditSubscription={(reg) => {
-            setDetailTarget(null)
-            setSubscriptionModal({ registration: reg, mode: 'edit' })
-          }}
-          onEditPayment={(reg) => {
-            setDetailTarget(null)
-            setPaymentModal(reg)
-          }}
-          onRenew={(reg) => {
-            setDetailTarget(null)
-            setSubscriptionModal({ registration: reg, mode: 'renew' })
-          }}
-          onDelete={(reg) => {
-            setDetailTarget(null)
-            setDeleteTarget(reg)
-          }}
-        />
-      )}
 
       {paymentModal && (
         <PaymentModal
