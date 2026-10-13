@@ -13,6 +13,7 @@ const EMPTY_FILTERS = {
   store: '',
   cost: '',
   delivery: 'all',
+  subscription: 'all',
   location: '',
 }
 
@@ -93,6 +94,8 @@ export default function AdminProducts() {
         if (!matchesCost(product, filters.cost)) return false
         if (filters.delivery === 'si' && !product.offers_delivery) return false
         if (filters.delivery === 'no' && product.offers_delivery) return false
+        if (filters.subscription === 'activa' && !product.subscription_active) return false
+        if (filters.subscription === 'inactiva' && product.subscription_active) return false
         if (filters.location.trim()) {
           const needle = filters.location.trim().toLowerCase()
           if (!product.locations.some((label) => label.toLowerCase().includes(needle))) return false
@@ -109,7 +112,7 @@ export default function AdminProducts() {
   const filterInput = `${adminInput} min-h-9 px-2 py-1.5 text-xs`
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-28 pt-5 sm:px-6">
+    <div className="w-full px-4 pb-28 pt-5 sm:px-6">
       <p className={`mb-4 text-sm leading-relaxed ${adminSubtle}`}>
         {loading ? 'Cargando productos…' : `${visible.length} de ${products.length} productos`}
       </p>
@@ -124,7 +127,7 @@ export default function AdminProducts() {
 
       {!loading && !error ? (
         <div className="overflow-x-auto rounded-2xl border border-brand-green/10">
-          <table className="w-full min-w-[52rem] border-collapse text-left text-sm">
+          <table className="w-full min-w-[64rem] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-800 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-400">
                 <th className="px-3 py-2">Nombre</th>
@@ -132,6 +135,7 @@ export default function AdminProducts() {
                 <th className="px-3 py-2">Negocio</th>
                 <th className="px-3 py-2">Costo</th>
                 <th className="px-3 py-2">Domicilio</th>
+                <th className="px-3 py-2">Suscripción</th>
                 <th className="px-3 py-2">Ubicaciones disponibles</th>
               </tr>
               <tr className="border-b border-zinc-800 bg-zinc-950/40">
@@ -185,6 +189,18 @@ export default function AdminProducts() {
                   </select>
                 </th>
                 <th className="px-2 py-2">
+                  <select
+                    value={filters.subscription}
+                    onChange={(event) => updateFilter('subscription', event.target.value)}
+                    className={filterInput}
+                    aria-label="Filtrar por suscripción"
+                  >
+                    <option value="all">Todas</option>
+                    <option value="activa">Activa</option>
+                    <option value="inactiva">Inactiva</option>
+                  </select>
+                </th>
+                <th className="px-2 py-2">
                   <input
                     value={filters.location}
                     onChange={(event) => updateFilter('location', event.target.value)}
@@ -198,7 +214,7 @@ export default function AdminProducts() {
             <tbody>
               {visible.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                  <td colSpan={7} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                     Ningún producto coincide con estos filtros.
                   </td>
                 </tr>
@@ -212,6 +228,9 @@ export default function AdminProducts() {
                       {formatPrice(product.price, product.currency)}
                     </td>
                     <td className="px-3 py-3 text-zinc-300">{product.offers_delivery ? 'Sí' : 'No'}</td>
+                    <td className="px-3 py-3 text-zinc-300">
+                      {product.subscription_active ? 'Activa' : 'Inactiva'}
+                    </td>
                     <td className="px-3 py-3">
                       <LocationChips locations={product.locations} />
                     </td>
