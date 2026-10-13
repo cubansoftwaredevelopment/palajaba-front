@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adminAlertError, adminInput, adminMuted, adminSection, adminSubtle } from '../components/admin/adminStyles'
+import { adminAlertError, adminFocusRing, adminSection, adminSubtle } from '../components/admin/adminStyles'
+import AdminPillSelect from '../components/admin/AdminPillSelect'
 import LoadingState from '../components/ui/LoadingState'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { fetchAdminProducts } from '../lib/api'
-import { formatPrice } from '../lib/money'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 
 const PAGE_SIZE = 25
@@ -14,42 +14,61 @@ const EMPTY_FILTERS = {
   category: '',
   store: '',
   cost: '',
+  currency: '',
   delivery: 'all',
   subscription: 'all',
   location: '',
+  sales: '',
 }
 
-function includesText(value, query) {
-  const needle = query.trim().toLowerCase()
-  if (!needle) return true
-  return String(value ?? '').toLowerCase().includes(needle)
+function uniqueLabels(values) {
+  return [...new Set(values.filter(Boolean))].sort((left, right) => left.localeCompare(right, 'es'))
 }
 
-function matchesCost(product, query) {
-  const needle = query.trim().toLowerCase().replace(',', '.')
-  if (!needle) return true
-  const amount = String(product.price)
-  const label = formatPrice(product.price, product.currency).toLowerCase()
-  return amount.includes(needle) || label.includes(needle) || product.currency.toLowerCase().includes(needle)
+function toOptions(labels) {
+  return labels.map((label) => ({ value: label, label }))
 }
 
-function LocationChips({ locations }) {
-  if (!locations?.length) {
-    return <span className={`text-xs ${adminMuted}`}>Sin ubicación</span>
-  }
+function maxNumber(value) {
+  const text = String(value ?? '').trim().replace(',', '.')
+  if (!text) return null
+  const amount = Number(text)
+  return Number.isFinite(amount) ? amount : null
+}
+
+function LocationSelect({ locations }) {
+  const [open, setOpen] = useState(false)
+  const count = locations?.length ?? 0
+  const label = count === 0 ? 'Sin ubicación' : count === 1 ? '1 ubicación' : `${count} ubicaciones`
+
   return (
-    <div
-      className="flex w-full min-w-0 flex-wrap gap-1 rounded-xl border border-brand-green/20 bg-zinc-950/40 p-1.5"
-      aria-readonly="true"
-    >
-      {locations.map((label) => (
-        <span
-          key={label}
-          className="rounded-full border border-brand-green bg-brand-green px-2.5 py-1 text-[0.65rem] font-semibold text-brand-white"
-        >
-          {label}
-        </span>
-      ))}
+    <div>
+      <button
+        type="button"
+        aria-expanded={open}
+        disabled={count === 0}
+        onClick={() => setOpen((current) => !current)}
+        className={`inline-flex min-h-9 w-full items-center justify-between gap-1 rounded-full border border-brand-green/40 bg-brand-green/10 px-3 text-left text-xs font-semibold text-brand-green disabled:opacity-70 ${adminFocusRing}`}
+      >
+        <span className="min-w-0 truncate">{label}</span>
+        {count > 0 ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true" className={`shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}>
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        ) : null}
+      </button>
+      {open && count > 0 ? (
+        <div className="mt-1.5 flex flex-wrap gap-1 rounded-xl border border-brand-green/20 bg-zinc-950/40 p-1.5">
+          {locations.map((item) => (
+            <span
+              key={item}
+              className="rounded-full border border-brand-green bg-brand-green px-2.5 py-1 text-[0.65rem] font-semibold text-brand-white"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -91,21 +110,44 @@ export default function AdminProducts() {
   const visible = useMemo(
     () =>
       products.filter((product) => {
-        if (!includesText(product.name, filters.name)) return false
-        if (!includesText(product.category_name, filters.category)) return false
-        if (!includesText(product.store_name, filters.store)) return false
-        if (!matchesCost(product, filters.cost)) return false
+        if (filters.name && product.name !== filters.name) return false
+        if (filters.category && product.category_name !== filters.category) return false
+        if (filters.store && product.store_name !== filters.store) return false
+        if (filters.cost) {
+          const maxPrice = maxNumber(filters.cost)
+          if (maxPrice !== null && Number(product.price) > maxPrice) return false
+        }
+        if (filters.currency && product.currency !== filters.currency) return false
+        if (filters.sales !== '') {
+          const maxSales = maxNumber(filters.sales)
+          if (maxSales !== null && Number(product.sales_count ?? 0) > maxSales) return false
+        }
         if (filters.delivery === 'si' && !product.offers_delivery) return false
         if (filters.delivery === 'no' && product.offers_delivery) return false
         if (filters.subscription === 'activa' && !product.subscription_active) return false
         if (filters.subscription === 'inactiva' && product.subscription_active) return false
-        if (filters.location.trim()) {
-          const needle = filters.location.trim().toLowerCase()
-          if (!product.locations.some((label) => label.toLowerCase().includes(needle))) return false
-        }
+        if (filters.location && !product.locations.includes(filters.location)) return false
         return true
       }),
     [filters, products],
+  )
+
+  const nameOptions = useMemo(() => toOptions(uniqueLabels(products.map((product) => product.name))), [products])
+  const categoryOptions = useMemo(
+    () => toOptions(uniqueLabels(products.map((product) => product.category_name))),
+    [products],
+  )
+  const storeOptions = useMemo(
+    () => toOptions(uniqueLabels(products.map((product) => product.store_name))),
+    [products],
+  )
+  const locationOptions = useMemo(
+    () => toOptions(uniqueLabels(products.flatMap((product) => product.locations))),
+    [products],
+  )
+  const currencyOptions = useMemo(
+    () => toOptions(uniqueLabels(products.map((product) => product.currency || 'CUP'))),
+    [products],
   )
 
   const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE))
@@ -113,12 +155,13 @@ export default function AdminProducts() {
   const pageStart = visible.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE
   const pageItems = visible.slice(pageStart, pageStart + PAGE_SIZE)
 
+  const numberInput =
+    'w-full min-h-9 rounded-full border border-brand-green/40 bg-brand-green/10 px-3 text-xs font-semibold text-brand-green outline-none placeholder:text-brand-green/45 focus:border-brand-green'
+
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }))
     setPage(1)
   }
-
-  const filterInput = `${adminInput} min-h-9 px-2 py-1.5 text-xs`
 
   return (
     <div className={adminSection}>
@@ -142,12 +185,14 @@ export default function AdminProducts() {
         <div className="overflow-x-auto rounded-2xl border border-brand-green/10">
           <table className="w-full min-w-[48rem] table-fixed border-collapse text-left text-sm xl:min-w-full">
             <colgroup>
-              <col className="w-[18%]" />
-              <col className="w-[13%]" />
-              <col className="w-[15%]" />
-              <col className="w-[10%]" />
-              <col className="w-[9%]" />
+              <col className="w-[14%]" />
               <col className="w-[11%]" />
+              <col className="w-[13%]" />
+              <col className="w-[10%]" />
+              <col className="w-[8%]" />
+              <col className="w-[8%]" />
+              <col className="w-[8%]" />
+              <col className="w-[10%]" />
               <col />
             </colgroup>
             <thead>
@@ -156,79 +201,100 @@ export default function AdminProducts() {
                 <th className="px-3 py-2">Categoría</th>
                 <th className="px-3 py-2">Negocio</th>
                 <th className="px-3 py-2">Costo</th>
+                <th className="px-3 py-2">Moneda</th>
+                <th className="px-3 py-2">Ventas</th>
                 <th className="px-3 py-2">Domicilio</th>
                 <th className="px-3 py-2">Suscripción</th>
                 <th className="px-3 py-2">Ubicaciones disponibles</th>
               </tr>
               <tr className="border-b border-zinc-800 bg-zinc-950/40">
                 <th className="px-2 py-2">
-                  <input
+                  <AdminPillSelect
                     value={filters.name}
-                    onChange={(event) => updateFilter('name', event.target.value)}
-                    className={filterInput}
-                    placeholder="Filtrar nombre"
-                    aria-label="Filtrar por nombre"
+                    onChange={(value) => updateFilter('name', value)}
+                    options={nameOptions}
+                    allLabel="Todos"
+                    ariaLabel="Filtrar por nombre"
                   />
                 </th>
                 <th className="px-2 py-2">
-                  <input
+                  <AdminPillSelect
                     value={filters.category}
-                    onChange={(event) => updateFilter('category', event.target.value)}
-                    className={filterInput}
-                    placeholder="Filtrar categoría"
-                    aria-label="Filtrar por categoría"
+                    onChange={(value) => updateFilter('category', value)}
+                    options={categoryOptions}
+                    allLabel="Todas"
+                    ariaLabel="Filtrar por categoría"
                   />
                 </th>
                 <th className="px-2 py-2">
-                  <input
+                  <AdminPillSelect
                     value={filters.store}
-                    onChange={(event) => updateFilter('store', event.target.value)}
-                    className={filterInput}
-                    placeholder="Filtrar negocio"
-                    aria-label="Filtrar por negocio"
+                    onChange={(value) => updateFilter('store', value)}
+                    options={storeOptions}
+                    allLabel="Todos"
+                    ariaLabel="Filtrar por negocio"
                   />
                 </th>
                 <th className="px-2 py-2">
                   <input
                     value={filters.cost}
                     onChange={(event) => updateFilter('cost', event.target.value)}
-                    className={filterInput}
-                    placeholder="Filtrar costo"
-                    aria-label="Filtrar por costo"
+                    className={numberInput}
+                    placeholder="≤ costo"
+                    aria-label="Filtrar por costo menor o igual"
                     inputMode="decimal"
                   />
                 </th>
                 <th className="px-2 py-2">
-                  <select
-                    value={filters.delivery}
-                    onChange={(event) => updateFilter('delivery', event.target.value)}
-                    className={filterInput}
-                    aria-label="Filtrar por domicilio"
-                  >
-                    <option value="all">Todos</option>
-                    <option value="si">Sí</option>
-                    <option value="no">No</option>
-                  </select>
-                </th>
-                <th className="px-2 py-2">
-                  <select
-                    value={filters.subscription}
-                    onChange={(event) => updateFilter('subscription', event.target.value)}
-                    className={filterInput}
-                    aria-label="Filtrar por suscripción"
-                  >
-                    <option value="all">Todas</option>
-                    <option value="activa">Activa</option>
-                    <option value="inactiva">Inactiva</option>
-                  </select>
+                  <AdminPillSelect
+                    value={filters.currency}
+                    onChange={(value) => updateFilter('currency', value)}
+                    options={currencyOptions}
+                    allLabel="Todas"
+                    ariaLabel="Filtrar por moneda"
+                  />
                 </th>
                 <th className="px-2 py-2">
                   <input
+                    value={filters.sales}
+                    onChange={(event) => updateFilter('sales', event.target.value)}
+                    className={numberInput}
+                    placeholder="≤ ventas"
+                    aria-label="Filtrar por ventas menores o iguales"
+                    inputMode="numeric"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <AdminPillSelect
+                    value={filters.delivery === 'all' ? '' : filters.delivery}
+                    onChange={(value) => updateFilter('delivery', value || 'all')}
+                    options={[
+                      { value: 'si', label: 'Sí' },
+                      { value: 'no', label: 'No' },
+                    ]}
+                    allLabel="Todos"
+                    ariaLabel="Filtrar por domicilio"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <AdminPillSelect
+                    value={filters.subscription === 'all' ? '' : filters.subscription}
+                    onChange={(value) => updateFilter('subscription', value || 'all')}
+                    options={[
+                      { value: 'activa', label: 'Activa' },
+                      { value: 'inactiva', label: 'Inactiva' },
+                    ]}
+                    allLabel="Todas"
+                    ariaLabel="Filtrar por suscripción"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <AdminPillSelect
                     value={filters.location}
-                    onChange={(event) => updateFilter('location', event.target.value)}
-                    className={filterInput}
-                    placeholder="Filtrar ubicación"
-                    aria-label="Filtrar por ubicación"
+                    onChange={(value) => updateFilter('location', value)}
+                    options={locationOptions}
+                    allLabel="Todas"
+                    ariaLabel="Filtrar por ubicación"
                   />
                 </th>
               </tr>
@@ -236,7 +302,7 @@ export default function AdminProducts() {
             <tbody>
               {pageItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                  <td colSpan={9} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                     Ningún producto coincide con estos filtros.
                   </td>
                 </tr>
@@ -247,14 +313,16 @@ export default function AdminProducts() {
                     <td className="px-3 py-3 break-words text-zinc-300">{product.category_name}</td>
                     <td className="px-3 py-3 break-words text-zinc-300">{product.store_name}</td>
                     <td className="px-3 py-3 tabular-nums text-zinc-100">
-                      {formatPrice(product.price, product.currency)}
+                      {Number(product.price).toLocaleString('es')}
                     </td>
+                    <td className="px-3 py-3 font-semibold text-brand-green">{product.currency || 'CUP'}</td>
+                    <td className="px-3 py-3 tabular-nums text-zinc-100">{product.sales_count ?? 0}</td>
                     <td className="px-3 py-3 text-zinc-300">{product.offers_delivery ? 'Sí' : 'No'}</td>
                     <td className="px-3 py-3 text-zinc-300">
                       {product.subscription_active ? 'Activa' : 'Inactiva'}
                     </td>
                     <td className="px-3 py-3">
-                      <LocationChips locations={product.locations} />
+                      <LocationSelect locations={product.locations} />
                     </td>
                   </tr>
                 ))
