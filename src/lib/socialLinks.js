@@ -5,7 +5,6 @@ export const SOCIAL_PLATFORMS = [
   { value: 'youtube', label: 'YouTube', placeholder: '@tucanal o enlace' },
   { value: 'telegram', label: 'Telegram', placeholder: 'tu_usuario' },
   { value: 'x', label: 'X', placeholder: 'tu_usuario' },
-  { value: 'whatsapp', label: 'WhatsApp', placeholder: '5351234567' },
   { value: 'other', label: 'Otra', placeholder: 'https://…' },
 ]
 
@@ -24,7 +23,7 @@ export function socialLinksFromProfile(source) {
   const stored = Array.isArray(source?.social_links) ? source.social_links : null
   if (stored) {
     return stored
-      .filter((link) => link?.value)
+      .filter((link) => link?.value && link.platform !== 'whatsapp')
       .map((link) =>
         createSocialLink({
           platform: link.platform,
@@ -92,10 +91,6 @@ export function socialLinkUrl(link) {
       return `https://t.me/${handle}`
     case 'x':
       return `https://x.com/${handle}`
-    case 'whatsapp': {
-      const digits = value.replace(/\D/g, '')
-      return digits ? `https://wa.me/${digits}` : null
-    }
     default:
       return `https://${handle}`
   }
