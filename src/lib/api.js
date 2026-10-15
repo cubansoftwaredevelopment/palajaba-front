@@ -737,6 +737,10 @@ function appendAdditionalMunicipalities(params, additionalMunicipalityIds) {
   }
 }
 
+function appendDisplayCurrency(params, currency) {
+  if (currency) params.set("currency", currency);
+}
+
 export function fetchMarketplaceBanners(provinceId = null) {
   const params = new URLSearchParams();
   if (provinceId) params.set("province_id", provinceId);
@@ -748,6 +752,7 @@ export function fetchMarketplaceFeed({
   provinceId,
   municipalityId,
   additionalMunicipalityIds,
+  currency,
   limitPerCategory = 20,
   limit = 4,
   offset = 0,
@@ -760,6 +765,7 @@ export function fetchMarketplaceFeed({
     offset: String(offset),
   });
   appendAdditionalMunicipalities(params, additionalMunicipalityIds);
+  appendDisplayCurrency(params, currency);
   return request(`/api/marketplace/feed?${params}`);
 }
 
@@ -767,6 +773,7 @@ export function fetchMarketplaceBusinesses({
   provinceId,
   municipalityId,
   additionalMunicipalityIds,
+  currency,
   query = "",
   categoryId,
   limit = 20,
@@ -785,6 +792,7 @@ export function fetchMarketplaceBusinesses({
     params.set("category_id", categoryId);
   }
   appendAdditionalMunicipalities(params, additionalMunicipalityIds);
+  appendDisplayCurrency(params, currency);
   return request(`/api/marketplace/businesses?${params}`);
 }
 
@@ -792,6 +800,7 @@ export function fetchMarketplaceSearch({
   provinceId,
   municipalityId,
   additionalMunicipalityIds,
+  currency,
   query = "",
   globalCategoryId,
   limit = 20,
@@ -808,6 +817,7 @@ export function fetchMarketplaceSearch({
     params.set("global_category_id", globalCategoryId);
   }
   appendAdditionalMunicipalities(params, additionalMunicipalityIds);
+  appendDisplayCurrency(params, currency);
   return request(`/api/marketplace/search?${params}`);
 }
 
@@ -819,6 +829,7 @@ export function fetchMarketplaceStoreCatalog({
   storeSlug,
   provinceId,
   municipalityId,
+  currency,
   limitPerCategory = 20,
 }) {
   const params = new URLSearchParams({
@@ -826,6 +837,7 @@ export function fetchMarketplaceStoreCatalog({
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
   });
+  appendDisplayCurrency(params, currency);
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/catalog?${params}`,
   );
@@ -836,6 +848,7 @@ export function fetchMarketplaceGestorStoreCatalog({
   gestorUsername,
   provinceId,
   municipalityId,
+  currency,
   limitPerCategory = 20,
 }) {
   const params = new URLSearchParams({
@@ -843,6 +856,7 @@ export function fetchMarketplaceGestorStoreCatalog({
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
   });
+  appendDisplayCurrency(params, currency);
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/catalog?${params}`,
   );
@@ -853,6 +867,7 @@ export function fetchMarketplaceStoreCategoryProducts({
   localCategoryId,
   provinceId,
   municipalityId,
+  currency,
   limit = 20,
   offset = 0,
 }) {
@@ -862,6 +877,7 @@ export function fetchMarketplaceStoreCategoryProducts({
     limit: String(limit),
     offset: String(offset),
   });
+  appendDisplayCurrency(params, currency);
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
   );
@@ -873,6 +889,7 @@ export function fetchMarketplaceGestorStoreCategoryProducts({
   localCategoryId,
   provinceId,
   municipalityId,
+  currency,
   limit = 20,
   offset = 0,
 }) {
@@ -882,6 +899,7 @@ export function fetchMarketplaceGestorStoreCategoryProducts({
     limit: String(limit),
     offset: String(offset),
   });
+  appendDisplayCurrency(params, currency);
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
   );
@@ -967,6 +985,7 @@ export function fetchMarketplaceCategoryProducts({
   provinceId,
   municipalityId,
   additionalMunicipalityIds,
+  currency,
   globalCategoryId,
   limit = 20,
   offset = 0,
@@ -979,6 +998,7 @@ export function fetchMarketplaceCategoryProducts({
     offset: String(offset),
   });
   appendAdditionalMunicipalities(params, additionalMunicipalityIds);
+  appendDisplayCurrency(params, currency);
   return request(`/api/marketplace/products?${params}`);
 }
 
@@ -1141,12 +1161,13 @@ export function fetchAdminBanners(token) {
 export async function createAdminBanner(
   token,
   file,
-  { title = "", linkUrl = "", provinceIds = [] } = {},
+  { title = "", linkUrl = "", provinceIds = [], deactivateAt = "" } = {},
 ) {
   const formData = new FormData();
   formData.append("file", file);
   if (title) formData.append("title", title);
   if (linkUrl) formData.append("link_url", linkUrl);
+  if (deactivateAt) formData.append("deactivate_at", deactivateAt);
   for (const provinceId of provinceIds || []) {
     formData.append("province_ids", provinceId);
   }
@@ -1184,6 +1205,32 @@ export function updateAdminBanner(token, bannerId, payload) {
     },
     body: JSON.stringify(body),
   });
+}
+
+export async function replaceAdminBannerImage(token, bannerId, file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await fetch(
+    `${getApiBase()}/api/admin/banners/${encodeURIComponent(bannerId)}/image`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    },
+  );
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
+    throw new ApiError(parsed.message, {
+      code: parsed.code,
+      data: parsed.data,
+    });
+  }
+
+  return response.json();
 }
 
 export function deleteAdminBanner(token, bannerId) {

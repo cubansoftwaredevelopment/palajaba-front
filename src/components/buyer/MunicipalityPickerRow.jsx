@@ -6,9 +6,14 @@ import {
   buyerMunicipalityRow,
 } from './buyerStyles'
 
-export default function MunicipalityPickerRow({ municipality, onSelect }) {
+export default function MunicipalityPickerRow({ municipality, selected = false, onSelect }) {
   return (
-    <button type="button" onClick={() => onSelect(municipality)} className={buyerMunicipalityRow}>
+    <button
+      type="button"
+      onClick={() => onSelect(municipality)}
+      aria-pressed={selected}
+      className={`${buyerMunicipalityRow} ${selected ? 'border-brand-green/35 bg-brand-yellow/15' : ''}`}
+    >
       <span className={buyerMunicipalityMonogram} aria-hidden="true">
         {getMunicipalityMonogram(municipality.name)}
       </span>

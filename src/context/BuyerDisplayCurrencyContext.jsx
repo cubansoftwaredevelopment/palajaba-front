@@ -7,7 +7,7 @@ import {
   loadExchangeRates,
 } from '../lib/exchangeRates'
 
-const BuyerDisplayCurrencyContext = createContext(null)
+export const BuyerDisplayCurrencyContext = createContext(null)
 
 export function BuyerDisplayCurrencyProvider({ children }) {
   const [currency, setCurrencyState] = useState(getBuyerDisplayCurrency)

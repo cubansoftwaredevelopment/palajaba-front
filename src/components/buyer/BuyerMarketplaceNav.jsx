@@ -1,56 +1,352 @@
-import { NavLink } from 'react-router-dom'
-import {
-  getVisibleBuyerMarketplaceNav,
-  isBuyerMarketplaceNavVisible,
-} from '../../constants/buyerMarketplaceNav'
-import { buyerMarketplaceNavItem, buyerMarketplaceNavShell } from './buyerStyles'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { NavLink, useLocation } from 'react-router-dom'
+import { fetchCategories, fetchRenewalContactPhone } from '../../lib/api'
+import { isAdminAuthenticated } from '../../lib/adminAuth'
+import { getBuyerLocation, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+import { isSellerAuthenticated } from '../../lib/sellerAuth'
+import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
+import { openExternalUrl } from '../../lib/nativeApp'
 
-const ICONS = {
-  marketplace: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-      <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-      <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
-    </svg>
-  ),
-  negocios: (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-      <path d="M9 22V12h6v10" />
-    </svg>
-  ),
+export const MARKETPLACE_CATEGORY_EVENT = 'pala-jaba-marketplace-category'
+
+const HELP_MESSAGE = 'Hola tengo un problema'
+
+const optionClass =
+  'relative inline-flex text-brand-carmelita touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35 disabled:cursor-not-allowed disabled:opacity-40'
+
+const MAIN_RADIUS = 118
+
+function arcPoint(index, count, radius) {
+  const start = Math.PI
+  const end = Math.PI / 2
+  const t = count <= 1 ? 0.5 : index / (count - 1)
+  const angle = start + (end - start) * t
+  return {
+    x: Math.cos(angle) * radius,
+    y: -Math.sin(angle) * radius,
+  }
+}
+
+const MAIN_POINTS = [0, 1, 2].map((index) => arcPoint(index, 3, MAIN_RADIUS))
+const ORIGIN = { x: 0, y: 0 }
+
+const optionIconClass =
+  'flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-white shadow-[0_8px_18px_rgba(89,128,44,0.18)]'
+
+const LIVES = [
+  { icon: ['ghost-drift-a', '3.8s', '-0.6s'], label: ['ghost-drift-b', '5.4s', '-2.2s'], fade: ['4.3s', '-1.1s'] },
+  { icon: ['ghost-drift-c', '2.9s', '-1.5s'], label: ['ghost-drift-a', '4.7s', '-0.2s'], fade: ['3.2s', '-2.6s'] },
+  { icon: ['ghost-drift-b', '4.6s', '-3.1s'], label: ['ghost-drift-c', '3.3s', '-1.8s'], fade: ['5.7s', '-0.4s'] },
+]
+
+function lifeFor(index) {
+  const base = LIVES[index % LIVES.length]
+  return {
+    icon: [base.icon[0], base.icon[1], `-${(index * 0.67).toFixed(2)}s`],
+    label: [base.label[0], base.label[1], `-${(index * 1.13).toFixed(2)}s`],
+    fade: [base.fade[0], `-${(index * 0.41).toFixed(2)}s`],
+  }
+}
+
+function driftStyle(open, spec, fade) {
+  if (!open) return { animation: 'none' }
+  if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    return { animation: 'none' }
+  }
+  const [name, duration, delay] = spec
+  const fadePart = fade ? `, ghost-fade ${fade[0]} ease-in-out ${fade[1]} infinite` : ''
+  return { animation: `${name} ${duration} ease-in-out ${delay} infinite${fadePart}` }
+}
+
+function ArcOption({ open, from, to, index, children }) {
+  const reduceMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  const place = open ? to : from
+  return (
+    <div
+      className="absolute top-1/2 left-1/2 z-0"
+      inert={open ? undefined : true}
+      aria-hidden={open ? undefined : true}
+      style={{
+        opacity: open ? 1 : 0,
+        filter: reduceMotion || open ? 'blur(0px)' : 'blur(6px)',
+        transform: `translate(calc(-50% + ${place.x}px), calc(-50% + ${place.y}px))`,
+        transition: reduceMotion ? 'none' : 'transform 220ms linear, opacity 160ms ease, filter 160ms ease',
+        transitionDelay: open && !reduceMotion ? `${index * 16}ms` : '0ms',
+        pointerEvents: open ? 'auto' : 'none',
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+function OptionLabel({ open, life, children }) {
+  return (
+    <span className="pointer-events-none absolute bottom-[calc(100%+0.3rem)] left-1/2 w-max -translate-x-1/2">
+      <span
+        className="inline-block whitespace-nowrap rounded-full bg-brand-white/95 px-2.5 py-1 text-xs font-semibold text-brand-green shadow-[0_4px_12px_rgba(89,128,44,0.12)] motion-reduce:animate-none"
+        style={driftStyle(open, life.label, life.fade)}
+      >
+        {children}
+      </span>
+    </span>
+  )
+}
+
+function OptionIcon({ open, life, className, children }) {
+  return (
+    <span className={`${className} motion-reduce:animate-none`} style={driftStyle(open, life.icon)}>
+      {children}
+    </span>
+  )
+}
+
+function publishCategory(provinceId, categoryId) {
+  if (!provinceId) return
+  setMarketplaceCategoryFilter(provinceId, categoryId)
+  window.dispatchEvent(
+    new CustomEvent(MARKETPLACE_CATEGORY_EVENT, {
+      detail: { provinceId, categoryId },
+    }),
+  )
+}
+
+function CategoryModal({ provinceId, categories, loading, selectedId, onClose, onSelect }) {
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-brand-green/25 p-3 backdrop-blur-sm sm:items-center"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="buyer-category-modal-title"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[min(70dvh,32rem)] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)]"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-brand-green/10 px-5 py-4">
+          <h2 id="buyer-category-modal-title" className="font-display text-lg font-bold text-brand-green">
+            Categorías
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-full px-2 text-lg text-brand-carmelita"
+            aria-label="Cerrar"
+          >
+            ×
+          </button>
+        </div>
+        <ul className="min-h-0 flex-1 overflow-y-auto py-2">
+          {loading ? (
+            <li className="px-5 py-4 text-sm text-brand-carmelita">Cargando categorías…</li>
+          ) : (
+            [{ id: '', name: 'Todas las categorías' }, ...categories].map((category) => {
+              const active = (selectedId || '') === category.id
+              return (
+                <li key={category.id || 'all'}>
+                  <button
+                    type="button"
+                    onClick={() => onSelect(category.id)}
+                    className={`flex w-full items-center justify-between px-5 py-3 text-left text-sm touch-manipulation ${
+                      active ? 'bg-brand-green/10 font-semibold text-brand-green' : 'text-brand-green'
+                    }`}
+                  >
+                    <span>{category.name}</span>
+                    {active ? <span aria-hidden="true">✓</span> : null}
+                  </button>
+                </li>
+              )
+            })
+          )}
+        </ul>
+      </div>
+    </div>
+  )
 }
 
 export default function BuyerMarketplaceNav() {
-  if (!isBuyerMarketplaceNavVisible()) return null
-
-  const items = getVisibleBuyerMarketplaceNav()
-  if (!items.length) return null
-
-  return (
-    <nav className={buyerMarketplaceNavShell} aria-label="Secciones de compra">
-      <div className="mx-auto flex w-full min-w-0 max-w-md items-stretch px-1 sm:max-w-lg lg:max-w-5xl">
-        {items.map((item) => (
-          <NavLink
-            key={item.id}
-            to={item.path}
-            end={item.end}
-            className={({ isActive }) => buyerMarketplaceNavItem(isActive)}
-          >
-            {({ isActive }) => (
-              <>
-                <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors sm:h-9 sm:w-9 sm:rounded-xl ${
-                    isActive ? 'bg-brand-green text-brand-white' : 'text-current'
-                  }`}
-                >
-                  {ICONS[item.id]}
-                </span>
-                <span className="w-full truncate px-0.5 text-center">{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        ))}
-      </div>
-    </nav>
+  const route = useLocation()
+  const location = getBuyerLocation()
+  const provinceId = location?.province?.id ?? ''
+  const [categoryOpen, setCategoryOpen] = useState(false)
+  const [categories, setCategories] = useState([])
+  const [categoriesLoading, setCategoriesLoading] = useState(false)
+  const [selectedCategoryId, setSelectedCategoryId] = useState(() =>
+    provinceId ? getMarketplaceCategoryFilter(provinceId) : '',
   )
+  const [helpPhone, setHelpPhone] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchRenewalContactPhone()
+      .then((data) => {
+        if (!cancelled) setHelpPhone(data?.renewal_contact_phone || '')
+      })
+      .catch(() => {
+        if (!cancelled) setHelpPhone('')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!categoryOpen || categories.length) return undefined
+    let cancelled = false
+    setCategoriesLoading(true)
+    fetchCategories()
+      .then((data) => {
+        if (!cancelled) setCategories(Array.isArray(data) ? data : [])
+      })
+      .catch(() => {
+        if (!cancelled) setCategories([])
+      })
+      .finally(() => {
+        if (!cancelled) setCategoriesLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [categoryOpen, categories.length])
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key !== 'Escape') return
+      if (categoryOpen) setCategoryOpen(false)
+      else setMenuOpen(false)
+    }
+    if (!categoryOpen && !menuOpen) return undefined
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [categoryOpen, menuOpen])
+
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [route.pathname])
+
+  function chooseCategory(categoryId) {
+    setSelectedCategoryId(categoryId)
+    publishCategory(provinceId, categoryId)
+    setCategoryOpen(false)
+    setMenuOpen(false)
+  }
+
+  function openHelp() {
+    const url = buildWhatsAppUrl(helpPhone, HELP_MESSAGE)
+    if (url) openExternalUrl(url)
+  }
+
+  const accountSignedIn = isSellerAuthenticated() || isAdminAuthenticated()
+  const categoryActive = categoryOpen || Boolean(selectedCategoryId)
+  const accountIcon = (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <circle cx="12" cy="8" r="3.2" />
+      <path d="M5.5 19.2c1.4-2.6 3.6-3.7 6.5-3.7s5.1 1.1 6.5 3.7" />
+    </svg>
+  )
+  const backTo = `${route.pathname}${route.search}${route.hash}`
+
+  const menu = (
+    <>
+      {menuOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-20 bg-brand-green/10"
+          aria-label="Cerrar navegación"
+          onClick={() => setMenuOpen(false)}
+        />
+      ) : null}
+      <nav
+        className="fixed right-4 bottom-[max(2rem,calc(1.65rem+var(--safe-bottom)))] z-30 h-14 w-14 sm:right-[3.25rem]"
+        aria-label="Secciones de compra"
+      >
+        <ArcOption open={menuOpen} from={ORIGIN} to={MAIN_POINTS[0]} index={0}>
+          <button
+            type="button"
+            className={`${optionClass} ${categoryActive ? 'text-brand-green' : ''}`}
+            aria-label="Categorías"
+            onClick={() => {
+              setMenuOpen(false)
+              setCategoryOpen(true)
+            }}
+          >
+            <OptionLabel open={menuOpen} life={lifeFor(0)}>Categorías</OptionLabel>
+            <OptionIcon open={menuOpen} life={lifeFor(0)} className={optionIconClass}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
+                <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+                <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
+                <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+              </svg>
+            </OptionIcon>
+          </button>
+        </ArcOption>
+        <ArcOption open={menuOpen} from={ORIGIN} to={MAIN_POINTS[1]} index={1}>
+          <button
+            type="button"
+            className={`${optionClass} text-brand-green`}
+            aria-label="Ayuda"
+            disabled={!helpPhone}
+            onClick={() => {
+              setMenuOpen(false)
+              openHelp()
+            }}
+          >
+            <OptionLabel open={menuOpen} life={lifeFor(1)}>Ayuda</OptionLabel>
+            <OptionIcon open={menuOpen} life={lifeFor(1)} className={optionIconClass}>
+              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M12.04 2C6.58 2 2.15 6.4 2.15 11.83c0 1.74.46 3.44 1.34 4.94L2 22l5.39-1.41a10 10 0 0 0 4.65 1.18h.01c5.46 0 9.89-4.4 9.89-9.83C21.94 6.41 17.5 2 12.04 2Zm5.76 14.15c-.24.68-1.4 1.3-1.94 1.38-.5.08-1.12.11-1.81-.11-.42-.14-.95-.31-1.64-.6-2.88-1.25-4.76-4.16-4.9-4.35-.14-.19-1.17-1.55-1.17-2.96 0-1.41.74-2.1 1-2.39.26-.28.57-.35.76-.35.19 0 .38 0 .55.01.18.01.41-.07.64.49.24.57.81 1.97.88 2.11.07.14.12.31.02.5-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.28-.12.55.16.26.7 1.16 1.51 1.88 1.04.92 1.91 1.21 2.18 1.35.26.14.42.12.58-.07.16-.19.66-.77.84-1.03.18-.26.35-.22.59-.13.24.09 1.51.71 1.77.84.26.13.43.19.5.3.06.11.06.64-.18 1.32Z"
+                />
+              </svg>
+            </OptionIcon>
+          </button>
+        </ArcOption>
+        <ArcOption open={menuOpen} from={ORIGIN} to={MAIN_POINTS[2]} index={2}>
+          {accountSignedIn ? (
+            <button type="button" className={optionClass} aria-label="Cuenta" disabled>
+              <OptionLabel open={menuOpen} life={lifeFor(2)}>Cuenta</OptionLabel>
+              <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
+            </button>
+          ) : (
+            <NavLink
+              to="/login"
+              state={{ backTo }}
+              className={optionClass}
+              aria-label="Iniciar sesión"
+              onClick={() => setMenuOpen(false)}
+            >
+              <OptionLabel open={menuOpen} life={lifeFor(2)}>Cuenta</OptionLabel>
+              <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
+            </NavLink>
+          )}
+        </ArcOption>
+        <button
+          type="button"
+          className="relative z-10 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-brand-yellow shadow-[0_14px_28px_rgba(28,33,24,0.28)] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40"
+          aria-label={menuOpen ? 'Cerrar navegación' : 'Abrir navegación'}
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((open) => !open)}
+        >
+          <img src="/images/welcome/lali.png" alt="" className="h-12 w-12 object-contain" />
+        </button>
+      </nav>
+      {categoryOpen ? (
+        <CategoryModal
+          provinceId={provinceId}
+          categories={categories}
+          loading={categoriesLoading}
+          selectedId={selectedCategoryId}
+          onClose={() => setCategoryOpen(false)}
+          onSelect={chooseCategory}
+        />
+      ) : null}
+    </>
+  )
+
+  return createPortal(menu, document.body)
 }

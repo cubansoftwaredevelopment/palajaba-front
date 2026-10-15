@@ -137,6 +137,33 @@
     }
   }
 
+  @keyframes ghost-drift-a {
+    0% { transform: translate(0, 0); }
+    28% { transform: translate(-3px, -6px); }
+    61% { transform: translate(2px, -2px); }
+    100% { transform: translate(0, 0); }
+  }
+
+  @keyframes ghost-drift-b {
+    0% { transform: translate(0, 1px); }
+    37% { transform: translate(4px, -4px); }
+    71% { transform: translate(-2px, -7px); }
+    100% { transform: translate(0, 1px); }
+  }
+
+  @keyframes ghost-drift-c {
+    0% { transform: translate(1px, 0); }
+    44% { transform: translate(-4px, -5px); }
+    78% { transform: translate(3px, -3px); }
+    100% { transform: translate(1px, 0); }
+  }
+
+  @keyframes ghost-fade {
+    0%,
+    100% { opacity: 1; }
+    50% { opacity: 0.62; }
+  }
+
   @keyframes pulse-soft {
     0%,
     100% {
@@ -176,6 +203,16 @@
   body {
     @apply m-0 min-h-dvh min-w-0 overflow-x-hidden bg-brand-white font-sans text-brand-green antialiased;
     letter-spacing: 0.01em;
+  }
+
+  .buyer-preview-static a,
+  .buyer-preview-static button,
+  .buyer-preview-static input,
+  .buyer-preview-static select,
+  .buyer-preview-static textarea,
+  .buyer-preview-static label,
+  .buyer-preview-static [role='button'] {
+    pointer-events: none;
   }
 
   .admin-theme {

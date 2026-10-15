@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchMarketplaceBanners } from '../../lib/api'
 import { resolveMediaUrl } from '../../lib/media'
 
-export default function BuyerBannerCarousel({ provinceId = null }) {
+export default function BuyerBannerCarousel({ provinceId = null, initialBannerId = null }) {
   const [banners, setBanners] = useState([])
   const [index, setIndex] = useState(0)
+  const [animate, setAnimate] = useState(true)
   const [loading, setLoading] = useState(true)
+  const indexRef = useRef(0)
+  indexRef.current = index
 
   useEffect(() => {
     let cancelled = false
@@ -13,8 +16,10 @@ export default function BuyerBannerCarousel({ provinceId = null }) {
     fetchMarketplaceBanners(provinceId)
       .then((data) => {
         if (cancelled) return
-        setBanners(Array.isArray(data) ? data : [])
-        setIndex(0)
+        const list = Array.isArray(data) ? data : []
+        setBanners(list)
+        const focus = list.findIndex((item) => item.id === initialBannerId)
+        setIndex(focus >= 0 ? focus : 0)
       })
       .catch(() => {
         if (!cancelled) setBanners([])
@@ -25,50 +30,105 @@ export default function BuyerBannerCarousel({ provinceId = null }) {
     return () => {
       cancelled = true
     }
-  }, [provinceId])
+  }, [provinceId, initialBannerId])
 
   useEffect(() => {
     if (banners.length <= 1) return undefined
     const id = window.setInterval(() => {
-      setIndex((current) => (current + 1) % banners.length)
+      const current = indexRef.current
+      if (current >= banners.length) {
+        setAnimate(false)
+        setIndex(0)
+        return
+      }
+      setAnimate(true)
+      setIndex(current + 1)
     }, 5000)
     return () => window.clearInterval(id)
   }, [banners.length])
 
-  const goTo = useCallback((next) => {
-    if (!banners.length) return
-    setIndex((next + banners.length) % banners.length)
-  }, [banners.length])
+  useEffect(() => {
+    if (!banners.length || index <= banners.length) return undefined
+    setAnimate(false)
+    setIndex(0)
+    return undefined
+  }, [banners.length, index])
 
-  if (loading) return null
+  const goTo = useCallback((next) => {
+    if (banners.length <= 1) return
+    const count = banners.length
+    const normalized = ((next % count) + count) % count
+    if (index % count === 0 && normalized === count - 1) {
+      setAnimate(false)
+      setIndex(count)
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          setAnimate(true)
+          setIndex(count - 1)
+        })
+      })
+      return
+    }
+    setAnimate(true)
+    setIndex(normalized)
+  }, [banners.length, index])
+
+  function handleSlideEnd(event) {
+    if (event.target !== event.currentTarget || event.propertyName !== 'transform') return
+    if (banners.length > 1 && index >= banners.length) {
+      setAnimate(false)
+      setIndex(0)
+    }
+  }
   if (!banners.length) return null
 
-  const banner = banners[index]
-  const imageUrl = resolveMediaUrl(banner.image_url)
-  const content = (
-    <img
-      src={imageUrl}
-      alt={banner.title || 'Banner promocional'}
-      className="h-full w-full object-cover"
-      loading="eager"
-    />
-  )
+  const slides = banners.length > 1 ? [...banners, banners[0]] : banners
+  const safeIndex = Math.min(index, slides.length - 1)
+  const activeDot = banners.length ? safeIndex % banners.length : 0
 
   return (
-    <section className="relative mb-4 overflow-hidden rounded-3xl bg-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.35)]">
-      <div className="aspect-[3/1] w-full sm:aspect-[4/1] lg:aspect-[5/1]">
-        {banner.link_url ? (
-          <a
-            href={banner.link_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block h-full w-full"
-          >
-            {content}
-          </a>
-        ) : (
-          content
-        )}
+    <section className="group relative -mx-3 -mt-2 mb-4 overflow-hidden rounded-3xl sm:-mx-4 lg:-mx-8 lg:-mt-6">
+      <div
+        className="aspect-[4/3] w-full overflow-hidden"
+        style={{
+          maskImage: 'linear-gradient(to right, transparent, #000 1.15rem, #000 calc(100% - 1.15rem), transparent), linear-gradient(to bottom, transparent, #000 0.9rem, #000 calc(100% - 0.9rem), transparent)',
+          WebkitMaskImage: 'linear-gradient(to right, transparent, #000 1.15rem, #000 calc(100% - 1.15rem), transparent), linear-gradient(to bottom, transparent, #000 0.9rem, #000 calc(100% - 0.9rem), transparent)',
+          maskComposite: 'intersect',
+          WebkitMaskComposite: 'source-in',
+        }}
+      >
+        <div
+          className={`flex h-full w-full ${animate ? 'transition-transform duration-700 ease-in-out motion-reduce:transition-none' : ''}`}
+          style={{ transform: `translateX(-${safeIndex * 100}%)` }}
+          onTransitionEnd={handleSlideEnd}
+        >
+          {slides.map((banner, slideIndex) => {
+            const image = (
+              <img
+                src={resolveMediaUrl(banner.image_url)}
+                alt={banner.title || 'Banner promocional'}
+                className="h-full w-full object-cover"
+                loading={slideIndex === 0 ? 'eager' : 'lazy'}
+              />
+            )
+            return (
+              <div key={`${banner.id}-${slideIndex}`} className="h-full shrink-0 basis-full">
+                {banner.link_url ? (
+                  <a
+                    href={banner.link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block h-full w-full"
+                  >
+                    {image}
+                  </a>
+                ) : (
+                  image
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       {banners.length > 1 ? (
@@ -81,24 +141,26 @@ export default function BuyerBannerCarousel({ provinceId = null }) {
                 aria-label={`Banner ${itemIndex + 1}`}
                 onClick={() => goTo(itemIndex)}
                 className={`h-2 rounded-full transition-all ${
-                  itemIndex === index ? 'w-6 bg-white' : 'w-2 bg-white/50'
+                  itemIndex === activeDot ? 'w-6 bg-white' : 'w-2 bg-white/50'
                 }`}
               />
             ))}
           </div>
           <button
             type="button"
-            onClick={() => goTo(index - 1)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-2 py-1 text-white hover:bg-black/60"
+            onClick={() => goTo(activeDot - 1)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-2 py-1 text-white opacity-0 transition-opacity duration-200 pointer-events-none hover:bg-black/60 group-hover:pointer-events-auto group-hover:opacity-100"
             aria-label="Banner anterior"
           >
             ‹
           </button>
           <button
             type="button"
-            onClick={() => goTo(index + 1)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-2 py-1 text-white hover:bg-black/60"
-            aria-label="Banner siguiente"
+            onClick={() => {
+              setAnimate(true)
+              setIndex((current) => (current % banners.length) + 1)
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-black/40 px-2 py-1 text-white opacity-0 transition-opacity duration-200 pointer-events-none hover:bg-black/60 group-hover:pointer-events-auto group-hover:opacity-100"
           >
             ›
           </button>

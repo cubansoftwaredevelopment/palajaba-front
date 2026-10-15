@@ -12,7 +12,8 @@ import {
 } from '../../components/buyer/buyerStyles'
 import { MARKETPLACE_LABEL } from '../../constants/branding'
 import { getProvinceById } from '../../constants/cubaLocations'
-import { getBuyerLocation, setBuyerMunicipality } from '../../lib/buyerLocation'
+import { getAdditionalMunicipalities, getBuyerLocation, setAdditionalMunicipalities, setBuyerMunicipality } from '../../lib/buyerLocation'
+import Button from '../../components/Button'
 import { municipalityMatchesQuery } from '../../lib/municipalityDisplay'
 
 export default function BuyerSelectMunicipality() {
@@ -22,6 +23,15 @@ export default function BuyerSelectMunicipality() {
     ? getProvinceById(savedLocation.province.id)
     : null
   const [query, setQuery] = useState('')
+  const [selectedIds, setSelectedIds] = useState(() => {
+    if (!province) return []
+    const ids = []
+    if (savedLocation?.municipality?.id) ids.push(savedLocation.municipality.id)
+    for (const id of getAdditionalMunicipalities(province.id)) {
+      if (!ids.includes(id)) ids.push(id)
+    }
+    return ids
+  })
 
   const municipalities = useMemo(() => {
     if (!province) return []
@@ -36,10 +46,20 @@ export default function BuyerSelectMunicipality() {
   }
 
   function handleSelect(municipality) {
-    setBuyerMunicipality({
-      id: municipality.id,
-      name: municipality.name,
-    })
+    setSelectedIds((current) =>
+      current.includes(municipality.id)
+        ? current.filter((id) => id !== municipality.id)
+        : [...current, municipality.id],
+    )
+  }
+
+  function confirmSelection() {
+    if (!province || selectedIds.length === 0) return
+    const [firstId, ...rest] = selectedIds
+    const first = province.municipalities.find((municipality) => municipality.id === firstId)
+    if (!first) return
+    setBuyerMunicipality({ id: first.id, name: first.name })
+    setAdditionalMunicipalities(province.id, rest)
     navigate('/comprar')
   }
 
@@ -87,11 +107,20 @@ export default function BuyerSelectMunicipality() {
             <MunicipalityPickerRow
               key={municipality.id}
               municipality={municipality}
+              selected={selectedIds.includes(municipality.id)}
               onSelect={handleSelect}
             />
           ))
         )}
       </div>
+      <Button
+        type="button"
+        className="sticky bottom-[max(0.75rem,var(--safe-bottom))] mt-4"
+        disabled={selectedIds.length === 0}
+        onClick={confirmSelection}
+      >
+        Ver en el marketplace
+      </Button>
     </BuyerShell>
   )
 }

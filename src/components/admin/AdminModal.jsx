@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { adminFocusRing } from './adminStyles'
 import { readAdminTheme } from './adminTheme'
 
-export default function AdminModal({ title, subtitle, children, onClose, centered }) {
+export default function AdminModal({ title, subtitle, children, onClose, centered, panelClassName = 'max-w-md' }) {
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -25,7 +25,7 @@ export default function AdminModal({ title, subtitle, children, onClose, centere
       onClick={onClose}
     >
       <div
-        className={`relative max-h-[90dvh] w-full max-w-md animate-fade-in overflow-y-auto rounded-2xl border border-brand-green/15 bg-gradient-to-b from-zinc-900 to-zinc-950 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.45)] ${centered ? 'text-center' : ''}`}
+        className={`relative max-h-[90dvh] w-full animate-fade-in overflow-y-auto rounded-2xl border border-brand-green/15 bg-gradient-to-b from-zinc-900 to-zinc-950 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.45)] ${panelClassName} ${centered ? 'text-center' : ''}`}
         onClick={(e) => e.stopPropagation()}
       >
         {title ? (

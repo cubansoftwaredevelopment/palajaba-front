@@ -1,4 +1,7 @@
+import { useContext } from 'react'
 import { Link } from 'react-router-dom'
+import { BuyerDisplayCurrencyContext } from '../../context/BuyerDisplayCurrencyContext'
+import BuyerCurrencyTag from './BuyerCurrencyTag'
 import BuyerJabaButton from './BuyerJabaButton'
 import BuyerJabaPanel from './BuyerJabaPanel'
 import { buyerMarketplaceScrollPadding } from './buyerStyles'
@@ -6,7 +9,6 @@ import {
   BuyerSellerReturnFooter,
   BuyerSellerReturnHeaderLink,
 } from './BuyerSellerReturnLink'
-import { isBuyerMarketplaceNavVisible } from '../../constants/buyerMarketplaceNav'
 import { useBuyerMarketplaceHub } from '../../lib/buyerMarketplaceHub'
 import { isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
 
@@ -16,17 +18,19 @@ export default function BuyerShell({
   backLabel = 'Volver',
   headerStart = null,
   headerEnd = null,
+  headerSearch = null,
   children,
 }) {
   const showBackLink = Boolean(backTo) && !headerStart
   const isSellerPreview = mode === 'seller-preview'
   const marketplaceHub = useBuyerMarketplaceHub()
-  const marketplaceNavVisible = isBuyerMarketplaceNavVisible()
+  const currencyContext = useContext(BuyerDisplayCurrencyContext)
+  const showCurrencyTag = marketplaceHub && !isSellerPreview && Boolean(currencyContext)
   const sellerBrowsing = isSellerBrowsingMarketplace() && !isSellerPreview
   const scrollPaddingClass =
-    marketplaceHub && marketplaceNavVisible
+    marketplaceHub
       ? sellerBrowsing
-        ? 'pb-[calc(8.25rem+var(--safe-bottom))] lg:pb-[calc(5rem+var(--safe-bottom))]'
+        ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'
         : buyerMarketplaceScrollPadding
       : sellerBrowsing && marketplaceHub
         ? 'pb-[calc(4.75rem+var(--safe-bottom))] lg:pb-10'
@@ -44,9 +48,9 @@ export default function BuyerShell({
       />
 
       <header className="relative z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/90 pt-[var(--safe-top)] backdrop-blur-sm">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-5 py-4 lg:px-10 lg:py-5">
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-5 py-3 lg:gap-3 lg:px-10 lg:py-4">
           {headerStart ? (
-            <div className="min-w-0 flex-1 pr-4">{headerStart}</div>
+            <div className={headerSearch ? 'min-w-0 max-w-[46%] shrink' : 'min-w-0 flex-1 pr-4'}>{headerStart}</div>
           ) : showBackLink ? (
             <Link
               to={backTo}
@@ -58,8 +62,9 @@ export default function BuyerShell({
               {backLabel}
             </Link>
           ) : (
-            <span className="w-10" aria-hidden="true" />
+            <span className="w-10 shrink-0" aria-hidden="true" />
           )}
+          {headerSearch ? <div className="min-w-0 flex-1">{headerSearch}</div> : headerStart ? null : <div className="flex-1" />}
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             {headerEnd}
             {!isSellerPreview ? <BuyerSellerReturnHeaderLink /> : null}
@@ -67,6 +72,8 @@ export default function BuyerShell({
           </div>
         </div>
       </header>
+
+      {showCurrencyTag ? <BuyerCurrencyTag /> : null}
 
       <div className="buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
         <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${scrollPaddingClass}`}>

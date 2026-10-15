@@ -7,30 +7,51 @@ import {
   buyerHeaderLocationTitle,
 } from './buyerStyles'
 
-export default function BuyerLocationDisplay({ province, municipality }) {
+const linkClass =
+  'rounded-full touch-manipulation transition-opacity active:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25'
+
+export default function BuyerLocationDisplay({ province, municipality, extraMunicipalityCount = 0 }) {
   const provinceData = province?.id ? getProvinceById(province.id) : null
+  const extraLabel = extraMunicipalityCount > 0 ? ` +${extraMunicipalityCount}` : ''
 
   return (
-    <Link
-      to="/comprar/provincia"
-      aria-label={`Cambiar ubicación (${municipality?.name}, ${province?.name})`}
-      className={`${buyerHeaderLocationRoot} -ml-1 rounded-full py-0.5 pl-1 pr-2 touch-manipulation transition-opacity active:opacity-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25`}
-    >
-      {provinceData?.imageUrl ? (
-        <img
-          src={provinceData.imageUrl}
-          alt=""
-          className={buyerHeaderLocationImage}
-          loading="lazy"
-          decoding="async"
-        />
-      ) : (
-        <div className={`${buyerHeaderLocationImage} bg-brand-green/10`} aria-hidden="true" />
-      )}
+    <div className={`${buyerHeaderLocationRoot} -ml-1`}>
+      <Link
+        to="/comprar/provincia"
+        aria-label={`Cambiar provincia (${province?.name})`}
+        className={`${linkClass} shrink-0`}
+      >
+        {provinceData?.imageUrl ? (
+          <img
+            src={provinceData.imageUrl}
+            alt=""
+            className={buyerHeaderLocationImage}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className={`${buyerHeaderLocationImage} bg-brand-green/10`} aria-hidden="true" />
+        )}
+      </Link>
       <div className="min-w-0">
-        <p className={buyerHeaderLocationTitle}>{municipality?.name}</p>
-        <p className={buyerHeaderLocationProvince}>{province?.name}</p>
+        <Link
+          to="/comprar/municipio"
+          aria-label={`Cambiar municipio (${municipality?.name})`}
+          className={`${linkClass} block max-w-full`}
+        >
+          <p className={buyerHeaderLocationTitle}>
+            {municipality?.name}
+            {extraLabel}
+          </p>
+        </Link>
+        <Link
+          to="/comprar/provincia"
+          aria-label={`Cambiar provincia (${province?.name})`}
+          className={`${linkClass} block max-w-full`}
+        >
+          <p className={buyerHeaderLocationProvince}>{province?.name}</p>
+        </Link>
       </div>
-    </Link>
+    </div>
   )
 }

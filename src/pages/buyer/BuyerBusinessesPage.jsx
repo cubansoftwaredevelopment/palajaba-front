@@ -2,8 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import BuyerAdditionalMunicipalitiesFilter from '../../components/buyer/BuyerAdditionalMunicipalitiesFilter'
 import BuyerBusinessCard from '../../components/buyer/BuyerBusinessCard'
-import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
-import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
 import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
 import BuyerMarketplaceSearch, {
   BuyerBusinessSearchResults,
@@ -25,6 +23,7 @@ import {
   setAdditionalMunicipalities,
   setMarketplaceCategoryFilter,
 } from '../../lib/buyerLocation'
+import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 
 const PAGE_SIZE = 20
@@ -40,6 +39,7 @@ export default function BuyerBusinessesPage() {
 
 function BuyerBusinessesPageContent() {
   const location = getBuyerLocation()
+  const { currency } = useBuyerDisplayCurrency()
   const sentinelRef = useRef(null)
   const loadingMoreRef = useRef(false)
 
@@ -98,6 +98,7 @@ function BuyerBusinessesPageContent() {
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
           additionalMunicipalityIds,
+          currency,
           limit: PAGE_SIZE,
           offset,
         })
@@ -131,7 +132,7 @@ function BuyerBusinessesPageContent() {
         }
       }
     },
-    [additionalMunicipalityIds, location.municipality.id, location.province.id],
+    [additionalMunicipalityIds, currency, location.municipality.id, location.province.id],
   )
 
   useEffect(() => {
@@ -192,6 +193,7 @@ function BuyerBusinessesPageContent() {
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
           additionalMunicipalityIds,
+          currency,
           query: debouncedQuery,
           categoryId: searchCategoryId || undefined,
           limit: PAGE_SIZE,
@@ -224,6 +226,7 @@ function BuyerBusinessesPageContent() {
     },
     [
       additionalMunicipalityIds,
+      currency,
       debouncedQuery,
       location.municipality.id,
       location.province.id,
@@ -261,12 +264,6 @@ function BuyerBusinessesPageContent() {
           province={location.province}
           municipality={location.municipality}
         />
-      }
-      headerEnd={
-        <>
-          <BuyerLoginButton />
-          <BuyerCurrencySelector />
-        </>
       }
     >
       <div className="mb-4 flex flex-col gap-2 lg:mb-6 lg:gap-3">

@@ -36,8 +36,8 @@ export function convertBetweenCurrencies(
 }
 
 /**
- * Resuelve el precio a mostrar según la moneda elegida por el comprador.
- * Solo convierte si la tienda acepta esa moneda; si no, mantiene el precio base.
+ * Convierte el precio con las tasas del toque.
+ * El listado ya dejó solo negocios que aceptan la moneda elegida.
  * Si faltan tasas reales, muestra el precio base sin convertir.
  */
 export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCupPerUnit()) {

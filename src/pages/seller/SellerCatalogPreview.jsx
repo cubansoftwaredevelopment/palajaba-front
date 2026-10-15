@@ -12,7 +12,7 @@ import BuyerCatalogPoweredFooter from '../../components/buyer/BuyerCatalogPowere
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
-import { BuyerDisplayCurrencyProvider } from '../../context/BuyerDisplayCurrencyContext'
+import { BuyerDisplayCurrencyProvider, useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { BuyerJabaProvider } from '../../context/BuyerJabaContext'
 import {
   fetchMarketplaceStoreCatalog,
@@ -61,6 +61,7 @@ export default function SellerCatalogPreview() {
 
 function SellerCatalogPreviewContent() {
   const { profile, refreshProfile } = useOutletContext()
+  const { currency } = useBuyerDisplayCurrency()
   const storeSlug = resolveStoreSlug(profile)
   const previewLocation = useMemo(() => {
     const area = profile?.business_area
@@ -99,6 +100,7 @@ function SellerCatalogPreviewContent() {
         storeSlug,
         provinceId: previewLocation.provinceId,
         municipalityId: previewLocation.municipalityId,
+        currency,
         limitPerCategory: PAGE_SIZE,
       })
       setCatalog(data)
@@ -114,7 +116,7 @@ function SellerCatalogPreviewContent() {
     } finally {
       setLoading(false)
     }
-  }, [previewLocation, storeSlug])
+  }, [currency, previewLocation, storeSlug])
 
   useEffect(() => {
     loadCatalog()
@@ -127,6 +129,7 @@ function SellerCatalogPreviewContent() {
         localCategoryId: section.category_id,
         provinceId: previewLocation.provinceId,
         municipalityId: previewLocation.municipalityId,
+        currency,
         limit: PAGE_SIZE,
         offset,
       })
@@ -135,7 +138,7 @@ function SellerCatalogPreviewContent() {
         has_more: data.has_more,
       }
     },
-    [previewLocation, storeSlug],
+    [currency, previewLocation, storeSlug],
   )
 
   async function handleSelectTheme(nextTheme) {

@@ -1,45 +1,57 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
-import BuyerAdditionalMunicipalitiesFilter from '../../components/buyer/BuyerAdditionalMunicipalitiesFilter'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import BuyerBannerCarousel from '../../components/buyer/BuyerBannerCarousel'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
-import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
-import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
+import BuyerHeaderSearch from '../../components/buyer/BuyerHeaderSearch'
 import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
-import BuyerMarketplaceSearch, {
-  BuyerSearchResults,
-  useMarketplaceSearchActive,
-} from '../../components/buyer/BuyerMarketplaceSearch'
+import { MARKETPLACE_CATEGORY_EVENT } from '../../components/buyer/BuyerMarketplaceNav'
+import { BuyerSearchResults } from '../../components/buyer/BuyerMarketplaceSearch'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
-import Button from '../../components/Button'
 import {
   fetchMarketplaceCategoryProducts,
   fetchMarketplaceFeed,
   fetchMarketplaceSearch,
   fetchCategories,
 } from '../../lib/api'
-import { getBuyerLocation, getAdditionalMunicipalities, hasCompleteBuyerLocation, setAdditionalMunicipalities, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+import { getBuyerLocation, getAdditionalMunicipalities, hasCompleteBuyerLocation, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+import { getMunicipalityById, getProvinceById } from '../../constants/cubaLocations'
 import { recordMarketplaceVisit } from '../../lib/marketplaceVisit'
+import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 import { LOADING_MASCOT, MARKETPLACE_LABEL } from '../../constants/branding'
 
 const PAGE_SIZE = 20
 const SECTION_PAGE_SIZE = 4
-const SEARCH_DEBOUNCE_MS = 300
+
+function readPreviewLocation() {
+  if (typeof window === 'undefined') return null
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('vista') !== 'preview') return null
+  const province = getProvinceById(params.get('provincia'))
+  const municipality = getMunicipalityById(params.get('provincia'), params.get('municipio'))
+  if (!province || !municipality) return null
+  return {
+    province: { id: province.id, name: province.name },
+    municipality: { id: municipality.id, name: municipality.name },
+    bannerId: params.get('banner') || null,
+  }
+}
 
 export default function BuyerHome() {
-  if (!hasCompleteBuyerLocation()) {
+  const preview = readPreviewLocation()
+  if (!preview && !hasCompleteBuyerLocation()) {
     return <Navigate to="/comprar/provincia" replace />
   }
 
-  return <BuyerHomeContent />
+  return <BuyerHomeContent preview={preview} />
 }
 
-function BuyerHomeContent() {
-  const location = getBuyerLocation()
+function BuyerHomeContent({ preview = null }) {
+  const location = preview ?? getBuyerLocation()
+  const { currency } = useBuyerDisplayCurrency()
   const [feed, setFeed] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -47,44 +59,48 @@ function BuyerHomeContent() {
   const loadingMoreRef = useRef(false)
   const sentinelRef = useRef(null)
   const [categories, setCategories] = useState([])
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchCategoryId, setSearchCategoryIdState] = useState(
-    () => getMarketplaceCategoryFilter(location.province.id),
+  const [searchCategoryId, setSearchCategoryId] = useState(
+    () => (preview ? '' : getMarketplaceCategoryFilter(location.province.id)),
   )
-  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [searchResults, setSearchResults] = useState(null)
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchError, setSearchError] = useState(null)
   const [searchLoadingMore, setSearchLoadingMore] = useState(false)
-  const [additionalMunicipalityIds, setAdditionalMunicipalityIdsState] = useState(
-    () => getAdditionalMunicipalities(location.province.id),
+  const [additionalMunicipalityIds] = useState(
+    () => (preview ? [] : getAdditionalMunicipalities(location.province.id)),
   )
+  const [municipalityFeeds, setMunicipalityFeeds] = useState([])
+  const [groupedLoading, setGroupedLoading] = useState(false)
+
+  const municipalityIds = useMemo(() => {
+    const ids = [location.municipality.id]
+    for (const id of additionalMunicipalityIds) {
+      if (id && !ids.includes(id)) ids.push(id)
+    }
+    return ids
+  }, [additionalMunicipalityIds, location.municipality.id])
+  const grouped = municipalityIds.length > 1
 
   useEffect(() => {
+    if (preview) return
     recordMarketplaceVisit({
       provinceId: location.province.id,
       municipalityId: location.municipality.id,
     })
-  }, [location.province.id, location.municipality.id])
+  }, [preview, location.province.id, location.municipality.id])
 
-  const setAdditionalMunicipalityIds = useCallback(
-    (nextIds) => {
-      setAdditionalMunicipalityIdsState(nextIds)
-      setAdditionalMunicipalities(location.province.id, nextIds)
-    },
-    [location.province.id],
-  )
-
-  const setSearchCategoryId = useCallback(
-    (nextCategoryId) => {
-      setSearchCategoryIdState(nextCategoryId)
+  useEffect(() => {
+    function onCategory(event) {
+      if (event.detail?.provinceId !== location.province.id) return
+      const nextCategoryId = event.detail.categoryId || ''
+      setSearchCategoryId(nextCategoryId)
       setMarketplaceCategoryFilter(location.province.id, nextCategoryId)
-    },
-    [location.province.id],
-  )
+    }
+    window.addEventListener(MARKETPLACE_CATEGORY_EVENT, onCategory)
+    return () => window.removeEventListener(MARKETPLACE_CATEGORY_EVENT, onCategory)
+  }, [location.province.id])
 
-  const searchActive = useMarketplaceSearchActive(debouncedQuery, searchCategoryId)
+  const searchActive = Boolean(searchCategoryId) && !grouped
 
   const loadFeed = useCallback(async ({ offset = 0, append = false } = {}) => {
     if (append) {
@@ -100,7 +116,8 @@ function BuyerHomeContent() {
       const data = await fetchMarketplaceFeed({
         provinceId: location.province.id,
         municipalityId: location.municipality.id,
-        additionalMunicipalityIds,
+        additionalMunicipalityIds: [],
+        currency,
         limitPerCategory: PAGE_SIZE,
         limit: SECTION_PAGE_SIZE,
         offset,
@@ -134,15 +151,15 @@ function BuyerHomeContent() {
         setLoading(false)
       }
     }
-  }, [additionalMunicipalityIds, location.municipality.id, location.province.id])
+  }, [currency, location.municipality.id, location.province.id])
 
   useEffect(() => {
+    if (grouped) return
     loadFeed()
-  }, [loadFeed])
+  }, [grouped, loadFeed])
 
   useEffect(() => {
     let cancelled = false
-    setCategoriesLoading(true)
 
     fetchCategories()
       .then((data) => {
@@ -151,27 +168,14 @@ function BuyerHomeContent() {
       .catch(() => {
         if (!cancelled) setCategories([])
       })
-      .finally(() => {
-        if (!cancelled) setCategoriesLoading(false)
-      })
-
     return () => {
       cancelled = true
     }
   }, [])
 
-  useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      setDebouncedQuery(searchQuery)
-    }, SEARCH_DEBOUNCE_MS)
-
-    return () => window.clearTimeout(timeoutId)
-  }, [searchQuery])
-
   const runSearch = useCallback(
     async ({ offset = 0, append = false } = {}) => {
-      const isActive =
-        debouncedQuery.trim().length >= 2 || Boolean(searchCategoryId)
+      const isActive = Boolean(searchCategoryId) && !grouped
 
       if (!isActive) {
         setSearchResults(null)
@@ -191,8 +195,9 @@ function BuyerHomeContent() {
         const data = await fetchMarketplaceSearch({
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
-          additionalMunicipalityIds,
-          query: debouncedQuery,
+          additionalMunicipalityIds: [],
+          currency,
+          query: '',
           globalCategoryId: searchCategoryId || undefined,
           limit: PAGE_SIZE,
           offset,
@@ -223,8 +228,8 @@ function BuyerHomeContent() {
       }
     },
     [
-      additionalMunicipalityIds,
-      debouncedQuery,
+      currency,
+      grouped,
       location.municipality.id,
       location.province.id,
       searchCategoryId,
@@ -234,6 +239,86 @@ function BuyerHomeContent() {
   useEffect(() => {
     runSearch()
   }, [runSearch])
+
+  useEffect(() => {
+    if (!grouped) return undefined
+    let cancelled = false
+    setGroupedLoading(true)
+    setLoadError(null)
+
+    const requests = municipalityIds.map((municipalityId) => {
+      if (searchCategoryId) {
+        return fetchMarketplaceSearch({
+          provinceId: location.province.id,
+          municipalityId,
+          additionalMunicipalityIds: [],
+          currency,
+          query: '',
+          globalCategoryId: searchCategoryId,
+          limit: PAGE_SIZE,
+          offset: 0,
+        }).then((data) => {
+          if (!data?.products?.length) return null
+          const categoryName =
+            data.category_name ||
+            categories.find((category) => category.id === searchCategoryId)?.name ||
+            'Categoría'
+          return {
+            municipalityId,
+            municipalityName: getMunicipalityById(location.province.id, municipalityId)?.name || municipalityId,
+            sections: [
+              {
+                category_id: searchCategoryId,
+                category_name: categoryName,
+                products: data.products,
+                has_more: data.has_more,
+                total_products: data.total_products,
+              },
+            ],
+          }
+        })
+      }
+      return fetchMarketplaceFeed({
+        provinceId: location.province.id,
+        municipalityId,
+        additionalMunicipalityIds: [],
+        currency,
+        limitPerCategory: PAGE_SIZE,
+        limit: 20,
+        offset: 0,
+      }).then((data) => {
+        if ((data?.total_products ?? 0) <= 0) return null
+        return {
+          municipalityId: data.municipality_id,
+          municipalityName: data.municipality_name,
+          sections: data.sections ?? [],
+        }
+      })
+    })
+
+    Promise.all(requests.map((request) => request.catch(() => null)))
+      .then((blocks) => {
+        if (cancelled) return
+        setMunicipalityFeeds(blocks.filter(Boolean))
+      })
+      .catch((err) => {
+        if (cancelled) return
+        setMunicipalityFeeds([])
+        setLoadError(
+          resolveUserFacingError(err, {
+            contextTitle: `No se pudo cargar el ${MARKETPLACE_LABEL.toLowerCase()}`,
+            fallbackMessage: 'No pudimos mostrar los productos de tu zona. Inténtalo de nuevo.',
+          }),
+        )
+      })
+      .finally(() => {
+        if (!cancelled) setGroupedLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [categories, currency, grouped, location.province.id, municipalityIds, searchCategoryId])
 
   const sections = feed?.sections ?? []
   const hasProducts = (feed?.total_products ?? 0) > 0
@@ -262,33 +347,18 @@ function BuyerHomeContent() {
         <BuyerLocationDisplay
           province={location.province}
           municipality={location.municipality}
+          extraMunicipalityCount={Math.max(0, municipalityIds.length - 1)}
         />
       }
-      headerEnd={
-        <>
-          <BuyerLoginButton />
-          <BuyerCurrencySelector />
-        </>
+      headerSearch={
+        <BuyerHeaderSearch
+          provinceId={location.province.id}
+          municipalityId={location.municipality.id}
+          additionalMunicipalityIds={additionalMunicipalityIds}
+        />
       }
     >
-      <BuyerBannerCarousel provinceId={location.province.id} />
-
-      <div className="mb-4 flex flex-col gap-2 lg:mb-6 lg:gap-3">
-        <BuyerMarketplaceSearch
-          categories={categories}
-          categoriesLoading={categoriesLoading}
-          query={searchQuery}
-          categoryId={searchCategoryId}
-          onQueryChange={setSearchQuery}
-          onCategoryChange={setSearchCategoryId}
-        />
-        <BuyerAdditionalMunicipalitiesFilter
-          provinceId={location.province.id}
-          baseMunicipalityId={location.municipality.id}
-          selectedIds={additionalMunicipalityIds}
-          onChange={setAdditionalMunicipalityIds}
-        />
-      </div>
+      <BuyerBannerCarousel provinceId={location.province.id} initialBannerId={preview?.bannerId} />
 
       {searchActive ? (
         <BuyerSearchResults
@@ -307,11 +377,57 @@ function BuyerHomeContent() {
         />
       ) : null}
 
-      {!searchActive && loading ? (
+      {grouped && groupedLoading ? (
         <LoadingState message="Cargando productos…" className="lg:items-start lg:text-left" />
       ) : null}
 
-      {!searchActive && !loading && loadError ? (
+      {grouped && !groupedLoading && !loadError && municipalityFeeds.length === 0 ? (
+        <div className="flex flex-col items-center rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-8 text-center">
+          <img src="/images/welcome/papi.png" alt="" className="mb-3 h-36 w-36 object-contain" />
+          <p className="font-display text-lg font-bold text-brand-green">Aún no hay productos aquí</p>
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
+            No encontramos tiendas con productos disponibles en los municipios elegidos.
+          </p>
+        </div>
+      ) : null}
+
+      {grouped && !groupedLoading && !loadError && municipalityFeeds.length > 0 ? (
+        <div className="flex flex-col gap-10">
+          {municipalityFeeds.map((block) => (
+            <section key={block.municipalityId}>
+              <h2 className="mb-4 font-display text-xl font-bold text-brand-green">{block.municipalityName}</h2>
+              <div className={buyerHomeSections}>
+                {block.sections.map((section) => (
+                  <BuyerCategoryProductRow
+                    key={`${block.municipalityId}-${section.category_id}`}
+                    section={section}
+                    loadMore={(offset) =>
+                      fetchMarketplaceCategoryProducts({
+                        provinceId: location.province.id,
+                        municipalityId: block.municipalityId,
+                        additionalMunicipalityIds: [],
+                        currency,
+                        globalCategoryId: section.category_id,
+                        limit: PAGE_SIZE,
+                        offset,
+                      }).then((data) => ({
+                        products: data.products,
+                        has_more: data.has_more,
+                      }))
+                    }
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : null}
+
+      {!grouped && !searchActive && loading ? (
+        <LoadingState message="Cargando productos…" className="lg:items-start lg:text-left" />
+      ) : null}
+
+      {!grouped && !searchActive && !loading && loadError ? (
         <StatePanel
           variant="buyer"
           title={loadError.title}
@@ -322,29 +438,18 @@ function BuyerHomeContent() {
         />
       ) : null}
 
-      {!searchActive && !loading && !loadError && !hasProducts ? (
-        <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
+      {!grouped && !searchActive && !loading && !loadError && !hasProducts ? (
+        <div className="flex flex-col items-center rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-8 text-center">
+          <img src="/images/welcome/papi.png" alt="" className="mb-3 h-36 w-36 object-contain" />
           <p className="font-display text-lg font-bold text-brand-green">Aún no hay productos aquí</p>
-          <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
+          <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
             No encontramos tiendas con productos disponibles en {location.municipality.name}. Prueba con otra
-            zona o usa el buscador cuando haya más tiendas.
+            zona.
           </p>
-          <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-center lg:justify-start">
-            <Link to="/comprar/provincia">
-              <Button variant="secondary" className="w-full sm:w-auto">
-                Cambiar ubicación
-              </Button>
-            </Link>
-            <Link to="/">
-              <Button variant="ghost" className="w-full sm:w-auto">
-                Volver al inicio
-              </Button>
-            </Link>
-          </div>
         </div>
       ) : null}
 
-      {!searchActive && !loading && !loadError && hasProducts ? (
+      {!grouped && !searchActive && !loading && !loadError && hasProducts ? (
         <div className={buyerHomeSections}>
           {sections.map((section) => (
             <BuyerCategoryProductRow
@@ -354,7 +459,8 @@ function BuyerHomeContent() {
                 fetchMarketplaceCategoryProducts({
                   provinceId: location.province.id,
                   municipalityId: location.municipality.id,
-                  additionalMunicipalityIds,
+                  additionalMunicipalityIds: [],
+                  currency,
                   globalCategoryId: section.category_id,
                   limit: PAGE_SIZE,
                   offset,

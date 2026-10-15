@@ -4,6 +4,13 @@ const STORAGE_KEY = 'pala-jaba-buyer-location'
 const ADDITIONAL_MUNICIPALITIES_KEY = 'pala-jaba-buyer-additional-municipalities'
 const MARKETPLACE_CATEGORY_FILTER_KEY = 'pala-jaba-buyer-marketplace-category-filter'
 
+let persistBuyerPrefs = true
+
+/** La vista previa del admin no debe reescribir la ubicación real del navegador. */
+export function disableBuyerLocationPersistence() {
+  persistBuyerPrefs = false
+}
+
 function normalizeStoredLocation(raw) {
   if (!raw?.province?.id) return null
 
@@ -114,7 +121,7 @@ export function getAdditionalMunicipalities(provinceId) {
 
 export function setAdditionalMunicipalities(provinceId, municipalityIds) {
   if (!provinceId) return
-
+  if (!persistBuyerPrefs || !provinceId) return
   const store = readAdditionalMunicipalitiesStore()
   const normalized = [...new Set(
     (municipalityIds ?? [])
@@ -159,7 +166,7 @@ export function getMarketplaceCategoryFilter(provinceId) {
 
 export function setMarketplaceCategoryFilter(provinceId, categoryId) {
   if (!provinceId) return
-
+  if (!persistBuyerPrefs || !provinceId) return
   const store = readMarketplaceCategoryFilterStore()
   const normalized = typeof categoryId === 'string' ? categoryId.trim() : ''
 

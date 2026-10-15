@@ -38,6 +38,7 @@ export default function AppDevicePresence() {
   coordsRef.current = coords
 
   useEffect(() => {
+    if (window.parent !== window) return undefined
     const platform = devicePlatform()
 
     let stopped = false

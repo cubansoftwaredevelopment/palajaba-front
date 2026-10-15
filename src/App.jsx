@@ -40,6 +40,12 @@ import RedirectLegacyStoreRoute from './components/buyer/RedirectLegacyStoreRout
 import DownloadAppPage from './pages/DownloadAppPage'
 import Remesas from './pages/Remesas'
 import AppDevicePresence from './lib/appDevicePresence'
+import { disableBuyerLocationPersistence } from './lib/buyerLocation'
+
+if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vista') === 'preview') {
+  disableBuyerLocationPersistence()
+  document.documentElement.classList.add('buyer-preview-static')
+}
 
 const router = createBrowserRouter([
   {

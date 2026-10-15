@@ -379,7 +379,7 @@ export const buyerProductDetailStickyBar =
   'shrink-0 border-t border-brand-green/10 bg-brand-white/95 px-5 py-3 pb-[max(0.85rem,var(--safe-bottom))] shadow-[0_-8px_24px_rgba(89,128,44,0.08)] backdrop-blur-md'
 
 export const buyerMarketplaceNavShell =
-  'fixed bottom-0 left-0 right-0 z-30 w-full max-w-[100dvw] border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md pb-[max(0.375rem,var(--safe-bottom))]'
+  'fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md rounded-t-[1.75rem] bg-brand-white pt-2 shadow-[0_-8px_28px_rgba(28,33,24,0.08)] pb-[max(0.7rem,var(--safe-bottom))] sm:max-w-lg'
 
 export function buyerMarketplaceNavItem(isActive) {
   return `flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 py-1.5 text-[0.625rem] font-semibold leading-none transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/30 sm:text-xs ${
@@ -388,7 +388,7 @@ export function buyerMarketplaceNavItem(isActive) {
 }
 
 export const buyerMarketplaceScrollPadding =
-  'pb-[calc(4.75rem+var(--safe-bottom))] lg:pb-[calc(5rem+var(--safe-bottom))]'
+  'pb-[calc(5rem+var(--safe-bottom))] lg:pb-[calc(5.25rem+var(--safe-bottom))]'
 
 export const buyerProductDetailStickyPriceLabel =
   'text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70'

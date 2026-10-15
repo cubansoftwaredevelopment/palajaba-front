@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
-import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
+import BuyerMarketplaceNav from '../../components/buyer/BuyerMarketplaceNav'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHeader'
 import BuyerCatalogPoweredFooter from '../../components/buyer/BuyerCatalogPoweredFooter'
@@ -20,6 +20,7 @@ import {
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
 } from '../../lib/api'
+import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { getBuyerLocation, hasCompleteBuyerLocation } from '../../lib/buyerLocation'
 import { normalizeCatalogTheme } from '../../lib/catalogThemes'
 import { validateGestorUsername } from '../../lib/sellerGestores'
@@ -86,9 +87,12 @@ export default function BuyerStorePage() {
 
   if (resolvingLocation) {
     return (
-      <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL}>
-        <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
-      </BuyerShell>
+      <>
+        <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL}>
+          <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
+        </BuyerShell>
+        <BuyerMarketplaceNav />
+      </>
     )
   }
 
@@ -110,6 +114,7 @@ export default function BuyerStorePage() {
 
 function BuyerStorePageContent({ location, gestorUsername = null }) {
   const { storeSlug } = useParams()
+  const { currency } = useBuyerDisplayCurrency()
   const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
@@ -126,12 +131,14 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             gestorUsername,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
+            currency,
             limitPerCategory: PAGE_SIZE,
           })
         : await fetchMarketplaceStoreCatalog({
             storeSlug,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
+            currency,
             limitPerCategory: PAGE_SIZE,
           })
       setCatalog(data)
@@ -165,6 +172,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       setLoading(false)
     }
   }, [
+    currency,
     isGestorCatalog,
     gestorUsername,
     location.municipality.id,
@@ -185,6 +193,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             localCategoryId: section.category_id,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
+            currency,
             limit: PAGE_SIZE,
             offset,
           })
@@ -193,6 +202,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             localCategoryId: section.category_id,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
+            currency,
             limit: PAGE_SIZE,
             offset,
           })
@@ -202,6 +212,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       }
     },
     [
+      currency,
       isGestorCatalog,
       gestorUsername,
       location.municipality.id,
@@ -221,12 +232,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       <BuyerShell
         backTo={backTo}
         backLabel={backLabel}
-        headerEnd={
-          <>
-            <BuyerLoginButton />
-            <BuyerCurrencySelector />
-          </>
-        }
+        headerEnd={<BuyerLoginButton />}
       >
       {loading ? (
         <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
@@ -297,6 +303,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
         </div>
       ) : null}
       </BuyerShell>
+      <BuyerMarketplaceNav />
     </CatalogThemeScope>
   )
 }
