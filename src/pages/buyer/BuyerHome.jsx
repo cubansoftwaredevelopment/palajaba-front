@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
+import BuyerAssortmentHints from '../../components/buyer/BuyerAssortmentHints'
 import BuyerBannerCarousel from '../../components/buyer/BuyerBannerCarousel'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerHeaderSearch from '../../components/buyer/BuyerHeaderSearch'
@@ -11,6 +12,7 @@ import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import {
+  fetchMarketplaceAvailabilityHints,
   fetchMarketplaceCategoryProducts,
   fetchMarketplaceFeed,
   fetchMarketplaceSearch,
@@ -51,7 +53,7 @@ export default function BuyerHome() {
 
 function BuyerHomeContent({ preview = null }) {
   const location = preview ?? getBuyerLocation()
-  const { currency } = useBuyerDisplayCurrency()
+  const { currency, setCurrency } = useBuyerDisplayCurrency()
   const [feed, setFeed] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -71,6 +73,7 @@ function BuyerHomeContent({ preview = null }) {
   )
   const [municipalityFeeds, setMunicipalityFeeds] = useState([])
   const [groupedLoading, setGroupedLoading] = useState(false)
+  const [assortmentHints, setAssortmentHints] = useState(null)
 
   const municipalityIds = useMemo(() => {
     const ids = [location.municipality.id]
@@ -323,6 +326,53 @@ function BuyerHomeContent({ preview = null }) {
   const sections = feed?.sections ?? []
   const hasProducts = (feed?.total_products ?? 0) > 0
   const hasMoreSections = Boolean(feed?.has_more)
+  const searchEmpty =
+    searchActive && !searchLoading && !searchError && Boolean(searchResults) && !(searchResults.products?.length)
+  const groupedEmpty = grouped && !groupedLoading && !loadError && municipalityFeeds.length === 0
+  const feedEmpty = !grouped && !searchActive && !loading && !loadError && !hasProducts
+  const showAssortmentHints = searchEmpty || groupedEmpty || feedEmpty
+
+  useEffect(() => {
+    if (!showAssortmentHints) {
+      setAssortmentHints(null)
+      return undefined
+    }
+    let cancelled = false
+    fetchMarketplaceAvailabilityHints({
+      provinceId: location.province.id,
+      municipalityIds,
+      currency,
+      globalCategoryId: searchCategoryId || undefined,
+    })
+      .then((data) => {
+        if (!cancelled) setAssortmentHints(data)
+      })
+      .catch(() => {
+        if (!cancelled) setAssortmentHints(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [
+    currency,
+    location.province.id,
+    municipalityIds,
+    searchCategoryId,
+    showAssortmentHints,
+  ])
+
+  function chooseHintCategory(categoryId) {
+    setSearchCategoryId(categoryId)
+    if (!preview) setMarketplaceCategoryFilter(location.province.id, categoryId)
+  }
+
+  const assortmentNotice = (
+    <BuyerAssortmentHints
+      hints={assortmentHints}
+      onCurrency={setCurrency}
+      onCategory={chooseHintCategory}
+    />
+  )
 
   useEffect(() => {
     const sentinel = sentinelRef.current
@@ -374,6 +424,12 @@ function BuyerHomeContent({ preview = null }) {
               append: true,
             })
           }
+          emptyNotice={searchEmpty ? assortmentNotice : null}
+          emptyMessage={
+            assortmentHints?.currencies?.length
+              ? 'No hay productos con esta moneda en la categoría elegida.'
+              : undefined
+          }
         />
       ) : null}
 
@@ -386,8 +442,12 @@ function BuyerHomeContent({ preview = null }) {
           <img src="/images/welcome/papi.png" alt="" className="mb-3 h-36 w-36 object-contain" />
           <p className="font-display text-lg font-bold text-brand-green">Aún no hay productos aquí</p>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
-            No encontramos tiendas con productos disponibles en los municipios elegidos.
+            No encontramos tiendas con productos disponibles en los municipios elegidos
+            {assortmentHints?.currencies?.length || assortmentHints?.categories?.length
+              ? ' con esta configuración.'
+              : '.'}
           </p>
+          {assortmentNotice}
         </div>
       ) : null}
 
@@ -443,9 +503,12 @@ function BuyerHomeContent({ preview = null }) {
           <img src="/images/welcome/papi.png" alt="" className="mb-3 h-36 w-36 object-contain" />
           <p className="font-display text-lg font-bold text-brand-green">Aún no hay productos aquí</p>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
-            No encontramos tiendas con productos disponibles en {location.municipality.name}. Prueba con otra
-            zona.
+            No encontramos tiendas con productos disponibles en {location.municipality.name}
+            {assortmentHints?.currencies?.length || assortmentHints?.categories?.length
+              ? ' con esta configuración.'
+              : '. Prueba con otra zona.'}
           </p>
+          {assortmentNotice}
         </div>
       ) : null}
 

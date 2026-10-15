@@ -246,6 +246,8 @@ export function BuyerSearchResults({
   loadingMore,
   onRetry,
   retrying = false,
+  emptyNotice = null,
+  emptyMessage = 'Prueba con otra palabra o cambia la categoría.',
 }) {
   const products = results?.products ?? []
   const hasMore = results?.has_more ?? false
@@ -269,12 +271,15 @@ export function BuyerSearchResults({
 
   if (!products.length) {
     return (
-      <DeadState
-        variant="panel"
-        title="Sin resultados"
-        message="Prueba con otra palabra o cambia la categoría."
-        className="lg:items-start lg:text-left"
-      />
+      <div>
+        <DeadState
+          variant="panel"
+          title="Sin resultados"
+          message={emptyMessage}
+          className="lg:items-start lg:text-left"
+        />
+        {emptyNotice ? <div className="mt-4 flex justify-center lg:justify-start">{emptyNotice}</div> : null}
+      </div>
     )
   }
 

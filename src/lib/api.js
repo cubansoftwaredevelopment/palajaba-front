@@ -748,6 +748,23 @@ export function fetchMarketplaceBanners(provinceId = null) {
   return request(`/api/marketplace/banners${query}`);
 }
 
+export function fetchMarketplaceAvailabilityHints({
+  provinceId,
+  municipalityIds,
+  currency,
+  globalCategoryId,
+}) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+  });
+  for (const municipalityId of municipalityIds ?? []) {
+    if (municipalityId) params.append("municipality_id", municipalityId);
+  }
+  appendDisplayCurrency(params, currency);
+  if (globalCategoryId) params.set("global_category_id", globalCategoryId);
+  return request(`/api/marketplace/availability-hints?${params}`);
+}
+
 export function fetchMarketplaceFeed({
   provinceId,
   municipalityId,
