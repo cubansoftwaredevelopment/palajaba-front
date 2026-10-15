@@ -35,6 +35,12 @@ const NAV_ICONS = {
       <path d="M3.3 7 12 12l8.7-5M12 22V12" />
     </svg>
   ),
+  banners: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 10h18" />
+    </svg>
+  ),
   configuracion: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
       <circle cx="12" cy="12" r="3" />

@@ -4,7 +4,8 @@ export const ADMIN_NAV = [
   { id: 'descuentos', path: '/admin/descuentos', label: 'Descuentos' },
   { id: 'mensajes', path: '/admin/mensajes', label: 'Mensajes/Avisos' },
   { id: 'productos', path: '/admin/productos', label: 'Productos' },
-  { id: 'configuracion', path: '/admin/configuracion', label: 'Configuración' },
+  { id: 'banners', path: '/admin/banners', label: 'Banners' },
+  { id: 'configuracion', path: '/admin/configuracion', label: 'Config' },
 ]
 
 export const ADMIN_PAGE_TITLES = {
@@ -13,5 +14,6 @@ export const ADMIN_PAGE_TITLES = {
   '/admin/descuentos': 'Códigos de descuento',
   '/admin/mensajes': 'Mensajes/Avisos',
   '/admin/productos': 'Productos',
+  '/admin/banners': 'Banners promocionales',
   '/admin/configuracion': 'Configuración',
 }
