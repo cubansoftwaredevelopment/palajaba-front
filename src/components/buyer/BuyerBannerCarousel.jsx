@@ -88,15 +88,7 @@ export default function BuyerBannerCarousel({ provinceId = null, initialBannerId
 
   return (
     <section className="group relative -mx-3 -mt-2 mb-4 overflow-hidden rounded-3xl sm:-mx-4 lg:-mx-8 lg:-mt-6">
-      <div
-        className="aspect-[16/9] w-full overflow-hidden"
-        style={{
-          maskImage: 'linear-gradient(to right, transparent, #000 1.15rem, #000 calc(100% - 1.15rem), transparent), linear-gradient(to bottom, transparent, #000 0.9rem, #000 calc(100% - 0.9rem), transparent)',
-          WebkitMaskImage: 'linear-gradient(to right, transparent, #000 1.15rem, #000 calc(100% - 1.15rem), transparent), linear-gradient(to bottom, transparent, #000 0.9rem, #000 calc(100% - 0.9rem), transparent)',
-          maskComposite: 'intersect',
-          WebkitMaskComposite: 'source-in',
-        }}
-      >
+      <div className="aspect-[16/9] w-full overflow-hidden">
         <div
           className={`flex h-full w-full ${animate ? 'transition-transform duration-700 ease-in-out motion-reduce:transition-none' : ''}`}
           style={{ transform: `translateX(-${safeIndex * 100}%)` }}
