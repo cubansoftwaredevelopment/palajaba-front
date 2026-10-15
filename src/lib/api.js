@@ -737,6 +737,13 @@ function appendAdditionalMunicipalities(params, additionalMunicipalityIds) {
   }
 }
 
+export function fetchMarketplaceBanners(provinceId = null) {
+  const params = new URLSearchParams();
+  if (provinceId) params.set("province_id", provinceId);
+  const query = params.toString() ? `?${params.toString()}` : "";
+  return request(`/api/marketplace/banners${query}`);
+}
+
 export function fetchMarketplaceFeed({
   provinceId,
   municipalityId,
@@ -1118,5 +1125,72 @@ export function updateGestorSelectedProducts(token, products) {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ products }),
+  });
+}
+
+/* -- Banners promocionales (admin) -- */
+
+export function fetchAdminBanners(token) {
+  return request("/api/admin/banners", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function createAdminBanner(
+  token,
+  file,
+  { title = "", linkUrl = "", provinceIds = [] } = {},
+) {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (title) formData.append("title", title);
+  if (linkUrl) formData.append("link_url", linkUrl);
+  for (const provinceId of provinceIds || []) {
+    formData.append("province_ids", provinceId);
+  }
+
+  const response = await fetch(`${getApiBase()}/api/admin/banners`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
+    throw new ApiError(parsed.message, {
+      code: parsed.code,
+      data: parsed.data,
+    });
+  }
+
+  return response.json();
+}
+
+export function updateAdminBanner(token, bannerId, payload) {
+  const body = { ...payload };
+  if (typeof body.linkUrl !== "undefined") {
+    body.link_url = body.linkUrl;
+    delete body.linkUrl;
+  }
+  return request(`/api/admin/banners/${encodeURIComponent(bannerId)}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+export function deleteAdminBanner(token, bannerId) {
+  return request(`/api/admin/banners/${encodeURIComponent(bannerId)}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
   });
 }

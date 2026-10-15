@@ -25,6 +25,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import AdminStats from './AdminStatistics/pages/AdminStats'
 import AdminInbox from './pages/AdminInbox'
 import AdminProducts from './pages/AdminProducts'
+import AdminBanners from './pages/AdminBanners'
 import AdminDiscountCodes from './pages/AdminDiscountCodes'
 import AdminSettings from './pages/AdminSettings'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
@@ -114,6 +115,7 @@ const router = createBrowserRouter([
               { path: 'mensajes', element: <AdminInbox /> },
               { path: 'notificaciones', element: <Navigate to="/admin/mensajes" replace /> },
               { path: 'productos', element: <AdminProducts /> },
+              { path: 'banners', element: <AdminBanners /> },
               { path: 'configuracion', element: <AdminSettings /> },
             ],
           },

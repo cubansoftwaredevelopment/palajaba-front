@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import BuyerAdditionalMunicipalitiesFilter from '../../components/buyer/BuyerAdditionalMunicipalitiesFilter'
+import BuyerBannerCarousel from '../../components/buyer/BuyerBannerCarousel'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
@@ -270,6 +271,8 @@ function BuyerHomeContent() {
         </>
       }
     >
+      <BuyerBannerCarousel provinceId={location.province.id} />
+
       <div className="mb-4 flex flex-col gap-2 lg:mb-6 lg:gap-3">
         <BuyerMarketplaceSearch
           categories={categories}
