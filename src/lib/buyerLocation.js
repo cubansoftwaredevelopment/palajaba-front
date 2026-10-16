@@ -73,6 +73,36 @@ export function setBuyerProvince(province) {
   persistBuyerLocation(province, null)
 }
 
+export function setBuyerLocation(province, municipality) {
+  if (!persistBuyerPrefs || !province?.id || !municipality?.id) return false
+  const resolvedProvince = getProvinceById(province.id)
+  const resolvedMunicipality = getMunicipalityById(province.id, municipality.id)
+  if (!resolvedProvince || !resolvedMunicipality) return false
+  persistBuyerLocation(
+    { id: resolvedProvince.id, name: resolvedProvince.name },
+    { id: resolvedMunicipality.id, name: resolvedMunicipality.name },
+  )
+  return true
+}
+
+export function readSharedZoneFromSearch(search = '') {
+  const params = new URLSearchParams(search)
+  const province = getProvinceById(params.get('provincia'))
+  const municipality = getMunicipalityById(params.get('provincia'), params.get('municipio'))
+  if (!province || !municipality) return null
+  return {
+    province: { id: province.id, name: province.name },
+    municipality: { id: municipality.id, name: municipality.name },
+  }
+}
+
+export function applySharedZoneFromSearch(search = '') {
+  const zone = readSharedZoneFromSearch(search)
+  if (!zone) return null
+  setBuyerLocation(zone.province, zone.municipality)
+  return zone
+}
+
 export function setBuyerMunicipality(municipality) {
   const current = getBuyerLocation()
   if (!current?.province) return

@@ -140,6 +140,8 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
   const showScrollRight = canScrollRight || hasMore
   const showScrollLeft = canScrollLeft
 
+  if (!products.length) return null
+
   return (
     <section className="min-w-0" aria-labelledby={`buyer-category-${section.category_id}`}>
       <h2 id={`buyer-category-${section.category_id}`} className={`mb-3 ${buyerCategorySectionTitle}`}>

@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom'
 import { storeNameToSlug, storePublicPath } from '../../lib/storeSlug'
 
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
+import { useDisplayedLocation } from '../../context/BuyerDisplayedLocationContext'
+import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerShare'
+import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
 
 import { resolveDisplayPrice } from '../../lib/displayPrice'
 
@@ -162,6 +165,8 @@ export default function BuyerProductDetailModal({
 }) {
 
   const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
+  const location = useDisplayedLocation()
+  const [shareOpen, setShareOpen] = useState(false)
 
   const imageSrc = resolveMediaUrl(product.image_url)
 
@@ -262,6 +267,15 @@ export default function BuyerProductDetailModal({
 
               </span>
 
+              <div className="flex items-center gap-1">
+                {location?.province?.id && location?.municipality?.id ? (
+                  <BuyerShareButton
+                    iconOnly
+                    label={`Compartir ${product.name}`}
+                    onClick={() => setShareOpen(true)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-brand-green touch-manipulation active:bg-brand-green/8"
+                  />
+                ) : null}
               <button
 
                 type="button"
@@ -281,6 +295,7 @@ export default function BuyerProductDetailModal({
                 </svg>
 
               </button>
+              </div>
 
             </div>
 
@@ -482,7 +497,7 @@ export default function BuyerProductDetailModal({
 
                 >
 
-                  <span>{inJaba ? 'En Tu Jaba' : "Pa' La Jaba"}</span>
+                  <span>Pa&apos; La Jaba</span>
 
                 </button>
 
@@ -520,6 +535,14 @@ export default function BuyerProductDetailModal({
 
       </div>
 
+      {shareOpen && location?.province?.id ? (
+        <BuyerShareSheet
+          title="Compartir producto"
+          message={buildProductShareMessage(product, location)}
+          url={buildProductShareUrl(product.id, location)}
+          onClose={() => setShareOpen(false)}
+        />
+      ) : null}
     </BuyerModalPortal>
 
   )

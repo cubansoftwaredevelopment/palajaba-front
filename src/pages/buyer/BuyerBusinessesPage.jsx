@@ -14,7 +14,7 @@ import DeadState from '../../components/ui/DeadState'
 import Button from '../../components/Button'
 import { BUSINESSES_LABEL, LOADING_MASCOT } from '../../constants/branding'
 import { buyerBusinessList } from '../../components/buyer/buyerStyles'
-import { fetchCategories, fetchMarketplaceBusinesses } from '../../lib/api'
+import { fetchMarketplaceBusinesses, fetchMarketplaceFeed } from '../../lib/api'
 import {
   getAdditionalMunicipalities,
   getBuyerLocation,
@@ -145,9 +145,22 @@ function BuyerBusinessesPageContent() {
     let cancelled = false
     setCategoriesLoading(true)
 
-    fetchCategories()
+    fetchMarketplaceFeed({
+      provinceId: location.province.id,
+      municipalityId: location.municipality.id,
+      additionalMunicipalityIds,
+      currency,
+      limitPerCategory: 1,
+      limit: 50,
+      offset: 0,
+    })
       .then((data) => {
-        if (!cancelled) setCategories(data)
+        if (cancelled) return
+        setCategories(
+          (data?.sections ?? [])
+            .filter((section) => (section.total_products ?? section.products?.length ?? 0) > 0)
+            .map((section) => ({ id: section.category_id, name: section.category_name })),
+        )
       })
       .catch(() => {
         if (!cancelled) setCategories([])
@@ -159,7 +172,7 @@ function BuyerBusinessesPageContent() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [additionalMunicipalityIds, currency, location.municipality.id, location.province.id])
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import BuyerAssortmentHints from '../../components/buyer/BuyerAssortmentHints'
 import BuyerBannerCarousel from '../../components/buyer/BuyerBannerCarousel'
+import BuyerSharedEntry from '../../components/buyer/BuyerSharedEntry'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
 import BuyerHeaderSearch from '../../components/buyer/BuyerHeaderSearch'
 import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
@@ -18,12 +19,13 @@ import {
   fetchMarketplaceSearch,
   fetchCategories,
 } from '../../lib/api'
-import { getBuyerLocation, getAdditionalMunicipalities, hasCompleteBuyerLocation, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+import { getBuyerLocation, getAdditionalMunicipalities, hasCompleteBuyerLocation, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter, applySharedZoneFromSearch } from '../../lib/buyerLocation'
 import { getMunicipalityById, getProvinceById } from '../../constants/cubaLocations'
 import { recordMarketplaceVisit } from '../../lib/marketplaceVisit'
+import { BuyerDisplayedLocationProvider } from '../../context/BuyerDisplayedLocationContext'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { resolveUserFacingError } from '../../lib/userFacingError'
-import { LOADING_MASCOT, MARKETPLACE_LABEL } from '../../constants/branding'
+import { DEAD_MASCOT, LOADING_MASCOT, MARKETPLACE_LABEL } from '../../constants/branding'
 
 const PAGE_SIZE = 20
 const SECTION_PAGE_SIZE = 4
@@ -44,6 +46,9 @@ function readPreviewLocation() {
 
 export default function BuyerHome() {
   const preview = readPreviewLocation()
+  if (!preview && typeof window !== 'undefined') {
+    applySharedZoneFromSearch(window.location.search)
+  }
   if (!preview && !hasCompleteBuyerLocation()) {
     return <Navigate to="/comprar/provincia" replace />
   }
@@ -392,6 +397,7 @@ function BuyerHomeContent({ preview = null }) {
   }, [hasMoreSections, loadFeed, loading, loadingMore, searchActive, sections.length])
 
   return (
+    <BuyerDisplayedLocationProvider location={location}>
     <BuyerShell
       headerStart={
         <BuyerLocationDisplay
@@ -409,6 +415,7 @@ function BuyerHomeContent({ preview = null }) {
       }
     >
       <BuyerBannerCarousel provinceId={location.province.id} initialBannerId={preview?.bannerId} />
+      {preview ? null : <BuyerSharedEntry location={location} />}
 
       {searchActive ? (
         <BuyerSearchResults
@@ -439,7 +446,7 @@ function BuyerHomeContent({ preview = null }) {
 
       {grouped && !groupedLoading && !loadError && municipalityFeeds.length === 0 ? (
         <div className="flex flex-col items-center rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-8 text-center">
-          <img src="/images/welcome/papi.png" alt="" className="mb-3 h-36 w-36 object-contain" />
+          <img src={DEAD_MASCOT.src} alt="" className="mb-3 h-36 w-36 object-contain" />
           <p className="font-display text-lg font-bold text-brand-green">Aún no hay productos aquí</p>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
             No encontramos tiendas con productos disponibles en los municipios elegidos
@@ -457,7 +464,7 @@ function BuyerHomeContent({ preview = null }) {
             <section key={block.municipalityId}>
               <h2 className="mb-4 font-display text-xl font-bold text-brand-green">{block.municipalityName}</h2>
               <div className={buyerHomeSections}>
-                {block.sections.map((section) => (
+                {block.sections.filter((section) => section.products?.length).map((section) => (
                   <BuyerCategoryProductRow
                     key={`${block.municipalityId}-${section.category_id}`}
                     section={section}
@@ -500,7 +507,7 @@ function BuyerHomeContent({ preview = null }) {
 
       {!grouped && !searchActive && !loading && !loadError && !hasProducts ? (
         <div className="flex flex-col items-center rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-8 text-center">
-          <img src="/images/welcome/papi.png" alt="" className="mb-3 h-36 w-36 object-contain" />
+          <img src={DEAD_MASCOT.src} alt="" className="mb-3 h-36 w-36 object-contain" />
           <p className="font-display text-lg font-bold text-brand-green">Aún no hay productos aquí</p>
           <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
             No encontramos tiendas con productos disponibles en {location.municipality.name}
@@ -514,7 +521,7 @@ function BuyerHomeContent({ preview = null }) {
 
       {!grouped && !searchActive && !loading && !loadError && hasProducts ? (
         <div className={buyerHomeSections}>
-          {sections.map((section) => (
+          {sections.filter((section) => section.products?.length).map((section) => (
             <BuyerCategoryProductRow
               key={section.category_id}
               section={section}
@@ -555,5 +562,6 @@ function BuyerHomeContent({ preview = null }) {
         </div>
       ) : null}
     </BuyerShell>
+    </BuyerDisplayedLocationProvider>
   )
 }

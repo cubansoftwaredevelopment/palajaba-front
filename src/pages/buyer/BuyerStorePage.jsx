@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
-import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
+import BuyerHeaderSearch from '../../components/buyer/BuyerHeaderSearch'
 import BuyerMarketplaceNav from '../../components/buyer/BuyerMarketplaceNav'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHeader'
@@ -20,8 +20,9 @@ import {
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
 } from '../../lib/api'
+import { BuyerDisplayedLocationProvider } from '../../context/BuyerDisplayedLocationContext'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
-import { getBuyerLocation, hasCompleteBuyerLocation } from '../../lib/buyerLocation'
+import { getBuyerLocation, hasCompleteBuyerLocation, readSharedZoneFromSearch, setBuyerLocation } from '../../lib/buyerLocation'
 import { normalizeCatalogTheme } from '../../lib/catalogThemes'
 import { validateGestorUsername } from '../../lib/sellerGestores'
 import { recordStoreProfileView } from '../../lib/storeProfileView'
@@ -41,7 +42,9 @@ function businessAreaToLocation(area) {
 
 export default function BuyerStorePage() {
   const { storeSlug, gestorUsername } = useParams()
-  const buyerLocation = hasCompleteBuyerLocation() ? getBuyerLocation() : null
+  const sharedLocation = typeof window === 'undefined' ? null : readSharedZoneFromSearch(window.location.search)
+  if (sharedLocation) setBuyerLocation(sharedLocation.province, sharedLocation.municipality)
+  const buyerLocation = sharedLocation ?? (hasCompleteBuyerLocation() ? getBuyerLocation() : null)
   const [fallbackLocation, setFallbackLocation] = useState(null)
   const [resolvingLocation, setResolvingLocation] = useState(!buyerLocation)
   const [locationError, setLocationError] = useState(false)
@@ -229,10 +232,18 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
 
   return (
     <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
+      <BuyerDisplayedLocationProvider location={location}>
       <BuyerShell
         backTo={backTo}
         backLabel={backLabel}
-        headerEnd={<BuyerLoginButton />}
+        headerSearch={
+          <BuyerHeaderSearch
+            provinceId={location.province.id}
+            municipalityId={location.municipality.id}
+            storeSlug={storeSlug}
+            gestorUsername={gestorUsername}
+          />
+        }
       >
       {loading ? (
         <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
@@ -278,7 +289,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
 
       {!loading && !loadError && catalog ? (
         <div className={buyerHomeSections}>
-          <BuyerStoreProfileHeader catalog={catalog} />
+          <BuyerStoreProfileHeader catalog={catalog} location={location} />
 
           {!hasProducts ? (
             <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
@@ -303,6 +314,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
         </div>
       ) : null}
       </BuyerShell>
+      </BuyerDisplayedLocationProvider>
       <BuyerMarketplaceNav />
     </CatalogThemeScope>
   )

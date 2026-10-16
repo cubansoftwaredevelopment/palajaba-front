@@ -253,6 +253,22 @@ export function BuyerJabaProvider({ children }) {
     setJabaItemQuantity(productId, quantity)
   }, [])
 
+  const importSharedProducts = useCallback((entries) => {
+    const skipped = []
+    for (const entry of entries ?? []) {
+      const product = entry?.product
+      const quantity = Math.max(1, Math.floor(Number(entry?.quantity) || 1))
+      if (!product?.id || product.is_available === false || product.view_only) {
+        if (product?.name) skipped.push(product.name)
+        continue
+      }
+      if (!isInJaba(product.id)) addToJaba(product)
+      setJabaItemQuantity(product.id, quantity)
+    }
+    setOpen(true)
+    return skipped
+  }, [])
+
   const clearStore = useCallback((storeId) => {
     clearJabaStore(storeId)
   }, [])
@@ -408,6 +424,7 @@ export function BuyerJabaProvider({ children }) {
       badgePulseId,
       isInJaba,
       addProduct,
+      importSharedProducts,
       removeProduct,
       setQuantity,
       clearStore,
@@ -436,6 +453,7 @@ export function BuyerJabaProvider({ children }) {
       checkoutSubmittingStoreId,
       badgePulseId,
       addProduct,
+      importSharedProducts,
       removeProduct,
       setQuantity,
       clearStore,

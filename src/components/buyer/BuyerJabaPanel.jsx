@@ -1,4 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { useDisplayedLocation } from '../../context/BuyerDisplayedLocationContext'
+import { buildJabaShareMessage, buildJabaShareUrl } from '../../lib/buyerShare'
+import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
 import LoadingState from '../ui/LoadingState'
@@ -270,6 +273,7 @@ export default function BuyerJabaPanel() {
   const {
     open,
     closePanel,
+    items,
     groups,
     count,
     syncingContacts,
@@ -281,6 +285,8 @@ export default function BuyerJabaPanel() {
     setQuantity,
   } = useBuyerJaba()
   const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
+  const location = useDisplayedLocation()
+  const [shareOpen, setShareOpen] = useState(false)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
 
   const storeIdsKey = groups.map((group) => group.store_id).join('|')
@@ -356,6 +362,14 @@ export default function BuyerJabaPanel() {
               Tu Jaba
             </h2>
           </div>
+          {items.length > 0 && location?.province?.id && location?.municipality?.id ? (
+            <BuyerShareButton
+              iconOnly
+              label="Compartir tu jaba"
+              onClick={() => setShareOpen(true)}
+              className={buyerJabaIconBtn}
+            />
+          ) : null}
           <button
             type="button"
             onClick={closePanel}
@@ -421,6 +435,14 @@ export default function BuyerJabaPanel() {
           )}
         </div>
       </div>
+      {shareOpen && location?.province?.id ? (
+        <BuyerShareSheet
+          title="Compartir tu jaba"
+          message={buildJabaShareMessage(items, location)}
+          url={buildJabaShareUrl(items, location)}
+          onClose={() => setShareOpen(false)}
+        />
+      ) : null}
     </>
   )
 }

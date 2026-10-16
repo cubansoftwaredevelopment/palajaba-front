@@ -822,6 +822,8 @@ export function fetchMarketplaceSearch({
   globalCategoryId,
   limit = 20,
   offset = 0,
+  storeSlug,
+  gestorUsername,
 }) {
   const params = new URLSearchParams({
     province_id: provinceId,
@@ -833,9 +835,30 @@ export function fetchMarketplaceSearch({
   if (globalCategoryId) {
     params.set("global_category_id", globalCategoryId);
   }
+  if (storeSlug) params.set("store_slug", storeSlug);
+  if (gestorUsername) params.set("gestor_username", gestorUsername);
   appendAdditionalMunicipalities(params, additionalMunicipalityIds);
   appendDisplayCurrency(params, currency);
   return request(`/api/marketplace/search?${params}`);
+}
+
+export function fetchMarketplaceProduct({ productId, provinceId, municipalityId }) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+    municipality_id: municipalityId,
+  });
+  return request(`/api/marketplace/products/${encodeURIComponent(productId)}?${params}`);
+}
+
+export function fetchMarketplaceSharedProducts({ provinceId, municipalityId, items }) {
+  const params = new URLSearchParams({
+    province_id: provinceId,
+    municipality_id: municipalityId,
+  });
+  for (const item of items ?? []) {
+    if (item) params.append("item", item);
+  }
+  return request(`/api/marketplace/shared-products?${params}`);
 }
 
 export function fetchMarketplaceStore(storeRef) {

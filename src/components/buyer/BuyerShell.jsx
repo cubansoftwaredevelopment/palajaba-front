@@ -54,12 +54,12 @@ export default function BuyerShell({
           ) : showBackLink ? (
             <Link
               to={backTo}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8"
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8 ${headerSearch ? 'min-w-0 max-w-[38%] shrink' : ''}`}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
-              {backLabel}
+              <span className={headerSearch ? 'truncate' : ''}>{backLabel}</span>
             </Link>
           ) : (
             <span className="w-10 shrink-0" aria-hidden="true" />

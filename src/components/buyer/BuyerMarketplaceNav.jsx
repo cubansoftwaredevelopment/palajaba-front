@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation } from 'react-router-dom'
-import { fetchCategories, fetchRenewalContactPhone } from '../../lib/api'
+import { fetchMarketplaceFeed, fetchRenewalContactPhone } from '../../lib/api'
 import { isAdminAuthenticated } from '../../lib/adminAuth'
-import { getBuyerLocation, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
+import { getAdditionalMunicipalities, getBuyerLocation, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
 import { isSellerAuthenticated } from '../../lib/sellerAuth'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
@@ -141,6 +142,8 @@ function CategoryModal({ provinceId, categories, loading, selectedId, onClose, o
         <ul className="min-h-0 flex-1 overflow-y-auto py-2">
           {loading ? (
             <li className="px-5 py-4 text-sm text-brand-carmelita">Cargando categorías…</li>
+          ) : categories.length === 0 ? (
+            <li className="px-5 py-4 text-sm text-brand-carmelita">No hay categorías con productos en esta zona.</li>
           ) : (
             [{ id: '', name: 'Todas las categorías' }, ...categories].map((category) => {
               const active = (selectedId || '') === category.id
@@ -169,7 +172,9 @@ function CategoryModal({ provinceId, categories, loading, selectedId, onClose, o
 export default function BuyerMarketplaceNav() {
   const route = useLocation()
   const location = getBuyerLocation()
+  const { currency } = useBuyerDisplayCurrency()
   const provinceId = location?.province?.id ?? ''
+  const municipalityId = location?.municipality?.id ?? ''
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [categories, setCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(false)
@@ -194,12 +199,24 @@ export default function BuyerMarketplaceNav() {
   }, [])
 
   useEffect(() => {
-    if (!categoryOpen || categories.length) return undefined
+    if (!categoryOpen || !provinceId || !municipalityId) return undefined
     let cancelled = false
     setCategoriesLoading(true)
-    fetchCategories()
+    fetchMarketplaceFeed({
+      provinceId,
+      municipalityId,
+      additionalMunicipalityIds: getAdditionalMunicipalities(provinceId),
+      currency,
+      limitPerCategory: 1,
+      limit: 50,
+      offset: 0,
+    })
       .then((data) => {
-        if (!cancelled) setCategories(Array.isArray(data) ? data : [])
+        if (cancelled) return
+        const stocked = (data?.sections ?? [])
+          .filter((section) => (section.total_products ?? section.products?.length ?? 0) > 0)
+          .map((section) => ({ id: section.category_id, name: section.category_name }))
+        setCategories(stocked)
       })
       .catch(() => {
         if (!cancelled) setCategories([])
@@ -210,7 +227,7 @@ export default function BuyerMarketplaceNav() {
     return () => {
       cancelled = true
     }
-  }, [categoryOpen, categories.length])
+  }, [categoryOpen, currency, municipalityId, provinceId])
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -270,6 +287,7 @@ export default function BuyerMarketplaceNav() {
             aria-label="Categorías"
             onClick={() => {
               setMenuOpen(false)
+              setCategoriesLoading(true)
               setCategoryOpen(true)
             }}
           >

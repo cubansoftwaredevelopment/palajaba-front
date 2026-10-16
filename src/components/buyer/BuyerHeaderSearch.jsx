@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import BuyerProductDetailModal from './BuyerProductDetailModal'
+import { DEAD_MASCOT } from '../../constants/branding'
 import { fetchMarketplaceSearch } from '../../lib/api'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
 
 const DEBOUNCE_MS = 300
 const MOTION_MS = 320
+const NO_EXTRA_MUNICIPALITIES = []
 
 const SEARCH_ICON = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -38,7 +40,13 @@ function expandedFrame(anchor, restHeight) {
   }
 }
 
-export default function BuyerHeaderSearch({ provinceId, municipalityId, additionalMunicipalityIds = [] }) {
+export default function BuyerHeaderSearch({
+  provinceId,
+  municipalityId,
+  additionalMunicipalityIds = NO_EXTRA_MUNICIPALITIES,
+  storeSlug = null,
+  gestorUsername = null,
+}) {
   const { isInJaba, addProduct, buyProduct } = useBuyerJaba()
   const { currency } = useBuyerDisplayCurrency()
   const [open, setOpen] = useState(false)
@@ -53,6 +61,7 @@ export default function BuyerHeaderSearch({ provinceId, municipalityId, addition
   const closeTimer = useRef(null)
   const visibleRef = useRef(false)
   const suppressFocus = useRef(false)
+  const additionalMunicipalityKey = additionalMunicipalityIds.join(',')
 
   useEffect(() => () => {
     if (closeTimer.current) window.clearTimeout(closeTimer.current)
@@ -102,6 +111,8 @@ export default function BuyerHeaderSearch({ provinceId, municipalityId, addition
         query: text,
         limit: 8,
         offset: 0,
+        storeSlug,
+        gestorUsername,
       })
         .then((data) => {
           if (!cancelled) setSuggestions(data?.products ?? [])
@@ -117,7 +128,7 @@ export default function BuyerHeaderSearch({ provinceId, municipalityId, addition
       cancelled = true
       window.clearTimeout(timer)
     }
-  }, [additionalMunicipalityIds, currency, municipalityId, open, provinceId, query])
+  }, [additionalMunicipalityKey, currency, gestorUsername, municipalityId, open, provinceId, query, storeSlug])
 
   function openSearch() {
     if (suppressFocus.current) return
@@ -185,7 +196,7 @@ export default function BuyerHeaderSearch({ provinceId, municipalityId, addition
               enterKeyHint="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Buscar productos…"
+              placeholder={storeSlug ? 'Buscar en la tienda…' : 'Buscar productos…'}
               className="h-full w-full rounded-full border border-brand-green/20 bg-brand-white pl-10 pr-12 text-sm text-brand-green shadow-[0_8px_24px_rgba(89,128,44,0.12)] placeholder:text-brand-carmelita/45 focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/10"
               autoComplete="off"
             />
@@ -213,7 +224,10 @@ export default function BuyerHeaderSearch({ provinceId, municipalityId, addition
               <ul className="max-h-[min(60dvh,24rem)] overflow-y-auto rounded-2xl border border-brand-green/12 bg-brand-white py-1 shadow-[0_12px_32px_rgba(89,128,44,0.16)]">
                 {loading ? <li className="px-4 py-3 text-sm text-brand-carmelita">Buscando…</li> : null}
                 {!loading && suggestions.length === 0 ? (
-                  <li className="px-4 py-3 text-sm text-brand-carmelita">Sin coincidencias.</li>
+                  <li className="flex flex-col items-center px-4 py-4 text-center">
+                    <img src={DEAD_MASCOT.src} alt="" className="h-24 w-24 object-contain" />
+                    <p className="mt-1 text-sm text-brand-carmelita">Sin coincidencias.</p>
+                  </li>
                 ) : null}
                 {suggestions.map((product) => (
                   <li key={product.id}>
@@ -247,7 +261,7 @@ export default function BuyerHeaderSearch({ provinceId, municipalityId, addition
           type="text"
           readOnly
           value=""
-          placeholder="Buscar…"
+          placeholder={storeSlug ? 'Buscar en la tienda…' : 'Buscar…'}
           aria-label="Buscar productos"
           onFocus={openSearch}
           className="h-10 w-full cursor-text rounded-full border border-brand-green/15 bg-brand-white pl-9 pr-3 text-sm text-brand-green shadow-[0_2px_10px_rgba(89,128,44,0.08)] placeholder:text-brand-carmelita/45 focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/10 lg:h-11"

@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
+import { buildStoreShareMessage, buildStoreShareUrl } from '../../lib/buyerShare'
 import SellerLocationPreview from '../seller/SellerLocationPreview'
 import { resolveMediaUrl } from '../../lib/media'
 import { buildWhatsAppContactUrl } from '../../lib/whatsappOrder'
@@ -15,6 +17,7 @@ import {
   buyerStorePageDeliveryBadge,
   buyerStorePageHeader,
   buyerStorePageMapBtn,
+  buyerStorePageSecondaryBtn,
   buyerStorePageMeta,
   buyerStorePageMetaLabel,
   buyerStorePageMetaValue,
@@ -98,7 +101,7 @@ function SocialIcon({ platform }) {
   return <LinkIcon />
 }
 
-export default function BuyerStoreProfileHeader({ catalog }) {
+export default function BuyerStoreProfileHeader({ catalog, location = null }) {
   const store = catalog.store
   const photoSrc = resolveMediaUrl(store.profile_photo_url)
   const initials = store.store_name?.trim().slice(0, 2).toUpperCase() || '?'
@@ -110,6 +113,19 @@ export default function BuyerStoreProfileHeader({ catalog }) {
   const hasMap = Boolean(catalog.business_location)
   const hasActions = Boolean(whatsapp || hasMap || socialLinks.length)
   const [mapOpen, setMapOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
+  const canShare = Boolean(location?.province?.id && location?.municipality?.id && store.store_slug)
+  const shareUrl = canShare
+    ? buildStoreShareUrl(store.store_slug, location, catalog.gestor?.username)
+    : ''
+  const shareMessage = canShare
+    ? buildStoreShareMessage({
+        storeName: catalog.gestor?.username ? `${store.store_name} (@${catalog.gestor.username})` : store.store_name,
+        storeSlug: store.store_slug,
+        gestorUsername: catalog.gestor?.username,
+        location,
+      })
+    : ''
 
   useEffect(() => {
     if (!mapOpen) return undefined
@@ -163,8 +179,15 @@ export default function BuyerStoreProfileHeader({ catalog }) {
           </div>
         ) : null}
 
-        {hasActions ? (
+        {hasActions || canShare ? (
           <div className={buyerStorePageActions}>
+            {canShare ? (
+              <BuyerShareButton
+                label="Compartir"
+                onClick={() => setShareOpen(true)}
+                className={`${buyerStorePageSecondaryBtn} !w-auto gap-1.5 px-3.5 text-xs font-semibold`}
+              />
+            ) : null}
             {whatsapp ? (
               <a
                 href={whatsapp}
@@ -240,6 +263,14 @@ export default function BuyerStoreProfileHeader({ catalog }) {
             </div>
           </div>
         </BuyerModalPortal>
+      ) : null}
+      {shareOpen && canShare ? (
+        <BuyerShareSheet
+          title={catalog.gestor ? 'Compartir catálogo' : 'Compartir tienda'}
+          message={shareMessage}
+          url={shareUrl}
+          onClose={() => setShareOpen(false)}
+        />
       ) : null}
     </>
   )

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
+import { useDisplayedLocation } from '../../context/BuyerDisplayedLocationContext'
 import { JABA_CHANGE_EVENT } from '../../lib/buyerJaba'
 import {
   BUYER_PRODUCT_CARD_ACTIONS,
@@ -11,6 +12,8 @@ import { resolveDisplayPrice } from '../../lib/displayPrice'
 import { resolveMediaUrl } from '../../lib/media'
 import { isProductPurchasable, isProductSoldOut } from '../../lib/marketplaceProduct'
 import BuyerProductDetailModal from './BuyerProductDetailModal'
+import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
+import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerShare'
 import BuyerProductImage from './BuyerProductImage'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
 import {
@@ -48,12 +51,14 @@ function JabaBagIcon() {
 
 export default function BuyerProductCard({ product, compact = false }) {
   const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
+  const location = useDisplayedLocation()
   const { isInJaba: checkInJaba, addProduct, buyProduct } = useBuyerJaba()
   const imageSrc = resolveMediaUrl(product.image_url)
   const displayPrice = resolveDisplayPrice(product, displayCurrency, cupPerUnit)
   const [buyPulse, setBuyPulse] = useState(false)
   const [jabaPulse, setJabaPulse] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
+  const [shareOpen, setShareOpen] = useState(false)
   const [inJaba, setInJaba] = useState(() => checkInJaba(product.id))
 
   const storePath = resolveBuyerProductStorePath(product.store)
@@ -98,6 +103,17 @@ export default function BuyerProductCard({ product, compact = false }) {
   return (
     <>
       <article className={compact ? buyerProductCardCompact : buyerProductCard}>
+        {location?.province?.id && location?.municipality?.id ? (
+          <BuyerShareButton
+            iconOnly
+            label={`Compartir ${product.name}`}
+            onClick={(event) => {
+              event.stopPropagation()
+              setShareOpen(true)
+            }}
+            className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-brand-white/90 text-brand-green shadow-[0_2px_8px_rgba(28,33,24,0.16)] touch-manipulation active:bg-brand-white"
+          />
+        ) : null}
         <div
           className={
             soldOut
@@ -159,7 +175,7 @@ export default function BuyerProductCard({ product, compact = false }) {
                 aria-label={inJaba ? `${product.name} en tu jaba` : `Agregar ${product.name} a la jaba`}
               >
                 <JabaBagIcon />
-                <span>{inJaba ? 'En Tu Jaba' : "Pa' La Jaba"}</span>
+                <span>Pa&apos; La Jaba</span>
               </button>
             </div>
           ) : null}
@@ -175,6 +191,14 @@ export default function BuyerProductCard({ product, compact = false }) {
           onClose={() => setDetailOpen(false)}
           onBuy={handleBuy}
           onAddToJaba={handleAddToJaba}
+        />
+      ) : null}
+      {shareOpen && location?.province?.id ? (
+        <BuyerShareSheet
+          title="Compartir producto"
+          message={buildProductShareMessage(product, location)}
+          url={buildProductShareUrl(product.id, location)}
+          onClose={() => setShareOpen(false)}
         />
       ) : null}
     </>
