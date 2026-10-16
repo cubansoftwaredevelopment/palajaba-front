@@ -19,6 +19,7 @@ export default function BuyerShell({
   headerStart = null,
   headerEnd = null,
   headerSearch = null,
+  flushBottom = false,
   children,
 }) {
   const showBackLink = Boolean(backTo) && !headerStart
@@ -27,14 +28,13 @@ export default function BuyerShell({
   const currencyContext = useContext(BuyerDisplayCurrencyContext)
   const showCurrencyTag = marketplaceHub && !isSellerPreview && Boolean(currencyContext)
   const sellerBrowsing = isSellerBrowsingMarketplace() && !isSellerPreview
-  const scrollPaddingClass =
-    marketplaceHub
+  const scrollPaddingClass = flushBottom
+    ? ''
+    : marketplaceHub
       ? sellerBrowsing
         ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'
         : buyerMarketplaceScrollPadding
-      : sellerBrowsing && marketplaceHub
-        ? 'pb-[calc(4.75rem+var(--safe-bottom))] lg:pb-10'
-        : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
+      : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
 
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
@@ -76,7 +76,7 @@ export default function BuyerShell({
       {showCurrencyTag ? <BuyerCurrencyTag /> : null}
 
       <div className="buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
-        <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${scrollPaddingClass}`}>
+        <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${flushBottom ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
           {children}
         </div>
       </div>

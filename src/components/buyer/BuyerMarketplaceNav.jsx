@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { NavLink, useLocation } from 'react-router-dom'
 import { fetchMarketplaceFeed, fetchRenewalContactPhone } from '../../lib/api'
@@ -113,7 +113,7 @@ function publishCategory(provinceId, categoryId) {
   )
 }
 
-function CategoryModal({ provinceId, categories, loading, selectedId, onClose, onSelect }) {
+function CategoryModal({ categories, loading, selectedId, onClose, onSelect, emptyMessage }) {
   return (
     <div
       className="fixed inset-0 z-[60] flex items-end justify-center bg-brand-green/25 p-3 backdrop-blur-sm sm:items-center"
@@ -143,7 +143,7 @@ function CategoryModal({ provinceId, categories, loading, selectedId, onClose, o
           {loading ? (
             <li className="px-5 py-4 text-sm text-brand-carmelita">Cargando categorías…</li>
           ) : categories.length === 0 ? (
-            <li className="px-5 py-4 text-sm text-brand-carmelita">No hay categorías con productos en esta zona.</li>
+            <li className="px-5 py-4 text-sm text-brand-carmelita">{emptyMessage}</li>
           ) : (
             [{ id: '', name: 'Todas las categorías' }, ...categories].map((category) => {
               const active = (selectedId || '') === category.id
@@ -169,18 +169,26 @@ function CategoryModal({ provinceId, categories, loading, selectedId, onClose, o
   )
 }
 
-export default function BuyerMarketplaceNav() {
+export default function BuyerMarketplaceNav({
+  catalogCategories,
+  catalogCategoriesLoading = false,
+  selectedCatalogCategoryId = '',
+  onCatalogCategorySelect,
+}) {
   const route = useLocation()
   const location = getBuyerLocation()
   const { currency } = useBuyerDisplayCurrency()
   const provinceId = location?.province?.id ?? ''
   const municipalityId = location?.municipality?.id ?? ''
+  const isCatalog = catalogCategories !== undefined
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [categories, setCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState(() =>
     provinceId ? getMarketplaceCategoryFilter(provinceId) : '',
   )
+  const [fabVisible, setFabVisible] = useState(true)
+  const hideTimerRef = useRef(null)
   const [helpPhone, setHelpPhone] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -199,7 +207,32 @@ export default function BuyerMarketplaceNav() {
   }, [])
 
   useEffect(() => {
-    if (!categoryOpen || !provinceId || !municipalityId) return undefined
+    if (!isCatalog) return undefined
+    setCategories(catalogCategories)
+    setCategoriesLoading(catalogCategoriesLoading)
+    return undefined
+  }, [catalogCategories, catalogCategoriesLoading, isCatalog])
+
+  useEffect(() => {
+    const scroller = document.querySelector('.buyer-scroll')
+    if (!scroller) return undefined
+
+    function onScroll() {
+      setFabVisible(false)
+      setMenuOpen(false)
+      window.clearTimeout(hideTimerRef.current)
+      hideTimerRef.current = window.setTimeout(() => setFabVisible(true), 1000)
+    }
+
+    scroller.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      scroller.removeEventListener('scroll', onScroll)
+      window.clearTimeout(hideTimerRef.current)
+    }
+  }, [route.pathname])
+
+  useEffect(() => {
+    if (isCatalog || !categoryOpen || !provinceId || !municipalityId) return undefined
     let cancelled = false
     setCategoriesLoading(true)
     fetchMarketplaceFeed({
@@ -227,7 +260,7 @@ export default function BuyerMarketplaceNav() {
     return () => {
       cancelled = true
     }
-  }, [categoryOpen, currency, municipalityId, provinceId])
+  }, [categoryOpen, currency, isCatalog, municipalityId, provinceId])
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -245,8 +278,12 @@ export default function BuyerMarketplaceNav() {
   }, [route.pathname])
 
   function chooseCategory(categoryId) {
-    setSelectedCategoryId(categoryId)
-    publishCategory(provinceId, categoryId)
+    if (isCatalog) {
+      onCatalogCategorySelect?.(categoryId)
+    } else {
+      setSelectedCategoryId(categoryId)
+      publishCategory(provinceId, categoryId)
+    }
     setCategoryOpen(false)
     setMenuOpen(false)
   }
@@ -257,7 +294,8 @@ export default function BuyerMarketplaceNav() {
   }
 
   const accountSignedIn = isSellerAuthenticated() || isAdminAuthenticated()
-  const categoryActive = categoryOpen || Boolean(selectedCategoryId)
+  const activeCategoryId = isCatalog ? selectedCatalogCategoryId : selectedCategoryId
+  const categoryActive = categoryOpen || Boolean(activeCategoryId)
   const accountIcon = (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
       <circle cx="12" cy="8" r="3.2" />
@@ -277,8 +315,11 @@ export default function BuyerMarketplaceNav() {
         />
       ) : null}
       <nav
-        className="fixed right-4 bottom-[max(2rem,calc(1.65rem+var(--safe-bottom)))] z-30 h-14 w-14 sm:right-[3.25rem]"
+        className={`fixed right-4 bottom-[max(2rem,calc(1.65rem+var(--safe-bottom)))] z-30 h-14 w-14 transition-[opacity,transform] duration-200 sm:right-[3.25rem] motion-reduce:transition-none ${
+          fabVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'
+        }`}
         aria-label="Secciones de compra"
+        aria-hidden={fabVisible ? undefined : true}
       >
         <ArcOption open={menuOpen} from={ORIGIN} to={MAIN_POINTS[0]} index={0}>
           <button
@@ -287,7 +328,7 @@ export default function BuyerMarketplaceNav() {
             aria-label="Categorías"
             onClick={() => {
               setMenuOpen(false)
-              setCategoriesLoading(true)
+              if (!isCatalog) setCategoriesLoading(true)
               setCategoryOpen(true)
             }}
           >
@@ -355,10 +396,14 @@ export default function BuyerMarketplaceNav() {
       </nav>
       {categoryOpen ? (
         <CategoryModal
-          provinceId={provinceId}
           categories={categories}
           loading={categoriesLoading}
-          selectedId={selectedCategoryId}
+          selectedId={activeCategoryId}
+          emptyMessage={
+            isCatalog
+              ? 'Esta tienda no tiene categorías con productos.'
+              : 'No hay categorías con productos en esta zona.'
+          }
           onClose={() => setCategoryOpen(false)}
           onSelect={chooseCategory}
         />

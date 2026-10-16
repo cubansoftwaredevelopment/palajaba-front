@@ -70,6 +70,9 @@ export const buyerHomeSections = 'flex min-w-0 flex-col gap-7 sm:gap-8'
 export const buyerCatalogPoweredFooter =
   '-mx-5 mt-6 -mb-[max(2rem,var(--safe-bottom))] sm:-mx-6 sm:mt-8 lg:-mx-10 lg:-mb-10'
 
+export const buyerCatalogPoweredFooterPinned =
+  '-mx-5 mt-auto pt-6 sm:-mx-6 sm:pt-8 lg:-mx-10'
+
 export const buyerCatalogPoweredFooterShell =
   'relative w-full border-t border-brand-green/12 bg-gradient-to-b from-brand-yellow/10 via-brand-white to-brand-green/[0.03] px-5 py-4 pb-[max(1rem,var(--safe-bottom))] sm:px-6 sm:py-5 sm:pb-[max(1.25rem,var(--safe-bottom))] lg:px-10 lg:py-6 lg:pb-6'
 

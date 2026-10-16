@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { isBuyerMarketplaceNavVisible } from '../../constants/buyerMarketplaceNav'
 import { useBuyerMarketplaceHub } from '../../lib/buyerMarketplaceHub'
 import { getSellerReturnPath, isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
 
@@ -33,9 +34,9 @@ export function BuyerSellerReturnHeaderLink() {
 }
 
 export function BuyerSellerReturnFooter() {
+  const marketplaceHub = useBuyerMarketplaceHub()
   if (!isSellerBrowsingMarketplace()) return null
 
-  const marketplaceHub = useBuyerMarketplaceHub()
   const floatAboveMarketplaceNav = marketplaceHub && isBuyerMarketplaceNavVisible()
 
   return (

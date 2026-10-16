@@ -3,6 +3,7 @@ import Logo from '../Logo'
 import { BRAND_NAME } from '../../constants/branding'
 import {
   buyerCatalogPoweredFooter,
+  buyerCatalogPoweredFooterPinned,
   buyerCatalogPoweredFooterCta,
   buyerCatalogPoweredFooterEyebrow,
   buyerCatalogPoweredFooterShell,
@@ -16,9 +17,12 @@ const ARROW_ICON = (
   </svg>
 )
 
-export default function BuyerCatalogPoweredFooter() {
+export default function BuyerCatalogPoweredFooter({ pinned = false }) {
   return (
-    <footer className={buyerCatalogPoweredFooter} aria-label={`Catálogo creado con ${BRAND_NAME}`}>
+    <footer
+      className={pinned ? `${buyerCatalogPoweredFooterPinned}` : buyerCatalogPoweredFooter}
+      aria-label={`Catálogo creado con ${BRAND_NAME}`}
+    >
       <div className={buyerCatalogPoweredFooterShell}>
         <div
           className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-brand-yellow/10 to-transparent"

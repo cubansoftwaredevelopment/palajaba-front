@@ -179,6 +179,7 @@ function SellerCatalogPreviewContent() {
   const previewShell = (children, { header = headerEnd } = {}) => (
     <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
       <BuyerShell
+        flushBottom
         mode="seller-preview"
         backTo="/tienda/catalogo"
         backLabel="Volver"
@@ -227,6 +228,7 @@ function SellerCatalogPreviewContent() {
           ) : null}
 
           {!loading && !loadError && catalog ? (
+            <div className="flex min-h-full flex-1 flex-col">
             <div className={buyerHomeSections}>
               <div className="rounded-2xl border border-brand-yellow/25 bg-brand-yellow/10 px-4 py-3 text-center lg:text-left">
                 <p className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-carmelita/85">
@@ -256,7 +258,8 @@ function SellerCatalogPreviewContent() {
                 ))
               )}
 
-              <BuyerCatalogPoweredFooter />
+            </div>
+              <BuyerCatalogPoweredFooter pinned />
             </div>
           ) : null}
         </>,

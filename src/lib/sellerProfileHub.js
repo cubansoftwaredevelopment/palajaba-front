@@ -32,7 +32,7 @@ const PANELS = Object.freeze({
   [PROFILE_PANEL_IDS.location]: {
     id: PROFILE_PANEL_IDS.location,
     label: 'Ubicación y entrega',
-    description: 'Zona, mapa y domicilio',
+    description: 'Zona, mapa y envíos',
     kind: 'form',
     icon: 'location',
   },

@@ -1,9 +1,8 @@
-export default function ProfileProgressBar({ photo, categories, location, delivery, title = 'Perfil obligatorio' }) {
+export default function ProfileProgressBar({ photo, categories, location, title = 'Perfil obligatorio' }) {
   const steps = [
     { done: photo, label: 'Foto' },
     { done: categories > 0, label: 'Categoría' },
     { done: location, label: 'Zona' },
-    { done: delivery !== null, label: 'Domicilio' },
   ]
   const doneCount = steps.filter((s) => s.done).length
   const percent = Math.round((doneCount / steps.length) * 100)

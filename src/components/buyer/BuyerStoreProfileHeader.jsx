@@ -14,7 +14,6 @@ import {
   buyerStoreMapOverlay,
   buyerStorePageActions,
   buyerStorePageAvatar,
-  buyerStorePageDeliveryBadge,
   buyerStorePageHeader,
   buyerStorePageMapBtn,
   buyerStorePageSecondaryBtn,
@@ -29,26 +28,6 @@ import {
 function formatArea(area) {
   if (!area) return null
   return `${area.municipality_name}, ${area.province_name}`
-}
-
-function DeliveryIcon() {
-  return (
-    <svg
-      width="12"
-      height="12"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      aria-hidden="true"
-      className="shrink-0"
-    >
-      <path d="M3 7h11v10H3z" strokeLinejoin="round" />
-      <path d="M14 10h4l3 3v4h-7v-7z" strokeLinejoin="round" />
-      <circle cx="7" cy="18" r="1.75" />
-      <circle cx="17.5" cy="18" r="1.75" />
-    </svg>
-  )
 }
 
 function MapPinIcon() {
@@ -158,12 +137,6 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
               {catalog.gestor ? 'Catálogo de gestor' : 'Tienda'}
             </p>
             <h1 className={buyerStorePageName}>{store.store_name}</h1>
-            {catalog.offers_delivery != null ? (
-              <span className={buyerStorePageDeliveryBadge}>
-                <DeliveryIcon />
-                {catalog.offers_delivery ? 'Hace domicilio' : 'Solo recogida en tienda'}
-              </span>
-            ) : null}
             {catalog.gestor?.username ? (
               <p className="mt-1 text-sm text-zinc-600">Ofrecido por @{catalog.gestor.username}</p>
             ) : null}

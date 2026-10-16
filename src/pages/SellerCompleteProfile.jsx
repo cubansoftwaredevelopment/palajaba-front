@@ -17,7 +17,6 @@ import {
   sellerBtnGhost,
   sellerBtnPrimary,
   sellerBtnSecondary,
-  sellerChoice,
   sellerEyebrow,
   sellerFormGrid,
   sellerFormFull,
@@ -59,11 +58,6 @@ export default function SellerCompleteProfile() {
     profile?.business_area?.municipality_id ?? '',
   )
   const [deliveryAreas, setDeliveryAreas] = useState(profile?.delivery_areas ?? [])
-  const [offersDelivery, setOffersDelivery] = useState(
-    profile?.offers_delivery === null || profile?.offers_delivery === undefined
-      ? null
-      : profile.offers_delivery,
-  )
   const [loading, setLoading] = useState(false)
   const [categoriesLoading, setCategoriesLoading] = useState(true)
   const [categoriesError, setCategoriesError] = useState('')
@@ -128,10 +122,6 @@ export default function SellerCompleteProfile() {
       setError('Selecciona al menos una categoría.')
       return
     }
-    if (offersDelivery === null) {
-      setError('Indica si haces domicilio.')
-      return
-    }
 
     const businessArea = getBusinessAreaFromSelection(businessProvinceId, businessMunicipalityId)
     if (!businessArea) {
@@ -151,12 +141,10 @@ export default function SellerCompleteProfile() {
         biography: biography.trim() || null,
         social_links: socialLinksPayload(socialLinks),
         category_ids: selectedCategories,
-        offers_delivery: offersDelivery,
+        offers_delivery: deliveryAreas.length > 0,
         gestores_enabled: Boolean(profile?.gestores_enabled),
         business_area: businessArea,
-        delivery_areas: offersDelivery
-          ? dedupeDeliveryAreas(deliveryAreas, businessArea)
-          : [],
+        delivery_areas: dedupeDeliveryAreas(deliveryAreas, businessArea),
         clear_business_location: !location,
       }
       if (location) payload.business_location = location
@@ -198,7 +186,6 @@ export default function SellerCompleteProfile() {
             photo={Boolean(photoUrl)}
             categories={selectedCategories.length}
             location={Boolean(businessProvinceId && businessMunicipalityId)}
-            delivery={offersDelivery}
           />
         </div>
 
@@ -298,39 +285,11 @@ export default function SellerCompleteProfile() {
           </SellerSection>
 
           <SellerSection
-            label="¿Haces domicilio?"
-            required
-            hint="Cada producto puede tener su propia opción de envío al subirlo."
+            label="Zonas de envío"
+            optional
+            hint="Otros municipios donde entregas además del tuyo. Cada producto indica si acepta domicilio."
             className={sellerFormFull}
           >
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setOffersDelivery(true)}
-                className={sellerChoice(offersDelivery === true)}
-              >
-                Sí
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setOffersDelivery(false)
-                  setDeliveryAreas([])
-                }}
-                className={sellerChoice(offersDelivery === false)}
-              >
-                No
-              </button>
-            </div>
-          </SellerSection>
-
-          {offersDelivery === true && (
-            <SellerSection
-              label="Zonas de envío"
-              optional
-              hint="Agrega otros municipios donde entregas además del tuyo."
-              className={sellerFormFull}
-            >
               <SellerDeliveryZonesEditor
                 zones={deliveryAreas}
                 businessArea={getBusinessAreaFromSelection(
@@ -339,8 +298,7 @@ export default function SellerCompleteProfile() {
                 )}
                 onChange={setDeliveryAreas}
               />
-            </SellerSection>
-          )}
+          </SellerSection>
 
           {error && (
             <p className={`${sellerFormFull} ${sellerAlertError}`} role="alert">

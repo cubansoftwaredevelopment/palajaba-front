@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
@@ -94,7 +94,7 @@ export default function BuyerStorePage() {
         <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL}>
           <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
         </BuyerShell>
-        <BuyerMarketplaceNav />
+        <BuyerMarketplaceNav catalogCategories={[]} catalogCategoriesLoading />
       </>
     )
   }
@@ -122,6 +122,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const isGestorCatalog = Boolean(gestorUsername)
+  const [storeCategoryId, setStoreCategoryId] = useState('')
 
   const loadCatalog = useCallback(async () => {
     setLoading(true)
@@ -187,6 +188,18 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
     loadCatalog()
   }, [loadCatalog])
 
+  useEffect(() => {
+    setStoreCategoryId('')
+  }, [storeSlug, gestorUsername])
+
+  const catalogCategories = useMemo(
+    () =>
+      (catalog?.sections ?? [])
+        .filter((section) => section.products?.length)
+        .map((section) => ({ id: section.category_id, name: section.category_name })),
+    [catalog],
+  )
+
   const createLoadMore = useCallback(
     (section) => async (offset) => {
       const data = isGestorCatalog
@@ -225,6 +238,9 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
   )
 
   const sections = catalog?.sections ?? []
+  const visibleSections = storeCategoryId
+    ? sections.filter((section) => section.category_id === storeCategoryId && section.products?.length)
+    : sections.filter((section) => section.products?.length)
   const hasProducts = (catalog?.total_products ?? 0) > 0
   const catalogTheme = normalizeCatalogTheme(catalog?.catalog_theme)
   const backTo = isGestorCatalog ? storePublicPath(storeSlug) : '/comprar'
@@ -234,6 +250,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
     <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
       <BuyerDisplayedLocationProvider location={location}>
       <BuyerShell
+        flushBottom
         backTo={backTo}
         backLabel={backLabel}
         headerSearch={
@@ -288,6 +305,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       ) : null}
 
       {!loading && !loadError && catalog ? (
+        <div className="flex min-h-full flex-1 flex-col">
         <div className={buyerHomeSections}>
           <BuyerStoreProfileHeader catalog={catalog} location={location} />
 
@@ -301,7 +319,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
               </p>
             </div>
           ) : (
-            sections.map((section) => (
+            visibleSections.map((section) => (
               <BuyerCategoryProductRow
                 key={section.category_id}
                 section={section}
@@ -310,12 +328,18 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             ))
           )}
 
-          <BuyerCatalogPoweredFooter />
+        </div>
+          <BuyerCatalogPoweredFooter pinned />
         </div>
       ) : null}
       </BuyerShell>
       </BuyerDisplayedLocationProvider>
-      <BuyerMarketplaceNav />
+      <BuyerMarketplaceNav
+        catalogCategories={catalogCategories}
+        catalogCategoriesLoading={loading}
+        selectedCatalogCategoryId={storeCategoryId}
+        onCatalogCategorySelect={setStoreCategoryId}
+      />
     </CatalogThemeScope>
   )
 }

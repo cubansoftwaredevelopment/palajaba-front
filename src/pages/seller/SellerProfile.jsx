@@ -124,7 +124,6 @@ export default function SellerProfile() {
     profile?.business_area?.municipality_id ?? '',
   )
   const [deliveryAreas, setDeliveryAreas] = useState(profile?.delivery_areas ?? [])
-  const [offersDelivery, setOffersDelivery] = useState(profile?.offers_delivery ?? false)
   const [gestoresEnabled, setGestoresEnabled] = useState(Boolean(profile?.gestores_enabled))
   const [loading, setLoading] = useState(false)
   const [categoriesLoading, setCategoriesLoading] = useState(true)
@@ -235,12 +234,10 @@ export default function SellerProfile() {
         biography: biography.trim() || null,
         social_links: socialLinksPayload(socialLinks),
         category_ids: selectedCategories,
-        offers_delivery: offersDelivery,
+        offers_delivery: deliveryAreas.length > 0,
         gestores_enabled: gestoresEnabled,
         business_area: businessArea,
-        delivery_areas: offersDelivery
-          ? dedupeDeliveryAreas(deliveryAreas, businessArea)
-          : [],
+        delivery_areas: dedupeDeliveryAreas(deliveryAreas, businessArea),
         clear_business_location: !location,
       }
       if (location) payload.business_location = location
@@ -262,7 +259,6 @@ export default function SellerProfile() {
     return (
       normalizeText(biography) !== normalizeText(profile.biography) ||
       socialLinksSignature(socialLinks) !== socialLinksSignature(socialLinksFromProfile(profile)) ||
-      offersDelivery !== (profile.offers_delivery ?? false) ||
       gestoresEnabled !== Boolean(profile.gestores_enabled) ||
       !sameStringArray(selectedCategories, profile.category_ids) ||
       !sameLocation(location, profile.business_location) ||
@@ -270,16 +266,12 @@ export default function SellerProfile() {
         getBusinessAreaFromSelection(businessProvinceId, businessMunicipalityId),
         profile.business_area,
       ) ||
-      !sameDeliveryAreas(
-        offersDelivery ? deliveryAreas : [],
-        profile.delivery_areas ?? [],
-      )
+      !sameDeliveryAreas(deliveryAreas, profile.delivery_areas ?? [])
     )
   }, [
     profile,
     biography,
     socialLinks,
-    offersDelivery,
     gestoresEnabled,
     selectedCategories,
     location,
@@ -373,38 +365,11 @@ export default function SellerProfile() {
         </div>
       </SellerSection>
 
-      <SellerSection label="¿Haces domicilio?" required>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setOffersDelivery(true)
-              markDirty()
-            }}
-            className={sellerChoice(offersDelivery === true)}
-          >
-            Sí
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setOffersDelivery(false)
-              setDeliveryAreas([])
-              markDirty()
-            }}
-            className={sellerChoice(offersDelivery === false)}
-          >
-            No
-          </button>
-        </div>
-      </SellerSection>
-
-      {offersDelivery && (
-        <SellerSection
-          label="Zonas de envío"
-          optional
-          hint="Otros municipios donde entregas además del tuyo."
-        >
+      <SellerSection
+        label="Zonas de envío"
+        optional
+        hint="Otros municipios donde entregas además del tuyo. Cada producto indica si acepta domicilio."
+      >
           <SellerDeliveryZonesEditor
             zones={deliveryAreas}
             businessArea={getBusinessAreaFromSelection(
@@ -417,8 +382,7 @@ export default function SellerProfile() {
             }}
             idPrefix="seller-profile-delivery"
           />
-        </SellerSection>
-      )}
+      </SellerSection>
     </>
   )
 
