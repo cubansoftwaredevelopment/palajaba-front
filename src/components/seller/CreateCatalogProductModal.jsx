@@ -80,6 +80,46 @@ function samePrice(input, original) {
 
 }
 
+const MAX_PRODUCT_IMAGES = 6
+
+function sourcePhotos(product) {
+  const images = Array.isArray(product?.images) && product.images.length
+    ? product.images
+    : product?.image_url
+      ? [{ id: 'legacy', image_url: product.image_url, is_frontal: true }]
+      : []
+  const photos = images.map((image) => ({
+    key: image.id,
+    existingId: image.id,
+    file: null,
+    preview: resolveMediaUrl(image.image_url),
+    isFrontal: Boolean(image.is_frontal),
+  }))
+  return withSingleFrontal(photos)
+}
+
+function withSingleFrontal(photos) {
+  if (photos.length === 0) return photos
+  if (photos.length === 1 || !photos.some((photo) => photo.isFrontal)) {
+    return photos.map((photo, index) => ({ ...photo, isFrontal: index === 0 }))
+  }
+  let marked = false
+  return photos.map((photo) => {
+    const isFrontal = Boolean(photo.isFrontal) && !marked
+    if (isFrontal) marked = true
+    return { ...photo, isFrontal }
+  })
+}
+
+function photosChanged(photos, product) {
+  const original = sourcePhotos(product)
+  if (photos.some((photo) => photo.file)) return true
+  if (photos.length !== original.length) return true
+  return photos.some((photo, index) => (
+    photo.existingId !== original[index]?.existingId || photo.isFrontal !== original[index]?.isFrontal
+  ))
+}
+
 
 export default function CreateCatalogProductModal({
 
@@ -103,6 +143,7 @@ export default function CreateCatalogProductModal({
   const isEditing = Boolean(product)
 
   const fileInputRef = useRef(null)
+  const photosRef = useRef([])
 
   const [name, setName] = useState(product?.name ?? '')
 
@@ -136,9 +177,7 @@ export default function CreateCatalogProductModal({
 
   const [isAvailable, setIsAvailable] = useState(product?.is_available ?? true)
 
-  const [photoFile, setPhotoFile] = useState(null)
-
-  const [photoPreview, setPhotoPreview] = useState('')
+  const [photos, setPhotos] = useState(() => (product ? sourcePhotos(product) : []))
 
   const [currencies, setCurrencies] = useState([])
 
@@ -264,35 +303,13 @@ export default function CreateCatalogProductModal({
 
 
 
-  useEffect(() => {
+  photosRef.current = photos
 
-    if (photoFile) {
-
-      const url = URL.createObjectURL(photoFile)
-
-      setPhotoPreview(url)
-
-      return () => URL.revokeObjectURL(url)
-
-    }
-
-
-
-    if (isEditing && product?.image_url) {
-
-      setPhotoPreview(resolveMediaUrl(product.image_url))
-
-      return undefined
-
-    }
-
-
-
-    setPhotoPreview('')
-
-    return undefined
-
-  }, [photoFile, isEditing, product])
+  useEffect(() => () => {
+    photosRef.current.forEach((photo) => {
+      if (photo.file && photo.preview?.startsWith('blob:')) URL.revokeObjectURL(photo.preview)
+    })
+  }, [])
 
 
 
@@ -340,7 +357,7 @@ export default function CreateCatalogProductModal({
 
       isAvailable !== product.is_available ||
 
-      Boolean(photoFile) ||
+      photosChanged(photos, product) ||
 
       !sameStringArray(acceptedCurrencies, product.accepted_currencies)
 
@@ -370,7 +387,7 @@ export default function CreateCatalogProductModal({
 
     isAvailable,
 
-    photoFile,
+    photos,
 
     acceptedCurrencies,
 
@@ -379,23 +396,55 @@ export default function CreateCatalogProductModal({
 
 
   function handlePhotoChange(event) {
-    const file = event.target.files?.[0]
+    const files = [...(event.target.files ?? [])]
     event.target.value = ''
+    if (files.length === 0) return
 
-    if (!file) {
-      setPhotoFile(null)
-      return
+    let rejected = false
+    const next = []
+    for (const file of files) {
+      const validation = validateImageFile(file)
+      if (!validation.ok) {
+        rejected = true
+        setError(validation.message)
+        continue
+      }
+      next.push({
+        key: crypto.randomUUID(),
+        existingId: null,
+        file,
+        preview: URL.createObjectURL(file),
+        isFrontal: false,
+      })
     }
+    if (next.length === 0) return
 
-    const validation = validateImageFile(file)
-    if (!validation.ok) {
-      setPhotoFile(null)
-      setError(validation.message)
-      return
+    const room = MAX_PRODUCT_IMAGES - photos.length
+    const accepted = next.slice(0, Math.max(0, room))
+    next.slice(accepted.length).forEach((photo) => URL.revokeObjectURL(photo.preview))
+    if (next.length > room) {
+      setError(`Un producto puede tener hasta ${MAX_PRODUCT_IMAGES} fotos.`)
+    } else if (!rejected) {
+      setError('')
     }
+    if (accepted.length === 0) return
+    setPhotos((current) => withSingleFrontal([...current, ...accepted]))
+  }
 
-    setPhotoFile(file)
-    setError('')
+  function chooseFrontal(key) {
+    setPhotos((current) => {
+      if (current.length < 2) return withSingleFrontal(current)
+      return current.map((photo) => ({ ...photo, isFrontal: photo.key === key }))
+    })
+  }
+
+  function removePhoto(key) {
+    setPhotos((current) => {
+      if (current.length <= 1) return current
+      const target = current.find((photo) => photo.key === key)
+      if (target?.file && target.preview?.startsWith('blob:')) URL.revokeObjectURL(target.preview)
+      return withSingleFrontal(current.filter((photo) => photo.key !== key))
+    })
   }
 
 
@@ -418,7 +467,7 @@ export default function CreateCatalogProductModal({
 
     }
 
-    if (!photoFile && !isEditing) {
+    if (photos.length === 0) {
 
       setError('Sube una imagen del producto.')
 
@@ -478,9 +527,33 @@ export default function CreateCatalogProductModal({
 
     formData.append('is_available', String(isAvailable))
 
-    if (photoFile) {
+    const frontalIndex = Math.max(0, photos.findIndex((photo) => photo.isFrontal))
 
-      formData.append('photo', photoFile)
+    if (!isEditing) {
+
+      photos.forEach((photo) => formData.append('photos', photo.file))
+
+      formData.append('frontal_index', String(photos.length === 1 ? 0 : frontalIndex))
+
+    } else if (photosChanged(photos, product)) {
+
+      const original = sourcePhotos(product)
+
+      const keptIds = new Set(photos.map((photo) => photo.existingId).filter(Boolean))
+
+      const removed = original.filter((photo) => photo.existingId && !keptIds.has(photo.existingId))
+
+      const added = photos.filter((photo) => photo.file)
+
+      added.forEach((photo) => formData.append('photos', photo.file))
+
+      formData.append('remove_image_ids', JSON.stringify(removed.map((photo) => photo.existingId)))
+
+      const frontal = photos[frontalIndex]
+
+      if (frontal?.existingId) formData.append('frontal_image_id', frontal.existingId)
+
+      else formData.append('frontal_new_index', String(Math.max(0, added.indexOf(frontal))))
 
     }
 
@@ -564,55 +637,111 @@ export default function CreateCatalogProductModal({
 
               accept="image/jpeg,image/png,image/webp"
 
+              multiple
+
               className="sr-only"
 
               onChange={handlePhotoChange}
 
             />
 
+            <div>
 
+              <p className={sellerLabel}>Fotos<span className="text-brand-carmelita"> *</span></p>
 
-            <button
+              <div className="mt-2 grid grid-cols-3 gap-2">
 
-              type="button"
+                {photos.map((photo) => (
 
-              onClick={() => fileInputRef.current?.click()}
+                  <div key={photo.key} className="relative">
 
-              className="flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-brand-green/22 bg-brand-green/[0.02] px-4 py-5 touch-manipulation active:border-brand-green/35 active:bg-brand-yellow/10"
+                    <img
 
-            >
+                      src={photo.preview}
 
-              {photoPreview ? (
+                      alt=""
 
-                <img src={photoPreview} alt="" className="h-28 w-28 rounded-2xl object-cover" />
+                      className={`aspect-square w-full rounded-2xl object-cover ${photo.isFrontal ? 'ring-2 ring-brand-green' : ''}`}
 
-              ) : (
+                    />
 
-                <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-green/10 text-brand-green">
+                    {photos.length > 1 ? (
 
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                      <button
 
-                    <path d="M12 5v14M5 12h14" />
+                        type="button"
 
-                  </svg>
+                        onClick={() => removePhoto(photo.key)}
 
-                </span>
+                        className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-brand-white/95 text-brand-carmelita touch-manipulation"
 
-              )}
+                        aria-label="Quitar foto"
 
-              <span className="text-sm font-semibold text-brand-green">
+                      >
 
-                {photoPreview ? 'Cambiar imagen' : 'Subir imagen'}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
 
-              </span>
+                          <path d="M18 6 6 18M6 6l12 12" />
 
-              <span className={sellerHint}>
+                        </svg>
 
-                {isEditing ? 'Opcional si mantienes la actual' : 'Obligatoria'} · {IMAGE_UPLOAD_HINT}
+                      </button>
 
-              </span>
+                    ) : null}
 
-            </button>
+                    <button
+
+                      type="button"
+
+                      onClick={() => chooseFrontal(photo.key)}
+
+                      disabled={photos.length < 2}
+
+                      className={`absolute inset-x-1.5 bottom-1.5 rounded-full px-2 py-1 text-[0.65rem] font-semibold touch-manipulation ${photo.isFrontal ? 'bg-brand-green text-brand-white' : 'bg-brand-white/95 text-brand-green'}`}
+
+                    >
+
+                      {photo.isFrontal ? 'Frontal' : 'Elegir frontal'}
+
+                    </button>
+
+                  </div>
+
+                ))}
+
+                {photos.length < MAX_PRODUCT_IMAGES ? (
+
+                  <button
+
+                    type="button"
+
+                    onClick={() => fileInputRef.current?.click()}
+
+                    className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-brand-green/22 bg-brand-green/[0.02] text-brand-green touch-manipulation active:bg-brand-yellow/10"
+
+                  >
+
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+
+                      <path d="M12 5v14M5 12h14" />
+
+                    </svg>
+
+                    <span className="text-xs font-semibold">Agregar</span>
+
+                  </button>
+
+                ) : null}
+
+              </div>
+
+              <p className={`mt-2 ${sellerHint}`}>
+
+                Hasta {MAX_PRODUCT_IMAGES} fotos. Si solo hay una, esa queda como frontal. {IMAGE_UPLOAD_HINT}
+
+              </p>
+
+            </div>
 
 
 

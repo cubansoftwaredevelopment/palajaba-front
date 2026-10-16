@@ -349,7 +349,7 @@ export const buyerProductDetailModal =
   'relative flex w-full max-w-md min-h-0 animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:max-h-[min(92dvh,44rem)] sm:rounded-3xl lg:max-w-lg'
 
 export const buyerProductDetailBody =
-  'min-h-0 flex-1 overflow-y-auto overscroll-y-contain'
+  'min-h-0 flex-1 overflow-y-auto overscroll-y-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
 
 export const buyerProductDetailHero =
   'bg-gradient-to-b from-brand-green/[0.04] to-brand-white px-5 pb-4 pt-1'

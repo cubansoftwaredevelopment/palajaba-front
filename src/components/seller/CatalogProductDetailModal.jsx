@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useDismissibleModal } from '../buyer/useOrderModalPresence'
-import { resolveMediaUrl } from '../../lib/media'
+import ProductPhotoGallery from '../buyer/ProductPhotoGallery'
 import { formatPrice } from '../../lib/money'
 import {
   sellerBtnPrimary,
@@ -29,8 +29,6 @@ export default function CatalogProductDetailModal({
   onDelete,
 }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
-  const imageSrc = resolveMediaUrl(product.image_url)
-
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -77,24 +75,16 @@ export default function CatalogProductDetailModal({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4">
-          <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-brand-green/[0.04]">
-            {imageSrc ? (
-              <img
-                src={imageSrc}
-                alt=""
-                className={`h-full w-full object-cover ${product.is_available ? '' : 'grayscale'}`}
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-xs font-semibold text-brand-carmelita/60">
-                Sin imagen
-              </div>
-            )}
-            {!product.is_available && (
+          <ProductPhotoGallery
+            product={product}
+            emptyLabel="Sin imagen"
+            imageClassName={product.is_available ? '' : 'grayscale'}
+            overlay={!product.is_available ? (
               <span className="absolute inset-x-2 bottom-2 rounded-md bg-brand-carmelita/95 px-2 py-0.5 text-center text-[0.55rem] font-bold uppercase tracking-[0.08em] text-brand-white">
                 Agotado
               </span>
-            )}
-          </div>
+            ) : null}
+          />
 
           <p className="mt-4 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-brand-carmelita/75">
             {categoryName}

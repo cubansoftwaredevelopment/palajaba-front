@@ -18,6 +18,7 @@ import { recordProductPopularity } from '../../lib/productPopularity'
 import BuyerModalPortal from './BuyerModalPortal'
 import { useDismissibleModal } from './useOrderModalPresence'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
+import ProductPhotoGallery from './ProductPhotoGallery'
 
 import {
 
@@ -30,8 +31,6 @@ import {
   buyerProductDetailBody,
 
   buyerProductDetailHero,
-
-  buyerProductDetailHeroImage,
 
   buyerProductDetailModal,
 
@@ -170,8 +169,6 @@ export default function BuyerProductDetailModal({
   const location = useDisplayedLocation()
   const [shareOpen, setShareOpen] = useState(false)
 
-  const imageSrc = resolveMediaUrl(product.image_url)
-
   const displayPrice = resolveDisplayPrice(product, displayCurrency, cupPerUnit)
 
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
@@ -309,35 +306,21 @@ export default function BuyerProductDetailModal({
 
             <div className={buyerProductDetailHero}>
 
-              <div className={buyerProductDetailHeroImage}>
-
-                {imageSrc ? (
-
-                  <img
-                    src={imageSrc}
-                    alt=""
-                    className={`h-full w-full object-cover ${soldOut ? 'grayscale' : ''}`}
-                  />
-
-                ) : (
-
-                  <div className="flex h-full items-center justify-center text-sm font-semibold text-brand-carmelita/60">
-
-                    Sin foto
-
-                  </div>
-
+              <ProductPhotoGallery
+                product={product}
+                emptyLabel="Sin foto"
+                imageClassName={soldOut ? 'grayscale' : ''}
+                overlay={(
+                  <>
+                    {pickup.requiresPickup ? (
+                      <span className={buyerProductPickupRibbon}>
+                        Sin domicilio a tu municipio
+                      </span>
+                    ) : null}
+                    {soldOut ? <BuyerProductSoldOutOverlay /> : null}
+                  </>
                 )}
-
-                {pickup.requiresPickup ? (
-                  <span className={buyerProductPickupRibbon}>
-                    Sin domicilio a tu municipio
-                  </span>
-                ) : null}
-
-                {soldOut ? <BuyerProductSoldOutOverlay /> : null}
-
-              </div>
+              />
 
             </div>
 
