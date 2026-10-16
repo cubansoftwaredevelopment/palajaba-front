@@ -40,7 +40,8 @@ import {
   MARKETPLACE_LABEL,
 } from "../../constants/branding";
 
-const PAGE_SIZE = 20;
+const ROW_PAGE_SIZE = 5;
+const SEARCH_PAGE_SIZE = 20;
 const SECTION_PAGE_SIZE = 4;
 
 function readPreviewLocation() {
@@ -139,7 +140,7 @@ function BuyerHomeContent({ preview = null }) {
           municipalityId: location.municipality.id,
           additionalMunicipalityIds,
           currency,
-          limitPerCategory: PAGE_SIZE,
+          limitPerCategory: ROW_PAGE_SIZE,
           limit: SECTION_PAGE_SIZE,
           offset,
         });
@@ -211,7 +212,7 @@ function BuyerHomeContent({ preview = null }) {
           currency,
           query: "",
           globalCategoryId: searchCategoryId || undefined,
-          limit: PAGE_SIZE,
+          limit: SEARCH_PAGE_SIZE,
           offset,
         });
 
@@ -434,7 +435,7 @@ function BuyerHomeContent({ preview = null }) {
                       additionalMunicipalityIds,
                       currency,
                       globalCategoryId: section.category_id,
-                      limit: PAGE_SIZE,
+                      limit: ROW_PAGE_SIZE,
                       offset,
                     }).then((data) => ({
                       products: data.products,

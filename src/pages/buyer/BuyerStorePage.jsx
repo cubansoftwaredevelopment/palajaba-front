@@ -35,7 +35,7 @@ import { setStoreCheckoutPhones } from "../../lib/storeCheckoutPhones";
 import { storePublicPath } from "../../lib/storeSlug";
 import { resolveUserFacingError } from "../../lib/userFacingError";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 5;
 
 function businessAreaToLocation(area) {
   if (!area?.province_id || !area?.municipality_id) return null;

@@ -14,7 +14,7 @@ import {
   buyerProductRowWrap,
 } from './buyerStyles'
 
-const PAGE_SIZE = 20
+const HORIZONTAL_BATCH = 5
 const SCROLL_EDGE_THRESHOLD = 20
 
 function getScrollStep(container) {
@@ -32,11 +32,17 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
   const cancelScrollRef = useRef(null)
 
   const [products, setProducts] = useState(section.products)
+  const [visibleCount, setVisibleCount] = useState(() =>
+    Math.min(HORIZONTAL_BATCH, section.products?.length ?? 0),
+  )
   const [hasMore, setHasMore] = useState(section.has_more)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
   const [canScrollRight, setCanScrollRight] = useState(false)
   const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const visibleCountRef = useRef(visibleCount)
+  const holdUntilLeaveRef = useRef(false)
+  visibleCountRef.current = visibleCount
 
   const updateScrollState = useCallback(() => {
     const el = scrollRef.current
@@ -49,7 +55,9 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
   useEffect(() => {
     setProducts(section.products)
     setHasMore(section.has_more)
+    setVisibleCount(Math.min(HORIZONTAL_BATCH, section.products?.length ?? 0))
     setError('')
+    holdUntilLeaveRef.current = false
   }, [section.category_id, section.products, section.has_more])
 
   useEffect(() => {
@@ -78,11 +86,14 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
     try {
       const data = await loadMore(products.length)
 
+      let added = 0
       setProducts((current) => {
         const seen = new Set(current.map((item) => item.id))
         const nextItems = data.products.filter((item) => !seen.has(item.id))
+        added = nextItems.length
         return [...current, ...nextItems]
       })
+      setVisibleCount((count) => count + added)
       setHasMore(data.has_more)
     } catch (err) {
       setError(getUserFacingMessage(err, 'No pudimos cargar más productos. Inténtalo de nuevo.'))
@@ -92,23 +103,38 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
     }
   }, [hasMore, loadMore, products.length])
 
+  const requestNextCards = useCallback(() => {
+    if (visibleCountRef.current < products.length) {
+      setVisibleCount((count) => Math.min(products.length, count + HORIZONTAL_BATCH))
+      return
+    }
+    loadMoreProducts()
+  }, [loadMoreProducts, products.length])
+
   useEffect(() => {
     const root = scrollRef.current
     const sentinel = sentinelRef.current
-    if (!root || !sentinel || !hasMore) return undefined
+    const hasPending = visibleCount < products.length || hasMore
+    if (!root || !sentinel || !hasPending) return undefined
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          loadMoreProducts()
+        const hit = Boolean(entries[0]?.isIntersecting)
+        if (!hit) {
+          holdUntilLeaveRef.current = false
+          return
         }
+        if (holdUntilLeaveRef.current || loadingRef.current) return
+        if (root.scrollLeft <= SCROLL_EDGE_THRESHOLD) return
+        holdUntilLeaveRef.current = true
+        requestNextCards()
       },
-      { root, rootMargin: '120px', threshold: 0.1 },
+      { root, rootMargin: '0px', threshold: 0 },
     )
 
     observer.observe(sentinel)
     return () => observer.disconnect()
-  }, [hasMore, loadMoreProducts, products.length])
+  }, [hasMore, products.length, requestNextCards, visibleCount])
 
   const animateRow = useCallback(
     (direction) => {
@@ -128,16 +154,22 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
           animatingRef.current = false
           updateScrollState()
 
-          if (direction === 'next' && el.scrollLeft >= maxScroll - SCROLL_EDGE_THRESHOLD && hasMore) {
-            loadMoreProducts()
+          if (
+            direction === 'next' &&
+            el.scrollLeft >= maxScroll - SCROLL_EDGE_THRESHOLD &&
+            (visibleCountRef.current < products.length || hasMore)
+          ) {
+            requestNextCards()
           }
         },
       })
     },
-    [hasMore, loadMoreProducts, updateScrollState],
+    [hasMore, products.length, requestNextCards, updateScrollState],
   )
 
-  const showScrollRight = canScrollRight || hasMore
+  const visibleProducts = products.slice(0, visibleCount)
+  const hasPending = visibleCount < products.length || hasMore
+  const showScrollRight = canScrollRight || hasPending
   const showScrollLeft = canScrollLeft
 
   if (!products.length) return null
@@ -153,13 +185,13 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
           ref={scrollRef}
           className={`${buyerProductRow} ${showScrollLeft ? 'lg:pl-12' : ''} ${showScrollRight ? 'pr-12' : ''}`}
         >
-          {products.map((product) => (
+          {visibleProducts.map((product) => (
             <div key={product.id} data-product-item className={buyerProductRowItem}>
               <BuyerProductCard product={product} compact />
             </div>
           ))}
 
-          {hasMore ? (
+          {hasPending ? (
             <div
               ref={sentinelRef}
               className="flex w-16 shrink-0 items-center justify-center"

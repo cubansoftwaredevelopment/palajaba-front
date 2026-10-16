@@ -25,7 +25,7 @@ import { resolveUserFacingError } from '../../lib/userFacingError'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { sellerFocusRing } from '../../components/seller/sellerStyles'
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 5
 
 function CatalogPreviewThemeButton({ onClick }) {
   return (
