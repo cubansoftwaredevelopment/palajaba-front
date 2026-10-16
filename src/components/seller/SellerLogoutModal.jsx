@@ -1,7 +1,9 @@
 import { useEffect } from 'react'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { sellerBtnPrimary, sellerBtnSecondary, sellerFocusRing, sellerModalTitle } from './sellerStyles'
 
-export default function SellerLogoutModal({ onClose, onConfirm }) {
+export default function SellerLogoutModal({ onClose: requestClose, onConfirm }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -16,7 +18,7 @@ export default function SellerLogoutModal({ onClose, onConfirm }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-brand-green/20 p-4 backdrop-blur-sm"
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-green/20 p-4 backdrop-blur-sm ${motionClass}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="seller-logout-title"

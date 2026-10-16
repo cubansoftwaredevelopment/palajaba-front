@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import Button from './Button'
+import { useDismissibleModal } from './buyer/useOrderModalPresence'
 
 export default function ConfirmModal({
   title,
@@ -8,8 +9,9 @@ export default function ConfirmModal({
   confirmVariant = 'primary',
   icon,
   onConfirm,
-  onClose,
+  onClose: requestClose,
 }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -24,7 +26,7 @@ export default function ConfirmModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-green/25 p-4 backdrop-blur-sm sm:items-center"
+      className={`fixed inset-0 z-50 flex items-end justify-center bg-brand-green/25 p-4 backdrop-blur-sm sm:items-center ${motionClass}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"

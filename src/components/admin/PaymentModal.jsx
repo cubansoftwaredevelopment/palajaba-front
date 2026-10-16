@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { adminAlertError, adminLabel } from './adminStyles'
 import { normalizePlanTier } from '../../constants/plan'
 import { parseCupInput } from '../../lib/money'
@@ -9,7 +10,8 @@ import { updateRegistrationPayment } from '../../lib/api'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getAdminToken } from '../../lib/adminAuth'
 
-export default function PaymentModal({ registration, onClose, onSuccess }) {
+export default function PaymentModal({ registration, onClose: requestClose, onSuccess }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const { getPlanPrice } = usePlanPricing()
   const suggested = getPlanPrice(
     normalizePlanTier(registration.plan_tier),
@@ -48,6 +50,7 @@ export default function PaymentModal({ registration, onClose, onSuccess }) {
       title="Registrar monto pagado"
       subtitle={registration.store_name}
       onClose={onClose}
+      presenceClass={motionClass}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>

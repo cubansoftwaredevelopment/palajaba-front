@@ -1,11 +1,26 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { adminFocusRing } from './adminStyles'
 import { readAdminTheme } from './adminTheme'
 
-export default function AdminModal({ title, subtitle, children, onClose, centered, panelClassName = 'max-w-md' }) {
+export default function AdminModal({
+  title,
+  subtitle,
+  children,
+  onClose,
+  centered,
+  panelClassName = 'max-w-md',
+  presenceClass = null,
+}) {
+  const owned = useDismissibleModal(onClose)
+  const close = useCallback(() => {
+    if (presenceClass) onClose()
+    else owned.dismiss()
+  }, [presenceClass, onClose, owned.dismiss])
+  const motionClass = presenceClass ?? owned.motionClass
   useEffect(() => {
     function onKeyDown(e) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') close()
     }
     document.addEventListener('keydown', onKeyDown)
     document.body.style.overflow = 'hidden'
@@ -13,16 +28,16 @@ export default function AdminModal({ title, subtitle, children, onClose, centere
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = ''
     }
-  }, [onClose])
+  }, [close])
 
   return (
     <div
-      className="admin-theme fixed inset-0 z-50 flex items-end justify-center bg-[color-mix(in_srgb,var(--admin-canvas)_75%,transparent)] p-4 backdrop-blur-sm sm:items-center"
+      className={`admin-theme fixed inset-0 z-50 flex items-end justify-center bg-[color-mix(in_srgb,var(--admin-canvas)_75%,transparent)] p-4 backdrop-blur-sm sm:items-center ${motionClass}`}
       data-theme={readAdminTheme()}
       role="dialog"
       aria-modal="true"
       aria-labelledby={title ? 'admin-modal-title' : undefined}
-      onClick={onClose}
+      onClick={close}
     >
       <div
         className={`relative max-h-[90dvh] w-full animate-fade-in overflow-y-auto rounded-2xl border border-brand-green/15 bg-gradient-to-b from-zinc-900 to-zinc-950 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.45)] ${panelClassName} ${centered ? 'text-center' : ''}`}
@@ -38,7 +53,7 @@ export default function AdminModal({ title, subtitle, children, onClose, centere
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={close}
               className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-100 ${adminFocusRing}`}
               aria-label="Cerrar"
             >
@@ -50,7 +65,7 @@ export default function AdminModal({ title, subtitle, children, onClose, centere
         ) : (
           <button
             type="button"
-            onClick={onClose}
+            onClick={close}
             className={`absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-100 ${adminFocusRing}`}
             aria-label="Cerrar"
           >

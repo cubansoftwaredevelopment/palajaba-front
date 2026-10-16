@@ -10,6 +10,7 @@ import { getSellerToken } from '../../lib/sellerAuth'
 
 import CategoryAutocomplete from './CategoryAutocomplete'
 import SellerModalPortal from './SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 
 import {
 
@@ -92,11 +93,12 @@ export default function CreateCatalogProductModal({
 
   product = null,
 
-  onClose,
+  onClose: requestClose,
 
   onSaved,
 
 }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
 
   const isEditing = Boolean(product)
 
@@ -518,7 +520,7 @@ export default function CreateCatalogProductModal({
 
       <div
 
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
 
         role="dialog"
 

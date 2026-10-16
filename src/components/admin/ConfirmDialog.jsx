@@ -1,5 +1,6 @@
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 
 export default function ConfirmDialog({
   title,
@@ -8,11 +9,12 @@ export default function ConfirmDialog({
   confirmVariant = 'primary',
   loading,
   onConfirm,
-  onClose,
+  onClose: requestClose,
   children,
 }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   return (
-    <AdminModal title={title} subtitle={subtitle} onClose={onClose}>
+    <AdminModal title={title} subtitle={subtitle} onClose={onClose} presenceClass={motionClass}>
       {children}
       <div className="mt-5 flex flex-col gap-2 sm:flex-row">
         <AdminButton type="button" variant="secondary" onClick={onClose} disabled={loading}>

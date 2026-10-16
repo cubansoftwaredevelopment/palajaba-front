@@ -1,10 +1,12 @@
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { adminSubtle } from './adminStyles'
 
-export default function LogoutConfirmModal({ onConfirm, onClose }) {
+export default function LogoutConfirmModal({ onConfirm, onClose: requestClose }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   return (
-    <AdminModal onClose={onClose} centered>
+    <AdminModal onClose={onClose} presenceClass={motionClass} centered>
       <div className="flex flex-col items-center text-center">
         <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-zinc-700 bg-zinc-800">
           <svg

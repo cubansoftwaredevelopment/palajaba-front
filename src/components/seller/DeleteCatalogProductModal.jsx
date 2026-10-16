@@ -14,7 +14,10 @@ import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from './SellerModalPortal'
 
-export default function DeleteCatalogProductModal({ product, onClose, onDeleted }) {
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
+
+export default function DeleteCatalogProductModal({ product, onClose: requestClose, onDeleted }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -47,7 +50,7 @@ export default function DeleteCatalogProductModal({ product, onClose, onDeleted 
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-product-title"

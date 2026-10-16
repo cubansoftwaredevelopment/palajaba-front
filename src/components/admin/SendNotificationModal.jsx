@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { adminAlertError, adminInput, adminLabel, adminMuted, adminSubtle } from './adminStyles'
 import { NOTIFICATION_AUDIENCE_OPTIONS } from '../../constants/admin'
 import { matchesStoreQuery } from '../../lib/adminNotificationStores'
@@ -8,7 +9,8 @@ import { fetchRegistrations } from '../../lib/api'
 import { getAdminToken } from '../../lib/adminAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
-export default function SendNotificationModal({ onClose, onSubmit }) {
+export default function SendNotificationModal({ onClose: requestClose, onSubmit }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [audience, setAudience] = useState('all')
@@ -113,7 +115,7 @@ export default function SendNotificationModal({ onClose, onSubmit }) {
     : `Destinatarios: ${audienceLabel}`
 
   return (
-    <AdminModal title="Nueva notificación" subtitle={subtitle} onClose={onClose}>
+    <AdminModal title="Nueva notificación" subtitle={subtitle} onClose={onClose} presenceClass={motionClass}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <div>
           <label htmlFor="notification-audience" className={adminLabel}>

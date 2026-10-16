@@ -6,6 +6,8 @@ import AdminDatePicker from './AdminDatePicker'
 
 import AdminModal from './AdminModal'
 
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
+
 import { adminAlertError, adminInput, adminLabel } from './adminStyles'
 
 import { BILLING_LABELS, PLAN_TIER_LABELS } from '../../constants/admin'
@@ -119,7 +121,8 @@ function PlanFields({ planTier, billingPeriod, onPlanTierChange, onBillingPeriod
 
 
 
-export default function SubscriptionModal({ registration, mode, onClose, onSuccess }) {
+export default function SubscriptionModal({ registration, mode, onClose: requestClose, onSuccess }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
 
   const isEdit = mode === 'edit'
 
@@ -325,6 +328,8 @@ export default function SubscriptionModal({ registration, mode, onClose, onSucce
       subtitle={`${registration.store_name}${isRenew ? ' · suscripción vencida' : ''}`}
 
       onClose={onClose}
+
+      presenceClass={motionClass}
 
     >
 

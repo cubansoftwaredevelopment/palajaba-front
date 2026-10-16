@@ -7,6 +7,7 @@ import { formatPrice, parseCupInput } from '../../lib/money'
 import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
+import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../buyer/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
 import {
   sellerAlertError,
@@ -73,11 +74,12 @@ export default function SellerOrderDetailModal({
   cancelling,
   downloading,
   error,
-  onClose,
+  onClose: requestClose,
   onSave,
   onCancel,
   onDownloadInvoice,
 }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [editableItems, setEditableItems] = useState(order.items)
   const [deliveryPrice, setDeliveryPrice] = useState(
     order.delivery_price != null ? String(Math.round(order.delivery_price)) : '',
@@ -87,6 +89,8 @@ export default function SellerOrderDetailModal({
   const [localError, setLocalError] = useState('')
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
+  const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
+  const mapMotionClass = orderModalMotionClass(mapClosing)
   const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
 
   useEffect(() => {
@@ -108,7 +112,7 @@ export default function SellerOrderDetailModal({
   useEffect(() => {
     function onKeyDown(event) {
       if (event.key !== 'Escape') return
-      if (mapOpen) {
+      if (mapPresent) {
         setMapOpen(false)
         return
       }
@@ -121,7 +125,7 @@ export default function SellerOrderDetailModal({
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = ''
     }
-  }, [onClose, mapOpen])
+  }, [onClose, mapPresent])
 
   const isPending = order.status === 'pending_confirmation'
   const canEditItems = isPending
@@ -251,7 +255,7 @@ export default function SellerOrderDetailModal({
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="presentation"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) onClose()
@@ -641,9 +645,9 @@ export default function SellerOrderDetailModal({
         ) : null}
         </div>
       </div>
-      {mapOpen && deliveryMapUrl ? (
+      {mapPresent && deliveryMapUrl ? (
         <div
-          className="fixed inset-0 z-[210] flex flex-col bg-brand-white"
+          className={`fixed inset-0 z-[210] flex flex-col bg-brand-white ${mapMotionClass}`}
           role="dialog"
           aria-modal="true"
           aria-label="Ubicación del pedido"

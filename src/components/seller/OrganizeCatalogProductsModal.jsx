@@ -9,6 +9,7 @@ import { getSellerToken } from '../../lib/sellerAuth'
 import { formatPrice } from '../../lib/money'
 import { resolveMediaUrl } from '../../lib/media'
 import SellerModalPortal from './SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import {
   sellerAlertError,
   sellerBtnPrimary,
@@ -33,7 +34,8 @@ function moveItem(list, fromIndex, toIndex) {
   return next
 }
 
-export default function OrganizeCatalogProductsModal({ category, onClose, onSaved }) {
+export default function OrganizeCatalogProductsModal({ category, onClose: requestClose, onSaved }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [selectedMode, setSelectedMode] = useState(category.product_sort_mode || 'popularity')
   const [items, setItems] = useState(category.products ?? [])
   const [manualItems, setManualItems] = useState(category.products ?? [])
@@ -150,7 +152,7 @@ export default function OrganizeCatalogProductsModal({ category, onClose, onSave
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="organize-products-title"

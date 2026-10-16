@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export const ORDER_MODAL_EXIT_MS = 200
 
@@ -34,4 +34,21 @@ export function useOrderModalPresence(open) {
   }, [open])
 
   return { present, closing }
+}
+
+/** Mantiene el modal montado el tiempo del fade-out antes de avisar al padre. */
+export function useDismissibleModal(onClose) {
+  const [closing, setClosing] = useState(false)
+  const onCloseRef = useRef(onClose)
+  const closingRef = useRef(false)
+  onCloseRef.current = onClose
+
+  const dismiss = useCallback(() => {
+    if (closingRef.current) return
+    closingRef.current = true
+    setClosing(true)
+    window.setTimeout(() => onCloseRef.current?.(), ORDER_MODAL_EXIT_MS)
+  }, [])
+
+  return { dismiss, motionClass: orderModalMotionClass(closing), closing }
 }

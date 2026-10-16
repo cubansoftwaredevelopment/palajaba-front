@@ -5,6 +5,7 @@ import { reorderCatalogCategories } from '../../lib/api'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from './SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import {
   sellerAlertError,
   sellerBtnPrimary,
@@ -29,7 +30,8 @@ function moveItem(list, fromIndex, toIndex) {
   return next
 }
 
-export default function ReorderCatalogCategoriesModal({ categories, onClose, onSaved }) {
+export default function ReorderCatalogCategoriesModal({ categories, onClose: requestClose, onSaved }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [items, setItems] = useState(categories)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -89,7 +91,7 @@ export default function ReorderCatalogCategoriesModal({ categories, onClose, onS
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="reorder-categories-title"

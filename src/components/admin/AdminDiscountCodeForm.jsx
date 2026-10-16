@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import {
   adminAlertError,
   adminFocusRing,
@@ -48,7 +49,8 @@ function ActiveToggle({ checked, onChange }) {
   )
 }
 
-export default function AdminDiscountCodeForm({ initial, onSubmit, onClose, submitLabel, loading }) {
+export default function AdminDiscountCodeForm({ initial, onSubmit, onClose: requestClose, submitLabel, loading }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [code, setCode] = useState(initial?.code ?? '')
   const [percentOff, setPercentOff] = useState(String(initial?.percent_off ?? ''))
   const [isActive, setIsActive] = useState(initial?.is_active ?? true)
@@ -83,6 +85,7 @@ export default function AdminDiscountCodeForm({ initial, onSubmit, onClose, subm
           : 'Los vendedores lo usarán al elegir plan y pagar su solicitud.'
       }
       onClose={onClose}
+      presenceClass={motionClass}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>

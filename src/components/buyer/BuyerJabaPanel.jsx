@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useDisplayedLocation } from '../../context/BuyerDisplayedLocationContext'
 import { buildJabaShareMessage, buildJabaShareUrl } from '../../lib/buyerShare'
 import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
+import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
 import LoadingState from '../ui/LoadingState'
@@ -288,6 +289,8 @@ export default function BuyerJabaPanel() {
   const location = useDisplayedLocation()
   const [shareOpen, setShareOpen] = useState(false)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
+  const { present, closing } = useOrderModalPresence(open)
+  const motionClass = orderModalMotionClass(closing)
 
   const storeIdsKey = groups.map((group) => group.store_id).join('|')
   const showStoreChips = groups.length >= 3
@@ -328,7 +331,7 @@ export default function BuyerJabaPanel() {
     }
   }, [open, closePanel])
 
-  if (!open) return null
+  if (!present) return null
 
   function toggleStore(storeId) {
     setExpandedIds((current) => {
@@ -353,9 +356,9 @@ export default function BuyerJabaPanel() {
 
   return (
     <>
-      <button type="button" className={buyerJabaOverlay} aria-label="Cerrar tu jaba" onClick={closePanel} />
+      <button type="button" className={`${buyerJabaOverlay} ${motionClass}`} aria-label="Cerrar tu jaba" onClick={closePanel} />
 
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={buyerJabaPanel}>
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerJabaPanel} ${motionClass}`}>
         <div className={buyerJabaPanelHeader}>
           <div className="min-w-0 flex-1 pr-2">
             <h2 id={titleId} className={buyerJabaPanelTitle}>

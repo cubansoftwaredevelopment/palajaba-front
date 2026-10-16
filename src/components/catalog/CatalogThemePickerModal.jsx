@@ -1,5 +1,6 @@
 import { listCatalogThemes, normalizeCatalogTheme } from '../../lib/catalogThemes'
 import SellerModalPortal from '../seller/SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import {
   sellerAlertError,
   sellerBtnSecondary,
@@ -13,15 +14,16 @@ export default function CatalogThemePickerModal({
   selectedTheme,
   saving = false,
   error = '',
-  onClose,
+  onClose: requestClose,
   onSelectTheme,
 }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const themes = listCatalogThemes()
 
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="catalog-theme-title"

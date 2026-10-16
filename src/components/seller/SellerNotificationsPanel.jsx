@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { formatRelativeTime } from '../../lib/dates'
 import RenewPlanButton from './RenewPlanButton'
 import SellerModalPortal from './SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import LoadingState from '../ui/LoadingState'
 import {
   sellerBtnPrimary,
@@ -142,11 +143,12 @@ function NotificationCard({ notification, onClose, onMarkRead, storeName = '' })
 export default function SellerNotificationsPanel({
   notifications,
   loading,
-  onClose,
+  onClose: requestClose,
   onMarkRead,
   onMarkAllSystemRead,
   storeName = '',
 }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.read_at).length,
     [notifications],
@@ -182,7 +184,7 @@ export default function SellerNotificationsPanel({
   return (
     <SellerModalPortal>
       <div
-        className={sellerNotificationsOverlay}
+        className={`${sellerNotificationsOverlay} ${motionClass}`}
         role="presentation"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) onClose()

@@ -18,8 +18,10 @@ import { createCatalogCategory } from '../../lib/api'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from './SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 
-export default function CreateCatalogCategoryModal({ initialName = '', onClose, onCreated }) {
+export default function CreateCatalogCategoryModal({ initialName = '', onClose: requestClose, onCreated }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [name, setName] = useState(initialName)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -61,7 +63,7 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose, 
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-catalog-category-title"

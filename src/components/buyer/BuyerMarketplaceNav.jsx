@@ -8,6 +8,7 @@ import { getAdditionalMunicipalities, getBuyerLocation, getMarketplaceCategoryFi
 import { isSellerAuthenticated } from '../../lib/sellerAuth'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
+import { useDismissibleModal } from './useOrderModalPresence'
 
 export const MARKETPLACE_CATEGORY_EVENT = 'pala-jaba-marketplace-category'
 
@@ -113,10 +114,11 @@ function publishCategory(provinceId, categoryId) {
   )
 }
 
-function CategoryModal({ categories, loading, selectedId, onClose, onSelect, emptyMessage }) {
+function CategoryModal({ categories, loading, selectedId, onClose: requestClose, onSelect, emptyMessage }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-end justify-center bg-brand-green/25 p-3 backdrop-blur-sm sm:items-center"
+      className={`fixed inset-0 z-[60] flex items-end justify-center bg-brand-green/25 p-3 backdrop-blur-sm sm:items-center ${motionClass}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="buyer-category-modal-title"

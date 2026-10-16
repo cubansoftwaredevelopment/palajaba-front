@@ -10,8 +10,10 @@ import {
   sellerMapMarkerIcon,
 } from '../../lib/sellerMap'
 import { sellerModalTitle } from './sellerStyles'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 
-export default function LocationMapModal({ initialLocation, onConfirm, onClose }) {
+export default function LocationMapModal({ initialLocation, onConfirm, onClose: requestClose }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markerRef = useRef(null)
@@ -93,7 +95,7 @@ export default function LocationMapModal({ initialLocation, onConfirm, onClose }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
+      className={`fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-0 backdrop-blur-[2px] sm:items-center sm:p-4 ${motionClass}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="map-modal-title"

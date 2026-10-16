@@ -13,8 +13,10 @@ import { deleteCatalogCategory } from '../../lib/api'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from './SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 
-export default function DeleteCatalogCategoryModal({ category, onClose, onDeleted }) {
+export default function DeleteCatalogCategoryModal({ category, onClose: requestClose, onDeleted }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const productCount = category.product_count ?? category.products?.length ?? 0
@@ -49,7 +51,7 @@ export default function DeleteCatalogCategoryModal({ category, onClose, onDelete
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-category-title"

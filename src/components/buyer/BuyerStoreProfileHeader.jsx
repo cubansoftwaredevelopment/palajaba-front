@@ -5,6 +5,7 @@ import SellerLocationPreview from '../seller/SellerLocationPreview'
 import { resolveMediaUrl } from '../../lib/media'
 import { buildWhatsAppContactUrl } from '../../lib/whatsappOrder'
 import BuyerModalPortal from './BuyerModalPortal'
+import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 import BuyerStoreBio from './BuyerStoreBio'
 import { socialLinkLabel, socialLinkUrl, socialLinksFromProfile } from '../../lib/socialLinks'
 import {
@@ -92,6 +93,8 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
   const hasMap = Boolean(catalog.business_location)
   const hasActions = Boolean(whatsapp || hasMap || socialLinks.length)
   const [mapOpen, setMapOpen] = useState(false)
+  const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
+  const mapMotionClass = orderModalMotionClass(mapClosing)
   const [shareOpen, setShareOpen] = useState(false)
   const canShare = Boolean(location?.province?.id && location?.municipality?.id && store.store_slug)
   const shareUrl = canShare
@@ -107,7 +110,7 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
     : ''
 
   useEffect(() => {
-    if (!mapOpen) return undefined
+    if (!mapPresent) return undefined
 
     function onKeyDown(event) {
       if (event.key === 'Escape') setMapOpen(false)
@@ -119,7 +122,7 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = ''
     }
-  }, [mapOpen])
+  }, [mapPresent])
 
   return (
     <>
@@ -200,10 +203,10 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
         ) : null}
       </section>
 
-      {mapOpen && catalog.business_location ? (
+      {mapPresent && catalog.business_location ? (
         <BuyerModalPortal>
           <div
-            className={buyerStoreMapOverlay}
+            className={`${buyerStoreMapOverlay} ${mapMotionClass}`}
             role="presentation"
             onMouseDown={(event) => {
               if (event.target === event.currentTarget) setMapOpen(false)

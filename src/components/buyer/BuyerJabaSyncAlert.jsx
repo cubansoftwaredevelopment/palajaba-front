@@ -3,6 +3,7 @@ import { JABA_BAG } from '../../constants/branding'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
 import Button from '../Button'
 import BuyerModalPortal from './BuyerModalPortal'
+import { useDismissibleModal } from './useOrderModalPresence'
 import { reasonMeta, ReasonIcon } from './buyerJabaSyncReason'
 import {
   buyerJabaSyncBody,
@@ -24,7 +25,8 @@ import {
   buyerJabaSyncTitle,
 } from './buyerStyles'
 
-export default function BuyerJabaSyncAlert({ removed, onClose }) {
+export default function BuyerJabaSyncAlert({ removed, onClose: requestClose }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const { count, openPanel } = useBuyerJaba()
 
   useEffect(() => {
@@ -56,7 +58,7 @@ export default function BuyerJabaSyncAlert({ removed, onClose }) {
   return (
     <BuyerModalPortal>
       <div
-        className={buyerJabaSyncOverlay}
+        className={`${buyerJabaSyncOverlay} ${motionClass}`}
         role="presentation"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) onClose()

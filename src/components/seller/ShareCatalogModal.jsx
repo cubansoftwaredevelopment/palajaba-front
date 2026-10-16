@@ -11,6 +11,7 @@ import {
   getStoreShareMessage,
 } from '../../lib/storeShare'
 import SellerModalPortal from './SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { TelegramIcon, WhatsAppIcon } from './ShareBrandIcons'
 import {
   sellerAlertSuccess,
@@ -54,7 +55,8 @@ function ShareOption({ icon, label, hint, onClick, iconWrapClassName, disabled =
   )
 }
 
-export default function ShareCatalogModal({ profile, onClose }) {
+export default function ShareCatalogModal({ profile, onClose: requestClose }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [view, setView] = useState('options')
   const [copyStatus, setCopyStatus] = useState('')
   const [qrDataUrl, setQrDataUrl] = useState('')
@@ -153,7 +155,7 @@ export default function ShareCatalogModal({ profile, onClose }) {
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="share-catalog-title"

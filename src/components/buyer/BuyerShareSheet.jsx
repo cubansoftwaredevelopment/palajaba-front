@@ -4,6 +4,7 @@ import { buildTelegramShareUrl, buildWhatsAppShareUrl } from '../../lib/storeSha
 import { openExternalUrl } from '../../lib/nativeApp'
 import { TelegramIcon, WhatsAppIcon } from '../seller/ShareBrandIcons'
 import BuyerModalPortal from './BuyerModalPortal'
+import { useDismissibleModal } from './useOrderModalPresence'
 
 function ShareIcon() {
   return (
@@ -30,7 +31,8 @@ function shareWasCancelled(error) {
   return text.includes('cancel') || text.includes('abort')
 }
 
-export default function BuyerShareSheet({ title, message, url, onClose }) {
+export default function BuyerShareSheet({ title, message, url, onClose: requestClose }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [copyStatus, setCopyStatus] = useState('')
   const [destinationsOpen, setDestinationsOpen] = useState(false)
 
@@ -80,7 +82,7 @@ export default function BuyerShareSheet({ title, message, url, onClose }) {
   return (
     <BuyerModalPortal>
       <div
-        className="fixed inset-0 z-[80] flex items-end justify-center bg-brand-green/25 p-3 sm:items-center"
+        className={`fixed inset-0 z-[110] flex items-end justify-center bg-brand-green/25 p-3 sm:items-center ${motionClass}`}
         role="presentation"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) onClose()

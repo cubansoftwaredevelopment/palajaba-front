@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { resolveMediaUrl } from '../../lib/media'
 import { formatPrice } from '../../lib/money'
 import {
@@ -23,10 +24,11 @@ function DetailRow({ label, children }) {
 export default function CatalogProductDetailModal({
   product,
   categoryName,
-  onClose,
+  onClose: requestClose,
   onEdit,
   onDelete,
 }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const imageSrc = resolveMediaUrl(product.image_url)
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function CatalogProductDetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      className={`fixed inset-0 z-50 flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-sm sm:items-center sm:p-4 ${motionClass}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="catalog-product-detail-title"

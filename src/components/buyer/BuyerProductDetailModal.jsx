@@ -16,6 +16,7 @@ import { isProductPurchasable, isProductSoldOut, getProductPickupDisplay } from 
 import { recordProductPopularity } from '../../lib/productPopularity'
 
 import BuyerModalPortal from './BuyerModalPortal'
+import { useDismissibleModal } from './useOrderModalPresence'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
 
 import {
@@ -156,13 +157,14 @@ export default function BuyerProductDetailModal({
 
   inJaba,
 
-  onClose,
+  onClose: requestClose,
 
   onBuy,
 
   onAddToJaba,
 
 }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
 
   const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
   const location = useDisplayedLocation()
@@ -231,7 +233,7 @@ export default function BuyerProductDetailModal({
 
       <div
 
-        className={buyerProductDetailOverlay}
+        className={`${buyerProductDetailOverlay} ${motionClass}`}
 
         role="presentation"
 

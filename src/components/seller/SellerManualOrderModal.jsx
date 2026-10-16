@@ -12,6 +12,7 @@ import {
   validateManualOrderDraft,
 } from '../../lib/sellerManualOrder'
 import SellerModalPortal from './SellerModalPortal'
+import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
 import {
   sellerAlertError,
@@ -55,7 +56,8 @@ function QuantityStepper({ value, onChange, max = 99 }) {
   )
 }
 
-export default function SellerManualOrderModal({ onClose, onCreated }) {
+export default function SellerManualOrderModal({ onClose: requestClose, onCreated }) {
+  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [searchLoading, setSearchLoading] = useState(true)
   const [searchError, setSearchError] = useState('')
   const [suggestions, setSuggestions] = useState([])
@@ -206,7 +208,7 @@ export default function SellerManualOrderModal({ onClose, onCreated }) {
   return (
     <SellerModalPortal>
       <div
-        className={sellerModalOverlay}
+        className={`${sellerModalOverlay} ${motionClass}`}
         role="presentation"
         onMouseDown={(event) => {
           if (event.target === event.currentTarget) onClose()
