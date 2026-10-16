@@ -188,6 +188,49 @@ export function updateSellerStoreName(token, storeName) {
   });
 }
 
+export function updateSellerStoreBanner(token, bannerId, isActive) {
+  return request(`/api/auth/me/store-banners/${encodeURIComponent(bannerId)}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ is_active: isActive }),
+  });
+}
+
+export function deleteSellerStoreBanner(token, bannerId) {
+  return request(`/api/auth/me/store-banners/${encodeURIComponent(bannerId)}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+export async function uploadSellerStoreBanner(token, file) {
+  const formData = new FormData();
+  formData.append("photo", file);
+
+  const response = await fetch(`${getApiBase()}/api/auth/me/store-banners`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
+    throw new ApiError(parsed.message, {
+      code: parsed.code,
+      data: parsed.data,
+    });
+  }
+
+  return response.json();
+}
+
 export async function uploadSellerProfilePhoto(token, file) {
   const formData = new FormData();
   formData.append("photo", file);

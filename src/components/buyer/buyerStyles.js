@@ -406,10 +406,10 @@ export const buyerStoreStripLink =
   `${buyerStoreStrip} transition-colors touch-manipulation active:border-brand-green/25 active:bg-brand-yellow/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 lg:hover:border-brand-green/22 lg:hover:bg-brand-yellow/8`
 
 export const buyerStorePageHeader =
-  'min-w-0 rounded-3xl border border-zinc-200/90 bg-white px-5 py-5 shadow-[0_4px_20px_rgba(15,23,42,0.06)]'
+  'min-w-0 overflow-hidden rounded-3xl border border-zinc-200/90 bg-white shadow-[0_4px_20px_rgba(15,23,42,0.06)]'
 
 export const buyerStorePageAvatar =
-  'flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-zinc-100 font-display text-lg font-bold text-zinc-500 ring-2 ring-brand-green sm:h-20 sm:w-20'
+  'flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-white bg-zinc-100 font-display text-lg font-bold text-zinc-500 shadow-[0_4px_16px_rgba(15,23,42,0.18)] sm:h-24 sm:w-24'
 
 export const buyerStorePageName =
   'font-display text-xl font-bold text-brand-green sm:text-2xl'

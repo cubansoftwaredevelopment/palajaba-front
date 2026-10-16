@@ -7,23 +7,17 @@ import { buildWhatsAppContactUrl } from '../../lib/whatsappOrder'
 import BuyerModalPortal from './BuyerModalPortal'
 import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 import BuyerStoreBio from './BuyerStoreBio'
+import BuyerStoreBannerCover from './BuyerStoreBannerCover'
 import { socialLinkLabel, socialLinkUrl, socialLinksFromProfile } from '../../lib/socialLinks'
 import {
   buyerStoreMapModal,
   buyerStoreMapModalBody,
   buyerStoreMapModalHeader,
   buyerStoreMapOverlay,
-  buyerStorePageActions,
   buyerStorePageAvatar,
   buyerStorePageHeader,
-  buyerStorePageMapBtn,
-  buyerStorePageSecondaryBtn,
-  buyerStorePageMeta,
-  buyerStorePageMetaLabel,
-  buyerStorePageMetaValue,
   buyerStorePageName,
   buyerStorePageSocialLink,
-  buyerStorePageWhatsAppBtn,
 } from './buyerStyles'
 
 function formatArea(area) {
@@ -91,7 +85,6 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
     .filter((link) => link.href)
   const whatsapp = buildWhatsAppContactUrl(store.phone)
   const hasMap = Boolean(catalog.business_location)
-  const hasActions = Boolean(whatsapp || hasMap || socialLinks.length)
   const [mapOpen, setMapOpen] = useState(false)
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
   const mapMotionClass = orderModalMotionClass(mapClosing)
@@ -127,80 +120,83 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
   return (
     <>
       <section className={buyerStorePageHeader}>
-        <div className="flex items-center gap-4">
-          <div className={buyerStorePageAvatar}>
-            {photoSrc ? (
-              <img src={photoSrc} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <span>{initials}</span>
-            )}
+        <BuyerStoreBannerCover banners={catalog.banners} />
+
+        <div className="relative z-10 px-4 pb-5 sm:px-5">
+          <div className="-mt-10 flex items-center justify-between gap-3 sm:-mt-12">
+            <div className={buyerStorePageAvatar}>
+              {photoSrc ? (
+                <img src={photoSrc} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span>{initials}</span>
+              )}
+            </div>
+            {canShare || whatsapp || hasMap ? (
+              <div className="mb-1 flex shrink-0 items-center gap-2">
+                {whatsapp ? (
+                  <a
+                    href={whatsapp}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-brand-green shadow-sm touch-manipulation active:bg-zinc-50"
+                    aria-label="WhatsApp"
+                  >
+                    <WhatsAppIcon />
+                  </a>
+                ) : null}
+                {hasMap ? (
+                  <button
+                    type="button"
+                    onClick={() => setMapOpen(true)}
+                    className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm touch-manipulation active:bg-zinc-50"
+                    aria-label="Ver mapa"
+                  >
+                    <MapPinIcon />
+                  </button>
+                ) : null}
+                {canShare ? (
+                  <BuyerShareButton
+                    label="Compartir"
+                    onClick={() => setShareOpen(true)}
+                    className="inline-flex h-10 items-center gap-1.5 rounded-full bg-brand-green px-4 text-sm font-bold text-white shadow-[0_4px_14px_rgba(89,128,44,0.28)] touch-manipulation active:scale-[0.98]"
+                  />
+                ) : null}
+              </div>
+            ) : null}
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-zinc-500">
-              {catalog.gestor ? 'Catálogo de gestor' : 'Tienda'}
+
+          <h1 className={`${buyerStorePageName} mt-3`}>{store.store_name}</h1>
+          {catalog.gestor?.username ? (
+            <p className="mt-1 text-sm text-zinc-600">Ofrecido por @{catalog.gestor.username}</p>
+          ) : null}
+
+          <BuyerStoreBio biography={catalog.biography} storeSlug={store.store_slug} />
+
+          {socialLinks.length ? (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={`${buyerStorePageSocialLink} !w-auto gap-1.5 px-3.5 text-xs font-semibold`}
+                  aria-label={link.name}
+                >
+                  <SocialIcon platform={link.platform} />
+                  <span>{link.name}</span>
+                </a>
+              ))}
+            </div>
+          ) : null}
+
+          {businessArea ? (
+            <p className="mt-3 flex items-center gap-1.5 text-sm text-zinc-600">
+              <MapPinIcon />
+              <span>{businessArea}</span>
             </p>
-            <h1 className={buyerStorePageName}>{store.store_name}</h1>
-            {catalog.gestor?.username ? (
-              <p className="mt-1 text-sm text-zinc-600">Ofrecido por @{catalog.gestor.username}</p>
-            ) : null}
-          </div>
+          ) : null}
         </div>
-
-        <BuyerStoreBio biography={catalog.biography} storeSlug={store.store_slug} />
-
-        {businessArea ? (
-          <div className={`${buyerStorePageMeta} border-t border-zinc-200/90`}>
-            <p className={buyerStorePageMetaLabel}>Ubicación</p>
-            <p className={buyerStorePageMetaValue}>{businessArea}</p>
-          </div>
-        ) : null}
-
-        {hasActions || canShare ? (
-          <div className={buyerStorePageActions}>
-            {canShare ? (
-              <BuyerShareButton
-                label="Compartir"
-                onClick={() => setShareOpen(true)}
-                className={`${buyerStorePageSecondaryBtn} !w-auto gap-1.5 px-3.5 text-xs font-semibold`}
-              />
-            ) : null}
-            {whatsapp ? (
-              <a
-                href={whatsapp}
-                target="_blank"
-                rel="noreferrer"
-                className={buyerStorePageWhatsAppBtn}
-              >
-                <WhatsAppIcon />
-                WhatsApp
-              </a>
-            ) : null}
-            {hasMap ? (
-              <button
-                type="button"
-                onClick={() => setMapOpen(true)}
-                className={buyerStorePageMapBtn}
-                aria-label="Ver mapa"
-              >
-                <MapPinIcon />
-                <span className="hidden sm:inline">Ver mapa</span>
-              </button>
-            ) : null}
-            {socialLinks.map((link) => (
-              <a
-                key={link.id}
-                href={link.href}
-                target="_blank"
-                rel="noreferrer"
-                className={`${buyerStorePageSocialLink} !w-auto gap-1.5 px-3.5 text-xs font-semibold`}
-                aria-label={link.name}
-              >
-                <SocialIcon platform={link.platform} />
-                <span>{link.name}</span>
-              </a>
-            ))}
-          </div>
-        ) : null}
       </section>
 
       {mapPresent && catalog.business_location ? (

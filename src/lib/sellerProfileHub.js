@@ -2,6 +2,7 @@
 
 export const PROFILE_PANEL_IDS = Object.freeze({
   identity: 'identity',
+  banners: 'banners',
   location: 'location',
   categories: 'categories',
   social: 'social',
@@ -28,6 +29,13 @@ const PANELS = Object.freeze({
     description: 'Biografía de tu tienda',
     kind: 'form',
     icon: 'identity',
+  },
+  [PROFILE_PANEL_IDS.banners]: {
+    id: PROFILE_PANEL_IDS.banners,
+    label: 'Banners',
+    description: 'Imágenes del encabezado de tu tienda',
+    kind: 'panel',
+    icon: 'banners',
   },
   [PROFILE_PANEL_IDS.location]: {
     id: PROFILE_PANEL_IDS.location,
@@ -99,6 +107,7 @@ export const PROFILE_MENU_SECTIONS = Object.freeze([
     title: 'General',
     itemIds: [
       PROFILE_PANEL_IDS.identity,
+      PROFILE_PANEL_IDS.banners,
       PROFILE_PANEL_IDS.location,
       PROFILE_PANEL_IDS.categories,
       PROFILE_PANEL_IDS.social,
