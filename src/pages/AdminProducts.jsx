@@ -114,13 +114,13 @@ export default function AdminProducts() {
         if (filters.category && product.category_name !== filters.category) return false
         if (filters.store && product.store_name !== filters.store) return false
         if (filters.cost) {
-          const maxPrice = maxNumber(filters.cost)
-          if (maxPrice !== null && Number(product.price) > maxPrice) return false
+          const minPrice = maxNumber(filters.cost)
+          if (minPrice !== null && Number(product.price) < minPrice) return false
         }
         if (filters.currency && product.currency !== filters.currency) return false
         if (filters.sales !== '') {
-          const maxSales = maxNumber(filters.sales)
-          if (maxSales !== null && Number(product.sales_count ?? 0) > maxSales) return false
+          const minSales = maxNumber(filters.sales)
+          if (minSales !== null && Number(product.sales_count ?? 0) < minSales) return false
         }
         if (filters.delivery === 'si' && !product.offers_delivery) return false
         if (filters.delivery === 'no' && product.offers_delivery) return false
@@ -240,8 +240,8 @@ export default function AdminProducts() {
                     value={filters.cost}
                     onChange={(event) => updateFilter('cost', event.target.value)}
                     className={numberInput}
-                    placeholder="≤ costo"
-                    aria-label="Filtrar por costo menor o igual"
+                    placeholder="≥ costo"
+                    aria-label="Filtrar por costo igual o mayor"
                     inputMode="decimal"
                   />
                 </th>
@@ -259,8 +259,8 @@ export default function AdminProducts() {
                     value={filters.sales}
                     onChange={(event) => updateFilter('sales', event.target.value)}
                     className={numberInput}
-                    placeholder="≤ ventas"
-                    aria-label="Filtrar por ventas menores o iguales"
+                    placeholder="≥ ventas"
+                    aria-label="Filtrar por ventas iguales o mayores"
                     inputMode="numeric"
                   />
                 </th>
