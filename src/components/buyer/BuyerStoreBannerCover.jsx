@@ -59,7 +59,7 @@ export default function BuyerStoreBannerCover({ banners = NO_BANNERS }) {
   }
 
   if (!banners.length) {
-    return <div className={`relative z-0 w-full bg-gradient-to-br from-brand-green via-[#6d9440] to-brand-carmelita/70 ${storeBannerAspectClass}`} />
+    return <div className={`relative z-0 w-full bg-brand-green ${storeBannerAspectClass}`} />
   }
 
   const safeIndex = Math.min(index, Math.max(slides.length - 1, 0))

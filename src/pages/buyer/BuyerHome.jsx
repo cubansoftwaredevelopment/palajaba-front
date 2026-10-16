@@ -17,7 +17,6 @@ import {
   fetchMarketplaceCategoryProducts,
   fetchMarketplaceFeed,
   fetchMarketplaceSearch,
-  fetchCategories,
 } from "../../lib/api";
 import {
   getBuyerLocation,
@@ -82,7 +81,6 @@ function BuyerHomeContent({ preview = null }) {
   const [loadError, setLoadError] = useState(null);
   const loadingMoreRef = useRef(false);
   const sentinelRef = useRef(null);
-  const [categories, setCategories] = useState([]);
   const [searchCategoryId, setSearchCategoryId] = useState(() =>
     preview ? "" : getMarketplaceCategoryFilter(location.province.id),
   );
@@ -93,8 +91,6 @@ function BuyerHomeContent({ preview = null }) {
   const [additionalMunicipalityIds] = useState(() =>
     preview ? [] : getAdditionalMunicipalities(location.province.id),
   );
-  const [municipalityFeeds, setMunicipalityFeeds] = useState([]);
-  const [groupedLoading, setGroupedLoading] = useState(false);
   const [assortmentHints, setAssortmentHints] = useState(null);
 
   const municipalityIds = useMemo(() => {
@@ -104,8 +100,6 @@ function BuyerHomeContent({ preview = null }) {
     }
     return ids;
   }, [additionalMunicipalityIds, location.municipality.id]);
-  const grouped = municipalityIds.length > 1;
-
   useEffect(() => {
     if (preview) return;
     recordMarketplaceVisit({
@@ -126,7 +120,7 @@ function BuyerHomeContent({ preview = null }) {
       window.removeEventListener(MARKETPLACE_CATEGORY_EVENT, onCategory);
   }, [location.province.id]);
 
-  const searchActive = Boolean(searchCategoryId) && !grouped;
+  const searchActive = Boolean(searchCategoryId);
 
   const loadFeed = useCallback(
     async ({ offset = 0, append = false } = {}) => {
@@ -143,7 +137,7 @@ function BuyerHomeContent({ preview = null }) {
         const data = await fetchMarketplaceFeed({
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
-          additionalMunicipalityIds: [],
+          additionalMunicipalityIds,
           currency,
           limitPerCategory: PAGE_SIZE,
           limit: SECTION_PAGE_SIZE,
@@ -184,32 +178,16 @@ function BuyerHomeContent({ preview = null }) {
         }
       }
     },
-    [currency, location.municipality.id, location.province.id],
+    [additionalMunicipalityIds, currency, location.municipality.id, location.province.id],
   );
 
   useEffect(() => {
-    if (grouped) return;
     loadFeed();
-  }, [grouped, loadFeed]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetchCategories()
-      .then((data) => {
-        if (!cancelled) setCategories(data);
-      })
-      .catch(() => {
-        if (!cancelled) setCategories([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  }, [loadFeed]);
 
   const runSearch = useCallback(
     async ({ offset = 0, append = false } = {}) => {
-      const isActive = Boolean(searchCategoryId) && !grouped;
+      const isActive = Boolean(searchCategoryId);
 
       if (!isActive) {
         setSearchResults(null);
@@ -229,7 +207,7 @@ function BuyerHomeContent({ preview = null }) {
         const data = await fetchMarketplaceSearch({
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
-          additionalMunicipalityIds: [],
+          additionalMunicipalityIds,
           currency,
           query: "",
           globalCategoryId: searchCategoryId || undefined,
@@ -265,8 +243,8 @@ function BuyerHomeContent({ preview = null }) {
       }
     },
     [
+      additionalMunicipalityIds,
       currency,
-      grouped,
       location.municipality.id,
       location.province.id,
       searchCategoryId,
@@ -277,97 +255,6 @@ function BuyerHomeContent({ preview = null }) {
     runSearch();
   }, [runSearch]);
 
-  useEffect(() => {
-    if (!grouped) return undefined;
-    let cancelled = false;
-    setGroupedLoading(true);
-    setLoadError(null);
-
-    const requests = municipalityIds.map((municipalityId) => {
-      if (searchCategoryId) {
-        return fetchMarketplaceSearch({
-          provinceId: location.province.id,
-          municipalityId,
-          additionalMunicipalityIds: [],
-          currency,
-          query: "",
-          globalCategoryId: searchCategoryId,
-          limit: PAGE_SIZE,
-          offset: 0,
-        }).then((data) => {
-          if (!data?.products?.length) return null;
-          const categoryName =
-            data.category_name ||
-            categories.find((category) => category.id === searchCategoryId)
-              ?.name ||
-            "Categoría";
-          return {
-            municipalityId,
-            municipalityName:
-              getMunicipalityById(location.province.id, municipalityId)?.name ||
-              municipalityId,
-            sections: [
-              {
-                category_id: searchCategoryId,
-                category_name: categoryName,
-                products: data.products,
-                has_more: data.has_more,
-                total_products: data.total_products,
-              },
-            ],
-          };
-        });
-      }
-      return fetchMarketplaceFeed({
-        provinceId: location.province.id,
-        municipalityId,
-        additionalMunicipalityIds: [],
-        currency,
-        limitPerCategory: PAGE_SIZE,
-        limit: 20,
-        offset: 0,
-      }).then((data) => {
-        if ((data?.total_products ?? 0) <= 0) return null;
-        return {
-          municipalityId: data.municipality_id,
-          municipalityName: data.municipality_name,
-          sections: data.sections ?? [],
-        };
-      });
-    });
-
-    Promise.all(requests.map((request) => request.catch(() => null)))
-      .then((blocks) => {
-        if (cancelled) return;
-        setMunicipalityFeeds(blocks.filter(Boolean));
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        setMunicipalityFeeds([]);
-        setLoadError(
-          resolveUserFacingError(err, {
-            contextTitle: `No se pudo cargar el ${MARKETPLACE_LABEL.toLowerCase()}`,
-            fallbackMessage:
-              "No pudimos mostrar los productos de tu zona. Inténtalo de nuevo.",
-          }),
-        );
-      })
-      .finally(() => {
-        if (!cancelled) setGroupedLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    categories,
-    currency,
-    grouped,
-    location.province.id,
-    municipalityIds,
-    searchCategoryId,
-  ]);
-
   const sections = feed?.sections ?? [];
   const hasProducts = (feed?.total_products ?? 0) > 0;
   const hasMoreSections = Boolean(feed?.has_more);
@@ -377,11 +264,14 @@ function BuyerHomeContent({ preview = null }) {
     !searchError &&
     Boolean(searchResults) &&
     !searchResults.products?.length;
-  const groupedEmpty =
-    grouped && !groupedLoading && !loadError && municipalityFeeds.length === 0;
+  const severalMunicipalities = municipalityIds.length > 1;
+  const emptyBecauseOfCurrency = Boolean(assortmentHints?.currencies?.length);
+  const emptyZoneLabel = severalMunicipalities
+    ? "los municipios elegidos"
+    : location.municipality.name;
   const feedEmpty =
-    !grouped && !searchActive && !loading && !loadError && !hasProducts;
-  const showAssortmentHints = searchEmpty || groupedEmpty || feedEmpty;
+    !searchActive && !loading && !loadError && !hasProducts;
+  const showAssortmentHints = searchEmpty || feedEmpty;
 
   useEffect(() => {
     if (!showAssortmentHints) {
@@ -459,7 +349,7 @@ function BuyerHomeContent({ preview = null }) {
           />
         }
       >
-        {preview || !(groupedEmpty || feedEmpty) ? (
+        {preview || (!feedEmpty && !searchEmpty) ? (
           <BuyerBannerCarousel
             provinceId={location.province.id}
             initialBannerId={preview?.bannerId}
@@ -483,91 +373,21 @@ function BuyerHomeContent({ preview = null }) {
             }
             emptyNotice={searchEmpty ? assortmentNotice : null}
             emptyMessage={
-              assortmentHints?.currencies?.length
+              emptyBecauseOfCurrency
                 ? "No hay productos con esta moneda en la categoría elegida."
-                : undefined
+                : `Aún no hay ofertas en ${emptyZoneLabel}.`
             }
           />
         ) : null}
 
-        {grouped && groupedLoading ? (
+        {!searchActive && loading ? (
           <LoadingState
             message="Cargando productos…"
             className="lg:items-start lg:text-left"
           />
         ) : null}
 
-        {grouped &&
-        !groupedLoading &&
-        !loadError &&
-        municipalityFeeds.length === 0 ? (
-          <div className="flex flex-col items-center rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-8 text-center">
-            <img
-              src={DEAD_MASCOT.src}
-              alt=""
-              className="mb-3 h-36 w-36 object-contain"
-            />
-            <p className="font-display text-lg font-bold text-brand-green">
-              Aún no hay productos aquí
-            </p>
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
-              No encontramos tiendas con productos disponibles en los municipios
-              elegidos
-              {assortmentHints?.currencies?.length
-                ? " con esta configuración."
-                : "."}
-            </p>
-            {assortmentNotice}
-          </div>
-        ) : null}
-
-        {grouped &&
-        !groupedLoading &&
-        !loadError &&
-        municipalityFeeds.length > 0 ? (
-          <div className="flex flex-col gap-10">
-            {municipalityFeeds.map((block) => (
-              <section key={block.municipalityId}>
-                <h2 className="mb-4 font-display text-xl font-bold text-brand-green">
-                  {block.municipalityName}
-                </h2>
-                <div className={buyerHomeSections}>
-                  {block.sections
-                    .filter((section) => section.products?.length)
-                    .map((section) => (
-                      <BuyerCategoryProductRow
-                        key={`${block.municipalityId}-${section.category_id}`}
-                        section={section}
-                        loadMore={(offset) =>
-                          fetchMarketplaceCategoryProducts({
-                            provinceId: location.province.id,
-                            municipalityId: block.municipalityId,
-                            additionalMunicipalityIds: [],
-                            currency,
-                            globalCategoryId: section.category_id,
-                            limit: PAGE_SIZE,
-                            offset,
-                          }).then((data) => ({
-                            products: data.products,
-                            has_more: data.has_more,
-                          }))
-                        }
-                      />
-                    ))}
-                </div>
-              </section>
-            ))}
-          </div>
-        ) : null}
-
-        {!grouped && !searchActive && loading ? (
-          <LoadingState
-            message="Cargando productos…"
-            className="lg:items-start lg:text-left"
-          />
-        ) : null}
-
-        {!grouped && !searchActive && !loading && loadError ? (
+        {!searchActive && !loading && loadError ? (
           <StatePanel
             variant="buyer"
             title={loadError.title}
@@ -578,7 +398,7 @@ function BuyerHomeContent({ preview = null }) {
           />
         ) : null}
 
-        {!grouped && !searchActive && !loading && !loadError && !hasProducts ? (
+        {!searchActive && !loading && !loadError && !hasProducts ? (
           <div className="flex flex-col items-center rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-8 text-center">
             <img
               src={DEAD_MASCOT.src}
@@ -586,20 +406,20 @@ function BuyerHomeContent({ preview = null }) {
               className="mb-3 h-36 w-36 object-contain"
             />
             <p className="font-display text-lg font-bold text-brand-green">
-              Aún no hay productos aquí
+              {emptyBecauseOfCurrency
+                ? "Aún no hay productos aquí"
+                : `Aún no hay ofertas en ${emptyZoneLabel}`}
             </p>
-            <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
-              No encontramos tiendas con productos disponibles en{" "}
-              {location.municipality.name}
-              {assortmentHints?.currencies?.length
-                ? " con esta configuración."
-                : ". Prueba con otra zona."}
-            </p>
+            {emptyBecauseOfCurrency ? (
+              <p className="mt-2 max-w-md text-sm leading-relaxed text-brand-carmelita/90">
+                No encontramos tiendas con productos disponibles en {emptyZoneLabel} con esta configuración.
+              </p>
+            ) : null}
             {assortmentNotice}
           </div>
         ) : null}
 
-        {!grouped && !searchActive && !loading && !loadError && hasProducts ? (
+        {!searchActive && !loading && !loadError && hasProducts ? (
           <div className={buyerHomeSections}>
             {sections
               .filter((section) => section.products?.length)
@@ -611,7 +431,7 @@ function BuyerHomeContent({ preview = null }) {
                     fetchMarketplaceCategoryProducts({
                       provinceId: location.province.id,
                       municipalityId: location.municipality.id,
-                      additionalMunicipalityIds: [],
+                      additionalMunicipalityIds,
                       currency,
                       globalCategoryId: section.category_id,
                       limit: PAGE_SIZE,

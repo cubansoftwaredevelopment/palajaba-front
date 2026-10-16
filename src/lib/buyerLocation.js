@@ -5,6 +5,15 @@ const ADDITIONAL_MUNICIPALITIES_KEY = 'pala-jaba-buyer-additional-municipalities
 const MARKETPLACE_CATEGORY_FILTER_KEY = 'pala-jaba-buyer-marketplace-category-filter'
 
 let persistBuyerPrefs = true
+let memoryLocation = null
+let memoryAdditionalMunicipalities = {}
+
+try {
+  localStorage.removeItem(STORAGE_KEY)
+  localStorage.removeItem(ADDITIONAL_MUNICIPALITIES_KEY)
+} catch {
+  // El navegador puede bloquear localStorage.
+}
 
 /** La vista previa del admin no debe reescribir la ubicación real del navegador. */
 export function disableBuyerLocationPersistence() {
@@ -41,32 +50,23 @@ function normalizeStoredLocation(raw) {
 }
 
 function persistBuyerLocation(province, municipality = null) {
-  localStorage.setItem(
-    STORAGE_KEY,
-    JSON.stringify({
-      province: {
-        id: province.id,
-        name: province.name,
-      },
-      municipality: municipality
-        ? {
-            id: municipality.id,
-            name: municipality.name,
-          }
-        : null,
-    }),
-  )
+  if (!persistBuyerPrefs) return
+  memoryLocation = {
+    province: {
+      id: province.id,
+      name: province.name,
+    },
+    municipality: municipality
+      ? {
+          id: municipality.id,
+          name: municipality.name,
+        }
+      : null,
+  }
 }
 
 export function getBuyerLocation() {
-  const raw = localStorage.getItem(STORAGE_KEY)
-  if (!raw) return null
-
-  try {
-    return normalizeStoredLocation(JSON.parse(raw))
-  } catch {
-    return null
-  }
+  return normalizeStoredLocation(memoryLocation)
 }
 
 export function setBuyerProvince(province) {
@@ -111,7 +111,7 @@ export function setBuyerMunicipality(municipality) {
 }
 
 export function clearBuyerLocation() {
-  localStorage.removeItem(STORAGE_KEY)
+  memoryLocation = null
 }
 
 export function hasCompleteBuyerLocation() {
@@ -119,7 +119,7 @@ export function hasCompleteBuyerLocation() {
   return Boolean(location?.province?.id && location?.municipality?.id)
 }
 
-/** Ruta inicial al entrar a comprar según lo guardado en localStorage. */
+/** Ruta inicial al entrar a comprar según la zona elegida en esta visita. */
 export function resolveBuyerEntryPath() {
   const location = getBuyerLocation()
   if (location?.province?.id && location?.municipality?.id) return '/comprar'
@@ -128,15 +128,7 @@ export function resolveBuyerEntryPath() {
 }
 
 function readAdditionalMunicipalitiesStore() {
-  const raw = localStorage.getItem(ADDITIONAL_MUNICIPALITIES_KEY)
-  if (!raw) return {}
-
-  try {
-    const parsed = JSON.parse(raw)
-    return parsed && typeof parsed === 'object' ? parsed : {}
-  } catch {
-    return {}
-  }
+  return memoryAdditionalMunicipalities
 }
 
 export function getAdditionalMunicipalities(provinceId) {
@@ -165,12 +157,7 @@ export function setAdditionalMunicipalities(provinceId, municipalityIds) {
     store[provinceId] = normalized
   }
 
-  if (Object.keys(store).length === 0) {
-    localStorage.removeItem(ADDITIONAL_MUNICIPALITIES_KEY)
-    return
-  }
-
-  localStorage.setItem(ADDITIONAL_MUNICIPALITIES_KEY, JSON.stringify(store))
+  memoryAdditionalMunicipalities = store
 }
 
 function readMarketplaceCategoryFilterStore() {
