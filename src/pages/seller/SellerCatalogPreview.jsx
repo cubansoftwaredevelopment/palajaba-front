@@ -4,7 +4,6 @@ import { Link, useOutletContext } from 'react-router-dom'
 import CatalogThemePickerModal from '../../components/catalog/CatalogThemePickerModal'
 import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
 import BuyerCategoryProductRow from '../../components/buyer/BuyerCategoryProductRow'
-import BuyerCurrencySelector from '../../components/buyer/BuyerCurrencySelector'
 import BuyerLoginButton from '../../components/buyer/BuyerLoginButton'
 import BuyerShell from '../../components/buyer/BuyerShell'
 import BuyerStoreProfileHeader from '../../components/buyer/BuyerStoreProfileHeader'
@@ -171,7 +170,6 @@ function SellerCatalogPreviewContent() {
   const headerEnd = (
     <div className="flex items-center gap-2">
       <BuyerLoginButton />
-      <BuyerCurrencySelector />
       <CatalogPreviewThemeButton onClick={() => setShowThemePicker(true)} />
     </div>
   )

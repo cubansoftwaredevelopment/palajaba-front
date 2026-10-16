@@ -3,6 +3,9 @@ import { resolveMediaUrl } from '../../lib/media'
 
 const NO_BANNERS = []
 
+/** 16/9 con el alto reducido un 10%. */
+export const storeBannerAspectClass = 'aspect-[160/81]'
+
 export default function BuyerStoreBannerCover({ banners = NO_BANNERS }) {
   const [index, setIndex] = useState(0)
   const [animate, setAnimate] = useState(true)
@@ -56,14 +59,14 @@ export default function BuyerStoreBannerCover({ banners = NO_BANNERS }) {
   }
 
   if (!banners.length) {
-    return <div className="relative z-0 aspect-[16/9] w-full bg-gradient-to-br from-brand-green via-[#6d9440] to-brand-carmelita/70" />
+    return <div className={`relative z-0 w-full bg-gradient-to-br from-brand-green via-[#6d9440] to-brand-carmelita/70 ${storeBannerAspectClass}`} />
   }
 
   const safeIndex = Math.min(index, Math.max(slides.length - 1, 0))
   const activeDot = safeIndex % banners.length
 
   return (
-    <div className="relative z-0 aspect-[16/9] w-full overflow-hidden bg-brand-green/10">
+    <div className={`relative z-0 w-full overflow-hidden bg-brand-green/10 ${storeBannerAspectClass}`}>
       <div
         className={`flex h-full w-full ${animate ? 'transition-transform duration-700 ease-in-out motion-reduce:transition-none' : ''}`}
         style={{ transform: `translateX(-${safeIndex * 100}%)` }}

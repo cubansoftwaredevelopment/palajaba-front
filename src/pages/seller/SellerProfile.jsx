@@ -482,7 +482,11 @@ export default function SellerProfile() {
 
   return (
     <>
-      <section className={`animate-fade-in ${sellerPageWrap}`}>
+      <section
+        className={`animate-fade-in ${
+          activePanel === PROFILE_PANEL_IDS.banners ? 'w-full' : sellerPageWrap
+        }`}
+      >
         <input
           ref={fileInputRef}
           type="file"
