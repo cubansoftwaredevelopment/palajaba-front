@@ -250,13 +250,13 @@ export default function AdminBanners() {
         setSelectedId(updated.id)
         setSuccess('Banner actualizado.')
       } else {
-        const created = await createAdminBanner(token, file, {
-          title,
-          linkUrl,
-          provinceIds: selectedProvinces,
+      const created = await createAdminBanner(token, file, {
+        title,
+        linkUrl,
+        provinceIds: selectedProvinces,
           deactivateAt: schedule || '',
-        })
-        setItems((current) => [created, ...current])
+      })
+      setItems((current) => [created, ...current])
         setSelectedId(created.id)
         const zones = zonesForBanner(created)
         if (zones[0]) setPreviewProvinceId(zones[0].id)
@@ -493,27 +493,27 @@ export default function AdminBanners() {
           panelClassName="max-w-2xl"
         >
           <form onSubmit={handleUpload} className="space-y-4">
-            <div>
-              <label className={adminLabel} htmlFor="banner-file">
+        <div>
+          <label className={adminLabel} htmlFor="banner-file">
                 {editing ? 'Imagen (opcional)' : 'Imagen del banner'}
-              </label>
-              <input
-                id="banner-file"
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleFileChange}
-                className={`${adminInput} file:mr-3 file:rounded-lg file:border-0 file:bg-brand-green/15 file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-green`}
-              />
+          </label>
+          <input
+            id="banner-file"
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={handleFileChange}
+            className={`${adminInput} file:mr-3 file:rounded-lg file:border-0 file:bg-brand-green/15 file:px-3 file:py-2 file:text-sm file:font-medium file:text-brand-green`}
+          />
               {fileError ? <p className="mt-2 text-sm text-orange-300">{fileError}</p> : null}
               {preview || editing?.image_url ? (
                 <img
                   src={preview || resolveMediaUrl(editing.image_url)}
-                  alt="Vista previa del banner"
-                  className="mt-3 h-32 w-full rounded-xl object-cover"
-                />
-              ) : null}
-            </div>
+              alt="Vista previa del banner"
+              className="mt-3 h-32 w-full rounded-xl object-cover"
+            />
+          ) : null}
+        </div>
             <div>
               <label className={adminLabel} htmlFor="banner-deactivate">
                 Inactivar automáticamente
@@ -530,67 +530,67 @@ export default function AdminBanners() {
                 El banner queda activo y se apaga solo en esa fecha. Tiene que ser posterior a la hora actual. Si la dejas vacía, sigue hasta que lo desactives a mano.
               </p>
             </div>
-            <div>
-              <label className={adminLabel} htmlFor="banner-title">
-                Título (opcional)
-              </label>
-              <input
-                id="banner-title"
-                type="text"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Ej. ¡Ofertas de temporada!"
-                className={adminInput}
-              />
-            </div>
-            <div>
-              <label className={adminLabel} htmlFor="banner-link">
-                Enlace al tocar (opcional)
-              </label>
-              <input
-                id="banner-link"
-                type="url"
-                value={linkUrl}
-                onChange={(event) => setLinkUrl(event.target.value)}
-                placeholder="https://..."
-                className={adminInput}
-              />
-            </div>
-            <div>
-              <label className={adminLabel}>Mostrar en provincias</label>
-              <p className={`mb-2 text-xs ${adminMuted}`}>
-                Si no seleccionas ninguna, el banner se mostrará en todas las provincias.
-              </p>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {CUBA_PROVINCES.map((province) => {
-                  const checked = selectedProvinces.includes(province.id)
-                  return (
-                    <label
-                      key={province.id}
-                      className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-800/90 bg-zinc-900/70 px-3 py-2 text-sm text-zinc-200"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={(event) => {
-                          setSelectedProvinces((current) =>
-                            event.target.checked
-                              ? [...current, province.id]
-                              : current.filter((id) => id !== province.id),
-                          )
-                        }}
-                        className="h-4 w-4 accent-brand-green"
-                      />
-                      <span className="truncate">{province.name}</span>
-                    </label>
-                  )
-                })}
-              </div>
-            </div>
+        <div>
+          <label className={adminLabel} htmlFor="banner-title">
+            Título (opcional)
+          </label>
+          <input
+            id="banner-title"
+            type="text"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Ej. ¡Ofertas de temporada!"
+            className={adminInput}
+          />
+        </div>
+        <div>
+          <label className={adminLabel} htmlFor="banner-link">
+            Enlace al tocar (opcional)
+          </label>
+          <input
+            id="banner-link"
+            type="url"
+            value={linkUrl}
+            onChange={(event) => setLinkUrl(event.target.value)}
+            placeholder="https://..."
+            className={adminInput}
+          />
+        </div>
+        <div>
+          <label className={adminLabel}>Mostrar en provincias</label>
+          <p className={`mb-2 text-xs ${adminMuted}`}>
+            Si no seleccionas ninguna, el banner se mostrará en todas las provincias.
+          </p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {CUBA_PROVINCES.map((province) => {
+              const checked = selectedProvinces.includes(province.id)
+              return (
+                <label
+                  key={province.id}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-800/90 bg-zinc-900/70 px-3 py-2 text-sm text-zinc-200"
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={(event) => {
+                      setSelectedProvinces((current) =>
+                        event.target.checked
+                          ? [...current, province.id]
+                          : current.filter((id) => id !== province.id),
+                      )
+                    }}
+                    className="h-4 w-4 accent-brand-green"
+                  />
+                  <span className="truncate">{province.name}</span>
+                </label>
+              )
+            })}
+          </div>
+        </div>
             <AdminButton type="submit" disabled={uploading || (!editing && !file)}>
               {uploading ? 'Guardando…' : editing ? 'Guardar cambios' : 'Subir banner'}
-            </AdminButton>
-          </form>
+        </AdminButton>
+      </form>
         </AdminModal>
       ) : null}
 
@@ -601,7 +601,7 @@ export default function AdminBanners() {
         >
           <span className="flex-1">{toast}</span>
           <button
-            type="button"
+                  type="button"
             onClick={() => setToast('')}
             className="text-zinc-500 hover:text-white"
             aria-label="Cerrar"

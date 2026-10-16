@@ -99,7 +99,7 @@ export default function AdminStatsRangeControls({
   }
 
   const rangeLabel = customActive
-    ? `${format(range.from, 'd MMM', { locale: es })} – ${format(range.to, 'd MMM yyyy', { locale: es })}`
+      ? `${format(range.from, 'd MMM', { locale: es })} – ${format(range.to, 'd MMM yyyy', { locale: es })}`
     : 'Fechas'
 
   const floatButton = `inline-flex h-10 items-center rounded-full border px-4 text-xs font-medium shadow-[0_8px_24px_rgba(0,0,0,0.28)] ${adminFocusRing}`
@@ -112,20 +112,20 @@ export default function AdminStatsRangeControls({
       <div className="relative">
         {periodOpen ? (
           <div className="absolute right-0 bottom-full mb-2 flex w-36 flex-col gap-1 rounded-xl border border-brand-green/15 bg-[var(--admin-header)] p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
-            {OPTIONS.map((option) => (
-              <button
-                key={option.id}
-                type="button"
+        {OPTIONS.map((option) => (
+          <button
+            key={option.id}
+            type="button"
                 onClick={() => {
                   onGranularityChange(option.id)
                   setPeriodOpen(false)
                 }}
                 className={`${periodClass(granularity === option.id)} justify-center`}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
         ) : null}
         <button
           type="button"
@@ -145,7 +145,7 @@ export default function AdminStatsRangeControls({
         </button>
       </div>
       <div className="relative flex items-end gap-1">
-        {open ? (
+      {open ? (
           <div className="absolute right-0 bottom-full mb-2 w-[17.5rem] rounded-xl border border-brand-green/15 bg-[var(--admin-header)] p-2 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
             <DayPicker
               mode="range"
@@ -158,11 +158,11 @@ export default function AdminStatsRangeControls({
             />
             <p className={`mt-1 text-[0.65rem] leading-relaxed ${adminSubtle}`}>
               Incluye ambos días, hasta hoy.
-            </p>
-            <button
-              type="button"
-              onClick={applyRange}
-              disabled={!draft?.from || !draft?.to}
+          </p>
+          <button
+            type="button"
+            onClick={applyRange}
+            disabled={!draft?.from || !draft?.to}
               className={`${periodClass(true)} mt-2 w-full justify-center disabled:opacity-50`}
             >
               Aplicar
@@ -196,6 +196,6 @@ export default function AdminStatsRangeControls({
           {rangeLabel}
         </button>
       </div>
-    </div>
+        </div>
   )
 }
