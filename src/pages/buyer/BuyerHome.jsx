@@ -350,12 +350,10 @@ function BuyerHomeContent({ preview = null }) {
           />
         }
       >
-        {preview || (!feedEmpty && !searchEmpty) ? (
-          <BuyerBannerCarousel
+        <BuyerBannerCarousel
             provinceId={location.province.id}
             initialBannerId={preview?.bannerId}
           />
-        ) : null}
         {preview ? null : <BuyerSharedEntry location={location} />}
 
         {searchActive ? (
