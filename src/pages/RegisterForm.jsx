@@ -6,6 +6,7 @@ import { authFormWrap, authPageIntro } from '../components/auth/authStyles'
 import PasswordField from '../components/auth/PasswordField'
 import PhoneField from '../components/auth/PhoneField'
 import RegisterProgress from '../components/auth/RegisterProgress'
+import { TRIAL_STEPS } from '../lib/registerSteps'
 import Button from '../components/Button'
 import {
   alertErrorClass,
@@ -119,16 +120,26 @@ export default function RegisterForm() {
   }
 
   return (
-    <AuthShell backTo="/registro/pago" backLabel="Pago">
+    <AuthShell
+      backTo={trial ? '/registro' : '/registro/pago'}
+      backLabel={trial ? 'Plan' : 'Pago'}
+    >
       <section className="animate-fade-in" aria-labelledby="register-form-title">
         <div className={authPageIntro}>
           <AuthHeader
-            eyebrow="Paso 3 · Datos"
+            eyebrow={trial ? 'Paso 2 · Datos' : 'Paso 3 · Datos'}
             title="Tu tienda"
-            description="Estos datos serán tu acceso cuando aprobemos tu pago."
+            description={
+              trial
+                ? 'Estos datos serán tu acceso. Tu prueba gratis de 15 días empieza hoy.'
+                : 'Estos datos serán tu acceso cuando aprobemos tu pago.'
+            }
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={3} />
+          <RegisterProgress
+            currentStep={trial ? 2 : 3}
+            steps={trial ? TRIAL_STEPS : undefined}
+          />
         </div>
 
         <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>

@@ -169,7 +169,7 @@ export default function SellerGestores() {
 
   const allSelected = areAllProductsSelected(products, selectedIds)
 
-  const planTier = profile?.plan_tier
+  const planTier = profile?.is_free_trial ? 'premium' : profile?.plan_tier
   const gestorLimit = maxGestoresForPlan(planTier)
   const atGestorLimit = !canAddGestor(planTier, gestores.length)
   const gestorUsageLabel = formatGestorUsage(planTier, gestores.length)

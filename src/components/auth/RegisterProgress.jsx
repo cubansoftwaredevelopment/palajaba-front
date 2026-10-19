@@ -1,14 +1,10 @@
-const STEPS = [
-  { id: 1, label: 'Plan' },
-  { id: 2, label: 'Pago' },
-  { id: 3, label: 'Datos' },
-]
+import { REGISTER_STEPS } from '../../lib/registerSteps'
 
-export default function RegisterProgress({ currentStep, className = '' }) {
+export default function RegisterProgress({ currentStep, steps = REGISTER_STEPS, className = '' }) {
   return (
     <nav aria-label="Progreso del registro" className={`mb-6 lg:mb-0 ${className}`}>
       <ol className="flex items-center justify-between gap-2">
-        {STEPS.map((step, index) => {
+        {steps.map((step, index) => {
           const done = currentStep > step.id
           const active = currentStep === step.id
           return (
@@ -37,7 +33,7 @@ export default function RegisterProgress({ currentStep, className = '' }) {
                     step.id
                   )}
                 </span>
-                {index < STEPS.length - 1 && (
+                {index < steps.length - 1 && (
                   <div
                     className={`h-0.5 flex-1 ${done ? 'bg-brand-green' : 'bg-brand-green/15'}`}
                     aria-hidden="true"
