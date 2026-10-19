@@ -15,8 +15,9 @@ import {
 } from '../components/auth/formStyles'
 import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../lib/phone'
 import { normalizePlanTier } from '../constants/plan'
-import { registerSeller } from '../lib/api'
+import { registerSeller, sellerLogin } from '../lib/api'
 import { getUserFacingMessage } from '../lib/userFacingError'
+import { setSellerSession } from '../lib/sellerAuth'
 
 function RequiredLabel({ htmlFor, children }) {
   return (
@@ -26,7 +27,7 @@ function RequiredLabel({ htmlFor, children }) {
   )
 }
 
-function validateForm({ transferId, storeName, phone, password, confirmPassword }) {
+function validateForm({ transferId, storeName, phone, password, confirmPassword, trial }) {
   if (!trial && !transferId.trim()) return 'El ID de la transferencia es obligatorio.'
   if (!storeName.trim()) return 'El nombre de la tienda es obligatorio.'
   const phoneDigits = getPhoneDigits(phone)
@@ -66,6 +67,7 @@ export default function RegisterForm() {
       phone: phoneDigits,
       password,
       confirmPassword,
+      trial,
     })
 
     if (validationError) {
@@ -86,6 +88,23 @@ export default function RegisterForm() {
         free_trial: trial,
         ...(discountCode ? { discount_code: discountCode } : {}),
       })
+
+      if (trial) {
+        try {
+          const session = await sellerLogin({
+            method: 'phone',
+            phone: phoneDigits,
+            password,
+          })
+          setSellerSession(session.access_token, session.seller)
+          navigate('/tienda', { replace: true })
+          return
+        } catch {
+          navigate('/login', { replace: true })
+          return
+        }
+      }
+
       navigate('/registro/exito')
     } catch (err) {
       setError(
