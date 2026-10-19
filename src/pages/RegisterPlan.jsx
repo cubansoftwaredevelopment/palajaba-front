@@ -169,6 +169,8 @@ export default function RegisterPlan() {
   const [planTier, setPlanTier] = useState('standard')
   const [discountCodesAvailable, setDiscountCodesAvailable] = useState(false)
   const [appliedDiscount, setAppliedDiscount] = useState(null)
+  const [freeTrial, setFreeTrial] = useState(false)
+  const [showTrialModal, setShowTrialModal] = useState(true)
   const { getPlanPrice, getPlanYearlySavings, formatPlanAmount } = usePlanPricing()
 
   useEffect(() => {
@@ -186,6 +188,16 @@ export default function RegisterPlan() {
   }, [])
 
   function continueToPayment() {
+    if (freeTrial) {
+      navigate('/registro/verificacion', {
+        state: {
+          billing,
+          planTier: normalizePlanTier(planTier),
+          trial: true,
+        },
+      })
+      return
+    }
     navigate('/registro/pago', {
       state: {
         billing,
@@ -241,6 +253,11 @@ export default function RegisterPlan() {
           </div>
 
           <aside className={`${authStickyAside} flex flex-col gap-4`}>
+            <p className="text-sm text-brand-carmelita/80">
+              {freeTrial
+                ? 'Prueba gratuita de 15 días activada.'
+                : 'Registro con pago.'}
+            </p>
             <Button onClick={continueToPayment}>Continuar</Button>
 
             <p className="text-center text-xs text-brand-carmelita/80 lg:text-left">
@@ -256,6 +273,49 @@ export default function RegisterPlan() {
           </aside>
         </div>
       </section>
+
+      {showTrialModal ? (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-brand-green/25 p-4 backdrop-blur-sm sm:items-center"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="trial-modal-title"
+          onClick={() => setShowTrialModal(false)}
+        >
+          <div
+            className="relative w-full max-w-sm animate-fade-in overflow-hidden rounded-3xl border border-brand-green/15 bg-brand-white p-6 shadow-[0_24px_60px_rgba(89,128,44,0.22)]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="trial-modal-title" className="font-display text-2xl font-bold text-brand-green">
+              ¿Es tu primera vez?
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-brand-carmelita/90">
+              Si nunca has registrado tu tienda, puedes probar 15 días gratis con el plan que elijas.
+            </p>
+            <div className="mt-6 flex flex-col gap-2.5">
+              <Button
+                type="button"
+                onClick={() => {
+                  setFreeTrial(true)
+                  setShowTrialModal(false)
+                }}
+              >
+                Sí, es mi primera vez
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setFreeTrial(false)
+                  setShowTrialModal(false)
+                }}
+              >
+                No, ya me registré antes
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </AuthShell>
   )
 }

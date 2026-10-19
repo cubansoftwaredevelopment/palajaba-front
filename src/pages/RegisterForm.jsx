@@ -27,7 +27,7 @@ function RequiredLabel({ htmlFor, children }) {
 }
 
 function validateForm({ transferId, storeName, phone, password, confirmPassword }) {
-  if (!transferId.trim()) return 'El ID de la transferencia es obligatorio.'
+  if (!trial && !transferId.trim()) return 'El ID de la transferencia es obligatorio.'
   if (!storeName.trim()) return 'El nombre de la tienda es obligatorio.'
   const phoneDigits = getPhoneDigits(phone)
   if (!phoneDigits) return 'El número de teléfono es obligatorio.'
@@ -46,6 +46,7 @@ export default function RegisterForm() {
   const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
   const planTier = normalizePlanTier(location.state?.planTier)
   const discountCode = location.state?.discountCode ?? null
+  const trial = Boolean(location.state?.trial)
 
   const [transferId, setTransferId] = useState('')
   const [storeName, setStoreName] = useState('')
@@ -76,12 +77,13 @@ export default function RegisterForm() {
 
     try {
       await registerSeller({
-        transfer_id: transferId.trim(),
+        ...(trial ? {} : { transfer_id: transferId.trim() }),
         store_name: storeName.trim(),
         phone: phoneDigits,
         password,
         billing_period: billing,
         plan_tier: planTier,
+        free_trial: trial,
         ...(discountCode ? { discount_code: discountCode } : {}),
       })
       navigate('/registro/exito')
@@ -111,22 +113,24 @@ export default function RegisterForm() {
         </div>
 
         <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>
-          <div>
-            <RequiredLabel htmlFor="transfer-id">ID de la transferencia</RequiredLabel>
-            <input
-              id="transfer-id"
-              type="text"
-              value={transferId}
-              onChange={(e) => setTransferId(e.target.value)}
-              className={inputClass}
-              placeholder="Ej. 1234567890"
-              autoComplete="off"
-              required
-            />
-            <p className={hintClass}>
-              Lo encuentras en el mensaje de confirmación del pago.
-            </p>
-          </div>
+          {!trial ? (
+            <div>
+              <RequiredLabel htmlFor="transfer-id">ID de la transferencia</RequiredLabel>
+              <input
+                id="transfer-id"
+                type="text"
+                value={transferId}
+                onChange={(e) => setTransferId(e.target.value)}
+                className={inputClass}
+                placeholder="Ej. 1234567890"
+                autoComplete="off"
+                required
+              />
+              <p className={hintClass}>
+                Lo encuentras en el mensaje de confirmación del pago.
+              </p>
+            </div>
+          ) : null}
 
           <div>
             <RequiredLabel htmlFor="store-name">Nombre de la tienda</RequiredLabel>

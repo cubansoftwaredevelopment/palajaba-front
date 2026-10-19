@@ -87,7 +87,7 @@ export default function BuyerBannerCarousel({ provinceId = null, initialBannerId
   const activeDot = banners.length ? safeIndex % banners.length : 0
 
   return (
-    <section className="group relative -mx-3 -mt-2 mb-4 overflow-hidden rounded-3xl sm:-mx-4 lg:-mx-8 lg:-mt-6">
+    <section className="group relative -mx-5 -mt-2 mb-4 overflow-hidden sm:-mx-6 lg:-mx-10 lg:-mt-6">
       <div className="aspect-[16/9] w-full overflow-hidden">
         <div
           className={`flex h-full w-full ${animate ? 'transition-transform duration-700 ease-in-out motion-reduce:transition-none' : ''}`}
