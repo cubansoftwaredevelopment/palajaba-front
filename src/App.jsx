@@ -33,6 +33,7 @@ import AdminFinance from './pages/AdminFinance'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './pages/buyer/BuyerHome'
+import BuyerCategoryPage from './pages/buyer/BuyerCategoryPage'
 import BuyerBusinessesPage from './pages/buyer/BuyerBusinessesPage'
 import { BUYER_BUSINESSES_SECTION_ENABLED } from './constants/buyerMarketplaceNav'
 import BuyerSelectMunicipality from './pages/buyer/BuyerSelectMunicipality'
@@ -76,6 +77,7 @@ const router = createBrowserRouter([
                   <Navigate to="/comprar" replace />
                 ),
               },
+              { path: ':categorySlug', element: <BuyerCategoryPage /> },
             ],
           },
         ],

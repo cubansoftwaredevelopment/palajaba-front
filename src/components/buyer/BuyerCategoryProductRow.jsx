@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { LOADING_MASCOT } from '../../constants/branding'
 import { animateScrollLeft } from '../../lib/smoothScroll'
@@ -24,7 +25,7 @@ function getScrollStep(container) {
   return firstItem.offsetWidth + (Number.isFinite(gap) ? gap : 12)
 }
 
-export default function BuyerCategoryProductRow({ section, loadMore }) {
+export default function BuyerCategoryProductRow({ section, loadMore, href }) {
   const scrollRef = useRef(null)
   const sentinelRef = useRef(null)
   const loadingRef = useRef(false)
@@ -176,8 +177,21 @@ export default function BuyerCategoryProductRow({ section, loadMore }) {
 
   return (
     <section className="min-w-0" aria-labelledby={`buyer-category-${section.category_id}`}>
-      <h2 id={`buyer-category-${section.category_id}`} className={`mb-3 ${buyerCategorySectionTitle}`}>
-        {section.category_name}
+      <h2 id={`buyer-category-${section.category_id}`} className="mb-3">
+        {href ? (
+          <Link
+            to={href}
+            state={{
+              categoryId: section.category_id,
+              categoryName: section.category_name,
+            }}
+            className={`${buyerCategorySectionTitle} transition-colors hover:text-[#4d7026]`}
+          >
+            {section.category_name}
+          </Link>
+        ) : (
+          <span className={buyerCategorySectionTitle}>{section.category_name}</span>
+        )}
       </h2>
 
       <div className={buyerProductRowWrap}>
