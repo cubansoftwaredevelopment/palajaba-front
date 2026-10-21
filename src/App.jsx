@@ -28,6 +28,7 @@ import AdminProducts from './pages/AdminProducts'
 import AdminBanners from './pages/AdminBanners'
 import AdminDiscountCodes from './pages/AdminDiscountCodes'
 import AdminSettings from './pages/AdminSettings'
+import AdminFinance from './pages/AdminFinance'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './pages/buyer/BuyerHome'
@@ -122,6 +123,7 @@ const router = createBrowserRouter([
               { path: 'notificaciones', element: <Navigate to="/admin/mensajes" replace /> },
               { path: 'productos', element: <AdminProducts /> },
               { path: 'banners', element: <AdminBanners /> },
+              { path: 'finanzas', element: <AdminFinance /> },
               { path: 'configuracion', element: <AdminSettings /> },
             ],
           },

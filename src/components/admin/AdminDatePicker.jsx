@@ -2,9 +2,19 @@ import { DayPicker } from 'react-day-picker'
 import { es } from 'date-fns/locale'
 import { formatDateLabel } from '../../lib/dates'
 
-export default function AdminDatePicker({ value, onChange, minDate }) {
+export default function AdminDatePicker({
+  value,
+  onChange,
+  minDate,
+  maxDate,
+  caption = true,
+}) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const disabled = {
+    ...(minDate ? { before: minDate } : maxDate ? {} : { before: today }),
+    ...(maxDate ? { after: maxDate } : {}),
+  }
 
   return (
     <div className="admin-picker rounded-xl border border-brand-green/15 bg-zinc-900/80 p-3">
@@ -13,7 +23,7 @@ export default function AdminDatePicker({ value, onChange, minDate }) {
         selected={value}
         onSelect={onChange}
         locale={es}
-        disabled={{ before: minDate ?? today }}
+        disabled={disabled}
         defaultMonth={value ?? minDate ?? today}
         classNames={{
           root: 'w-full',
@@ -41,11 +51,11 @@ export default function AdminDatePicker({ value, onChange, minDate }) {
             '[&>button]:cursor-not-allowed [&>button]:text-zinc-700 [&>button]:hover:bg-transparent',
         }}
       />
-      {value && (
+      {caption && value ? (
         <p className="mt-2 border-t border-zinc-800 pt-2 text-center text-sm text-zinc-400">
           Fin: <strong className="text-white">{formatDateLabel(value)}</strong>
         </p>
-      )}
+      ) : null}
     </div>
   )
 }

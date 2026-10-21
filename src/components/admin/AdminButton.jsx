@@ -1,6 +1,12 @@
 import { adminFocusRing } from './adminStyles'
 
-const base = `inline-flex min-h-11 w-full items-center justify-center rounded-xl px-5 py-2.5 text-sm font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-11 ${adminFocusRing}`
+const base = `inline-flex items-center justify-center rounded-xl font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50 ${adminFocusRing}`
+
+const sizes = {
+  md: 'min-h-11 w-full px-5 py-2.5 text-sm sm:min-h-11',
+  sm: 'min-h-9 w-auto px-3 py-1.5 text-xs',
+  xs: 'min-h-8 w-fit px-2.5 py-1 text-[0.7rem]',
+}
 
 const variants = {
   primary:
@@ -14,6 +20,7 @@ const variants = {
 
 export default function AdminButton({
   variant = 'primary',
+  size = 'md',
   type = 'button',
   className = '',
   children,
@@ -22,7 +29,7 @@ export default function AdminButton({
   return (
     <button
       type={type}
-      className={`${base} ${variants[variant] ?? variants.primary} ${className}`}
+      className={`${base} ${sizes[size] ?? sizes.md} ${variants[variant] ?? variants.primary} ${className}`}
       {...props}
     >
       {children}

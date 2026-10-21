@@ -202,9 +202,6 @@ export const sellerCatalogFabAction =
 export const sellerCheckboxRow =
   'flex cursor-pointer items-start gap-3 rounded-xl border border-brand-green/12 bg-brand-green/[0.02] px-3 py-3 touch-manipulation has-[:checked]:border-brand-green/25 has-[:checked]:bg-brand-green/[0.05]'
 
-export const sellerCheckboxInput =
-  'mt-0.5 h-4 w-4 shrink-0 rounded border-brand-green/25 text-brand-green focus:ring-brand-green/20'
-
 export const sellerCatalogProductCard =
   'overflow-hidden rounded-2xl border border-brand-green/12 bg-brand-white shadow-[0_2px_10px_rgba(89,128,44,0.05)]'
 

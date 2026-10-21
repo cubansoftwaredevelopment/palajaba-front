@@ -9,6 +9,8 @@ import { resolveMediaUrl } from '../../lib/media'
 import { getSellerToken } from '../../lib/sellerAuth'
 
 import CategoryAutocomplete from './CategoryAutocomplete'
+import SellerSelect from './SellerSelect'
+import Checkbox from '../ui/Checkbox'
 import SellerModalPortal from './SellerModalPortal'
 import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 
@@ -21,8 +23,6 @@ import {
   sellerBtnSecondary,
 
   sellerCharCounter,
-
-  sellerCheckboxInput,
 
   sellerCheckboxRow,
 
@@ -815,39 +815,39 @@ export default function CreateCatalogProductModal({
 
             </label>
 
-            <select
+            <div className="mt-1.5">
 
-              id="catalog-product-local-category"
+              <SellerSelect
 
-              value={localCategoryId}
+                id="catalog-product-local-category"
 
-              onChange={(event) => {
+                modal
 
-                setLocalCategoryId(event.target.value)
+                dropdownZIndex={210}
 
-                setError('')
+                value={localCategoryId}
 
-              }}
+                onChange={(nextId) => {
 
-              className={`mt-1.5 ${sellerModalInput}`}
+                  setLocalCategoryId(nextId)
 
-              disabled={localCategories.length === 0}
+                  setError('')
 
-            >
+                }}
 
-              <option value="">Selecciona una categoría</option>
+                disabled={localCategories.length === 0}
 
-              {localCategories.map((category) => (
+                options={[
 
-                <option key={category.id} value={category.id}>
+                  { value: '', label: 'Selecciona una categoría' },
 
-                  {category.name}
+                  ...localCategories.map((category) => ({ value: category.id, label: category.name })),
 
-                </option>
+                ]}
 
-              ))}
+              />
 
-            </select>
+            </div>
 
             <p className={`mt-1 ${sellerHint}`}>
 
@@ -945,29 +945,25 @@ export default function CreateCatalogProductModal({
 
                 </label>
 
-                <select
+                <div className="mt-1.5">
 
-                  id="catalog-product-currency"
+                  <SellerSelect
 
-                  value={baseCurrency}
+                    id="catalog-product-currency"
 
-                  onChange={(event) => setBaseCurrency(event.target.value)}
+                    modal
 
-                  className={`mt-1.5 ${sellerModalInput}`}
+                    dropdownZIndex={210}
 
-                >
+                    value={baseCurrency}
 
-                  {currencies.map((currency) => (
+                    onChange={setBaseCurrency}
 
-                    <option key={currency.code} value={currency.code}>
+                    options={currencies.map((currency) => ({ value: currency.code, label: currency.label }))}
 
-                      {currency.label}
+                  />
 
-                    </option>
-
-                  ))}
-
-                </select>
+                </div>
 
               </div>
 
@@ -1021,15 +1017,13 @@ export default function CreateCatalogProductModal({
 
               <label className={sellerCheckboxRow}>
 
-                <input
+                <Checkbox
 
-                  type="checkbox"
+                  className="mt-0.5"
 
                   checked={offersDelivery}
 
                   onChange={(event) => setOffersDelivery(event.target.checked)}
-
-                  className={sellerCheckboxInput}
 
                 />
 
@@ -1047,15 +1041,13 @@ export default function CreateCatalogProductModal({
 
               <label className={sellerCheckboxRow}>
 
-                <input
+                <Checkbox
 
-                  type="checkbox"
+                  className="mt-0.5"
 
                   checked={viewOnly}
 
                   onChange={(event) => setViewOnly(event.target.checked)}
-
-                  className={sellerCheckboxInput}
 
                 />
 
@@ -1073,15 +1065,13 @@ export default function CreateCatalogProductModal({
 
               <label className={sellerCheckboxRow}>
 
-                <input
+                <Checkbox
 
-                  type="checkbox"
+                  className="mt-0.5"
 
                   checked={isAvailable}
 
                   onChange={(event) => setIsAvailable(event.target.checked)}
-
-                  className={sellerCheckboxInput}
 
                 />
 

@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom'
 import ConfirmModal from '../../components/ConfirmModal'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
+import Checkbox from '../../components/ui/Checkbox'
 import LoadingState from '../../components/ui/LoadingState'
 import StatePanel from '../../components/ui/StatePanel'
 import { formatPrice } from '../../lib/money'
@@ -169,7 +170,7 @@ export default function SellerGestores() {
 
   const allSelected = areAllProductsSelected(products, selectedIds)
 
-  const planTier = profile?.is_free_trial ? 'premium' : profile?.plan_tier
+  const planTier = profile?.plan_tier
   const gestorLimit = maxGestoresForPlan(planTier)
   const atGestorLimit = !canAddGestor(planTier, gestores.length)
   const gestorUsageLabel = formatGestorUsage(planTier, gestores.length)
@@ -503,12 +504,7 @@ export default function SellerGestores() {
         <ul className="mt-4 space-y-1" aria-label="Teléfonos para ventas">
           <li>
             <label className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 transition-colors touch-manipulation active:bg-brand-green/5">
-              <input
-                type="checkbox"
-                className="h-4 w-4 shrink-0 rounded border-brand-green/30 text-brand-green focus:ring-brand-green/25"
-                checked={includeStorePhone}
-                onChange={handleToggleStorePhone}
-              />
+              <Checkbox checked={includeStorePhone} onChange={handleToggleStorePhone} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-brand-green">
                   Número del negocio
@@ -524,12 +520,7 @@ export default function SellerGestores() {
             return (
               <li key={gestor.id}>
                 <label className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 transition-colors touch-manipulation active:bg-brand-green/5">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 shrink-0 rounded border-brand-green/30 text-brand-green focus:ring-brand-green/25"
-                    checked={checked}
-                    onChange={() => handleToggleCheckoutPhone(gestor.id)}
-                  />
+                  <Checkbox checked={checked} onChange={() => handleToggleCheckoutPhone(gestor.id)} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-brand-green">
                       @{gestor.username}
@@ -625,9 +616,7 @@ export default function SellerGestores() {
                         disabled ? 'opacity-80' : 'active:bg-brand-green/5'
                       }`}
                     >
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 shrink-0 rounded border-brand-green/30 text-brand-green focus:ring-brand-green/25"
+                      <Checkbox
                         checked={checked}
                         disabled={disabled}
                         onChange={() => handleToggleProduct(product.product_id)}

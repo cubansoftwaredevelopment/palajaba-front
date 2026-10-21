@@ -9,7 +9,6 @@ import {
   authStickyAside,
 } from '../components/auth/authStyles'
 import RegisterProgress from '../components/auth/RegisterProgress'
-import { TRIAL_STEPS } from '../lib/registerSteps'
 import Button from '../components/Button'
 import {
   PLAN_TIER_ORDER,
@@ -185,12 +184,13 @@ export default function RegisterPlan() {
     }
   }, [])
 
-  function startFreeTrial() {
-    navigate('/registro/verificacion', {
+  function continueToPayment() {
+    navigate('/registro/pago', {
       state: {
         billing,
         planTier: normalizePlanTier(planTier),
-        trial: true,
+        discountCode: appliedDiscount?.code ?? null,
+        discountPercent: appliedDiscount?.percent_off ?? null,
       },
     })
   }
@@ -201,11 +201,11 @@ export default function RegisterPlan() {
         <div className={authPageIntro}>
           <AuthHeader
             eyebrow="Crear cuenta"
-            title="Prueba gratis y planes"
-            description="Empieza con 15 días gratis y acceso completo. Estos son los precios cuando termine la prueba."
+            title="Elige tu plan"
+            description="Compara los planes y continúa al pago para activar tu tienda."
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={1} steps={TRIAL_STEPS} />
+          <RegisterProgress currentStep={1} />
         </div>
 
         <div className={authRegisterGrid}>
@@ -240,7 +240,7 @@ export default function RegisterPlan() {
           </div>
 
           <aside className={`${authStickyAside} flex flex-col gap-4`}>
-            <Button onClick={startFreeTrial}>Empezar prueba gratis</Button>
+            <Button onClick={continueToPayment}>Continuar al pago</Button>
 
             <p className="text-center text-xs text-brand-carmelita/80 lg:text-left">
               ¿Ya tienes cuenta?{' '}

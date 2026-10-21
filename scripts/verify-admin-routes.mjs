@@ -9,6 +9,7 @@ const adminPaths = [
   '/admin/estadisticas',
   '/admin/solicitudes',
   '/admin/notificaciones',
+  '/admin/finanzas',
   '/admin/configuracion',
 ]
 
@@ -25,6 +26,7 @@ const routes = [
               { path: 'estadisticas', element: null },
               { path: 'solicitudes', element: null },
               { path: 'notificaciones', element: null },
+              { path: 'finanzas', element: null },
               { path: 'configuracion', element: null },
             ],
           },

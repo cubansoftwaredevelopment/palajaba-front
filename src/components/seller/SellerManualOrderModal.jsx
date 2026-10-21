@@ -14,6 +14,7 @@ import {
 import SellerModalPortal from './SellerModalPortal'
 import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
+import Checkbox from '../ui/Checkbox'
 import {
   sellerAlertError,
   sellerBtnPrimary,
@@ -357,10 +358,9 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
               </div>
 
               <div className={`${sellerSection} space-y-3`}>
-                <label className="flex items-center gap-2 text-sm text-brand-carmelita">
-                  <input
+                <label className="flex items-center gap-2.5 text-sm text-brand-carmelita">
+                  <Checkbox
                     id="manual-order-with-delivery"
-                    type="checkbox"
                     checked={withDelivery}
                     onChange={(event) => setWithDelivery(event.target.checked)}
                   />

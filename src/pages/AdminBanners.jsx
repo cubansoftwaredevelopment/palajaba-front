@@ -26,6 +26,7 @@ import { resolveMediaUrl } from '../lib/media'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { CUBA_PROVINCES, getProvinceById } from '../constants/cubaLocations'
+import Checkbox from '../components/ui/Checkbox'
 import LoadingState from '../components/ui/LoadingState'
 
 function provinceName(provinceId) {
@@ -569,8 +570,8 @@ export default function AdminBanners() {
                   key={province.id}
                   className="flex cursor-pointer items-center gap-2 rounded-lg border border-zinc-800/90 bg-zinc-900/70 px-3 py-2 text-sm text-zinc-200"
                 >
-                  <input
-                    type="checkbox"
+                  <Checkbox
+                    tone="admin"
                     checked={checked}
                     onChange={(event) => {
                       setSelectedProvinces((current) =>
@@ -579,7 +580,6 @@ export default function AdminBanners() {
                           : current.filter((id) => id !== province.id),
                       )
                     }}
-                    className="h-4 w-4 accent-brand-green"
                   />
                   <span className="truncate">{province.name}</span>
                 </label>

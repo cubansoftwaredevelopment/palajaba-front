@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GestorShell from '../../components/gestor/GestorShell'
+import Checkbox from '../../components/ui/Checkbox'
 import LoadingState from '../../components/ui/LoadingState'
 import StatePanel from '../../components/ui/StatePanel'
 import { formatPrice } from '../../lib/money'
@@ -271,9 +272,8 @@ export default function GestorPanel() {
                       className="rounded-xl border border-brand-green/10 bg-brand-white px-3 py-3"
                     >
                       <label className="flex cursor-pointer items-start gap-3 touch-manipulation">
-                        <input
-                          type="checkbox"
-                          className="mt-1 h-4 w-4 shrink-0 rounded border-brand-green/30 text-brand-green focus:ring-brand-green/25"
+                        <Checkbox
+                          className="mt-1"
                           checked={product.selected}
                           onChange={() =>
                             setDrafts((prev) => toggleGestorProductSelection(prev, product.product_id))

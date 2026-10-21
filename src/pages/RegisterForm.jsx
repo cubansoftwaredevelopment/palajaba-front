@@ -6,7 +6,6 @@ import { authFormWrap, authPageIntro } from '../components/auth/authStyles'
 import PasswordField from '../components/auth/PasswordField'
 import PhoneField from '../components/auth/PhoneField'
 import RegisterProgress from '../components/auth/RegisterProgress'
-import { TRIAL_STEPS } from '../lib/registerSteps'
 import Button from '../components/Button'
 import {
   alertErrorClass,
@@ -16,9 +15,8 @@ import {
 } from '../components/auth/formStyles'
 import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../lib/phone'
 import { normalizePlanTier } from '../constants/plan'
-import { registerSeller, sellerLogin } from '../lib/api'
+import { registerSeller } from '../lib/api'
 import { getUserFacingMessage } from '../lib/userFacingError'
-import { setSellerSession } from '../lib/sellerAuth'
 
 function RequiredLabel({ htmlFor, children }) {
   return (
@@ -28,8 +26,8 @@ function RequiredLabel({ htmlFor, children }) {
   )
 }
 
-function validateForm({ transferId, storeName, phone, password, confirmPassword, trial }) {
-  if (!trial && !transferId.trim()) return 'El ID de la transferencia es obligatorio.'
+function validateForm({ transferId, storeName, phone, password, confirmPassword }) {
+  if (!transferId.trim()) return 'El ID de la transferencia es obligatorio.'
   if (!storeName.trim()) return 'El nombre de la tienda es obligatorio.'
   const phoneDigits = getPhoneDigits(phone)
   if (!phoneDigits) return 'El número de teléfono es obligatorio.'
@@ -48,7 +46,6 @@ export default function RegisterForm() {
   const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
   const planTier = normalizePlanTier(location.state?.planTier)
   const discountCode = location.state?.discountCode ?? null
-  const trial = Boolean(location.state?.trial)
 
   const [transferId, setTransferId] = useState('')
   const [storeName, setStoreName] = useState('')
@@ -68,7 +65,6 @@ export default function RegisterForm() {
       phone: phoneDigits,
       password,
       confirmPassword,
-      trial,
     })
 
     if (validationError) {
@@ -80,31 +76,14 @@ export default function RegisterForm() {
 
     try {
       await registerSeller({
-        ...(trial ? {} : { transfer_id: transferId.trim() }),
+        transfer_id: transferId.trim(),
         store_name: storeName.trim(),
         phone: phoneDigits,
         password,
         billing_period: billing,
         plan_tier: planTier,
-        free_trial: trial,
         ...(discountCode ? { discount_code: discountCode } : {}),
       })
-
-      if (trial) {
-        try {
-          const session = await sellerLogin({
-            method: 'phone',
-            phone: phoneDigits,
-            password,
-          })
-          setSellerSession(session.access_token, session.seller)
-          navigate('/tienda', { replace: true })
-          return
-        } catch {
-          navigate('/login', { replace: true })
-          return
-        }
-      }
 
       navigate('/registro/exito')
     } catch (err) {
@@ -120,47 +99,35 @@ export default function RegisterForm() {
   }
 
   return (
-    <AuthShell
-      backTo={trial ? '/registro' : '/registro/pago'}
-      backLabel={trial ? 'Plan' : 'Pago'}
-    >
+    <AuthShell backTo="/registro/pago" backLabel="Pago">
       <section className="animate-fade-in" aria-labelledby="register-form-title">
         <div className={authPageIntro}>
           <AuthHeader
-            eyebrow={trial ? 'Paso 2 · Datos' : 'Paso 3 · Datos'}
+            eyebrow="Paso 3 · Datos"
             title="Tu tienda"
-            description={
-              trial
-                ? 'Estos datos serán tu acceso. Tu prueba gratis de 15 días empieza hoy.'
-                : 'Estos datos serán tu acceso cuando aprobemos tu pago.'
-            }
+            description="Estos datos serán tu acceso cuando aprobemos tu pago."
             layout="desktop-left"
           />
-          <RegisterProgress
-            currentStep={trial ? 2 : 3}
-            steps={trial ? TRIAL_STEPS : undefined}
-          />
+          <RegisterProgress currentStep={3} />
         </div>
 
         <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>
-          {!trial ? (
-            <div>
-              <RequiredLabel htmlFor="transfer-id">ID de la transferencia</RequiredLabel>
-              <input
-                id="transfer-id"
-                type="text"
-                value={transferId}
-                onChange={(e) => setTransferId(e.target.value)}
-                className={inputClass}
-                placeholder="Ej. 1234567890"
-                autoComplete="off"
-                required
-              />
-              <p className={hintClass}>
-                Lo encuentras en el mensaje de confirmación del pago.
-              </p>
-            </div>
-          ) : null}
+          <div>
+            <RequiredLabel htmlFor="transfer-id">ID de la transferencia</RequiredLabel>
+            <input
+              id="transfer-id"
+              type="text"
+              value={transferId}
+              onChange={(e) => setTransferId(e.target.value)}
+              className={inputClass}
+              placeholder="Ej. 1234567890"
+              autoComplete="off"
+              required
+            />
+            <p className={hintClass}>
+              Lo encuentras en el mensaje de confirmación del pago.
+            </p>
+          </div>
 
           <div>
             <RequiredLabel htmlFor="store-name">Nombre de la tienda</RequiredLabel>

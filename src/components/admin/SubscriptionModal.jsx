@@ -5,10 +5,11 @@ import AdminButton from './AdminButton'
 import AdminDatePicker from './AdminDatePicker'
 
 import AdminModal from './AdminModal'
+import AdminSelect from './AdminSelect'
 
 import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 
-import { adminAlertError, adminInput, adminLabel } from './adminStyles'
+import { adminAlertError, adminLabel } from './adminStyles'
 
 import { BILLING_LABELS, PLAN_TIER_LABELS } from '../../constants/admin'
 
@@ -59,29 +60,19 @@ function PlanFields({ planTier, billingPeriod, onPlanTierChange, onBillingPeriod
 
         </label>
 
-        <select
+        <AdminSelect
 
           id="subscription-plan-tier"
 
           value={planTier}
 
-          onChange={(event) => onPlanTierChange(event.target.value)}
+          onChange={onPlanTierChange}
 
-          className={adminInput}
+          dropdownZIndex={70}
 
-        >
+          options={PLAN_TIER_ORDER.map((tier) => ({ value: tier, label: PLAN_TIER_LABELS[tier] }))}
 
-          {PLAN_TIER_ORDER.map((tier) => (
-
-            <option key={tier} value={tier}>
-
-              {PLAN_TIER_LABELS[tier]}
-
-            </option>
-
-          ))}
-
-        </select>
+        />
 
       </div>
 
@@ -93,23 +84,25 @@ function PlanFields({ planTier, billingPeriod, onPlanTierChange, onBillingPeriod
 
         </label>
 
-        <select
+        <AdminSelect
 
           id="subscription-billing-period"
 
           value={billingPeriod}
 
-          onChange={(event) => onBillingPeriodChange(event.target.value)}
+          onChange={onBillingPeriodChange}
 
-          className={adminInput}
+          dropdownZIndex={70}
 
-        >
+          options={[
 
-          <option value="monthly">{BILLING_LABELS.monthly}</option>
+            { value: 'monthly', label: BILLING_LABELS.monthly },
 
-          <option value="yearly">{BILLING_LABELS.yearly}</option>
+            { value: 'yearly', label: BILLING_LABELS.yearly },
 
-        </select>
+          ]}
+
+        />
 
       </div>
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AdminPillSelect from '../components/admin/AdminPillSelect'
 import ConfirmDialog from '../components/admin/ConfirmDialog'
 import PaymentModal from '../components/admin/PaymentModal'
 import RegistrationActionsMenu from '../components/admin/RegistrationActionsMenu'
@@ -272,18 +273,18 @@ export default function AdminDashboard() {
                     />
                   </th>
                   <th className="px-2 py-2">
-                    <select
-                      value={filters.status}
-                      onChange={(event) => updateFilter('status', event.target.value)}
-                      className={filterInput}
-                      aria-label="Filtrar por estado de suscripción"
-                    >
-                      <option value="all">Todas</option>
-                      <option value="pending">Pendiente</option>
-                      <option value="approved">Aprobada</option>
-                      <option value="expired">Vencida</option>
-                      <option value="rejected">Rechazada</option>
-                    </select>
+                    <AdminPillSelect
+                      value={filters.status === 'all' ? '' : filters.status}
+                      onChange={(value) => updateFilter('status', value || 'all')}
+                      allLabel="Todas"
+                      ariaLabel="Filtrar por estado de suscripción"
+                      options={[
+                        { value: 'pending', label: 'Pendiente' },
+                        { value: 'approved', label: 'Aprobada' },
+                        { value: 'expired', label: 'Vencida' },
+                        { value: 'rejected', label: 'Rechazada' },
+                      ]}
+                    />
                   </th>
                   <th className="px-2 py-2">
                     <input
@@ -295,28 +296,28 @@ export default function AdminDashboard() {
                     />
                   </th>
                   <th className="px-2 py-2">
-                    <select
-                      value={filters.plan}
-                      onChange={(event) => updateFilter('plan', event.target.value)}
-                      className={filterInput}
-                      aria-label="Filtrar por plan"
-                    >
-                      <option value="all">Todos</option>
-                      <option value="standard">Básico</option>
-                      <option value="premium">Premium</option>
-                    </select>
+                    <AdminPillSelect
+                      value={filters.plan === 'all' ? '' : filters.plan}
+                      onChange={(value) => updateFilter('plan', value || 'all')}
+                      allLabel="Todos"
+                      ariaLabel="Filtrar por plan"
+                      options={[
+                        { value: 'standard', label: 'Básico' },
+                        { value: 'premium', label: 'Premium' },
+                      ]}
+                    />
                   </th>
                   <th className="px-2 py-2">
-                    <select
-                      value={filters.billing}
-                      onChange={(event) => updateFilter('billing', event.target.value)}
-                      className={filterInput}
-                      aria-label="Filtrar por tiempo de suscripción"
-                    >
-                      <option value="all">Todos</option>
-                      <option value="monthly">Mensual</option>
-                      <option value="yearly">Anual</option>
-                    </select>
+                    <AdminPillSelect
+                      value={filters.billing === 'all' ? '' : filters.billing}
+                      onChange={(value) => updateFilter('billing', value || 'all')}
+                      allLabel="Todos"
+                      ariaLabel="Filtrar por tiempo de suscripción"
+                      options={[
+                        { value: 'monthly', label: 'Mensual' },
+                        { value: 'yearly', label: 'Anual' },
+                      ]}
+                    />
                   </th>
                   <th className="px-2 py-2">
                     <input

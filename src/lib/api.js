@@ -481,6 +481,104 @@ export function fetchRenewalContactPhone() {
   return request("/api/platform/renewal-contact");
 }
 
+export function fetchPlanPrices() {
+  return request("/api/platform/plan-prices");
+}
+
+function financeAuth(token) {
+  return { Authorization: `Bearer ${token}` };
+}
+
+function financeWindowParams({ start, end, currency, includeLiquidated, includeDeleted } = {}) {
+  const params = new URLSearchParams();
+  if (start) params.set("start", start);
+  if (end) params.set("end", end);
+  if (currency) params.set("currency", currency);
+  if (includeLiquidated) params.set("include_liquidated", "true");
+  if (includeDeleted) params.set("include_deleted", "true");
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+export function fetchFinanceExpenses(token) {
+  return request("/api/admin/finance/expenses", { headers: financeAuth(token) });
+}
+
+export function createFinanceExpense(token, payload) {
+  return request("/api/admin/finance/expenses", {
+    method: "POST",
+    headers: financeAuth(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateFinanceExpense(token, id, payload) {
+  return request(`/api/admin/finance/expenses/${id}`, {
+    method: "PATCH",
+    headers: financeAuth(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteFinanceExpense(token, id) {
+  return request(`/api/admin/finance/expenses/${id}`, {
+    method: "DELETE",
+    headers: financeAuth(token),
+  });
+}
+
+export function fetchFinanceDebts(token, options = {}) {
+  return request(`/api/admin/finance/debts${financeWindowParams(options)}`, {
+    headers: financeAuth(token),
+  });
+}
+
+export function updateFinanceDebt(token, id, payload) {
+  return request(`/api/admin/finance/debts/${id}`, {
+    method: "PATCH",
+    headers: financeAuth(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function generateFinanceDebts(token, payload = {}) {
+  return request("/api/admin/finance/debts/generate", {
+    method: "POST",
+    headers: financeAuth(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function liquidateFinanceDebts(token, payload) {
+  return request("/api/admin/finance/debts/liquidate", {
+    method: "POST",
+    headers: financeAuth(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteFinanceDebts(token, payload) {
+  return request("/api/admin/finance/debts/delete", {
+    method: "POST",
+    headers: financeAuth(token),
+    body: JSON.stringify(payload),
+  });
+}
+
+export function fetchFinanceLedger(token, options = {}) {
+  return request(`/api/admin/finance/ledger${financeWindowParams(options)}`, {
+    headers: financeAuth(token),
+  });
+}
+
+export function createFinanceExtraction(token, payload) {
+  return request("/api/admin/finance/ledger/extractions", {
+    method: "POST",
+    headers: financeAuth(token),
+    body: JSON.stringify(payload),
+  });
+}
+
 export function fetchDiscountCodesAvailability() {
   return request("/api/platform/discount-codes/availability");
 }

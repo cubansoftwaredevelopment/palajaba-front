@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
+import AdminSelect from './AdminSelect'
 import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { adminAlertError, adminInput, adminLabel, adminMuted, adminSubtle } from './adminStyles'
 import { NOTIFICATION_AUDIENCE_OPTIONS } from '../../constants/admin'
@@ -121,25 +122,22 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
           <label htmlFor="notification-audience" className={adminLabel}>
             Enviar a
           </label>
-          <select
+          <AdminSelect
             id="notification-audience"
             value={audience}
-            onChange={(event) => {
-              const next = event.target.value
+            dropdownZIndex={70}
+            onChange={(next) => {
               setAudience(next)
               if (next !== 'single') {
                 setSelectedSellerId('')
                 setStoreQuery('')
               }
             }}
-            className={adminInput}
-          >
-            {NOTIFICATION_AUDIENCE_OPTIONS.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            options={NOTIFICATION_AUDIENCE_OPTIONS.map((option) => ({
+              value: option.id,
+              label: option.label,
+            }))}
+          />
           <p className={`mt-2 text-xs ${adminMuted}`}>
             {isSingle
               ? 'El mensaje llega solo a esa tienda (aprobada o con suscripción vencida).'
