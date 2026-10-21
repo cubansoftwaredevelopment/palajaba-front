@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AdminDateRangeControls, { rangeForPeriod } from '../components/admin/AdminDateRangeControls'
 import AdminPillSelect from '../components/admin/AdminPillSelect'
+import AdminSelect from '../components/admin/AdminSelect'
 import ConfirmDialog from '../components/admin/ConfirmDialog'
 import PaymentModal from '../components/admin/PaymentModal'
 import RegistrationActionsMenu from '../components/admin/RegistrationActionsMenu'
@@ -20,11 +22,15 @@ import { normalizePlanTier } from '../constants/plan'
 import { fetchRegistrations, rejectRegistration, deleteRegistration } from '../lib/api'
 import { formatDateTime } from '../lib/dates'
 import { formatPrice } from '../lib/money'
+import { usePlanPricing } from '../lib/usePlanPricing'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import LoadingState from '../components/ui/LoadingState'
 
-const PAGE_SIZE = 25
+const PAGE_SIZES = [10, 15, 20]
+const PAGE_SIZE_OPTIONS = PAGE_SIZES.map((size) => ({ value: String(size), label: `${size} por página` }))
+const pagerButton =
+  'inline-flex min-h-9 items-center rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-3 text-xs font-medium text-zinc-100 disabled:opacity-40'
 
 const EMPTY_FILTERS = {
   store: '',
@@ -87,6 +93,27 @@ function subscriptionTime(item) {
   return period
 }
 
+function startOfLocalDay(value) {
+  const next = value instanceof Date ? new Date(value) : new Date(value)
+  if (Number.isNaN(next.getTime())) return null
+  next.setHours(0, 0, 0, 0)
+  return next
+}
+
+function inDateRange(value, range) {
+  if (!range?.from || !range?.to) return true
+  const day = startOfLocalDay(value)
+  if (!day) return false
+  const from = startOfLocalDay(range.from)
+  const to = startOfLocalDay(range.to)
+  return day >= from && day <= to
+}
+
+function registrationEventAt(item) {
+  if (item.status === 'pending' || item.status === 'rejected') return item.created_at
+  return item.approved_at || item.created_at
+}
+
 function matchesSales(item, query) {
   const needle = query.trim().toLowerCase().replace(',', '.')
   if (!needle) return true
@@ -97,12 +124,16 @@ function matchesSales(item, query) {
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
+  const { getPlanPrice } = usePlanPricing()
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [toast, setToast] = useState(null)
   const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [period, setPeriod] = useState('monthly')
+  const [range, setRange] = useState(() => rangeForPeriod('monthly'))
   const [actionId, setActionId] = useState(null)
   const [openActionsId, setOpenActionsId] = useState(null)
   const [subscriptionModal, setSubscriptionModal] = useState(null)
@@ -175,9 +206,41 @@ export default function AdminDashboard() {
     }
   }
 
+  const inPeriod = useMemo(
+    () => registrations.filter((item) => inDateRange(registrationEventAt(item), range)),
+    [range, registrations],
+  )
+
+  const subscriptionTotals = useMemo(() => {
+    let paidCount = 0
+    let paidAmount = 0
+    let expectedCount = 0
+    let expectedAmount = 0
+    for (const item of inPeriod) {
+      if (item.status === 'pending') {
+        const planAmount = getPlanPrice(normalizePlanTier(item.plan_tier), item.billing_period)?.amount
+        const amount = Number(item.expected_payment_cup ?? planAmount ?? 0)
+        expectedCount += 1
+        expectedAmount += Number.isFinite(amount) ? amount : 0
+        continue
+      }
+      if (item.payment_amount_cup == null) continue
+      paidCount += 1
+      paidAmount += Number(item.payment_amount_cup) || 0
+    }
+    return {
+      paidCount,
+      paidAmount,
+      expectedCount,
+      expectedAmount,
+      totalCount: paidCount + expectedCount,
+      totalAmount: paidAmount + expectedAmount,
+    }
+  }, [getPlanPrice, inPeriod])
+
   const filteredRegistrations = useMemo(
     () =>
-      registrations.filter((item) => {
+      inPeriod.filter((item) => {
         if (!includesText(item.store_name, filters.store)) return false
         if (!includesText(item.phone, filters.phone)) return false
         const transferLabel = item.is_launch_promo
@@ -191,13 +254,17 @@ export default function AdminDashboard() {
         if (!matchesSales(item, filters.sales)) return false
         return true
       }),
-    [filters, registrations],
+    [filters, inPeriod],
   )
 
-  const pageCount = Math.max(1, Math.ceil(filteredRegistrations.length / PAGE_SIZE))
+  useEffect(() => {
+    setPage(1)
+  }, [range, pageSize])
+
+  const pageCount = Math.max(1, Math.ceil(filteredRegistrations.length / pageSize))
   const currentPage = Math.min(page, pageCount)
-  const pageStart = filteredRegistrations.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE
-  const pageItems = filteredRegistrations.slice(pageStart, pageStart + PAGE_SIZE)
+  const pageStart = filteredRegistrations.length === 0 ? 0 : (currentPage - 1) * pageSize
+  const pageItems = filteredRegistrations.slice(pageStart, pageStart + pageSize)
 
   function updateFilter(field, value) {
     setFilters((current) => ({ ...current, [field]: value }))
@@ -212,14 +279,28 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <main className={adminSection}>
+      <main className={`${adminSection} pb-24`}>
         <p className={`mb-4 text-sm leading-relaxed ${adminSubtle}`}>
           {loading
             ? 'Cargando solicitudes…'
             : filteredRegistrations.length === 0
-              ? `0 de ${registrations.length} negocios`
+              ? `0 de ${inPeriod.length} negocios en este periodo`
               : `${pageStart + 1}–${pageStart + pageItems.length} de ${filteredRegistrations.length} negocios`}
         </p>
+
+        {!loading ? (
+          <div className="mb-4 flex flex-wrap gap-2">
+            <span className="rounded-full border border-brand-green/25 bg-brand-green/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-zinc-100">
+              Pagadas {subscriptionTotals.paidCount} · {formatPrice(subscriptionTotals.paidAmount, 'CUP')}
+            </span>
+            <span className="rounded-full border border-brand-yellow/30 bg-brand-yellow/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-zinc-100">
+              Esperadas {subscriptionTotals.expectedCount} · {formatPrice(subscriptionTotals.expectedAmount, 'CUP')}
+            </span>
+            <span className="rounded-full border border-zinc-700 bg-zinc-900/70 px-2.5 py-1 text-xs font-semibold tabular-nums text-zinc-100">
+              Total {subscriptionTotals.totalCount} · {formatPrice(subscriptionTotals.totalAmount, 'CUP')}
+            </span>
+          </div>
+        ) : null}
 
         {error && (
           <p className={`mb-4 ${adminAlertError}`} role="alert">
@@ -405,14 +486,22 @@ export default function AdminDashboard() {
         ) : null}
 
         {!loading && filteredRegistrations.length > 0 ? (
-          <div className="mt-4 flex items-center justify-between gap-3">
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className={`text-sm ${adminSubtle}`}>
               Página {currentPage} de {pageCount}
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <AdminSelect
+                className="w-[9.5rem]"
+                triggerClassName="min-h-9 py-1.5 text-xs"
+                ariaLabel="Negocios por página"
+                value={String(pageSize)}
+                onChange={(value) => setPageSize(Number(value))}
+                options={PAGE_SIZE_OPTIONS}
+              />
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-3 text-xs font-medium text-zinc-100 disabled:opacity-40"
+                className={pagerButton}
                 disabled={currentPage <= 1}
                 onClick={() => setPage(currentPage - 1)}
               >
@@ -420,7 +509,7 @@ export default function AdminDashboard() {
               </button>
               <button
                 type="button"
-                className="inline-flex min-h-9 items-center rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-3 text-xs font-medium text-zinc-100 disabled:opacity-40"
+                className={pagerButton}
                 disabled={currentPage >= pageCount}
                 onClick={() => setPage(currentPage + 1)}
               >
@@ -430,6 +519,14 @@ export default function AdminDashboard() {
           </div>
         ) : null}
       </main>
+
+      <AdminDateRangeControls
+        period={period}
+        onPeriodChange={setPeriod}
+        range={range}
+        onRangeChange={(next) => setRange(next ?? rangeForPeriod(period))}
+        applyPeriodToRange
+      />
 
       {paymentModal && (
         <PaymentModal
