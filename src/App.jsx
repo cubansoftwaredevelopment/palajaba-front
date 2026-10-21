@@ -150,6 +150,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <PublicStoreRoute /> },
           { path: ':gestorUsername', element: <PublicStoreRoute /> },
+          { path: ':gestorUsername/:categorySlug', element: <PublicStoreRoute /> },
         ],
       },
     ],

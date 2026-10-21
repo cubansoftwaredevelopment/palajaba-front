@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import BuyerHeaderSearch from '../../components/buyer/BuyerHeaderSearch'
 import BuyerLocationDisplay from '../../components/buyer/BuyerLocationDisplay'
 import BuyerProductCard from '../../components/buyer/BuyerProductCard'
@@ -39,7 +39,9 @@ export default function BuyerCategoryPage() {
 
 function BuyerCategoryPageContent() {
   const { categorySlug } = useParams()
-  const hintedCategory = useLocation().state
+  const route = useLocation()
+  const navigate = useNavigate()
+  const hintedCategory = route.state
   const location = getBuyerLocation()
   const { currencies } = useBuyerDisplayCurrency()
   const sentinelRef = useRef(null)
@@ -184,6 +186,14 @@ function BuyerCategoryPageContent() {
   const extraMunicipalityCount = Math.max(0, municipalityIds.length - 1)
   const categoryName = category?.name || decodeURIComponent(categorySlug || '')
 
+  function goBack() {
+    if (route.key !== 'default') {
+      navigate(-1)
+      return
+    }
+    navigate('/comprar')
+  }
+
   return (
     <BuyerDisplayedLocationProvider location={location}>
       <BuyerShell
@@ -204,15 +214,16 @@ function BuyerCategoryPageContent() {
       >
         <div className={buyerHomeSections}>
           <div className="flex items-center gap-2">
-            <Link
-              to="/comprar"
-              aria-label="Volver al mercado"
+            <button
+              type="button"
+              onClick={goBack}
+              aria-label="Atrás"
               className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-brand-green transition-colors touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8"
             >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
-            </Link>
+            </button>
             <h1 className={buyerCategorySectionTitle}>{categoryName}</h1>
           </div>
 

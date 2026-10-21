@@ -1,3 +1,5 @@
+import { storeGestorPublicPath, storePublicPath } from './storeSlug'
+
 export function slugifyMarketplaceCategory(value) {
   return String(value || '')
     .normalize('NFD')
@@ -12,6 +14,16 @@ export function marketplaceCategoryPath(section) {
     slugifyMarketplaceCategory(section?.category_name || section?.name) ||
     slugifyMarketplaceCategory(section?.category_id || section?.id)
   return `/comprar/${encodeURIComponent(slug)}`
+}
+
+export function storeCategoryPath(storeSlug, section, gestorUsername) {
+  const slug =
+    slugifyMarketplaceCategory(section?.category_name || section?.name) ||
+    slugifyMarketplaceCategory(section?.category_id || section?.id)
+  const base = gestorUsername
+    ? storeGestorPublicPath(storeSlug, gestorUsername)
+    : storePublicPath(storeSlug)
+  return `${base}/${encodeURIComponent(slug)}`
 }
 
 export function resolveMarketplaceCategory(categories, slug) {
