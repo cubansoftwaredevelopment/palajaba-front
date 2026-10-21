@@ -30,6 +30,7 @@ import {
   getMunicipalityById,
   getProvinceById,
 } from "../../constants/cubaLocations";
+import { marketplaceCategoryPath } from "../../lib/marketplaceCategory";
 import { recordMarketplaceVisit } from "../../lib/marketplaceVisit";
 import { BuyerDisplayedLocationProvider } from "../../context/BuyerDisplayedLocationContext";
 import { useBuyerDisplayCurrency } from "../../context/BuyerDisplayCurrencyContext";
@@ -435,6 +436,7 @@ function BuyerHomeContent({ preview = null }) {
                 <BuyerCategoryProductRow
                   key={section.category_id}
                   section={section}
+                  href={marketplaceCategoryPath(section)}
                   loadMore={(offset) =>
                     fetchMarketplaceCategoryProducts({
                       provinceId: location.province.id,

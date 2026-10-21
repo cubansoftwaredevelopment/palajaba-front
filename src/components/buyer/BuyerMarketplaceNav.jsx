@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { NavLink, useLocation } from 'react-router-dom'
+import { matchPath, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { fetchMarketplaceFeed, fetchRenewalContactPhone } from '../../lib/api'
 import { isAdminAuthenticated } from '../../lib/adminAuth'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
-import { getAdditionalMunicipalities, getBuyerLocation, getMarketplaceCategoryFilter, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+import { getAdditionalMunicipalities, getBuyerLocation, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
+import { marketplaceCategoryPath, resolveMarketplaceCategory, storeCategoryPath } from '../../lib/marketplaceCategory'
+import { storeGestorPublicPath, storePublicPath } from '../../lib/storeSlug'
 import { isSellerAuthenticated } from '../../lib/sellerAuth'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
@@ -104,16 +106,6 @@ function OptionIcon({ open, life, className, children }) {
   )
 }
 
-function publishCategory(provinceId, categoryId) {
-  if (!provinceId) return
-  setMarketplaceCategoryFilter(provinceId, categoryId)
-  window.dispatchEvent(
-    new CustomEvent(MARKETPLACE_CATEGORY_EVENT, {
-      detail: { provinceId, categoryId },
-    }),
-  )
-}
-
 function CategoryModal({ categories, loading, selectedId, onClose: requestClose, onSelect, emptyMessage }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   return (
@@ -175,9 +167,11 @@ export default function BuyerMarketplaceNav({
   catalogCategories,
   catalogCategoriesLoading = false,
   selectedCatalogCategoryId = '',
-  onCatalogCategorySelect,
+  storeSlug = '',
+  gestorUsername = null,
 }) {
   const route = useLocation()
+  const navigate = useNavigate()
   const location = getBuyerLocation()
   const { currencies } = useBuyerDisplayCurrency()
   const provinceId = location?.province?.id ?? ''
@@ -186,9 +180,7 @@ export default function BuyerMarketplaceNav({
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [categories, setCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(false)
-  const [selectedCategoryId, setSelectedCategoryId] = useState(() =>
-    provinceId ? getMarketplaceCategoryFilter(provinceId) : '',
-  )
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [fabVisible, setFabVisible] = useState(true)
   const hideTimerRef = useRef(null)
   const [helpPhone, setHelpPhone] = useState('')
@@ -279,15 +271,61 @@ export default function BuyerMarketplaceNav({
     setMenuOpen(false)
   }, [route.pathname])
 
-  function chooseCategory(categoryId) {
-    if (isCatalog) {
-      onCatalogCategorySelect?.(categoryId)
-    } else {
-      setSelectedCategoryId(categoryId)
-      publishCategory(provinceId, categoryId)
+  useEffect(() => {
+    if (isCatalog) return
+    const match = matchPath({ path: '/comprar/:categorySlug', end: true }, route.pathname)
+    const slug = match?.params?.categorySlug
+    if (!slug || slug === 'negocios') {
+      setSelectedCategoryId('')
+      return
     }
+    const found = resolveMarketplaceCategory(categories, slug)
+    setSelectedCategoryId(found?.id || '')
+  }, [categories, isCatalog, route.pathname])
+
+  function chooseCategory(categoryId) {
     setCategoryOpen(false)
     setMenuOpen(false)
+
+    const category = categories.find((item) => item.id === categoryId)
+    const categoryName = category?.name
+
+    if (isCatalog) {
+      const homePath = gestorUsername
+        ? storeGestorPublicPath(storeSlug, gestorUsername)
+        : storePublicPath(storeSlug)
+      if (!categoryId) {
+        if (route.pathname !== homePath) navigate(homePath)
+        return
+      }
+      const path = storeCategoryPath(
+        storeSlug,
+        { category_id: categoryId, category_name: categoryName },
+        gestorUsername,
+      )
+      if (route.pathname === path) return
+      navigate(path, {
+        state: { categoryId, categoryName, kind: 'category' },
+      })
+      return
+    }
+
+    setSelectedCategoryId(categoryId)
+    if (provinceId) setMarketplaceCategoryFilter(provinceId, '')
+
+    if (!categoryId) {
+      if (route.pathname !== '/comprar') navigate('/comprar')
+      return
+    }
+
+    const path = marketplaceCategoryPath({
+      category_id: categoryId,
+      category_name: categoryName,
+    })
+    if (route.pathname === path) return
+    navigate(path, {
+      state: { categoryId, categoryName },
+    })
   }
 
   function openHelp() {

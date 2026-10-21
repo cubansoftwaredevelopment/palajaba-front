@@ -16,85 +16,30 @@ import Button from "../../components/Button";
 import {
   fetchMarketplaceGestorStoreCatalog,
   fetchMarketplaceGestorStoreCategoryProducts,
-  fetchMarketplaceStore,
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
 } from "../../lib/api";
 import { BuyerDisplayedLocationProvider } from "../../context/BuyerDisplayedLocationContext";
 import { useBuyerDisplayCurrency } from "../../context/BuyerDisplayCurrencyContext";
-import {
-  getBuyerLocation,
-  hasCompleteBuyerLocation,
-  readSharedZoneFromSearch,
-  setBuyerLocation,
-} from "../../lib/buyerLocation";
 import { normalizeCatalogTheme } from "../../lib/catalogThemes";
+import { storeCategoryPath } from "../../lib/marketplaceCategory";
 import { validateGestorUsername } from "../../lib/sellerGestores";
 import { recordStoreProfileView } from "../../lib/storeProfileView";
 import { setStoreCheckoutPhones } from "../../lib/storeCheckoutPhones";
 import { storePublicPath } from "../../lib/storeSlug";
 import { resolveUserFacingError } from "../../lib/userFacingError";
+import { usePublicStoreLocation } from "./usePublicStoreLocation";
 
 const PAGE_SIZE = 5;
 
-function businessAreaToLocation(area) {
-  if (!area?.province_id || !area?.municipality_id) return null;
-  return {
-    province: { id: area.province_id, name: area.province_name },
-    municipality: { id: area.municipality_id, name: area.municipality_name },
-  };
-}
-
 export default function BuyerStorePage() {
   const { storeSlug, gestorUsername } = useParams();
-  const sharedLocation =
-    typeof window === "undefined"
-      ? null
-      : readSharedZoneFromSearch(window.location.search);
-  if (sharedLocation)
-    setBuyerLocation(sharedLocation.province, sharedLocation.municipality);
-  const buyerLocation =
-    sharedLocation ?? (hasCompleteBuyerLocation() ? getBuyerLocation() : null);
-  const [fallbackLocation, setFallbackLocation] = useState(null);
-  const [resolvingLocation, setResolvingLocation] = useState(!buyerLocation);
-  const [locationError, setLocationError] = useState(false);
+  const { location, resolvingLocation, locationError } =
+    usePublicStoreLocation(storeSlug);
 
   const gestorCheck = gestorUsername
     ? validateGestorUsername(gestorUsername)
     : { ok: true, username: null };
-
-  useEffect(() => {
-    if (buyerLocation) return undefined;
-
-    let cancelled = false;
-    setResolvingLocation(true);
-    setLocationError(false);
-
-    fetchMarketplaceStore(storeSlug)
-      .then((store) => {
-        if (cancelled) return;
-        const nextLocation = businessAreaToLocation(store.business_area);
-        if (!nextLocation) {
-          setLocationError(true);
-          setFallbackLocation(null);
-          return;
-        }
-        setFallbackLocation(nextLocation);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setLocationError(true);
-          setFallbackLocation(null);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setResolvingLocation(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [buyerLocation, storeSlug]);
 
   if (gestorUsername && !gestorCheck.ok) {
     return <Navigate to={storePublicPath(storeSlug)} replace />;
@@ -109,22 +54,23 @@ export default function BuyerStorePage() {
             className="lg:items-start lg:text-left"
           />
         </BuyerShell>
-        <BuyerMarketplaceNav catalogCategories={[]} catalogCategoriesLoading />
+        <BuyerMarketplaceNav
+          catalogCategories={[]}
+          catalogCategoriesLoading
+          storeSlug={storeSlug}
+          gestorUsername={gestorCheck.ok ? gestorCheck.username : null}
+        />
       </>
     );
   }
 
-  const effectiveLocation = buyerLocation ?? fallbackLocation;
-  if (!effectiveLocation) {
-    if (locationError) {
-      return <Navigate to="/comprar/provincia" replace />;
-    }
+  if (!location || locationError) {
     return <Navigate to="/comprar/provincia" replace />;
   }
 
   return (
     <BuyerStorePageContent
-      location={effectiveLocation}
+      location={location}
       gestorUsername={gestorCheck.ok ? gestorCheck.username : null}
     />
   );
@@ -137,7 +83,6 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const isGestorCatalog = Boolean(gestorUsername);
-  const [storeCategoryId, setStoreCategoryId] = useState("");
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
@@ -203,10 +148,6 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
     loadCatalog();
   }, [loadCatalog]);
 
-  useEffect(() => {
-    setStoreCategoryId("");
-  }, [storeSlug, gestorUsername]);
-
   const catalogCategories = useMemo(
     () =>
       (catalog?.sections ?? [])
@@ -256,12 +197,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
   );
 
   const sections = catalog?.sections ?? [];
-  const visibleSections = storeCategoryId
-    ? sections.filter(
-        (section) =>
-          section.category_id === storeCategoryId && section.products?.length,
-      )
-    : sections.filter((section) => section.products?.length);
+  const visibleSections = sections.filter((section) => section.products?.length);
   const hasProducts = (catalog?.total_products ?? 0) > 0;
   const catalogTheme = normalizeCatalogTheme(catalog?.catalog_theme);
   const backTo = isGestorCatalog ? storePublicPath(storeSlug) : "/comprar";
@@ -362,6 +298,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
                     <BuyerCategoryProductRow
                       key={section.category_id}
                       section={section}
+                      href={storeCategoryPath(storeSlug, section, gestorUsername)}
                       loadMore={createLoadMore(section)}
                     />
                   ))
@@ -375,8 +312,8 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       <BuyerMarketplaceNav
         catalogCategories={catalogCategories}
         catalogCategoriesLoading={loading}
-        selectedCatalogCategoryId={storeCategoryId}
-        onCatalogCategorySelect={setStoreCategoryId}
+        storeSlug={storeSlug}
+        gestorUsername={gestorUsername}
       />
     </CatalogThemeScope>
   );
