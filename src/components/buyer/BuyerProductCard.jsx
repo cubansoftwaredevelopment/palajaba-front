@@ -8,7 +8,7 @@ import {
   BUYER_PRODUCT_CARD_ACTIONS,
   resolveBuyerProductStorePath,
 } from '../../lib/buyerProductCardView'
-import { resolveDisplayPrice } from '../../lib/displayPrice'
+import { resolveDisplayPrices } from '../../lib/displayPrice'
 import { resolveMediaUrl } from '../../lib/media'
 import { isProductPurchasable, isProductSoldOut } from '../../lib/marketplaceProduct'
 import BuyerProductDetailModal from './BuyerProductDetailModal'
@@ -50,11 +50,11 @@ function JabaBagIcon() {
 }
 
 export default function BuyerProductCard({ product, compact = false }) {
-  const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
+  const { currencies: displayCurrencies, cupPerUnit } = useBuyerDisplayCurrency()
   const location = useDisplayedLocation()
   const { isInJaba: checkInJaba, addProduct, buyProduct } = useBuyerJaba()
   const imageSrc = resolveMediaUrl(product.image_url, { width: 400 })
-  const displayPrice = resolveDisplayPrice(product, displayCurrency, cupPerUnit)
+  const displayPrices = resolveDisplayPrices(product, displayCurrencies, cupPerUnit)
   const [buyPulse, setBuyPulse] = useState(false)
   const [jabaPulse, setJabaPulse] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -133,7 +133,13 @@ export default function BuyerProductCard({ product, compact = false }) {
 
             <div className={buyerProductBody}>
               <h3 className={buyerProductName}>{product.name}</h3>
-              <p className={buyerProductPrice}>{displayPrice.label}</p>
+              <div className="mt-1 flex flex-col gap-0.5">
+                {displayPrices.map((price) => (
+                  <p key={price.currency} className={`${buyerProductPrice} !mt-0`}>
+                    {price.label}
+                  </p>
+                ))}
+              </div>
             </div>
           </button>
 

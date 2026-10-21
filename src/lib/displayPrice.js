@@ -6,10 +6,34 @@ function productAcceptsCurrency(product, currencyCode) {
   return (product.accepted_currencies ?? []).includes(currencyCode)
 }
 
+export function productAcceptedCurrencies(product) {
+  const codes = [product?.base_currency, ...(product?.accepted_currencies ?? [])]
+  return [...new Set(codes.map((code) => String(code || '').trim().toUpperCase()).filter(Boolean))]
+}
+
+export function normalizeDisplayCurrencies(displayCurrency) {
+  if (Array.isArray(displayCurrency)) {
+    return displayCurrency.filter(Boolean)
+  }
+  return displayCurrency ? [displayCurrency] : []
+}
+
+export function resolveDisplayPrices(product, displayCurrency, cupPerUnit = getCupPerUnit()) {
+  const selected = normalizeDisplayCurrencies(displayCurrency)
+  const accepted = productAcceptedCurrencies(product)
+  const wanted = selected.filter((code) => accepted.includes(code))
+  const codes = wanted.length ? wanted : [product.base_currency].filter(Boolean)
+  return codes.map((code) => resolveDisplayPrice(product, code, cupPerUnit))
+}
+
+export function pickCheckoutCurrency(product, displayCurrency) {
+  return resolveDisplayPrices(product, displayCurrency)[0]?.currency ?? product?.base_currency
+}
+
 export function needsExchangeRatesForDisplay(product, displayCurrency) {
   if (!product || !displayCurrency) return false
-  if (!productAcceptsCurrency(product, displayCurrency)) return false
-  return displayCurrency !== product.base_currency
+  const codes = normalizeDisplayCurrencies(displayCurrency)
+  return codes.some((code) => productAcceptsCurrency(product, code) && code !== product.base_currency)
 }
 
 export function convertBetweenCurrencies(

@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { getBuyerDisplayCurrency, setBuyerDisplayCurrency } from '../lib/buyerDisplayCurrency'
+import {
+  BUYER_DISPLAY_CURRENCY_EVENT,
+  getBuyerDisplayCurrencies,
+  setBuyerDisplayCurrencies,
+  setBuyerDisplayCurrency,
+  toggleBuyerDisplayCurrency,
+} from '../lib/buyerDisplayCurrency'
 import {
   areExchangeRatesAvailable,
   getCupPerUnit,
@@ -10,7 +16,7 @@ import {
 export const BuyerDisplayCurrencyContext = createContext(null)
 
 export function BuyerDisplayCurrencyProvider({ children }) {
-  const [currency, setCurrencyState] = useState(getBuyerDisplayCurrency)
+  const [currencies, setCurrenciesState] = useState(getBuyerDisplayCurrencies)
   const [cupPerUnit, setCupPerUnitState] = useState(getCupPerUnit)
   const [ratesReady, setRatesReady] = useState(areExchangeRatesAvailable)
   const [ratesMeta, setRatesMeta] = useState(getExchangeRatesMeta)
@@ -40,25 +46,32 @@ export function BuyerDisplayCurrencyProvider({ children }) {
 
   useEffect(() => {
     function onChange(event) {
-      setCurrencyState(event.detail)
+      const next = Array.isArray(event.detail) ? event.detail : getBuyerDisplayCurrencies()
+      setCurrenciesState(next)
     }
 
-    window.addEventListener('buyer-display-currency-change', onChange)
-    return () => window.removeEventListener('buyer-display-currency-change', onChange)
+    window.addEventListener(BUYER_DISPLAY_CURRENCY_EVENT, onChange)
+    return () => window.removeEventListener(BUYER_DISPLAY_CURRENCY_EVENT, onChange)
   }, [])
 
   const value = useMemo(
     () => ({
-      currency,
+      currencies,
+      currency: currencies[0],
       cupPerUnit,
       ratesReady,
       ratesMeta,
       setCurrency: (code) => {
-        setBuyerDisplayCurrency(code)
-        setCurrencyState(code)
+        setCurrenciesState(setBuyerDisplayCurrency(code))
+      },
+      setCurrencies: (codes) => {
+        setCurrenciesState(setBuyerDisplayCurrencies(codes))
+      },
+      toggleCurrency: (code) => {
+        setCurrenciesState(toggleBuyerDisplayCurrency(code))
       },
     }),
-    [currency, cupPerUnit, ratesMeta, ratesReady],
+    [currencies, cupPerUnit, ratesMeta, ratesReady],
   )
 
   return (

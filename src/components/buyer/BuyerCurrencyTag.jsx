@@ -13,10 +13,12 @@ export default function BuyerCurrencyTag() {
   const shellRef = useRef(null)
   const trackRef = useRef(null)
   const closedMeasureRef = useRef(null)
-  const { currency, setCurrency } = useBuyerDisplayCurrency()
+  const { currencies, toggleCurrency } = useBuyerDisplayCurrency()
   const [open, setOpen] = useState(false)
   const [motion, setMotion] = useState(null)
-  const selected = DISPLAY_CURRENCIES.find((item) => item.code === currency) ?? DISPLAY_CURRENCIES[0]
+  const selectedLabels = DISPLAY_CURRENCIES.filter((item) => currencies.includes(item.code))
+    .map((item) => item.label)
+    .join(' · ') || DISPLAY_CURRENCIES[0].label
 
   useEffect(() => {
     if (!open) return undefined
@@ -25,8 +27,17 @@ export default function BuyerCurrencyTag() {
       setMotion(null)
       setOpen(false)
     }
+    function onPointerDown(event) {
+      if (shellRef.current?.contains(event.target)) return
+      setMotion(null)
+      setOpen(false)
+    }
     document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
+    document.addEventListener('mousedown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('mousedown', onPointerDown)
+    }
   }, [open])
 
   useLayoutEffect(() => {
@@ -113,21 +124,8 @@ export default function BuyerCurrencyTag() {
     setOpen(true)
   }
 
-  function choose(code, event) {
-    if (prefersReducedMotion()) {
-      setCurrency(code)
-      setOpen(false)
-      return
-    }
-    const shell = shellRef.current
-    const option = event.currentTarget.getBoundingClientRect()
-    const shellBox = shell?.getBoundingClientRect()
-    setCurrency(code)
-    setMotion({
-      type: 'close',
-      fromWidth: shell?.offsetWidth ?? 0,
-      shift: shellBox ? Math.max(0, option.left - shellBox.left) : 0,
-    })
+  function choose(code) {
+    toggleCurrency(code)
   }
 
   return (
@@ -140,13 +138,14 @@ export default function BuyerCurrencyTag() {
             className="pointer-events-none invisible absolute inline-flex items-center gap-1.5 rounded-full border border-transparent px-2.5 py-1 text-xs whitespace-nowrap"
           >
             <span className="font-medium">Moneda</span>
-            <span className="font-bold">{selected.label}</span>
+            <span className="font-bold">{selectedLabels}</span>
           </div>
           <div
             ref={shellRef}
             id={listId}
             role="listbox"
-            aria-label="Moneda de visualización"
+            aria-label="Monedas de visualización"
+            aria-multiselectable="true"
             aria-expanded={open}
             className={`inline-flex max-w-full items-center overflow-hidden rounded-full border border-brand-green/20 bg-transparent ${
               open ? 'p-0.5' : ''
@@ -155,7 +154,7 @@ export default function BuyerCurrencyTag() {
             {open ? (
               <div ref={trackRef} className="flex items-center gap-0.5">
                 {DISPLAY_CURRENCIES.map((item) => {
-                  const active = item.code === currency
+                  const active = currencies.includes(item.code)
                   return (
                     <button
                       key={item.code}
@@ -163,7 +162,7 @@ export default function BuyerCurrencyTag() {
                       role="option"
                       aria-selected={active}
                       aria-label={item.fullLabel}
-                      onClick={(event) => choose(item.code, event)}
+                      onClick={() => choose(item.code)}
                       className={`rounded-full px-2.5 py-1 text-xs font-bold whitespace-nowrap transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 ${
                         active
                           ? 'bg-brand-green text-brand-white'
@@ -180,10 +179,10 @@ export default function BuyerCurrencyTag() {
                 type="button"
                 onClick={openTag}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs whitespace-nowrap touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
-                aria-label={`Cambiar moneda, ${selected.fullLabel}`}
+                aria-label={`Cambiar monedas, ${selectedLabels}`}
               >
                 <span className="font-medium text-brand-carmelita/80">Moneda</span>
-                <span className="font-bold text-brand-green">{selected.label}</span>
+                <span className="font-bold text-brand-green">{selectedLabels}</span>
               </button>
             )}
           </div>

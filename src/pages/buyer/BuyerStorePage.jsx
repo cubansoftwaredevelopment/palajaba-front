@@ -132,7 +132,7 @@ export default function BuyerStorePage() {
 
 function BuyerStorePageContent({ location, gestorUsername = null }) {
   const { storeSlug } = useParams();
-  const { currency } = useBuyerDisplayCurrency();
+  const { currencies } = useBuyerDisplayCurrency();
   const [catalog, setCatalog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -150,14 +150,14 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             gestorUsername,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
-            currency,
+            currency: currencies,
             limitPerCategory: PAGE_SIZE,
           })
         : await fetchMarketplaceStoreCatalog({
             storeSlug,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
-            currency,
+            currency: currencies,
             limitPerCategory: PAGE_SIZE,
           });
       setCatalog(data);
@@ -191,7 +191,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       setLoading(false);
     }
   }, [
-    currency,
+    currencies,
     isGestorCatalog,
     gestorUsername,
     location.municipality.id,
@@ -227,7 +227,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             localCategoryId: section.category_id,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
-            currency,
+            currency: currencies,
             limit: PAGE_SIZE,
             offset,
           })
@@ -236,7 +236,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             localCategoryId: section.category_id,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
-            currency,
+            currency: currencies,
             limit: PAGE_SIZE,
             offset,
           });
@@ -246,7 +246,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       };
     },
     [
-      currency,
+      currencies,
       isGestorCatalog,
       gestorUsername,
       location.municipality.id,

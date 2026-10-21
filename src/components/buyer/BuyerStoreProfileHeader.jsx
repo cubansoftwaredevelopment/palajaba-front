@@ -4,6 +4,7 @@ import { buildStoreShareMessage, buildStoreShareUrl } from '../../lib/buyerShare
 import SellerLocationPreview from '../seller/SellerLocationPreview'
 import { resolveMediaUrl } from '../../lib/media'
 import { buildWhatsAppContactUrl } from '../../lib/whatsappOrder'
+import PhotoLightbox from '../PhotoLightbox'
 import BuyerModalPortal from './BuyerModalPortal'
 import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 import BuyerStoreBio from './BuyerStoreBio'
@@ -85,6 +86,7 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
     .filter((link) => link.href)
   const whatsapp = buildWhatsAppContactUrl(store.phone)
   const hasMap = Boolean(catalog.business_location)
+  const [photoOpen, setPhotoOpen] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
   const mapMotionClass = orderModalMotionClass(mapClosing)
@@ -124,13 +126,20 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
 
         <div className="relative z-10 px-4 pb-5 sm:px-5">
           <div className="-mt-10 flex items-center justify-between gap-3 sm:-mt-12">
-            <div className={buyerStorePageAvatar}>
-              {photoSrc ? (
+            {photoSrc ? (
+              <button
+                type="button"
+                onClick={() => setPhotoOpen(true)}
+                className={`${buyerStorePageAvatar} cursor-zoom-in touch-manipulation`}
+                aria-label="Ver foto de perfil"
+              >
                 <img src={photoSrc} alt="" className="h-full w-full object-cover" />
-              ) : (
+              </button>
+            ) : (
+              <div className={buyerStorePageAvatar}>
                 <span>{initials}</span>
-              )}
-            </div>
+              </div>
+            )}
             {canShare || whatsapp || hasMap ? (
               <div className="mb-1 flex shrink-0 items-center gap-2">
                 {whatsapp ? (
@@ -235,6 +244,15 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
             </div>
           </div>
         </BuyerModalPortal>
+      ) : null}
+      {photoOpen && photoSrc ? (
+        <PhotoLightbox
+          images={[{ id: 'profile', image_url: store.profile_photo_url }]}
+          index={0}
+          onIndex={() => {}}
+          onClose={() => setPhotoOpen(false)}
+          label="Foto de perfil"
+        />
       ) : null}
       {shareOpen && canShare ? (
         <BuyerShareSheet

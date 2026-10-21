@@ -39,7 +39,7 @@ export default function BuyerBusinessesPage() {
 
 function BuyerBusinessesPageContent() {
   const location = getBuyerLocation()
-  const { currency } = useBuyerDisplayCurrency()
+  const { currencies } = useBuyerDisplayCurrency()
   const sentinelRef = useRef(null)
   const loadingMoreRef = useRef(false)
 
@@ -98,7 +98,7 @@ function BuyerBusinessesPageContent() {
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
           additionalMunicipalityIds,
-          currency,
+          currency: currencies,
           limit: PAGE_SIZE,
           offset,
         })
@@ -132,7 +132,7 @@ function BuyerBusinessesPageContent() {
         }
       }
     },
-    [additionalMunicipalityIds, currency, location.municipality.id, location.province.id],
+    [additionalMunicipalityIds, currencies, location.municipality.id, location.province.id],
   )
 
   useEffect(() => {
@@ -149,7 +149,7 @@ function BuyerBusinessesPageContent() {
       provinceId: location.province.id,
       municipalityId: location.municipality.id,
       additionalMunicipalityIds,
-      currency,
+      currency: currencies,
       limitPerCategory: 1,
       limit: 50,
       offset: 0,
@@ -172,7 +172,7 @@ function BuyerBusinessesPageContent() {
     return () => {
       cancelled = true
     }
-  }, [additionalMunicipalityIds, currency, location.municipality.id, location.province.id])
+  }, [additionalMunicipalityIds, currencies, location.municipality.id, location.province.id])
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -206,7 +206,7 @@ function BuyerBusinessesPageContent() {
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
           additionalMunicipalityIds,
-          currency,
+          currency: currencies,
           query: debouncedQuery,
           categoryId: searchCategoryId || undefined,
           limit: PAGE_SIZE,
@@ -239,7 +239,7 @@ function BuyerBusinessesPageContent() {
     },
     [
       additionalMunicipalityIds,
-      currency,
+      currencies,
       debouncedQuery,
       location.municipality.id,
       location.province.id,

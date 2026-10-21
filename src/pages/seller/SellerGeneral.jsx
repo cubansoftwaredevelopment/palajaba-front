@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 
+import PhotoLightbox from '../../components/PhotoLightbox'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import SellerProductsSoldSection from '../../components/seller/SellerProductsSoldSection'
 import SellerRevenueSection from '../../components/seller/SellerRevenueSection'
@@ -45,6 +46,7 @@ export default function SellerGeneral() {
   const [topProducts, setTopProducts] = useState(null)
   const [topProductsLoading, setTopProductsLoading] = useState(true)
   const [topProductsError, setTopProductsError] = useState('')
+  const [photoOpen, setPhotoOpen] = useState(false)
 
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
@@ -217,11 +219,14 @@ export default function SellerGeneral() {
       <SellerSection label="Tu negocio">
         <div className="flex items-center gap-3">
           {photoSrc ? (
-            <img
-              src={photoSrc}
-              alt=""
-              className="h-14 w-14 shrink-0 rounded-full border-2 border-brand-green/12 object-cover shadow-[0_2px_8px_rgba(89,128,44,0.12)]"
-            />
+            <button
+              type="button"
+              onClick={() => setPhotoOpen(true)}
+              className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-brand-green/12 shadow-[0_2px_8px_rgba(89,128,44,0.12)] touch-manipulation"
+              aria-label="Ver foto de perfil"
+            >
+              <img src={photoSrc} alt="" className="h-full w-full object-cover" />
+            </button>
           ) : (
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand-yellow/15 text-[0.6rem] text-brand-carmelita">
               Sin foto
@@ -292,6 +297,16 @@ export default function SellerGeneral() {
             chart={productsSoldChart}
           />
         </>
+      ) : null}
+
+      {photoOpen && seller.profile_photo_url ? (
+        <PhotoLightbox
+          images={[{ id: 'profile', image_url: seller.profile_photo_url }]}
+          index={0}
+          onIndex={() => {}}
+          onClose={() => setPhotoOpen(false)}
+          label="Foto de perfil"
+        />
       ) : null}
     </section>
   )

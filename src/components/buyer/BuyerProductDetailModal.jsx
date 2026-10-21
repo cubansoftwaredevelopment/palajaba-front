@@ -7,7 +7,7 @@ import { useDisplayedLocation } from '../../context/BuyerDisplayedLocationContex
 import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerShare'
 import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
 
-import { resolveDisplayPrice } from '../../lib/displayPrice'
+import { resolveDisplayPrices } from '../../lib/displayPrice'
 
 import { formatPrice } from '../../lib/money'
 
@@ -165,11 +165,12 @@ export default function BuyerProductDetailModal({
 }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
 
-  const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
+  const { currencies: displayCurrencies, cupPerUnit } = useBuyerDisplayCurrency()
   const location = useDisplayedLocation()
   const [shareOpen, setShareOpen] = useState(false)
 
-  const displayPrice = resolveDisplayPrice(product, displayCurrency, cupPerUnit)
+  const displayPrices = resolveDisplayPrices(product, displayCurrencies, cupPerUnit)
+  const convertedFromBase = displayPrices.some((price) => price.converted)
 
   const [descriptionExpanded, setDescriptionExpanded] = useState(false)
 
@@ -328,9 +329,15 @@ export default function BuyerProductDetailModal({
 
             <div className="px-5 pt-4">
 
-              <p className={buyerProductDetailPrice}>{displayPrice.label}</p>
+              <div className="flex flex-col gap-1">
+                {displayPrices.map((price) => (
+                  <p key={price.currency} className={buyerProductDetailPrice}>
+                    {price.label}
+                  </p>
+                ))}
+              </div>
 
-              {displayPrice.converted ? (
+              {convertedFromBase ? (
 
                 <p className="mt-1 text-xs font-medium text-brand-carmelita/75">
 

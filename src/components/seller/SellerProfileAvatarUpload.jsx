@@ -23,6 +23,7 @@ export default function SellerProfileAvatarUpload({
   photoUrl,
   uploading,
   onSelectClick,
+  onViewClick,
   size = 'compact',
   storeName,
 }) {
@@ -34,9 +35,9 @@ export default function SellerProfileAvatarUpload({
     <button
       type="button"
       disabled={uploading}
-      onClick={onSelectClick}
+      onClick={previewSrc && onViewClick ? onViewClick : onSelectClick}
       className={`group relative shrink-0 overflow-hidden rounded-full bg-brand-yellow/12 ${config.wrap} ${config.ring} ${sellerFocusRing}`}
-      aria-label={previewSrc ? 'Cambiar foto de perfil' : 'Subir foto de perfil'}
+      aria-label={previewSrc ? (onViewClick ? 'Ver foto de perfil' : 'Cambiar foto de perfil') : 'Subir foto de perfil'}
     >
       {previewSrc ? (
         <img src={previewSrc} alt="" className="h-full w-full object-cover" />
