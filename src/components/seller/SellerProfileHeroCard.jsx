@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { BILLING_LABELS } from '../../constants/admin'
 import { getPlanTier } from '../../constants/plan'
 import { getProfileHubSubtitle } from '../../lib/sellerProfileHub'
 import { sellerFocusRing } from './sellerStyles'
+import PhotoLightbox from '../PhotoLightbox'
 import SellerProfileAvatarUpload from './SellerProfileAvatarUpload'
 
 function EditPencilIcon() {
@@ -31,6 +33,7 @@ export default function SellerProfileHeroCard({
   const tier = getPlanTier(profile?.plan_tier)
   const subtitle = getProfileHubSubtitle(profile)
   const handleEdit = onEditClick ?? onPhotoClick
+  const [photoOpen, setPhotoOpen] = useState(false)
 
   return (
     <div className="relative z-10 rounded-2xl border border-brand-green/10 bg-brand-white p-4 shadow-[0_8px_28px_rgba(89,128,44,0.12)] sm:p-5">
@@ -39,6 +42,7 @@ export default function SellerProfileHeroCard({
           photoUrl={photoUrl}
           uploading={photoUploading}
           onSelectClick={onPhotoClick}
+          onViewClick={photoUrl ? () => setPhotoOpen(true) : undefined}
           size="account"
           storeName={profile.store_name}
         />
@@ -70,6 +74,15 @@ export default function SellerProfileHeroCard({
           Subiendo foto…
         </p>
       )}
+      {photoOpen && photoUrl ? (
+        <PhotoLightbox
+          images={[{ id: 'profile', image_url: photoUrl }]}
+          index={0}
+          onIndex={() => {}}
+          onClose={() => setPhotoOpen(false)}
+          label="Foto de perfil"
+        />
+      ) : null}
     </div>
   )
 }

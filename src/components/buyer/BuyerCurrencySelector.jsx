@@ -7,11 +7,13 @@ export default function BuyerCurrencySelector({ panelZIndex = 60 }) {
   const listId = useId()
   const rootRef = useRef(null)
   const triggerRef = useRef(null)
-  const { currency, setCurrency, ratesMeta } = useBuyerDisplayCurrency()
+  const { currencies, toggleCurrency, ratesMeta } = useBuyerDisplayCurrency()
   const [open, setOpen] = useState(false)
   const [panelStyle, setPanelStyle] = useState(null)
 
-  const selected = DISPLAY_CURRENCIES.find((item) => item.code === currency) ?? DISPLAY_CURRENCIES[0]
+  const selectedLabels = DISPLAY_CURRENCIES.filter((item) => currencies.includes(item.code))
+    .map((item) => item.label)
+    .join(' · ') || DISPLAY_CURRENCIES[0].label
 
   useEffect(() => {
     if (!open) return undefined
@@ -59,11 +61,6 @@ export default function BuyerCurrencySelector({ panelZIndex = 60 }) {
     }
   }, [open])
 
-  function handleSelect(code) {
-    setCurrency(code)
-    setOpen(false)
-  }
-
   return (
     <div ref={rootRef} className="relative shrink-0">
       <button
@@ -74,9 +71,9 @@ export default function BuyerCurrencySelector({ panelZIndex = 60 }) {
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={listId}
-        aria-label={`Moneda de visualización: ${selected.fullLabel}`}
+        aria-label={`Monedas de visualización: ${selectedLabels}`}
       >
-        <span className="font-display text-sm font-bold">{selected.label}</span>
+        <span className="font-display text-sm font-bold">{selectedLabels}</span>
         <svg
           width="14"
           height="14"
@@ -97,17 +94,18 @@ export default function BuyerCurrencySelector({ panelZIndex = 60 }) {
         <ul
           id={listId}
           role="listbox"
-          aria-label="Moneda de visualización"
+          aria-label="Monedas de visualización"
+          aria-multiselectable="true"
           className={buyerCurrencyPanel}
           style={panelStyle}
         >
           {DISPLAY_CURRENCIES.map((item) => {
-            const active = item.code === currency
+            const active = currencies.includes(item.code)
             return (
               <li key={item.code} role="option" aria-selected={active}>
                 <button
                   type="button"
-                  onClick={() => handleSelect(item.code)}
+                  onClick={() => toggleCurrency(item.code)}
                   className={buyerCurrencyOption(active)}
                 >
                   <span className="font-display font-bold">{item.label}</span>

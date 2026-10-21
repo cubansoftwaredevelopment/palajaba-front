@@ -879,7 +879,10 @@ function appendAdditionalMunicipalities(params, additionalMunicipalityIds) {
 }
 
 function appendDisplayCurrency(params, currency) {
-  if (currency) params.set("currency", currency);
+  const codes = Array.isArray(currency) ? currency : currency ? [currency] : [];
+  for (const code of codes) {
+    if (code) params.append("currency", code);
+  }
 }
 
 export function fetchMarketplaceBanners(provinceId = null) {

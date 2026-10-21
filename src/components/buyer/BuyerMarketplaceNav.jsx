@@ -179,7 +179,7 @@ export default function BuyerMarketplaceNav({
 }) {
   const route = useLocation()
   const location = getBuyerLocation()
-  const { currency } = useBuyerDisplayCurrency()
+  const { currencies } = useBuyerDisplayCurrency()
   const provinceId = location?.province?.id ?? ''
   const municipalityId = location?.municipality?.id ?? ''
   const isCatalog = catalogCategories !== undefined
@@ -241,7 +241,7 @@ export default function BuyerMarketplaceNav({
       provinceId,
       municipalityId,
       additionalMunicipalityIds: getAdditionalMunicipalities(provinceId),
-      currency,
+      currency: currencies,
       limitPerCategory: 1,
       limit: 50,
       offset: 0,
@@ -262,7 +262,7 @@ export default function BuyerMarketplaceNav({
     return () => {
       cancelled = true
     }
-  }, [categoryOpen, currency, isCatalog, municipalityId, provinceId])
+  }, [categoryOpen, currencies, isCatalog, municipalityId, provinceId])
 
   useEffect(() => {
     function onKeyDown(event) {

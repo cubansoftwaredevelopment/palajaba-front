@@ -60,7 +60,7 @@ export default function SellerCatalogPreview() {
 
 function SellerCatalogPreviewContent() {
   const { profile, refreshProfile } = useOutletContext()
-  const { currency } = useBuyerDisplayCurrency()
+  const { currencies } = useBuyerDisplayCurrency()
   const storeSlug = resolveStoreSlug(profile)
   const previewLocation = useMemo(() => {
     const area = profile?.business_area
@@ -99,7 +99,7 @@ function SellerCatalogPreviewContent() {
         storeSlug,
         provinceId: previewLocation.provinceId,
         municipalityId: previewLocation.municipalityId,
-        currency,
+        currency: currencies,
         limitPerCategory: PAGE_SIZE,
       })
       setCatalog(data)
@@ -115,7 +115,7 @@ function SellerCatalogPreviewContent() {
     } finally {
       setLoading(false)
     }
-  }, [currency, previewLocation, storeSlug])
+  }, [currencies, previewLocation, storeSlug])
 
   useEffect(() => {
     loadCatalog()
@@ -128,7 +128,7 @@ function SellerCatalogPreviewContent() {
         localCategoryId: section.category_id,
         provinceId: previewLocation.provinceId,
         municipalityId: previewLocation.municipalityId,
-        currency,
+        currency: currencies,
         limit: PAGE_SIZE,
         offset,
       })
@@ -137,7 +137,7 @@ function SellerCatalogPreviewContent() {
         has_more: data.has_more,
       }
     },
-    [currency, previewLocation, storeSlug],
+    [currencies, previewLocation, storeSlug],
   )
 
   async function handleSelectTheme(nextTheme) {

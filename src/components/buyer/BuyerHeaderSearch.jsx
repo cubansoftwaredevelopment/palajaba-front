@@ -125,7 +125,7 @@ export default function BuyerHeaderSearch({
 }) {
   const navigate = useNavigate();
   const { isInJaba, addProduct, buyProduct } = useBuyerJaba();
-  const { currency } = useBuyerDisplayCurrency();
+  const { currencies } = useBuyerDisplayCurrency();
   const [open, setOpen] = useState(false);
   const [shown, setShown] = useState(false);
   const [query, setQuery] = useState("");
@@ -187,7 +187,7 @@ export default function BuyerHeaderSearch({
         provinceId,
         municipalityId,
         additionalMunicipalityIds,
-        currency,
+        currency: currencies,
         query: text,
         limit: 8,
         offset: 0,
@@ -200,7 +200,7 @@ export default function BuyerHeaderSearch({
             provinceId,
             municipalityId,
             additionalMunicipalityIds,
-            currency,
+            currency: currencies,
             query: text,
             limit: 5,
             offset: 0,
@@ -226,7 +226,7 @@ export default function BuyerHeaderSearch({
     };
   }, [
     additionalMunicipalityKey,
-    currency,
+    currencies,
     gestorUsername,
     municipalityId,
     open,

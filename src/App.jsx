@@ -6,6 +6,7 @@ import SellerLayout from './components/seller/SellerLayout'
 import WelcomeGate from './pages/WelcomeGate'
 import Login from './pages/Login'
 import SellerGeneral from './pages/seller/SellerGeneral'
+import SellerStats from './SellerStatistics/pages/SellerStats'
 import SellerCatalog from './pages/seller/SellerCatalog'
 import SellerCatalogPreview from './pages/seller/SellerCatalogPreview'
 import SellerOrders from './pages/seller/SellerOrders'
@@ -93,6 +94,7 @@ const router = createBrowserRouter([
           { path: 'catalogo/vista-previa', element: <SellerCatalogPreview /> },
           { path: 'gestores', element: <SellerGestores /> },
           { path: 'pedidos', element: <SellerOrders /> },
+          { path: 'estadisticas', element: <SellerStats /> },
           { path: 'perfil', element: <SellerProfile /> },
           { path: 'completar-perfil', element: <SellerCompleteProfile /> },
         ],

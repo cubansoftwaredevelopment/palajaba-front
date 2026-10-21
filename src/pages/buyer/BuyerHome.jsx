@@ -75,7 +75,7 @@ export default function BuyerHome() {
 
 function BuyerHomeContent({ preview = null }) {
   const location = preview ?? getBuyerLocation();
-  const { currency, setCurrency } = useBuyerDisplayCurrency();
+  const { currencies, toggleCurrency } = useBuyerDisplayCurrency();
   const [feed, setFeed] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -139,7 +139,7 @@ function BuyerHomeContent({ preview = null }) {
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
           additionalMunicipalityIds,
-          currency,
+          currency: currencies,
           limitPerCategory: ROW_PAGE_SIZE,
           limit: SECTION_PAGE_SIZE,
           offset,
@@ -179,7 +179,7 @@ function BuyerHomeContent({ preview = null }) {
         }
       }
     },
-    [additionalMunicipalityIds, currency, location.municipality.id, location.province.id],
+    [additionalMunicipalityIds, currencies, location.municipality.id, location.province.id],
   );
 
   useEffect(() => {
@@ -209,7 +209,7 @@ function BuyerHomeContent({ preview = null }) {
           provinceId: location.province.id,
           municipalityId: location.municipality.id,
           additionalMunicipalityIds,
-          currency,
+          currency: currencies,
           query: "",
           globalCategoryId: searchCategoryId || undefined,
           limit: SEARCH_PAGE_SIZE,
@@ -245,33 +245,43 @@ function BuyerHomeContent({ preview = null }) {
     },
     [
       additionalMunicipalityIds,
-      currency,
+      currencies,
       location.municipality.id,
       location.province.id,
       searchCategoryId,
     ],
   );
 
+  const severalMunicipalities = municipalityIds.length > 1;
+  const showSearchGrid = searchActive && !severalMunicipalities;
+
   useEffect(() => {
+    if (!showSearchGrid) {
+      setSearchResults(null);
+      setSearchError(null);
+      setSearchLoading(false);
+      return undefined;
+    }
     runSearch();
-  }, [runSearch]);
+    return undefined;
+  }, [runSearch, showSearchGrid]);
 
   const sections = feed?.sections ?? [];
+  const visibleSections = sections.filter((section) => section.products?.length);
   const hasProducts = (feed?.total_products ?? 0) > 0;
   const hasMoreSections = Boolean(feed?.has_more);
   const searchEmpty =
-    searchActive &&
+    showSearchGrid &&
     !searchLoading &&
     !searchError &&
     Boolean(searchResults) &&
     !searchResults.products?.length;
-  const severalMunicipalities = municipalityIds.length > 1;
   const emptyBecauseOfCurrency = Boolean(assortmentHints?.currencies?.length);
   const emptyZoneLabel = severalMunicipalities
     ? "los municipios elegidos"
     : location.municipality.name;
   const feedEmpty =
-    !searchActive && !loading && !loadError && !hasProducts;
+    !showSearchGrid && !loading && !loadError && !hasProducts;
   const showAssortmentHints = searchEmpty || feedEmpty;
 
   useEffect(() => {
@@ -283,8 +293,8 @@ function BuyerHomeContent({ preview = null }) {
     fetchMarketplaceAvailabilityHints({
       provinceId: location.province.id,
       municipalityIds,
-      currency,
-      globalCategoryId: searchCategoryId || undefined,
+      currency: currencies,
+      globalCategoryId: showSearchGrid ? searchCategoryId || undefined : undefined,
     })
       .then((data) => {
         if (!cancelled) setAssortmentHints(data);
@@ -296,20 +306,21 @@ function BuyerHomeContent({ preview = null }) {
       cancelled = true;
     };
   }, [
-    currency,
+    currencies,
     location.province.id,
     municipalityIds,
+    showSearchGrid,
     searchCategoryId,
     showAssortmentHints,
   ]);
 
   const assortmentNotice = (
-    <BuyerAssortmentHints hints={assortmentHints} onCurrency={setCurrency} />
+    <BuyerAssortmentHints hints={assortmentHints} onCurrency={toggleCurrency} />
   );
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel || !hasMoreSections || loading || loadingMore || searchActive)
+    if (!sentinel || !hasMoreSections || loading || loadingMore || showSearchGrid)
       return undefined;
 
     const observer = new IntersectionObserver(
@@ -328,7 +339,7 @@ function BuyerHomeContent({ preview = null }) {
     loadFeed,
     loading,
     loadingMore,
-    searchActive,
+    showSearchGrid,
     sections.length,
   ]);
 
@@ -356,7 +367,7 @@ function BuyerHomeContent({ preview = null }) {
           />
         {preview ? null : <BuyerSharedEntry location={location} />}
 
-        {searchActive ? (
+        {showSearchGrid ? (
           <BuyerSearchResults
             loading={searchLoading}
             error={searchError}
@@ -379,14 +390,14 @@ function BuyerHomeContent({ preview = null }) {
           />
         ) : null}
 
-        {!searchActive && loading ? (
+        {!showSearchGrid && loading ? (
           <LoadingState
             message="Cargando productos…"
             className="lg:items-start lg:text-left"
           />
         ) : null}
 
-        {!searchActive && !loading && loadError ? (
+        {!showSearchGrid && !loading && loadError ? (
           <StatePanel
             variant="buyer"
             title={loadError.title}
@@ -397,7 +408,7 @@ function BuyerHomeContent({ preview = null }) {
           />
         ) : null}
 
-        {!searchActive && !loading && !loadError && !hasProducts ? (
+        {!showSearchGrid && !loading && !loadError && !hasProducts ? (
           <div className="flex flex-col items-center rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-8 text-center">
             <img
               src={DEAD_MASCOT.src}
@@ -418,11 +429,9 @@ function BuyerHomeContent({ preview = null }) {
           </div>
         ) : null}
 
-        {!searchActive && !loading && !loadError && hasProducts ? (
+        {!showSearchGrid && !loading && !loadError && hasProducts ? (
           <div className={buyerHomeSections}>
-            {sections
-              .filter((section) => section.products?.length)
-              .map((section) => (
+            {visibleSections.map((section) => (
                 <BuyerCategoryProductRow
                   key={section.category_id}
                   section={section}
@@ -431,7 +440,7 @@ function BuyerHomeContent({ preview = null }) {
                       provinceId: location.province.id,
                       municipalityId: location.municipality.id,
                       additionalMunicipalityIds,
-                      currency,
+                      currency: currencies,
                       globalCategoryId: section.category_id,
                       limit: ROW_PAGE_SIZE,
                       offset,
