@@ -52,7 +52,7 @@ export default function AuthShell({
         </header>
       ) : null}
 
-      <div className="auth-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
+      <div className="page-scroll auth-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
         <div
           className={`mx-auto flex w-full flex-col px-5 pb-[max(2rem,var(--safe-bottom))] sm:px-6 lg:px-10 lg:pb-10 ${
             hideHeader

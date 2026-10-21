@@ -10,7 +10,7 @@ export default function GestorShell({
   children,
 }) {
   return (
-    <main className="relative flex min-h-dvh flex-col bg-brand-white">
+    <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
       <div
         className="pointer-events-none absolute -right-16 top-0 h-56 w-56 rounded-full bg-brand-yellow/20 blur-3xl"
         aria-hidden="true"
@@ -57,8 +57,10 @@ export default function GestorShell({
         </div>
       </header>
 
-      <div className="relative z-10 mx-auto w-full max-w-lg flex-1 px-4 pt-5 pb-[max(1.25rem,var(--safe-bottom))] sm:px-5 sm:pt-6 sm:pb-[max(1.5rem,var(--safe-bottom))]">
-        {children}
+      <div className="page-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
+        <div className="mx-auto w-full max-w-lg px-4 pt-5 pb-[max(1.25rem,var(--safe-bottom))] sm:px-5 sm:pt-6 sm:pb-[max(1.5rem,var(--safe-bottom))]">
+          {children}
+        </div>
       </div>
     </main>
   )

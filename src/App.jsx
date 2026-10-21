@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
+import ScrollToTopButton from './components/ScrollToTopButton'
 import AdminAuthenticatedLayout from './components/admin/AdminAuthenticatedLayout'
 import RouteError from './components/RouteError'
 import SellerRoute from './components/SellerRoute'
@@ -50,10 +51,19 @@ if (typeof window !== 'undefined' && new URLSearchParams(window.location.search)
   document.documentElement.classList.add('buyer-preview-static')
 }
 
+function RootLayout() {
+  return (
+    <>
+      <Outlet />
+      <ScrollToTopButton />
+    </>
+  )
+}
+
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Outlet />,
+    element: <RootLayout />,
     errorElement: <RouteError />,
     children: [
       { index: true, element: <WelcomeGate /> },
