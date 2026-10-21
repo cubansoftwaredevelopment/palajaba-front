@@ -5,8 +5,8 @@ import { sellerFocusRing } from './sellerStyles'
 export const SELLER_NAV_ICONS = {
   general: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-      <path d="M3 3v18h18" />
-      <path d="M7 16V9M12 16V5M17 16v-3" />
+      <path d="M3 10.5 12 3l9 7.5" />
+      <path d="M5 10v10h14V10" />
     </svg>
   ),
   catalogo: (
@@ -25,6 +25,12 @@ export const SELLER_NAV_ICONS = {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
       <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
       <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
+    </svg>
+  ),
+  estadisticas: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+      <path d="M3 3v18h18" />
+      <path d="M7 16V9M12 16V5M17 16v-3" />
     </svg>
   ),
   perfil: (
