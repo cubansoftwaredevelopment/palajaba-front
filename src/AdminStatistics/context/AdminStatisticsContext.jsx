@@ -209,7 +209,7 @@ export function AdminStatisticsProvider({ children }) {
       devicesError,
       pulling,
       periodLabel: periodLabel(stats),
-      multiDay: isMultiDayRange(range, deviceStats?.points?.length ?? 0),
+      multiDay: granularity !== 'daily' || isMultiDayRange(range, deviceStats?.points?.length ?? 0),
     }),
     [
       granularity,

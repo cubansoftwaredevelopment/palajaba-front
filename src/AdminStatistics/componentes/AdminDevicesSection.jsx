@@ -28,12 +28,20 @@ function formatMapDay(day) {
   return `${date} de ${MONTHS[month - 1]} de ${year}`
 }
 
+function mapHeading(data, multiDay) {
+  if (multiDay) {
+    return data?.live
+      ? 'Ubicaciones del periodo, con dispositivos en vivo'
+      : 'Ubicaciones del periodo'
+  }
+  if (data?.live) return 'Ubicaciones del día, con dispositivos en vivo'
+  return `Ubicaciones del ${formatMapDay(data?.map_day)}`
+}
+
 export default function AdminDevicesSection({ data, loading, error, multiDay }) {
   const points = data?.points ?? []
   const hasData = points.some((point) => Number(point.close) > 0 || Number(point.count) > 0)
-  const mapTitle = data?.live
-    ? 'Posición en vivo'
-    : `Última ubicación del ${formatMapDay(data?.map_day)}`
+  const mapTitle = mapHeading(data, multiDay)
   const activeOnly = Math.max(0, (data?.active_now ?? 0) - (data?.signed_in_now ?? 0))
 
   return (
@@ -95,9 +103,9 @@ export default function AdminDevicesSection({ data, loading, error, multiDay }) 
 
           <div className="mt-4">
             <h4 className="text-sm font-medium text-zinc-50">{mapTitle}</h4>
-            {!data.live && multiDay ? (
+            {multiDay ? (
               <p className={`mt-1 text-xs ${adminSubtle}`}>
-                El rango cubre varios días. El mapa usa el último día.
+                El mapa muestra cada dispositivo visto entre las fechas. Si el rango incluye hoy, también los que están en vivo.
               </p>
             ) : null}
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-zinc-400">
@@ -130,7 +138,7 @@ export default function AdminDevicesSection({ data, loading, error, multiDay }) 
             <div className="mt-3">
               <AdminDeviceMap
                 markers={data.markers ?? []}
-                frameKey={data.live ? 'live' : data.map_day || 'past'}
+                frameKey={`${data.map_day || 'range'}:${data.live ? 'live' : 'past'}:${(data.markers ?? []).length}`}
               />
             </div>
           </div>
