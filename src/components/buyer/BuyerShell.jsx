@@ -75,7 +75,7 @@ export default function BuyerShell({
 
       {showCurrencyTag ? <BuyerCurrencyTag /> : null}
 
-      <div className="buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
+      <div className="page-scroll buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
         <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${flushBottom ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
           {children}
         </div>

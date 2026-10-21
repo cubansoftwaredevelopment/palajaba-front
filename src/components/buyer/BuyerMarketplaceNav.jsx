@@ -11,6 +11,7 @@ import { isSellerAuthenticated } from '../../lib/sellerAuth'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { useDismissibleModal } from './useOrderModalPresence'
+import { setOptionsFabPresent, setOptionsFabVisible } from '../../lib/optionsFabVisibility'
 
 export const MARKETPLACE_CATEGORY_EVENT = 'pala-jaba-marketplace-category'
 
@@ -206,6 +207,15 @@ export default function BuyerMarketplaceNav({
     setCategoriesLoading(catalogCategoriesLoading)
     return undefined
   }, [catalogCategories, catalogCategoriesLoading, isCatalog])
+
+  useEffect(() => {
+    setOptionsFabPresent(true)
+    return () => setOptionsFabPresent(false)
+  }, [])
+
+  useEffect(() => {
+    setOptionsFabVisible(fabVisible)
+  }, [fabVisible])
 
   useEffect(() => {
     const scroller = document.querySelector('.buyer-scroll')

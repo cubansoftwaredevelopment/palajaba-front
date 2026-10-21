@@ -20,7 +20,7 @@ export const sellerContent = 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidd
 
 /** Contenedor de scroll (mismo patrón que buyer-scroll) */
 export const sellerScrollArea =
-  'seller-scroll relative z-0 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-y-contain [touch-action:pan-y]'
+  'page-scroll seller-scroll relative z-0 min-h-0 flex-1 basis-0 overflow-y-auto overscroll-y-contain [touch-action:pan-y]'
 
 export const sellerMain =
   'mx-auto w-full max-w-md px-4 pb-28 pt-4 sm:px-5 sm:pb-8 lg:mx-0 lg:max-w-none lg:px-8 lg:py-8 lg:pb-8'
@@ -59,7 +59,7 @@ export const sellerSubtitleOnDark =
 
 /** Contenido scrolleable del catálogo (el verde lo pone sellerMainCatalog) */
 export const sellerCatalogSection =
-  'seller-catalog-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain touch-pan-y px-4 pt-4 pb-[calc(4.75rem+var(--safe-bottom))] sm:px-5 lg:overflow-y-auto lg:px-8 lg:pb-8 lg:pt-8'
+  'page-scroll seller-catalog-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain touch-pan-y px-4 pt-4 pb-[calc(4.75rem+var(--safe-bottom))] sm:px-5 lg:overflow-y-auto lg:px-8 lg:pb-8 lg:pt-8'
 
 export const sellerSection =
   'rounded-2xl border border-brand-green/12 bg-brand-white p-3.5 shadow-[0_2px_12px_rgba(89,128,44,0.06)] sm:p-4'
