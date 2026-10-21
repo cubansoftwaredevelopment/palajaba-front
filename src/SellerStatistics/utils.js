@@ -2,6 +2,7 @@ export const DATE_RANGE_PERIODS = [
   { id: 'daily', label: 'Diario' },
   { id: 'weekly', label: 'Semanal' },
   { id: 'monthly', label: 'Mensual' },
+  { id: 'custom', label: 'Personalizado' },
 ]
 
 export function startOfToday() {
@@ -29,6 +30,15 @@ export function rangeForPeriod(period) {
     return { from: new Date(to.getFullYear(), to.getMonth(), 1), to }
   }
   return { from: new Date(to), to }
+}
+
+export function granularityForRange(period, range) {
+  if (period === 'daily' || period === 'weekly' || period === 'monthly') return period
+  if (!range?.from || !range?.to) return 'daily'
+  const days = Math.round((range.to - range.from) / 86400000) + 1
+  if (days <= 14) return 'daily'
+  if (days <= 90) return 'weekly'
+  return 'monthly'
 }
 
 export function formatRangeLabel(range) {

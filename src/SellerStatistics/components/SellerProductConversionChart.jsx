@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import {
   CartesianGrid,
   ResponsiveContainer,
@@ -12,13 +13,27 @@ import {
 import { formatCount, formatPercent } from '../utils'
 import SellerChartCard from './SellerChartCard'
 
+function PointDetails({ point }) {
+  if (!point) return null
+  return (
+    <div className="rounded-xl border border-brand-green/12 bg-brand-white px-3 py-2 shadow-[0_8px_24px_rgba(89,128,44,0.14)]">
+      <p className="text-sm font-semibold text-brand-green">{point.name}</p>
+      <p className="mt-1 text-xs text-brand-carmelita/85">
+        {formatCount(point.views)} vistas · {formatCount(point.sales)} compras · {formatPercent(point.rate)}
+      </p>
+    </div>
+  )
+}
+
 export default function SellerProductConversionChart({ loading, error, data }) {
+  const [selected, setSelected] = useState(null)
   const points =
     data?.items?.map((item) => ({
       name: item.name,
       views: item.views,
       sales: item.purchases,
-      z: Math.max(20, item.views),
+      rate: item.conversion_rate,
+      z: Math.max(48, item.views),
     })) ?? []
 
   return (
@@ -34,9 +49,9 @@ export default function SellerProductConversionChart({ loading, error, data }) {
       empty={!points.length}
       emptyMessage="Aún no hay vistas o compras de productos en este periodo."
     >
-      <div className="h-64 w-full min-w-0 sm:h-72">
+      <div className="h-64 w-full min-w-0 overflow-visible sm:h-72 [&_.recharts-wrapper]:overflow-visible [&_.recharts-surface]:overflow-visible">
         <ResponsiveContainer width="100%" height="100%">
-          <ScatterChart margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+          <ScatterChart margin={{ top: 16, right: 16, left: 0, bottom: 8 }}>
             <CartesianGrid stroke="#59802c14" />
             <XAxis
               type="number"
@@ -56,25 +71,34 @@ export default function SellerProductConversionChart({ loading, error, data }) {
               tickLine={false}
               width={36}
             />
-            <ZAxis type="number" dataKey="z" range={[40, 160]} />
+            <ZAxis type="number" dataKey="z" range={[56, 180]} />
             <Tooltip
               cursor={{ strokeDasharray: '3 3' }}
+              allowEscapeViewBox={{ x: true, y: true }}
+              offset={16}
+              wrapperStyle={{ zIndex: 40, outline: 'none', pointerEvents: 'none' }}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null
-                const point = payload[0]?.payload
-                return (
-                  <div className="rounded-xl border border-brand-green/12 bg-brand-white px-3 py-2 shadow-[0_8px_24px_rgba(89,128,44,0.14)]">
-                    <p className="text-sm font-semibold text-brand-green">{point?.name}</p>
-                    <p className="mt-1 text-xs text-brand-carmelita/85">
-                      {formatCount(point?.views)} vistas · {formatCount(point?.sales)} compras
-                    </p>
-                  </div>
-                )
+                return <PointDetails point={payload[0]?.payload} />
               }}
             />
-            <Scatter data={points} fill="#59802c" />
+            <Scatter
+              data={points}
+              fill="#59802c"
+              onClick={(item) => {
+                const point = item?.payload ?? item
+                if (point?.name) setSelected(point)
+              }}
+            />
           </ScatterChart>
         </ResponsiveContainer>
+      </div>
+      <div className="mt-3 min-h-[3.5rem]">
+        {selected ? (
+          <PointDetails point={selected} />
+        ) : (
+          <p className="text-xs text-brand-carmelita/75 sm:hidden">Toca una bola para ver el producto.</p>
+        )}
       </div>
     </SellerChartCard>
   )

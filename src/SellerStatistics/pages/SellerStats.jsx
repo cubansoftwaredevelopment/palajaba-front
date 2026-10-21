@@ -26,7 +26,7 @@ import SellerSeriesChart from '../components/SellerSeriesChart'
 import SellerStatsKpis from '../components/SellerStatsKpis'
 import SellerTopSold from '../components/SellerTopSold'
 import SellerViewsByZone from '../components/SellerViewsByZone'
-import { isoDate, rangeForPeriod } from '../utils'
+import { granularityForRange, isoDate, rangeForPeriod } from '../utils'
 
 const EMPTY_BUNDLE = {
   kpis: null,
@@ -50,16 +50,21 @@ export default function SellerStats() {
 
   const windowQuery = useMemo(
     () => ({
-      granularity: period,
+      granularity: granularityForRange(period, range),
       start: isoDate(range.from),
       end: isoDate(range.to),
     }),
     [period, range],
   )
 
-  function handlePeriodChange(nextPeriod) {
+  function handlePeriodChange(nextPeriod, nextRange) {
     setPeriod(nextPeriod)
-    setRange(rangeForPeriod(nextPeriod))
+    if (nextRange) setRange(nextRange)
+  }
+
+  function handleRangeChange(nextRange) {
+    setPeriod('custom')
+    setRange(nextRange)
   }
 
   useEffect(() => {
@@ -138,7 +143,12 @@ export default function SellerStats() {
 
       {hasStatistics ? (
         <>
-          <SellerDateRangeControls period={period} range={range} onPeriodChange={handlePeriodChange} />
+          <SellerDateRangeControls
+            period={period}
+            range={range}
+            onPeriodChange={handlePeriodChange}
+            onRangeChange={handleRangeChange}
+          />
 
           {error ? (
             <p className={sellerAlertError} role="alert">
