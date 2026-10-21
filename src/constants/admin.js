@@ -24,18 +24,31 @@ export const NOTIFICATION_AUDIENCE_OPTIONS = [
   { id: 'premium_yearly', label: 'Premium · Anual' },
   { id: 'standard_monthly', label: 'Básico · Mensual' },
   { id: 'standard_yearly', label: 'Básico · Anual' },
-  { id: 'single', label: 'Un negocio específico' },
 ]
 
 export const NOTIFICATION_AUDIENCE_LABELS = {
   ...Object.fromEntries(NOTIFICATION_AUDIENCE_OPTIONS.map(({ id, label }) => [id, label])),
   premium: 'Plan Premium (mensual o anual)',
   standard: 'Plan Básico (mensual o anual)',
+  mixed: 'Selección múltiple',
+  single: 'Negocios específicos',
 }
 
 export function notificationAudienceDisplay(item) {
+  const selected = (item?.audiences ?? []).filter((id) => id && id !== 'single')
+  if (selected.length > 1) {
+    return selected
+      .map((id) => NOTIFICATION_AUDIENCE_LABELS[id] ?? id)
+      .join(' · ')
+  }
   if (item?.audience === 'single' && item?.target_store_name) {
     return `Tienda: ${item.target_store_name}`
+  }
+  if (item?.audience === 'single' && item?.recipient_count > 1) {
+    return `${item.recipient_count} negocios`
+  }
+  if (selected.length === 1) {
+    return NOTIFICATION_AUDIENCE_LABELS[selected[0]] ?? NOTIFICATION_AUDIENCE_LABELS.all
   }
   return NOTIFICATION_AUDIENCE_LABELS[item?.audience] ?? NOTIFICATION_AUDIENCE_LABELS.all
 }

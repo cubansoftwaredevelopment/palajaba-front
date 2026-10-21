@@ -47,7 +47,7 @@ export default function AdminNotifications({ embedded = false }) {
     const result = await sendAdminNotification(token, payload)
     const targetLabel = notificationAudienceDisplay(result)
     setSuccess(
-      result.audience === 'single'
+      result.audience === 'single' && result.recipient_count === 1
         ? `Notificación enviada a ${result.target_store_name || 'la tienda'}.`
         : `Notificación enviada a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${targetLabel}).`,
     )
@@ -58,7 +58,7 @@ export default function AdminNotifications({ embedded = false }) {
     <div className={embedded ? '' : 'mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 lg:px-8'}>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
-          Envía avisos a todos, por plan/facturación, o a un negocio concreto.
+          Envía avisos a uno o varios grupos (plan y facturación) y a negocios concretos.
         </p>
         <AdminButton type="button" className="sm:w-auto" onClick={() => setShowModal(true)}>
           Nueva notificación

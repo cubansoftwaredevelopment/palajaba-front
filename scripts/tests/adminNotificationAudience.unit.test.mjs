@@ -21,6 +21,16 @@ test('notificationAudienceDisplay usa label de audiencia normal', () => {
   )
 })
 
+test('notificationAudienceDisplay junta varios grupos seleccionados', () => {
+  assert.equal(
+    notificationAudienceDisplay({
+      audience: 'mixed',
+      audiences: ['premium_monthly', 'premium_yearly'],
+    }),
+    'Premium · Mensual · Premium · Anual',
+  )
+})
+
 test('matchesStoreQuery filtra por nombre y teléfono', () => {
   const store = {
     store_name: 'Tienda Pepe',
