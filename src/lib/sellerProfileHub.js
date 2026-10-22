@@ -11,6 +11,7 @@ export const PROFILE_PANEL_IDS = Object.freeze({
   feedback: 'feedback',
   marketplace: 'marketplace',
   advertising: 'advertising',
+  plan: 'plan',
 })
 
 /** Paneles que editan el formulario principal (Guardar cambios). */
@@ -93,14 +94,25 @@ const PANELS = Object.freeze({
     kind: 'panel',
     icon: 'advertising',
   },
+  [PROFILE_PANEL_IDS.plan]: {
+    id: PROFILE_PANEL_IDS.plan,
+    label: 'Mejorar plan',
+    description: 'Pasa a Pro o Premium y desbloquea más funciones',
+    kind: 'panel',
+    icon: 'plan',
+  },
 })
 
 export const PROFILE_MENU_SECTIONS = Object.freeze([
   {
     id: 'marketplace',
     title: '',
-    ariaLabel: 'Marketplace y publicidad',
-    itemIds: [PROFILE_PANEL_IDS.marketplace, PROFILE_PANEL_IDS.advertising],
+    ariaLabel: 'Marketplace, publicidad y plan',
+    itemIds: [
+      PROFILE_PANEL_IDS.marketplace,
+      PROFILE_PANEL_IDS.advertising,
+      PROFILE_PANEL_IDS.plan,
+    ],
   },
   {
     id: 'general',
@@ -161,12 +173,26 @@ export function closeProfilePanel() {
   return null
 }
 
-export function getProfileMenuSections() {
+function planMenuItem(profile) {
+  const panel = PANELS[PROFILE_PANEL_IDS.plan]
+  if (profile?.plan_tier === 'premium') {
+    return {
+      ...panel,
+      label: 'Tu plan',
+      description: 'Ya tienes el plan más completo',
+    }
+  }
+  return panel
+}
+
+export function getProfileMenuSections(profile) {
   return PROFILE_MENU_SECTIONS.map((section) => ({
     id: section.id,
     title: section.title,
     ariaLabel: section.ariaLabel,
-    items: section.itemIds.map((id) => PANELS[id]).filter(Boolean),
+    items: section.itemIds
+      .map((id) => (id === PROFILE_PANEL_IDS.plan ? planMenuItem(profile) : PANELS[id]))
+      .filter(Boolean),
   }))
 }
 

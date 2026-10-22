@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BILLING_LABELS } from '../../constants/admin'
-import { getPlanTier } from '../../constants/plan'
+import { canUpgradePlan, getPlanTier } from '../../constants/plan'
 import { getProfileHubSubtitle } from '../../lib/sellerProfileHub'
 import { sellerFocusRing } from './sellerStyles'
 import PhotoLightbox from '../PhotoLightbox'
@@ -29,11 +29,13 @@ export default function SellerProfileHeroCard({
   photoUploading,
   onPhotoClick,
   onEditClick,
+  onUpgradeClick,
 }) {
   const tier = getPlanTier(profile?.plan_tier)
   const subtitle = getProfileHubSubtitle(profile)
   const handleEdit = onEditClick ?? onPhotoClick
   const [photoOpen, setPhotoOpen] = useState(false)
+  const showUpgrade = canUpgradePlan(profile) && typeof onUpgradeClick === 'function'
 
   return (
     <div className="relative z-10 rounded-2xl border border-brand-green/10 bg-brand-white p-4 shadow-[0_8px_28px_rgba(89,128,44,0.12)] sm:p-5">
@@ -56,6 +58,15 @@ export default function SellerProfileHeroCard({
             Plan {tier.name} ·{' '}
             {BILLING_LABELS[profile?.billing_period] ?? BILLING_LABELS.monthly}
           </p>
+          {showUpgrade ? (
+            <button
+              type="button"
+              onClick={onUpgradeClick}
+              className={`mt-2 inline-flex min-h-8 items-center rounded-full bg-brand-green px-3 py-1 text-[0.7rem] font-semibold text-brand-white touch-manipulation active:scale-[0.98] ${sellerFocusRing}`}
+            >
+              Mejorar plan
+            </button>
+          ) : null}
         </div>
 
         <button

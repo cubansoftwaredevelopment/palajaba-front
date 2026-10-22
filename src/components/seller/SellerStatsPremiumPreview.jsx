@@ -1,5 +1,5 @@
 import UpgradeToPremiumButton from './UpgradeToPremiumButton'
-import { sellerHint, sellerSection, sellerStatCard } from './sellerStyles'
+import { sellerBtnPrimary, sellerHint, sellerSection, sellerStatCard } from './sellerStyles'
 
 const MOCK_STATS = {
   profile_views: 342,
@@ -94,7 +94,7 @@ function MockTopProducts() {
   )
 }
 
-export default function SellerStatsPremiumPreview({ storeName = '' }) {
+export default function SellerStatsPremiumPreview({ storeName = '', onUpgradeClick }) {
   return (
     <section
       className="relative overflow-hidden rounded-3xl border border-brand-green/12 shadow-[0_8px_32px_rgba(89,128,44,0.08)]"
@@ -165,7 +165,13 @@ export default function SellerStatsPremiumPreview({ storeName = '' }) {
               </li>
             </ul>
             <div className="mt-5">
-              <UpgradeToPremiumButton className="w-full" storeName={storeName} />
+              {typeof onUpgradeClick === 'function' ? (
+                <button type="button" onClick={onUpgradeClick} className={`${sellerBtnPrimary} w-full`}>
+                  Mejorar plan
+                </button>
+              ) : (
+                <UpgradeToPremiumButton className="w-full" storeName={storeName} />
+              )}
             </div>
           </div>
         </div>

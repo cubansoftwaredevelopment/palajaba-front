@@ -82,11 +82,13 @@ function PlanPriceDisplay({ price, discountPercent, formatPlanAmount }) {
   )
 }
 
-const planCardShell = (selected) =>
+const planCardShell = (selected, recommended) =>
   `flex h-full min-h-0 w-full flex-col rounded-3xl border p-5 text-left transition-all touch-manipulation sm:p-6 ${
-    selected
-      ? 'border-brand-green bg-brand-white shadow-[0_8px_28px_rgba(89,128,44,0.14)] ring-2 ring-brand-green/20'
-      : 'border-brand-green/15 bg-brand-white/90 active:border-brand-green/30 sm:hover:border-brand-green/30'
+    recommended
+      ? 'border-brand-yellow bg-brand-yellow/[0.08] shadow-[0_8px_28px_rgba(89,128,44,0.14)] ring-2 ring-brand-yellow/40'
+      : selected
+        ? 'border-brand-green bg-brand-white shadow-[0_8px_28px_rgba(89,128,44,0.14)] ring-2 ring-brand-green/20'
+        : 'border-brand-green/15 bg-brand-white/90 active:border-brand-green/30 sm:hover:border-brand-green/30'
   }`
 
 function PlanCard({
@@ -105,12 +107,13 @@ function PlanCard({
     discountPercent && periodSavingsAmount != null
       ? Math.max(0, Math.floor((periodSavingsAmount * (100 - discountPercent)) / 100))
       : periodSavingsAmount
+  const recommended = Boolean(tier.recommended)
 
   return (
     <button
       type="button"
       onClick={() => onSelect(tier.id)}
-      className={planCardShell(selected)}
+      className={planCardShell(selected, recommended)}
       aria-pressed={selected}
     >
       <div className="flex items-start justify-between gap-3">
@@ -124,14 +127,21 @@ function PlanCard({
             formatPlanAmount={formatPlanAmount}
           />
         </div>
-        <span
-          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-            selected ? 'border-brand-green bg-brand-green text-brand-white' : 'border-brand-green/25'
-          }`}
-          aria-hidden="true"
-        >
-          {selected ? <CheckIcon /> : null}
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {recommended ? (
+            <span className="rounded-full bg-brand-yellow px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.08em] text-brand-green">
+              Recomendado
+            </span>
+          ) : null}
+          <span
+            className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+              selected ? 'border-brand-green bg-brand-green text-brand-white' : 'border-brand-green/25'
+            }`}
+            aria-hidden="true"
+          >
+            {selected ? <CheckIcon /> : null}
+          </span>
+        </div>
       </div>
 
       <p className="mt-3 text-sm leading-relaxed text-pretty text-brand-carmelita/90">
@@ -166,7 +176,7 @@ function TrialCard({ selected, onSelect }) {
     <button
       type="button"
       onClick={onSelect}
-      className={planCardShell(selected)}
+      className={planCardShell(selected, false)}
       aria-pressed={selected}
     >
       <div className="flex items-start justify-between gap-3">
@@ -210,7 +220,7 @@ export default function RegisterPlan() {
   const navigate = useNavigate()
   const [billing, setBilling] = useState('monthly')
   const [kind, setKind] = useState('paid')
-  const [planTier, setPlanTier] = useState('standard')
+  const [planTier, setPlanTier] = useState('pro')
   const [discountCodesAvailable, setDiscountCodesAvailable] = useState(false)
   const [appliedDiscount, setAppliedDiscount] = useState(null)
   const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount } = usePlanPricing()

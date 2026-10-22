@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom'
 import CategoryAutocomplete from '../../components/seller/CategoryAutocomplete'
 import LoadingState from '../../components/ui/LoadingState'
 import LocationMapModal from '../../components/seller/LocationMapModal'
@@ -11,6 +11,7 @@ import SellerLocationPreview from '../../components/seller/SellerLocationPreview
 import SellerAdvancedProfileSettings from '../../components/seller/SellerAdvancedProfileSettings'
 import SellerAdvertisingPlans from '../../components/seller/SellerAdvertisingPlans'
 import SellerStoreBanners from '../../components/seller/SellerStoreBanners'
+import SellerUpgradePlan from '../../components/seller/SellerUpgradePlan'
 import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection'
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
 import SellerProfileMenuList from '../../components/seller/SellerProfileMenuList'
@@ -57,6 +58,7 @@ import {
   getProfileMenuSections,
   getProfilePanel,
   isProfileFormPanel,
+  isProfileHubPanel,
   openProfilePanel,
   resolveProfileMenuAction,
 } from '../../lib/sellerProfileHub'
@@ -105,9 +107,10 @@ function BackToHubButton({ onClick }) {
 
 export default function SellerProfile() {
   const navigate = useNavigate()
+  const routeLocation = useLocation()
   const { profile, refreshProfile } = useOutletContext()
   const fileInputRef = useRef(null)
-  const menuSections = useMemo(() => getProfileMenuSections(), [])
+  const menuSections = useMemo(() => getProfileMenuSections(profile), [profile])
 
   const [activePanel, setActivePanel] = useState(null)
   const [categories, setCategories] = useState([])
@@ -131,6 +134,13 @@ export default function SellerProfile() {
   const [categoriesError, setCategoriesError] = useState('')
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    const requested = routeLocation?.state?.panel
+    if (!requested || !isProfileHubPanel(requested)) return
+    setActivePanel(openProfilePanel(null, requested))
+    navigate('.', { replace: true, state: null })
+  }, [routeLocation, navigate])
 
   useEffect(() => {
     let cancelled = false
@@ -473,6 +483,8 @@ export default function SellerProfile() {
         return <SellerFeedbackSection embedded />
       case PROFILE_PANEL_IDS.advertising:
         return <SellerAdvertisingPlans profile={profile} />
+      case PROFILE_PANEL_IDS.plan:
+        return <SellerUpgradePlan profile={profile} />
       case PROFILE_PANEL_IDS.banners:
         return <SellerStoreBanners profile={profile} onUpdated={refreshProfile} />
       default:
@@ -533,6 +545,7 @@ export default function SellerProfile() {
                 photoUrl={photoUrl}
                 photoUploading={photoUploading}
                 onPhotoClick={() => fileInputRef.current?.click()}
+                onUpgradeClick={() => handleMenuSelect(PROFILE_PANEL_IDS.plan)}
               />
 
               <div className="mt-5">

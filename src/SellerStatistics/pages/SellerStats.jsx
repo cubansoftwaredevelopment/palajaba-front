@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import SellerStatsPremiumPreview from '../../components/seller/SellerStatsPremiumPreview'
 import { sellerHasStatistics } from '../../constants/plan'
+import { PROFILE_PANEL_IDS } from '../../lib/sellerProfileHub'
 import { sellerAlertError, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
@@ -41,6 +42,7 @@ const EMPTY_BUNDLE = {
 }
 
 export default function SellerStats() {
+  const navigate = useNavigate()
   const { profile: seller } = useOutletContext()
   const [period, setPeriod] = useState('monthly')
   const [range, setRange] = useState(() => rangeForPeriod('monthly'))
@@ -139,7 +141,14 @@ export default function SellerStats() {
         subtitle="Visitas, conversión, pedidos e ingresos del periodo que elijas."
       />
 
-      {!hasStatistics ? <SellerStatsPremiumPreview storeName={seller.store_name} /> : null}
+      {!hasStatistics ? (
+        <SellerStatsPremiumPreview
+          storeName={seller.store_name}
+          onUpgradeClick={() =>
+            navigate('/tienda/perfil', { state: { panel: PROFILE_PANEL_IDS.plan } })
+          }
+        />
+      ) : null}
 
       {hasStatistics ? (
         <>

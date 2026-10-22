@@ -88,6 +88,12 @@ test('flujo integrado: publicidad abre panel sin Guardar cambios del form', () =
   ])
 })
 
+test('flujo integrado: mejorar plan abre panel sin Guardar cambios del form', () => {
+  const result = simulateProfileHubFlow([PROFILE_PANEL_IDS.plan])
+  assert.equal(result.activePanel, PROFILE_PANEL_IDS.plan)
+  assert.deepEqual(result.opened, [{ panelId: PROFILE_PANEL_IDS.plan, showsSave: false }])
+})
+
 test('flujo integrado: el menú del hub cubre todos los paneles editables', () => {
   const sections = getProfileMenuSections()
   const editable = sections

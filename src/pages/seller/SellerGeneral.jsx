@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 
 import PhotoLightbox from '../../components/PhotoLightbox'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
@@ -11,9 +11,11 @@ import SellerStatsMonthNav from '../../components/seller/SellerStatsMonthNav'
 import SellerStatsPremiumPreview from '../../components/seller/SellerStatsPremiumPreview'
 import SellerSubscriptionAlert from '../../components/seller/SellerSubscriptionAlert'
 import SellerTopProductsSection from '../../components/seller/SellerTopProductsSection'
-import { sellerHasStatistics } from '../../constants/plan'
+import { canUpgradePlan, sellerHasStatistics } from '../../constants/plan'
+import { PROFILE_PANEL_IDS } from '../../lib/sellerProfileHub'
 import {
   sellerAlertError,
+  sellerFocusRing,
   sellerPageWrap,
   sellerSectionGap,
 } from '../../components/seller/sellerStyles'
@@ -29,6 +31,7 @@ function formatMonthLabel(year, month) {
 }
 
 export default function SellerGeneral() {
+  const navigate = useNavigate()
   const { profile: seller } = useOutletContext()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -213,7 +216,12 @@ export default function SellerGeneral() {
       <SellerSubscriptionAlert profile={seller} />
 
       {!hasStatistics ? (
-        <SellerStatsPremiumPreview storeName={seller.store_name} />
+        <SellerStatsPremiumPreview
+          storeName={seller.store_name}
+          onUpgradeClick={() =>
+            navigate('/tienda/perfil', { state: { panel: PROFILE_PANEL_IDS.plan } })
+          }
+        />
       ) : null}
 
       <SellerSection label="Tu negocio">
@@ -243,6 +251,17 @@ export default function SellerGeneral() {
                 {formatDateTime(seller.subscription_ends_at)}
               </p>
             )}
+            {canUpgradePlan(seller) ? (
+              <button
+                type="button"
+                onClick={() =>
+                  navigate('/tienda/perfil', { state: { panel: PROFILE_PANEL_IDS.plan } })
+                }
+                className={`mt-2 inline-flex min-h-8 items-center rounded-full bg-brand-green px-3 py-1 text-[0.7rem] font-semibold text-brand-white touch-manipulation active:scale-[0.98] ${sellerFocusRing}`}
+              >
+                Mejorar plan
+              </button>
+            ) : null}
           </div>
         </div>
       </SellerSection>

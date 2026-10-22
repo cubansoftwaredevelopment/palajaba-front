@@ -8,6 +8,10 @@ export default function UpgradeToPremiumButton({
   className = '',
   storeName = '',
   contactPhone = null,
+  currentPlanName = '',
+  targetPlanName = '',
+  billingLabel = '',
+  label = 'Mejorar plan',
 }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -28,7 +32,13 @@ export default function UpgradeToPremiumButton({
         return
       }
 
-      const opened = openPremiumUpgradeWhatsApp({ storeName, adminPhone: phone })
+      const opened = openPremiumUpgradeWhatsApp({
+        storeName,
+        adminPhone: phone,
+        currentPlanName,
+        targetPlanName,
+        billingLabel,
+      })
       if (!opened) {
         setError('No pudimos abrir WhatsApp. Revisa el número de contacto.')
       }
@@ -47,7 +57,7 @@ export default function UpgradeToPremiumButton({
         disabled={loading}
         className={`${sellerBtnPrimary} min-h-11 px-5 text-sm ${sellerFocusRing} ${className}`}
       >
-        {loading ? 'Abriendo WhatsApp…' : 'Mejorar plan'}
+        {loading ? 'Abriendo WhatsApp…' : label}
       </button>
       {error ? (
         <p className="mt-2 text-xs leading-relaxed text-brand-carmelita/90" role="alert">

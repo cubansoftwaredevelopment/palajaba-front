@@ -38,6 +38,7 @@ export const PLAN_TIERS = {
   standard: {
     id: 'standard',
     name: 'Básico',
+    recommended: false,
     description: 'Todo lo esencial para publicar tu catálogo y recibir pedidos.',
     features: [
       'Catálogos a tu medida',
@@ -50,6 +51,7 @@ export const PLAN_TIERS = {
   pro: {
     id: 'pro',
     name: 'Pro',
+    recommended: true,
     description: 'Estadísticas, banners y más visibilidad para hacer crecer tu tienda.',
     features: [
       'Todo lo del plan Básico',
@@ -64,6 +66,7 @@ export const PLAN_TIERS = {
   premium: {
     id: 'premium',
     name: 'Premium',
+    recommended: false,
     description: 'Máxima visibilidad y personalización total del catálogo.',
     features: [
       'Todo lo del plan Pro',
@@ -85,6 +88,24 @@ export function normalizePlanTier(tier) {
 
 export function getPlanTier(tierId) {
   return PLAN_TIERS[normalizePlanTier(tierId)]
+}
+
+export function isRecommendedPlan(tierId) {
+  return Boolean(getPlanTier(tierId).recommended)
+}
+
+export function upgradeablePlanTiers(tierId) {
+  const index = PLAN_TIER_ORDER.indexOf(normalizePlanTier(tierId))
+  if (index < 0) return []
+  return PLAN_TIER_ORDER.slice(index + 1).map((id) => PLAN_TIERS[id])
+}
+
+export function canUpgradePlan(profileOrTier) {
+  const tier =
+    typeof profileOrTier === 'string' || profileOrTier == null
+      ? profileOrTier
+      : profileOrTier.plan_tier
+  return upgradeablePlanTiers(tier).length > 0
 }
 
 export function normalizePlanPrices(raw) {

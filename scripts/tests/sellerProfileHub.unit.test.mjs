@@ -24,7 +24,9 @@ test('getProfileMenuSections agrupa General y Cuenta sin solapes', () => {
   assert.deepEqual(ids, [
     PROFILE_PANEL_IDS.marketplace,
     PROFILE_PANEL_IDS.advertising,
+    PROFILE_PANEL_IDS.plan,
     PROFILE_PANEL_IDS.identity,
+    PROFILE_PANEL_IDS.banners,
     PROFILE_PANEL_IDS.location,
     PROFILE_PANEL_IDS.categories,
     PROFILE_PANEL_IDS.social,
@@ -69,4 +71,16 @@ test('getProfilePanel y getProfileHubSubtitle exponen textos de UI', () => {
   assert.equal(panel.label, 'Ubicación y entrega')
   assert.equal(getProfileHubSubtitle({ phone: '51234567' }), '51234567')
   assert.equal(getProfileHubSubtitle({}), 'Completa los datos de tu tienda')
+})
+
+test('el ítem de plan cambia de copy cuando ya es Premium', () => {
+  const basic = getProfileMenuSections({ plan_tier: 'standard' })
+    .flatMap((section) => section.items)
+    .find((item) => item.id === PROFILE_PANEL_IDS.plan)
+  const premium = getProfileMenuSections({ plan_tier: 'premium' })
+    .flatMap((section) => section.items)
+    .find((item) => item.id === PROFILE_PANEL_IDS.plan)
+
+  assert.equal(basic.label, 'Mejorar plan')
+  assert.equal(premium.label, 'Tu plan')
 })
