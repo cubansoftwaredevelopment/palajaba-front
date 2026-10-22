@@ -43,6 +43,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [expiredInfo, setExpiredInfo] = useState(null)
+  const notice = typeof location.state?.notice === 'string' ? location.state.notice : ''
 
   useEffect(() => {
     if (isSellerAuthenticated()) {
@@ -114,6 +115,11 @@ export default function Login() {
         />
 
         <AuthCard>
+          {notice ? (
+            <p className="mb-4 rounded-xl border border-brand-yellow/30 bg-brand-yellow/10 px-3.5 py-2.5 text-sm text-brand-green">
+              {notice}
+            </p>
+          ) : null}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
             <MethodTabs
               options={LOGIN_METHODS}
@@ -152,6 +158,15 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
+
+            <p className="-mt-1 text-right text-sm">
+              <Link
+                to="/recuperar"
+                className="font-semibold text-brand-green underline-offset-2 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </p>
 
             {error && (
               <p className={alertErrorClass} role="alert">

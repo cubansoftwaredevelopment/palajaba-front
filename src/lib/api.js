@@ -155,6 +155,34 @@ export async function request(path, options = {}) {
   return response.json();
 }
 
+export function startPasswordReset(payload) {
+  return request("/api/auth/password-reset/start", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function resendPasswordResetOtp(payload) {
+  return request("/api/auth/password-reset/otp/resend", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function confirmPasswordResetOtp(payload) {
+  return request("/api/auth/password-reset/otp/confirm", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function completePasswordReset(payload) {
+  return request("/api/auth/password-reset/complete", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function sellerLogin(payload) {
   const data = await request("/api/auth/login", {
     method: "POST",

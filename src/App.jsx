@@ -6,6 +6,9 @@ import SellerRoute from './components/SellerRoute'
 import SellerLayout from './components/seller/SellerLayout'
 import WelcomeGate from './pages/WelcomeGate'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ForgotPasswordOtp from './pages/ForgotPasswordOtp'
+import ForgotPasswordNew from './pages/ForgotPasswordNew'
 import SellerGeneral from './pages/seller/SellerGeneral'
 import SellerStats from './SellerStatistics/pages/SellerStats'
 import SellerCatalog from './pages/seller/SellerCatalog'
@@ -94,6 +97,9 @@ const router = createBrowserRouter([
         ],
       },
       { path: 'login', element: <Login /> },
+      { path: 'recuperar', element: <ForgotPassword /> },
+      { path: 'recuperar/codigo', element: <ForgotPasswordOtp /> },
+      { path: 'recuperar/nueva', element: <ForgotPasswordNew /> },
       {
         path: 'tienda',
         element: (
