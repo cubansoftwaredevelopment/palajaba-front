@@ -26,21 +26,23 @@ export default function AdminInbox() {
 
   return (
     <div className={adminSection}>
-      <div className="mb-4 grid grid-cols-2 gap-2" role="tablist" aria-label="Mensajes y avisos">
-        {TABS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === item.id}
-            className={tabClass(tab === item.id)}
-            onClick={() => selectTab(item.id)}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-4 grid grid-cols-2 gap-2" role="tablist" aria-label="Mensajes y avisos">
+          {TABS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === item.id}
+              className={tabClass(tab === item.id)}
+              onClick={() => selectTab(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+        {tab === 'avisos' ? <AdminNotifications embedded /> : <AdminFeedback embedded />}
       </div>
-      {tab === 'avisos' ? <AdminNotifications embedded /> : <AdminFeedback embedded />}
     </div>
   )
 }
