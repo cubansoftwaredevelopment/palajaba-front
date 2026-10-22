@@ -145,7 +145,7 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
             }))}
           />
           <p className={`mt-2 text-xs ${adminMuted}`}>
-            Puedes marcar varios. Premium mensual y anual juntos cubren a todos los Premium activos.
+            Puedes marcar varios. Un plan mensual y anual juntos cubren a todos los vendedores de ese plan.
           </p>
         </div>
 

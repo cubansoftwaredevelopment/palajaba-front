@@ -7,6 +7,7 @@ import Checkbox from '../../components/ui/Checkbox'
 import LoadingState from '../../components/ui/LoadingState'
 import StatePanel from '../../components/ui/StatePanel'
 import { formatPrice } from '../../lib/money'
+import { getPlanTier } from '../../constants/plan'
 import {
   createSellerGestor,
   deleteSellerGestor,
@@ -171,6 +172,7 @@ export default function SellerGestores() {
   const allSelected = areAllProductsSelected(products, selectedIds)
 
   const planTier = profile?.plan_tier
+  const planName = getPlanTier(planTier).name
   const gestorLimit = maxGestoresForPlan(planTier)
   const atGestorLimit = !canAddGestor(planTier, gestores.length)
   const gestorUsageLabel = formatGestorUsage(planTier, gestores.length)
@@ -182,7 +184,7 @@ export default function SellerGestores() {
       setCreateError(
         gestorLimit == null
           ? 'No pudimos crear el gestor.'
-          : `El plan Básico permite hasta ${gestorLimit} gestores. Pasa a Premium para gestores ilimitados.`,
+          : `El plan ${planName} permite hasta ${gestorLimit} gestores. Pasa a Premium para gestores ilimitados.`,
       )
       return
     }
@@ -404,12 +406,12 @@ export default function SellerGestores() {
           Solo necesitas el usuario. Ellos completan contraseña y teléfono en su primer ingreso.
           {gestorLimit == null
             ? ' Tu plan Premium permite gestores ilimitados.'
-            : ` El plan Básico permite hasta ${gestorLimit}.`}
+            : ` El plan ${planName} permite hasta ${gestorLimit}.`}
         </p>
 
         {atGestorLimit ? (
           <p className={`mt-4 ${sellerAlertError}`} role="status">
-            Alcanzaste el máximo de {gestorLimit} gestores del plan Básico. Pasa a Premium para
+            Alcanzaste el máximo de {gestorLimit} gestores del plan {planName}. Pasa a Premium para
             gestores ilimitados.
           </p>
         ) : null}

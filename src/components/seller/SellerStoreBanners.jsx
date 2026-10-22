@@ -5,6 +5,7 @@ import { validateImageFile, IMAGE_UPLOAD_HINT } from '../../lib/imageUpload'
 import { resolveMediaUrl } from '../../lib/media'
 import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { sellerHasStoreBanners } from '../../constants/plan'
 import BuyerStoreBannerCover, { storeBannerAspectClass } from '../buyer/BuyerStoreBannerCover'
 import { buyerStorePageHeader, buyerStorePageName } from '../buyer/buyerStyles'
 
@@ -74,12 +75,19 @@ export default function SellerStoreBanners({ profile, onUpdated }) {
   }
 
   const activeBanners = banners.filter((banner) => banner.is_active !== false)
+  const canManageBanners = sellerHasStoreBanners(profile)
 
   return (
     <div className="flex flex-col gap-5">
       <p className={sellerHint}>
         Estas imágenes se ven detrás de la foto de tu tienda. Los desactivados no se muestran. Si hay más de uno activo, se van turnando. {IMAGE_UPLOAD_HINT}.
       </p>
+      {canManageBanners ? null : (
+        <p className={sellerAlertError} role="status">
+          Los banners de tienda están disponibles en los planes Pro y Premium. Los que ya tengas
+          se ocultan en el catálogo público hasta que subas de plan.
+        </p>
+      )}
 
       <input
         ref={fileInputRef}
@@ -98,7 +106,7 @@ export default function SellerStoreBanners({ profile, onUpdated }) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              disabled={uploading || !canManageBanners}
               className={`${sellerBtnPrimary} !w-auto px-4`}
             >
               {uploading ? 'Subiendo…' : 'Agregar banner'}
@@ -136,7 +144,7 @@ export default function SellerStoreBanners({ profile, onUpdated }) {
                         <button
                           type="button"
                           onClick={() => handleToggle(banner)}
-                          disabled={togglingId === banner.id}
+                          disabled={togglingId === banner.id || !canManageBanners}
                           className={`${sellerBtnSecondary} !w-auto px-3 text-xs`}
                         >
                           {togglingId === banner.id ? 'Guardando…' : (active ? 'Desactivar' : 'Activar')}

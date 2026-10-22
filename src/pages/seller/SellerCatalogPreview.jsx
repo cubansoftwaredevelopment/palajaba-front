@@ -18,7 +18,8 @@ import {
   fetchMarketplaceStoreCategoryProducts,
   updateCatalogTheme,
 } from '../../lib/api'
-import { normalizeCatalogTheme } from '../../lib/catalogThemes'
+import { DEFAULT_CATALOG_THEME, normalizeCatalogTheme } from '../../lib/catalogThemes'
+import { sellerHasFullStoreCustomization } from '../../constants/plan'
 import { resolveStoreSlug } from '../../lib/storeShare'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { resolveUserFacingError } from '../../lib/userFacingError'
@@ -74,16 +75,24 @@ function SellerCatalogPreviewContent() {
   const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const canCustomizeTheme = sellerHasFullStoreCustomization(profile)
   const [catalogTheme, setCatalogTheme] = useState(
-    () => normalizeCatalogTheme(profile?.catalog_theme ?? catalog?.catalog_theme),
+    () =>
+      canCustomizeTheme
+        ? normalizeCatalogTheme(profile?.catalog_theme ?? catalog?.catalog_theme)
+        : DEFAULT_CATALOG_THEME,
   )
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [savingTheme, setSavingTheme] = useState(false)
   const [themeError, setThemeError] = useState('')
 
   useEffect(() => {
+    if (!canCustomizeTheme) {
+      setCatalogTheme(DEFAULT_CATALOG_THEME)
+      return
+    }
     setCatalogTheme(normalizeCatalogTheme(profile?.catalog_theme ?? catalog?.catalog_theme))
-  }, [profile?.catalog_theme, catalog?.catalog_theme])
+  }, [canCustomizeTheme, profile?.catalog_theme, catalog?.catalog_theme])
 
   const loadCatalog = useCallback(async () => {
     if (!storeSlug || !previewLocation) {
@@ -103,7 +112,11 @@ function SellerCatalogPreviewContent() {
         limitPerCategory: PAGE_SIZE,
       })
       setCatalog(data)
-      setCatalogTheme(normalizeCatalogTheme(data.catalog_theme))
+      setCatalogTheme(
+        canCustomizeTheme
+          ? normalizeCatalogTheme(data.catalog_theme)
+          : DEFAULT_CATALOG_THEME,
+      )
     } catch (err) {
       setLoadError(
         resolveUserFacingError(err, {
@@ -115,7 +128,7 @@ function SellerCatalogPreviewContent() {
     } finally {
       setLoading(false)
     }
-  }, [currencies, previewLocation, storeSlug])
+  }, [canCustomizeTheme, currencies, previewLocation, storeSlug])
 
   useEffect(() => {
     loadCatalog()
@@ -142,6 +155,10 @@ function SellerCatalogPreviewContent() {
 
   async function handleSelectTheme(nextTheme) {
     const normalized = normalizeCatalogTheme(nextTheme)
+    if (!canCustomizeTheme) {
+      setThemeError('La personalización del catálogo está disponible en el plan Premium.')
+      return
+    }
     if (normalized === catalogTheme) {
       setShowThemePicker(false)
       return
@@ -267,6 +284,7 @@ function SellerCatalogPreviewContent() {
         <CatalogThemePickerModal
           selectedTheme={catalogTheme}
           saving={savingTheme}
+          locked={!canCustomizeTheme}
           error={themeError}
           onClose={() => {
             if (!savingTheme) {

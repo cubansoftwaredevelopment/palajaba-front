@@ -10,6 +10,10 @@ export const DEFAULT_PLAN_PRICES = {
     monthly: { amount: 2, currency: PLAN_SOURCE_CURRENCY },
     yearly: { amount: 20, currency: PLAN_SOURCE_CURRENCY },
   },
+  pro: {
+    monthly: { amount: 8, currency: PLAN_SOURCE_CURRENCY },
+    yearly: { amount: 80, currency: PLAN_SOURCE_CURRENCY },
+  },
   premium: {
     monthly: { amount: 4, currency: PLAN_SOURCE_CURRENCY },
     yearly: { amount: 30, currency: PLAN_SOURCE_CURRENCY },
@@ -32,23 +36,40 @@ export const PLAN_TIERS = {
       PLAN_GESTOR_FEATURES.standard,
     ],
   },
-  premium: {
-    id: 'premium',
-    name: 'Premium',
-    description: 'Estadísticas de tu tienda y más visibilidad en el marketplace.',
+  pro: {
+    id: 'pro',
+    name: 'Pro',
+    description: 'Estadísticas, banners y más visibilidad para hacer crecer tu tienda.',
     features: [
       'Todo lo del plan Básico',
       'Estadísticas de tu tienda',
+      PLAN_GESTOR_FEATURES.pro,
+      'Menciones en Instagram',
+      'Banners de tu tienda',
       'Boost en recomendaciones (×2 visibilidad)',
+      'Promociones de tus productos en redes sociales',
+    ],
+  },
+  premium: {
+    id: 'premium',
+    name: 'Premium',
+    description: 'Máxima visibilidad y personalización total del catálogo.',
+    features: [
+      'Todo lo del plan Pro',
       PLAN_GESTOR_FEATURES.premium,
+      'Tema y personalización total del catálogo',
+      'Prioridad en las búsquedas de negocios',
+      'Boost en recomendaciones (×4 visibilidad)',
+      'Soporte VIP',
     ],
   },
 }
 
-export const PLAN_TIER_ORDER = ['standard', 'premium']
+export const PLAN_TIER_ORDER = ['standard', 'pro', 'premium']
 
 export function normalizePlanTier(tier) {
-  return tier === 'premium' ? 'premium' : 'standard'
+  if (tier === 'pro' || tier === 'premium') return tier
+  return 'standard'
 }
 
 export function getPlanTier(tierId) {
@@ -143,17 +164,29 @@ export function formatPlanAmount(amount, currency = PLAN_DISPLAY_CURRENCY) {
 }
 
 export function sellerHasStatistics(profile) {
-  return Boolean(profile?.has_statistics ?? normalizePlanTier(profile?.plan_tier) === 'premium')
+  const tier = normalizePlanTier(profile?.plan_tier)
+  return Boolean(profile?.has_statistics ?? (tier === 'pro' || tier === 'premium'))
 }
 
 export function sellerHasRecommendationBoost(profile) {
+  const tier = normalizePlanTier(profile?.plan_tier)
+  return Boolean(profile?.has_recommendation_boost ?? (tier === 'pro' || tier === 'premium'))
+}
+
+export function sellerHasStoreBanners(profile) {
+  const tier = normalizePlanTier(profile?.plan_tier)
+  return Boolean(profile?.has_store_banners ?? (tier === 'pro' || tier === 'premium'))
+}
+
+export function sellerHasFullStoreCustomization(profile) {
   return Boolean(
-    profile?.has_recommendation_boost ?? normalizePlanTier(profile?.plan_tier) === 'premium',
+    profile?.has_full_store_customization ?? normalizePlanTier(profile?.plan_tier) === 'premium',
   )
 }
 
 export {
   STANDARD_GESTOR_LIMIT,
+  PRO_GESTOR_LIMIT,
   PLAN_GESTOR_FEATURES,
   canAddGestor,
   formatGestorUsage,

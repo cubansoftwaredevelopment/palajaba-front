@@ -8,6 +8,7 @@ export const BILLING_LABELS = {
 
 export const PLAN_TIER_LABELS = {
   standard: 'Básico',
+  pro: 'Pro',
   premium: 'Premium',
 }
 
@@ -22,6 +23,8 @@ export const NOTIFICATION_AUDIENCE_OPTIONS = [
   { id: 'all', label: 'Todos los vendedores activos' },
   { id: 'premium_monthly', label: 'Premium · Mensual' },
   { id: 'premium_yearly', label: 'Premium · Anual' },
+  { id: 'pro_monthly', label: 'Pro · Mensual' },
+  { id: 'pro_yearly', label: 'Pro · Anual' },
   { id: 'standard_monthly', label: 'Básico · Mensual' },
   { id: 'standard_yearly', label: 'Básico · Anual' },
 ]
@@ -29,6 +32,7 @@ export const NOTIFICATION_AUDIENCE_OPTIONS = [
 export const NOTIFICATION_AUDIENCE_LABELS = {
   ...Object.fromEntries(NOTIFICATION_AUDIENCE_OPTIONS.map(({ id, label }) => [id, label])),
   premium: 'Plan Premium (mensual o anual)',
+  pro: 'Plan Pro (mensual o anual)',
   standard: 'Plan Básico (mensual o anual)',
   mixed: 'Selección múltiple',
   single: 'Negocios específicos',

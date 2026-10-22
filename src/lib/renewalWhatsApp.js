@@ -14,7 +14,7 @@ export function buildPremiumUpgradeMessage(storeName) {
   const name = (storeName || 'mi tienda').trim()
   return `Buenas, soy la tienda ${name} de Pa' La Jaba.
 
-Deseo pasar al plan Premium.`
+Deseo pasar a un plan superior (Pro o Premium).`
 }
 
 export function buildRenewalWhatsAppUrl({ storeName, adminPhone }) {

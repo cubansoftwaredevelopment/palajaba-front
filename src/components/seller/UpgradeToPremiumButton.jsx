@@ -47,7 +47,7 @@ export default function UpgradeToPremiumButton({
         disabled={loading}
         className={`${sellerBtnPrimary} min-h-11 px-5 text-sm ${sellerFocusRing} ${className}`}
       >
-        {loading ? 'Abriendo WhatsApp…' : 'Pasar a Premium'}
+        {loading ? 'Abriendo WhatsApp…' : 'Mejorar plan'}
       </button>
       {error ? (
         <p className="mt-2 text-xs leading-relaxed text-brand-carmelita/90" role="alert">

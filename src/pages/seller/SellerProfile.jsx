@@ -390,7 +390,7 @@ export default function SellerProfile() {
   const gestoresFields = (
     <SellerSection
       label="¿Usas gestores de venta?"
-      hint="Si lo activas, podrás crear gestores y aparecerá la sección Gestores en tu panel. El plan Básico permite hasta 3; Premium es ilimitado."
+      hint="Si lo activas, podrás crear gestores y aparecerá la sección Gestores en tu panel. El plan Básico permite 1, Pro hasta 3 y Premium es ilimitado."
     >
       <div className="grid grid-cols-2 gap-2">
         <button

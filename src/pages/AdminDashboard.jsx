@@ -360,6 +360,7 @@ export default function AdminDashboard() {
                       ariaLabel="Filtrar por plan"
                       options={[
                         { value: 'standard', label: 'Básico' },
+                        { value: 'pro', label: 'Pro' },
                         { value: 'premium', label: 'Premium' },
                       ]}
                     />

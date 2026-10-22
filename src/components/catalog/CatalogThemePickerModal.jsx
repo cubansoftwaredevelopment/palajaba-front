@@ -13,6 +13,7 @@ import {
 export default function CatalogThemePickerModal({
   selectedTheme,
   saving = false,
+  locked = false,
   error = '',
   onClose: requestClose,
   onSelectTheme,
@@ -36,7 +37,9 @@ export default function CatalogThemePickerModal({
                 Tema del catálogo
               </h2>
               <p className="mt-1 text-xs leading-relaxed text-brand-carmelita/85">
-                Elige cómo verán tu tienda tus clientes.
+                {locked
+                  ? 'El tema del catálogo está disponible en el plan Premium.'
+                  : 'Elige cómo verán tu tienda tus clientes.'}
               </p>
             </div>
             <button
@@ -60,7 +63,7 @@ export default function CatalogThemePickerModal({
                   <button
                     key={theme.id}
                     type="button"
-                    disabled={saving}
+                    disabled={saving || locked}
                     onClick={() => onSelectTheme(theme.id)}
                     className={`w-full rounded-2xl border px-3 py-3 text-left transition-colors touch-manipulation ${
                       isSelected
@@ -106,7 +109,9 @@ export default function CatalogThemePickerModal({
               <p className="mt-2 text-center text-xs text-brand-carmelita/75">Guardando tema…</p>
             ) : (
               <p className="mt-2 text-center text-xs text-brand-carmelita/75">
-                Toca un tema para aplicarlo de inmediato.
+                {locked
+                  ? 'Pasa a Premium para cambiar el tema de tu catálogo.'
+                  : 'Toca un tema para aplicarlo de inmediato.'}
               </p>
             )}
           </div>

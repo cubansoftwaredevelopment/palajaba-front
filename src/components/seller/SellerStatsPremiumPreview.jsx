@@ -132,7 +132,7 @@ export default function SellerStatsPremiumPreview({ storeName = '' }) {
         <div className="absolute inset-0 flex items-start justify-center px-4 pb-6 pt-8 sm:items-center sm:py-8">
           <div className="w-full max-w-sm rounded-3xl border border-brand-green/18 bg-brand-white/96 p-5 text-center shadow-[0_20px_56px_rgba(89,128,44,0.18)] backdrop-blur-md sm:p-6">
             <span className="inline-flex rounded-full bg-brand-yellow/25 px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.08em] text-brand-green">
-              Plan Premium
+              Planes Pro y Premium
             </span>
             <h3
               id="premium-stats-preview-title"
@@ -141,8 +141,8 @@ export default function SellerStatsPremiumPreview({ storeName = '' }) {
               Tus estadísticas te están esperando
             </h3>
             <p className={`mt-2 ${sellerHint}`}>
-              Visitas, ingresos, pedidos y productos más vendidos. Pásate a Premium para verlo en
-              vivo.
+              Visitas, ingresos, pedidos y productos más vendidos. Pásate a Pro o Premium para
+              verlo en vivo.
             </p>
             <ul className="mt-4 space-y-1.5 text-left text-sm text-brand-carmelita/90">
               <li className="flex gap-2">

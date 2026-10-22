@@ -33,12 +33,20 @@ function simulateCreateUntilLimit(planTier, existingCount = 0) {
   return { count, created, blocked: !canAddGestor(planTier, count) }
 }
 
-test('flujo integrado: Básico crea 3 y bloquea el siguiente', () => {
+test('flujo integrado: Básico crea 1 y bloquea el siguiente', () => {
   const result = simulateCreateUntilLimit('standard')
+  assert.equal(result.created.length, 1)
+  assert.equal(result.count, 1)
+  assert.equal(result.blocked, true)
+  assert.equal(maxGestoresForPlan('standard'), 1)
+})
+
+test('flujo integrado: Pro crea 3 y bloquea el siguiente', () => {
+  const result = simulateCreateUntilLimit('pro')
   assert.equal(result.created.length, 3)
   assert.equal(result.count, 3)
   assert.equal(result.blocked, true)
-  assert.equal(maxGestoresForPlan('standard'), 3)
+  assert.equal(maxGestoresForPlan('pro'), 3)
 })
 
 test('flujo integrado: Premium no se bloquea al crear muchos', () => {
@@ -53,8 +61,10 @@ test('flujo integrado: Premium no se bloquea al crear muchos', () => {
 
 test('flujo integrado: tarjetas de registro usan PLAN_GESTOR_FEATURES', () => {
   assert.match(planSource, /PLAN_GESTOR_FEATURES\.standard/)
+  assert.match(planSource, /PLAN_GESTOR_FEATURES\.pro/)
   assert.match(planSource, /PLAN_GESTOR_FEATURES\.premium/)
-  assert.equal(PLAN_GESTOR_FEATURES.standard, 'Hasta 3 gestores de venta')
+  assert.equal(PLAN_GESTOR_FEATURES.standard, 'Hasta 1 gestor de venta')
+  assert.equal(PLAN_GESTOR_FEATURES.pro, 'Hasta 3 gestores de venta')
   assert.equal(PLAN_GESTOR_FEATURES.premium, 'Gestores de venta ilimitados')
 })
 
