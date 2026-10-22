@@ -17,6 +17,7 @@ const TECHNICAL_PATTERNS = [
   /^gateway timeout$/i,
   /^unauthorized$/i,
   /^forbidden$/i,
+  /^not authenticated$/i,
   /no se pudo subir la imagen a cloudinary/i,
   /cloudinary no devolvi[oó]/i,
   /^error de servidor$/i,
@@ -26,7 +27,32 @@ const TECHNICAL_PATTERNS = [
   /cannot read propert/i,
   /referenceerror/i,
   /typeerror/i,
+  /valueerror/i,
+  /field required/i,
+  /input should be/i,
+  /value is not a valid/i,
+  /string should have at least/i,
+  /token secret/i,
+  /x-api-key/i,
+  /traceback/i,
+  /objectid/i,
+  /mongo/i,
 ]
+
+const ENGLISH_ERROR_HINTS =
+  /\b(failed|unable|cannot|could not|please try|timed? out|unauthorized|forbidden|not found|bad request|too many requests|unexpected|undefined|null|exception|stack|missing|required|invalid json|internal server)\b/i
+
+const SPANISH_COPY_HINTS =
+  /\b(no|tu|tú|el|la|los|las|un|una|para|por|con|que|de|del|intenta|inténtalo|pudimos|ocurrió|sesión|correo|teléfono|tienda|producto|pedido|contraseña|revisa)\b|[áéíóúñü¿¡]/i
+
+function looksLikeCode(message) {
+  const text = message.trim()
+  if (/[{}\[\]]/.test(text)) return true
+  if (/^[A-Za-z]*Error\b/.test(text)) return true
+  if (/\.(jsx|js|py|tsx):\d+/.test(text)) return true
+  if (/https?:\/\//i.test(text) && /error|failed|exception/i.test(text)) return true
+  return false
+}
 
 export function isNetworkError(err) {
   if (!err) return false
@@ -44,7 +70,11 @@ export function isNetworkError(err) {
 
 export function isTechnicalMessage(message) {
   if (!message?.trim()) return true
-  return TECHNICAL_PATTERNS.some((pattern) => pattern.test(message.trim()))
+  const text = message.trim()
+  if (TECHNICAL_PATTERNS.some((pattern) => pattern.test(text))) return true
+  if (looksLikeCode(text)) return true
+  if (ENGLISH_ERROR_HINTS.test(text) && !SPANISH_COPY_HINTS.test(text)) return true
+  return false
 }
 
 export function isSessionError(err) {
@@ -53,7 +83,9 @@ export function isSessionError(err) {
     msg.includes('autenticado') ||
     msg.includes('token inv') ||
     msg.includes('credenciales inv') ||
-    msg.includes('no autorizado')
+    msg.includes('no autorizado') ||
+    msg.includes('not authenticated') ||
+    msg.includes('not authorized')
   )
 }
 

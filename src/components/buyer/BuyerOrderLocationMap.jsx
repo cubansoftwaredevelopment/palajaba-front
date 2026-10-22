@@ -9,6 +9,7 @@ import {
   SELLER_MAP_LOCATION_ZOOM,
   sellerMapMarkerIcon,
 } from '../../lib/sellerMap'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 
 export default function BuyerOrderLocationMap({ initialCoords, onChange, fill = false }) {
   const mapRef = useRef(null)
@@ -97,7 +98,7 @@ export default function BuyerOrderLocationMap({ initialCoords, onChange, fill = 
       map.setView([lat, lng], SELLER_MAP_LOCATION_ZOOM)
       placeMarker(lat, lng)
     } catch (error) {
-      setLocateError(error?.message || 'No se pudo obtener tu ubicación.')
+      setLocateError(getUserFacingMessage(error, 'No se pudo obtener tu ubicación.'))
     } finally {
       setLocating(false)
     }

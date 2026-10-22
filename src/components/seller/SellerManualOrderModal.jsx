@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { searchSellerOrderedProducts } from '../../lib/api'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import { formatPrice } from '../../lib/money'
 import {
   buildManualOrderPayload,
@@ -200,7 +201,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
       await onCreated(payload)
       onClose()
     } catch (err) {
-      setError(err?.message || 'No pudimos registrar el pedido.')
+      setError(getUserFacingMessage(err, 'No pudimos registrar el pedido.'))
     } finally {
       setSubmitting(false)
     }

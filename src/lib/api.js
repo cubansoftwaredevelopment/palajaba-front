@@ -1,4 +1,5 @@
 import { downloadBlob } from "./downloadFile";
+import { getUserFacingMessage } from "./userFacingError";
 
 /** En dev usa rutas relativas → proxy de Vite. En prod usa VITE_API_URL. */
 function getApiBase() {
@@ -10,12 +11,36 @@ export const NETWORK_ERROR_CODE = "network_error";
 
 export class ApiError extends Error {
   constructor(message, { code = null, data = null, status = null } = {}) {
-    super(message);
+    super(
+      getUserFacingMessage(
+        { message, code, status },
+        "Ocurrió un error. Intenta de nuevo.",
+      ),
+    );
     this.name = "ApiError";
     this.code = code;
     this.data = data;
     this.status = status;
   }
+}
+
+function mapValidationMessage(msg) {
+  const text = String(msg || "").trim();
+  if (!text) return "Revisa los datos e inténtalo de nuevo.";
+  if (/field required|field_required|missing/i.test(text)) {
+    return "Falta un dato obligatorio.";
+  }
+  const minChars = text.match(/at least (\d+) characters/i);
+  if (minChars) {
+    return `Este campo debe tener al menos ${minChars[1]} caracteres.`;
+  }
+  if (/valid email|email address/i.test(text)) {
+    return "Ingresa un correo válido.";
+  }
+  if (/input should be|value is not a valid|type_error/i.test(text)) {
+    return "Hay un dato con formato incorrecto.";
+  }
+  return getUserFacingMessage({ message: text }, "Revisa los datos e inténtalo de nuevo.");
 }
 
 export function parseApiErrorDetail(detail) {
@@ -60,9 +85,9 @@ export function parseApiErrorDetail(detail) {
                 return "La contraseña debe tener al menos 6 caracteres.";
               }
             }
-            return field ? `${field}: ${item.msg}` : item.msg;
+            return mapValidationMessage(item.msg);
           }
-          return "Datos inválidos";
+          return "Revisa los datos e inténtalo de nuevo.";
         })
         .join(" "),
       code: null,

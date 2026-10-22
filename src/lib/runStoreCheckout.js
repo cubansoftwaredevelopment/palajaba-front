@@ -5,6 +5,7 @@ import {
 } from './checkoutMessages.js'
 import { toApiDelivery } from './buyerDelivery.js'
 import { isSavedMarketplaceOrder } from './marketplaceOrder.js'
+import { getUserFacingMessage } from './userFacingError.js'
 
 export const CHECKOUT_INVALID_PAYLOAD = 'invalid_payload'
 export const CHECKOUT_BLOCKED_RATES = 'blocked_rates'
@@ -18,8 +19,7 @@ export {
 } from './checkoutMessages.js'
 
 function resolveCheckoutErrorMessage(error) {
-  if (error?.message) return error.message
-  return CHECKOUT_SAVE_FAILED_MESSAGE
+  return getUserFacingMessage(error, CHECKOUT_SAVE_FAILED_MESSAGE)
 }
 
 /**
