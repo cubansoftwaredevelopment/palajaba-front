@@ -180,13 +180,43 @@ export function updateSellerProfile(token, payload) {
   });
 }
 
-export function updateSellerPhone(token, phone) {
-  return request("/api/auth/me/phone", {
-    method: "PATCH",
+export function startSellerPhoneOtp(token, phone) {
+  return request("/api/auth/me/phone/otp/start", {
+    method: "POST",
     headers: {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ phone }),
+  });
+}
+
+export function startSellerEmailOtp(token, email) {
+  return request("/api/auth/me/email/otp/start", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ email }),
+  });
+}
+
+export function resendSellerContactOtp(token, challengeId) {
+  return request("/api/auth/me/contact-otp/resend", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ challenge_id: challengeId }),
+  });
+}
+
+export function confirmSellerContactOtp(token, challengeId, code) {
+  return request("/api/auth/me/contact-otp/confirm", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ challenge_id: challengeId, code }),
   });
 }
 

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AdminButton from '../components/admin/AdminButton'
+import AdminToastStack from '../components/admin/AdminToastStack'
 import SendNotificationModal from '../components/admin/SendNotificationModal'
 import { notificationAudienceDisplay } from '../constants/admin'
-import { adminAlertError, adminAlertSuccess, adminCard, adminMuted, adminSubtle } from '../components/admin/adminStyles'
+import { adminAlertError, adminCard, adminMuted, adminSubtle } from '../components/admin/adminStyles'
 import { fetchAdminNotifications, sendAdminNotification } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
@@ -15,7 +16,7 @@ export default function AdminNotifications({ embedded = false }) {
   const [items, setItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const [toasts, setToasts] = useState([])
   const [showModal, setShowModal] = useState(false)
 
   const loadNotifications = useCallback(async () => {
@@ -41,16 +42,43 @@ export default function AdminNotifications({ embedded = false }) {
     loadNotifications()
   }, [loadNotifications])
 
+  function pushEvents(events) {
+    const stamped = (events ?? []).map((event, index) => ({
+      id: `${Date.now()}-${index}-${event.message}`,
+      type: event.type === 'error' ? 'error' : 'success',
+      message: event.message,
+    }))
+    if (!stamped.length) return
+    setToasts((current) => [...current, ...stamped])
+  }
+
+  function dismissToast(id) {
+    setToasts((current) => current.filter((toast) => toast.id !== id))
+  }
+
   async function handleSend(payload) {
-    setSuccess('')
     const token = getAdminToken()
     const result = await sendAdminNotification(token, payload)
-    const targetLabel = notificationAudienceDisplay(result)
-    setSuccess(
-      result.audience === 'single' && result.recipient_count === 1
-        ? `Aviso y SMS enviados a ${result.target_store_name || 'la tienda'}.`
-        : `Aviso y SMS enviados a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${targetLabel}).`,
-    )
+    if (result.events?.length) {
+      pushEvents(result.events)
+    } else {
+      const targetLabel = notificationAudienceDisplay(result)
+      const avisoLabel =
+        result.audience === 'single' && result.recipient_count === 1
+          ? `Aviso enviado a ${result.target_store_name || 'la tienda'}`
+          : `Aviso enviado a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${targetLabel})`
+      pushEvents([
+        { type: 'success', message: avisoLabel },
+        result.sms_sent
+          ? { type: 'success', message: 'También se envió por SMS.' }
+          : {
+              type: 'error',
+              message: result.sms_error
+                ? `El SMS no se pudo enviar: ${result.sms_error}`
+                : 'El SMS no se pudo enviar.',
+            },
+      ])
+    }
     await loadNotifications()
   }
 
@@ -59,18 +87,12 @@ export default function AdminNotifications({ embedded = false }) {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
           Envía avisos a uno o varios grupos (plan y facturación) y a negocios concretos.
-          Cada aviso también llega por SMS al teléfono de esos negocios.
+          Cada aviso llega al panel del vendedor. Si el SMS está disponible, también se envía al teléfono.
         </p>
         <AdminButton type="button" className="sm:w-auto" onClick={() => setShowModal(true)}>
           Nueva notificación
         </AdminButton>
       </div>
-
-      {success && (
-        <p className={`mb-4 ${adminAlertSuccess}`} role="status">
-          {success}
-        </p>
-      )}
 
       {error && (
         <p className={`mb-4 ${adminAlertError}`} role="alert">
@@ -123,6 +145,7 @@ export default function AdminNotifications({ embedded = false }) {
           onSubmit={handleSend}
         />
       )}
+      <AdminToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

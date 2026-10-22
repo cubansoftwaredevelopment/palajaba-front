@@ -67,7 +67,7 @@ const PANELS = Object.freeze({
   },
   [PROFILE_PANEL_IDS.advanced]: {
     id: PROFILE_PANEL_IDS.advanced,
-    label: 'Nombre y teléfono',
+    label: 'Nombre, teléfono y correo',
     description: 'Datos de acceso a tu cuenta',
     kind: 'panel',
     icon: 'account',
