@@ -8,6 +8,7 @@ import RegisterProgress from '../components/auth/RegisterProgress'
 import Button from '../components/Button'
 import { getPlanTier, normalizePlanTier, formatPlanPriceLabel } from '../constants/plan'
 import { getDiscountedPlanPrice } from '../lib/discountCode'
+import { getRegisterSteps } from '../register/constants'
 import { usePlanPricing } from '../lib/usePlanPricing'
 import {
   PAYMENT_CARD_NUMBER,
@@ -68,7 +69,7 @@ export default function RegisterPayment() {
             }
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={2} />
+          <RegisterProgress currentStep={2} steps={getRegisterSteps('paid')} />
         </div>
 
         <div className={authPaymentGrid}>
@@ -129,7 +130,7 @@ export default function RegisterPayment() {
             <Button
               onClick={() =>
                 navigate('/registro/verificacion', {
-                  state: { billing, planTier, discountCode, discountPercent },
+                  state: { kind: 'paid', billing, planTier, discountCode, discountPercent },
                 })
               }
             >

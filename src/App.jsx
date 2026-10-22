@@ -21,6 +21,7 @@ import SellerCompleteProfile from './pages/SellerCompleteProfile'
 import RegisterEntry from './pages/RegisterEntry'
 import RegisterPayment from './pages/RegisterPayment'
 import RegisterForm from './pages/RegisterForm'
+import RegisterOtp from './pages/RegisterOtp'
 import RegisterSuccess from './pages/RegisterSuccess'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
@@ -115,6 +116,7 @@ const router = createBrowserRouter([
       { path: 'registro/promo/datos', element: <Navigate to="/registro" replace /> },
       { path: 'registro/pago', element: <RegisterPayment /> },
       { path: 'registro/verificacion', element: <RegisterForm /> },
+      { path: 'registro/otp', element: <RegisterOtp /> },
       { path: 'registro/exito', element: <RegisterSuccess /> },
       { path: 'aplicacion', element: <DownloadAppPage /> },
       {

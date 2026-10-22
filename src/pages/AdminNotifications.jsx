@@ -48,8 +48,8 @@ export default function AdminNotifications({ embedded = false }) {
     const targetLabel = notificationAudienceDisplay(result)
     setSuccess(
       result.audience === 'single' && result.recipient_count === 1
-        ? `Notificación enviada a ${result.target_store_name || 'la tienda'}.`
-        : `Notificación enviada a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${targetLabel}).`,
+        ? `Aviso y SMS enviados a ${result.target_store_name || 'la tienda'}.`
+        : `Aviso y SMS enviados a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${targetLabel}).`,
     )
     await loadNotifications()
   }
@@ -59,6 +59,7 @@ export default function AdminNotifications({ embedded = false }) {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
           Envía avisos a uno o varios grupos (plan y facturación) y a negocios concretos.
+          Cada aviso también llega por SMS al teléfono de esos negocios.
         </p>
         <AdminButton type="button" className="sm:w-auto" onClick={() => setShowModal(true)}>
           Nueva notificación

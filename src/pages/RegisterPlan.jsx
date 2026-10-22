@@ -18,6 +18,7 @@ import {
 } from '../constants/plan'
 import { fetchDiscountCodesAvailability } from '../lib/api'
 import { getDiscountedPlanPrice } from '../lib/discountCode'
+import { getRegisterSteps } from '../register/constants'
 import { usePlanPricing } from '../lib/usePlanPricing'
 
 function CheckIcon() {
@@ -162,9 +163,58 @@ function PlanCard({
   )
 }
 
+function TrialCard({ selected, onSelect }) {
+  const tier = PLAN_TIERS.standard
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`w-full rounded-3xl border p-4 text-left transition-all touch-manipulation sm:p-5 ${
+        selected
+          ? 'border-brand-green bg-brand-white shadow-[0_8px_28px_rgba(89,128,44,0.14)] ring-2 ring-brand-green/20'
+          : 'border-brand-green/15 bg-brand-white/90 active:border-brand-green/30'
+      }`}
+      aria-pressed={selected}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-brand-carmelita/80">
+            Prueba 15 días
+          </p>
+          <p className="mt-1 font-display text-xl font-bold text-brand-green sm:text-2xl">
+            Gratis
+          </p>
+        </div>
+        <span
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+            selected ? 'border-brand-green bg-brand-green text-brand-white' : 'border-brand-green/25'
+          }`}
+          aria-hidden="true"
+        >
+          {selected ? <CheckIcon /> : null}
+        </span>
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
+        Mismas prestaciones del plan Básico, sin pago, durante 15 días.
+      </p>
+      <ul className="mt-4 flex flex-col gap-2">
+        {tier.features.map((feature) => (
+          <li key={feature} className="flex items-start gap-2">
+            <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-brand-yellow/25 text-brand-green">
+              <CheckIcon />
+            </span>
+            <span className="text-sm leading-relaxed text-brand-green">{feature}</span>
+          </li>
+        ))}
+      </ul>
+    </button>
+  )
+}
+
 export default function RegisterPlan() {
   const navigate = useNavigate()
   const [billing, setBilling] = useState('monthly')
+  const [kind, setKind] = useState('paid')
   const [planTier, setPlanTier] = useState('standard')
   const [discountCodesAvailable, setDiscountCodesAvailable] = useState(false)
   const [appliedDiscount, setAppliedDiscount] = useState(null)
@@ -184,9 +234,25 @@ export default function RegisterPlan() {
     }
   }, [])
 
-  function continueToPayment() {
+  function continueNext() {
+    try {
+      sessionStorage.setItem('registerKind', kind)
+    } catch {
+      /* ignore */
+    }
+    if (kind === 'trial') {
+      navigate('/registro/verificacion', {
+        state: {
+          kind: 'trial',
+          billing: 'monthly',
+          planTier: 'standard',
+        },
+      })
+      return
+    }
     navigate('/registro/pago', {
       state: {
+        kind: 'paid',
         billing,
         planTier: normalizePlanTier(planTier),
         discountCode: appliedDiscount?.code ?? null,
@@ -202,17 +268,19 @@ export default function RegisterPlan() {
           <AuthHeader
             eyebrow="Crear cuenta"
             title="Elige tu plan"
-            description="Compara los planes y continúa al pago para activar tu tienda."
+            description="Prueba 15 días con el plan Básico, o elige Básico o Premium y continúa al pago."
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={1} />
+          <RegisterProgress currentStep={1} steps={getRegisterSteps(kind)} />
         </div>
 
         <div className={authRegisterGrid}>
           <div className="flex flex-col gap-4">
-            <BillingToggle billing={billing} onChange={setBilling} />
+            {kind === 'paid' ? (
+              <BillingToggle billing={billing} onChange={setBilling} />
+            ) : null}
 
-            {discountCodesAvailable ? (
+            {kind === 'paid' && discountCodesAvailable ? (
               <RegisterDiscountCodeField
                 billing={billing}
                 planTier={normalizePlanTier(planTier)}
@@ -222,14 +290,25 @@ export default function RegisterPlan() {
               />
             ) : null}
 
-            <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 lg:grid-cols-3">
+              <TrialCard
+                selected={kind === 'trial'}
+                onSelect={() => {
+                  setKind('trial')
+                  setPlanTier('standard')
+                  setAppliedDiscount(null)
+                }}
+              />
               {PLAN_TIER_ORDER.map((tierId) => (
                 <PlanCard
                   key={tierId}
                   tier={PLAN_TIERS[tierId]}
                   billing={billing}
-                  selected={planTier === tierId}
-                  onSelect={setPlanTier}
+                  selected={kind === 'paid' && planTier === tierId}
+                  onSelect={(id) => {
+                    setKind('paid')
+                    setPlanTier(id)
+                  }}
                   getPlanPrice={getPlanPrice}
                   getPlanYearlySavings={getPlanYearlySavings}
                   formatPlanAmount={formatPlanAmount}
@@ -240,7 +319,9 @@ export default function RegisterPlan() {
           </div>
 
           <aside className={`${authStickyAside} flex flex-col gap-4`}>
-            <Button onClick={continueToPayment}>Continuar al pago</Button>
+            <Button onClick={continueNext}>
+              {kind === 'trial' ? 'Continuar sin pago' : 'Continuar al pago'}
+            </Button>
 
             <p className="text-center text-xs text-brand-carmelita/80 lg:text-left">
               ¿Ya tienes cuenta?{' '}

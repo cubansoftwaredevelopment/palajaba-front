@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthCard from '../components/auth/AuthCard'
 import AuthShell from '../components/auth/AuthShell'
 import { authCenteredBlock } from '../components/auth/authStyles'
@@ -7,6 +7,8 @@ import Logo from '../components/Logo'
 
 export default function RegisterSuccess() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const isTrial = location.state?.kind === 'trial'
 
   return (
     <AuthShell backTo="/" backLabel="Inicio" contentWidth="narrow">
@@ -18,18 +20,28 @@ export default function RegisterSuccess() {
           />
 
           <p className="mb-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-brand-carmelita">
-            Solicitud enviada
+            {isTrial ? 'Tienda activa' : 'Solicitud enviada'}
           </p>
           <h1
             id="success-title"
             className="font-display text-2xl font-bold leading-tight text-brand-green sm:text-[1.65rem] lg:text-3xl"
           >
-            ¡Gracias por unirte!
+            {isTrial ? 'Tu prueba ya está lista' : '¡Gracias por unirte!'}
           </h1>
           <p className="mt-3 max-w-sm text-sm leading-relaxed text-brand-carmelita/90">
-            Revisaremos tu pago en un plazo de{' '}
-            <strong className="text-brand-green">24 horas</strong>. Cuando aprueben tu cuenta,
-            podrás entrar con tu teléfono o nombre de tienda.
+            {isTrial ? (
+              <>
+                Tu tienda quedó activa por{' '}
+                <strong className="text-brand-green">15 días</strong> con el plan Básico.
+                Entra con tu teléfono o nombre de tienda.
+              </>
+            ) : (
+              <>
+                Revisaremos tu pago en un plazo de{' '}
+                <strong className="text-brand-green">24 horas</strong>. Cuando aprueben tu cuenta,
+                podrás entrar con tu teléfono o nombre de tienda.
+              </>
+            )}
           </p>
         </div>
 
@@ -42,13 +54,17 @@ export default function RegisterSuccess() {
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-yellow/25 text-[0.65rem] font-bold text-brand-green">
                 1
               </span>
-              Espera la confirmación del pago por nuestro equipo.
+              {isTrial
+                ? 'Inicia sesión y completa el perfil de tu tienda.'
+                : 'Espera la confirmación del pago por nuestro equipo.'}
             </li>
             <li className="flex gap-2.5">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-yellow/25 text-[0.65rem] font-bold text-brand-green">
                 2
               </span>
-              Recibirás acceso cuando tu tienda sea aprobada.
+              {isTrial
+                ? 'Tienes 15 días de prueba con las prestaciones del plan Básico.'
+                : 'Recibirás acceso cuando tu tienda sea aprobada.'}
             </li>
             <li className="flex gap-2.5">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-yellow/25 text-[0.65rem] font-bold text-brand-green">

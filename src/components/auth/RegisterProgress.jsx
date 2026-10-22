@@ -1,4 +1,4 @@
-import { REGISTER_STEPS } from '../../lib/registerSteps'
+import { REGISTER_STEPS } from '../../register/constants'
 
 export default function RegisterProgress({ currentStep, steps = REGISTER_STEPS, className = '' }) {
   return (

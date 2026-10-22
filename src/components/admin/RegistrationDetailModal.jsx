@@ -102,6 +102,7 @@ export default function RegistrationDetailModal({
           )}
         </DetailRow>
         <DetailRow label="Teléfono">{item.phone}</DetailRow>
+        {item.email ? <DetailRow label="Correo">{item.email}</DetailRow> : null}
         {(item.status === 'approved' || item.status === 'expired') && (
           <DetailRow label="Productos">
             <span className="text-white">
@@ -159,6 +160,7 @@ export default function RegistrationDetailModal({
         )}
         <DetailRow label="Plan contratado">
           {PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]} · {BILLING_LABELS[item.billing_period]}
+          {item.is_trial ? ' · Prueba 15 días' : ''}
         </DetailRow>
         {item.discount_code ? (
           <DetailRow label="Código de descuento">

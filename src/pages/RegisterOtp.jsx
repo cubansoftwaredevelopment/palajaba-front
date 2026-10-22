@@ -1,0 +1,214 @@
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import AuthHeader from '../components/auth/AuthHeader'
+import AuthShell from '../components/auth/AuthShell'
+import { authFormWrap, authPageIntro } from '../components/auth/authStyles'
+import RegisterProgress from '../components/auth/RegisterProgress'
+import Button from '../components/Button'
+import {
+  alertErrorClass,
+  hintClass,
+  inputClass,
+  labelClass,
+} from '../components/auth/formStyles'
+import { confirmRegisterOtp, resendRegisterOtp } from '../register/api'
+import { getRegisterSteps } from '../register/constants'
+import { expiryMs, formatCountdown, useCountdown } from '../register/utils'
+import { getUserFacingMessage } from '../lib/userFacingError'
+
+function CodeField({ id, label, hint, value, onChange }) {
+  return (
+    <div>
+      <label htmlFor={id} className={labelClass}>
+        {label} <span className="text-brand-carmelita" aria-hidden="true">*</span>
+      </label>
+      <input
+        id={id}
+        type="text"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 6))}
+        className={`${inputClass} tracking-[0.35em]`}
+        placeholder="000000"
+        required
+      />
+      <p className={hintClass}>{hint}</p>
+    </div>
+  )
+}
+
+export default function RegisterOtp() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const kind = location.state?.kind === 'trial' ? 'trial' : 'paid'
+  const challengeId = location.state?.challengeId
+  const email = location.state?.email || ''
+  const phone = location.state?.phone || ''
+
+  const [emailCode, setEmailCode] = useState('')
+  const [phoneCode, setPhoneCode] = useState('')
+  const [error, setError] = useState('')
+  const [info, setInfo] = useState(location.state?.message || '')
+  const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState('')
+  const [emailEndsAt, setEmailEndsAt] = useState(() => expiryMs(location.state?.emailExpiresAt))
+  const [phoneEndsAt, setPhoneEndsAt] = useState(() => expiryMs(location.state?.phoneExpiresAt))
+  const emailRemaining = useCountdown(emailEndsAt)
+  const phoneRemaining = useCountdown(phoneEndsAt)
+  const remaining = Math.max(emailRemaining, phoneRemaining)
+  const expired = remaining <= 0
+
+  useEffect(() => {
+    if (!challengeId) {
+      navigate('/registro', { replace: true })
+    }
+  }, [challengeId, navigate])
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    if (emailCode.length < 4 || phoneCode.length < 4) {
+      setError('Ingresa los dos códigos de verificación.')
+      return
+    }
+    setLoading(true)
+    try {
+      const result = await confirmRegisterOtp({
+        challenge_id: challengeId,
+        email_code: emailCode,
+        phone_code: phoneCode,
+      })
+      navigate('/registro/exito', {
+        replace: true,
+        state: { kind: result.kind || kind, message: result.message },
+      })
+    } catch (err) {
+      setError(
+        getUserFacingMessage(
+          err,
+          'No pudimos verificar los códigos. Revísalos o pídelos de nuevo.',
+        ),
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function handleResend(channel) {
+    setError('')
+    setResending(channel)
+    try {
+      const result = await resendRegisterOtp({
+        challenge_id: challengeId,
+        channel,
+      })
+      setInfo(result.message || 'Código reenviado.')
+      if (channel === 'email') setEmailEndsAt(expiryMs(result.email_expires_at))
+      if (channel === 'phone') setPhoneEndsAt(expiryMs(result.phone_expires_at))
+    } catch (err) {
+      setError(
+        getUserFacingMessage(
+          err,
+          'No pudimos reenviar el código. Espera un momento e inténtalo de nuevo.',
+        ),
+      )
+    } finally {
+      setResending('')
+    }
+  }
+
+  if (!challengeId) return null
+
+  return (
+    <AuthShell backTo="/registro/verificacion" backLabel="Datos">
+      <section className="animate-fade-in" aria-labelledby="register-otp-title">
+        <div className={authPageIntro}>
+          <AuthHeader
+            eyebrow={kind === 'trial' ? 'Paso 3 · Verificar' : 'Paso 4 · Verificar'}
+            title="Confirma tu correo y teléfono"
+            description="Enviamos un código a tu correo y otro por SMS. Tienes 10 minutos para introducirlos."
+            layout="desktop-left"
+          />
+          <RegisterProgress currentStep={kind === 'trial' ? 3 : 4} steps={getRegisterSteps(kind)} />
+        </div>
+
+        <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>
+          <div
+            className="flex items-center justify-between gap-3 rounded-xl border border-brand-green/15 bg-brand-white px-3.5 py-3"
+            role="timer"
+            aria-live="polite"
+            aria-label="Tiempo restante para usar los códigos"
+          >
+            <p className="text-sm text-brand-carmelita/90">
+              {expired ? 'Los códigos expiraron' : 'Tiempo restante'}
+            </p>
+            <p
+              className={`font-mono text-xl font-bold tabular-nums ${
+                expired ? 'text-brand-carmelita' : 'text-brand-green'
+              }`}
+            >
+              {formatCountdown(remaining)}
+            </p>
+          </div>
+
+          {info ? (
+            <p className="rounded-xl border border-brand-yellow/30 bg-brand-yellow/10 px-3.5 py-2.5 text-sm text-brand-green">
+              {info}
+            </p>
+          ) : null}
+
+          <CodeField
+            id="email-code"
+            label="Código del correo"
+            hint={`Enviado a ${email || 'tu correo'}.`}
+            value={emailCode}
+            onChange={setEmailCode}
+          />
+          <button
+            type="button"
+            onClick={() => handleResend('email')}
+            disabled={Boolean(resending) || loading || emailRemaining > 0}
+            className="self-start text-sm font-semibold text-brand-green underline-offset-2 hover:underline disabled:opacity-60"
+          >
+            {resending === 'email'
+              ? 'Reenviando…'
+              : emailRemaining > 0
+                ? `Reenviar correo en ${formatCountdown(emailRemaining)}`
+                : 'Reenviar código de correo'}
+          </button>
+
+          <CodeField
+            id="phone-code"
+            label="Código del SMS"
+            hint={`Enviado a +53 ${phone || 'tu teléfono'}.`}
+            value={phoneCode}
+            onChange={setPhoneCode}
+          />
+          <button
+            type="button"
+            onClick={() => handleResend('phone')}
+            disabled={Boolean(resending) || loading || phoneRemaining > 0}
+            className="self-start text-sm font-semibold text-brand-green underline-offset-2 hover:underline disabled:opacity-60"
+          >
+            {resending === 'phone'
+              ? 'Reenviando…'
+              : phoneRemaining > 0
+                ? `Reenviar SMS en ${formatCountdown(phoneRemaining)}`
+                : 'Reenviar código de SMS'}
+          </button>
+
+          {error && (
+            <p className={alertErrorClass} role="alert">
+              {error}
+            </p>
+          )}
+
+          <Button type="submit" className="mt-1" disabled={loading}>
+            {loading ? 'Verificando…' : 'Verificar y continuar'}
+          </Button>
+        </form>
+      </section>
+    </AuthShell>
+  )
+}

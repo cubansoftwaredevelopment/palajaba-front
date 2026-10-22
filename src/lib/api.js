@@ -48,6 +48,18 @@ export function parseApiErrorDetail(detail) {
             ) {
               return "Ingresa un teléfono de contacto con al menos 8 caracteres.";
             }
+            if (
+              field === "password" ||
+              field.endsWith(".password")
+            ) {
+              if (
+                item.type === "string_too_short" ||
+                /at least 6 characters/i.test(item.msg) ||
+                /al menos 6 caracteres/i.test(item.msg)
+              ) {
+                return "La contraseña debe tener al menos 6 caracteres.";
+              }
+            }
             return field ? `${field}: ${item.msg}` : item.msg;
           }
           return "Datos inválidos";
@@ -253,13 +265,6 @@ export async function uploadSellerProfilePhoto(token, file) {
   }
 
   return response.json();
-}
-
-export function registerSeller(payload) {
-  return request("/api/register", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
 }
 
 export function adminLogin(username, password) {

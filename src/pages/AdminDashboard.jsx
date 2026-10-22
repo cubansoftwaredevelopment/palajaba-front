@@ -215,9 +215,14 @@ export default function AdminDashboard() {
   const filteredRegistrations = useMemo(
     () =>
       registrations.filter((item) => {
-        if (!includesText(item.store_name, filters.store)) return false
+        if (
+          !includesText(item.store_name, filters.store) &&
+          !includesText(item.email || '', filters.store)
+        ) return false
         if (!includesText(item.phone, filters.phone)) return false
-        const transferLabel = item.is_launch_promo
+        const transferLabel = item.is_trial
+          ? `Prueba ${item.transfer_id}`
+          : item.is_launch_promo
           ? `Promoción ${item.transfer_id}`
           : item.transfer_id
         if (!includesText(transferLabel, filters.transfer)) return false
@@ -394,10 +399,17 @@ export default function AdminDashboard() {
                 ) : (
                   pageItems.map((item) => (
                     <tr key={item.id} className="border-b border-zinc-800/80 align-top">
-                      <td className="px-3 py-3 font-medium break-words text-zinc-50">{item.store_name}</td>
+                      <td className="px-3 py-3 font-medium break-words text-zinc-50">
+                        <div>{item.store_name}</div>
+                        {item.email ? (
+                          <div className="mt-1 text-xs font-normal text-zinc-400 break-all">
+                            {item.email}
+                          </div>
+                        ) : null}
+                      </td>
                       <td className="px-3 py-3 whitespace-nowrap text-zinc-300">{item.phone}</td>
                       <td className="px-3 py-3 font-mono text-xs break-all text-zinc-300">
-                        {item.is_launch_promo ? 'Promoción' : item.transfer_id}
+                        {item.is_trial ? 'Prueba' : item.is_launch_promo ? 'Promoción' : item.transfer_id}
                       </td>
                       <td className="px-3 py-3">
                         <span className={STATUS_BADGES[item.status] ?? adminBadgePending}>
@@ -408,7 +420,12 @@ export default function AdminDashboard() {
                         {item.approved_at ? formatDateTime(item.approved_at) : '—'}
                       </td>
                       <td className="px-3 py-3 text-zinc-300">
-                        {PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span>{PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}</span>
+                          {item.is_trial ? (
+                            <span className={adminBadgePending}>Prueba</span>
+                          ) : null}
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-zinc-300">{subscriptionTime(item)}</td>
                       <td className="px-3 py-3 tabular-nums text-zinc-100">
