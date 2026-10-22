@@ -203,6 +203,17 @@ export default function RegistrationDetailModal({
             )}
           </DetailRow>
         )}
+        {(item.status === 'approved' || item.status === 'expired') && item.subscription_ends_at && (
+          <DetailRow label="Aviso de vencimiento">
+            <span className={item.expiry_notice_email_sent ? 'text-emerald-300' : 'text-zinc-500'}>
+              {item.expiry_notice_email_sent ? 'Email enviado' : 'Email pendiente'}
+            </span>
+            <span className="text-zinc-600"> · </span>
+            <span className={item.expiry_notice_sms_sent ? 'text-emerald-300' : 'text-zinc-500'}>
+              {item.expiry_notice_sms_sent ? 'SMS enviado' : 'SMS pendiente'}
+            </span>
+          </DetailRow>
+        )}
         {item.status === 'rejected' && (
           <DetailRow label="Motivo de rechazo">
             <span className="text-zinc-400">
