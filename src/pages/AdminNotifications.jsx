@@ -77,6 +77,14 @@ export default function AdminNotifications({ embedded = false }) {
                 ? `El SMS no se pudo enviar: ${result.sms_error}`
                 : 'El SMS no se pudo enviar.',
             },
+        result.email_sent
+          ? { type: 'success', message: 'También se envió por correo.' }
+          : {
+              type: 'error',
+              message: result.email_error
+                ? `El correo no se pudo enviar: ${result.email_error}`
+                : 'El correo no se pudo enviar.',
+            },
       ])
     }
     await loadNotifications()
