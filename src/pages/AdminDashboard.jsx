@@ -373,6 +373,7 @@ export default function AdminDashboard() {
                       ariaLabel="Filtrar por tiempo de suscripción"
                       options={[
                         { value: 'monthly', label: 'Mensual' },
+                        { value: 'quarterly', label: 'Trimestral' },
                         { value: 'yearly', label: 'Anual' },
                       ]}
                     />

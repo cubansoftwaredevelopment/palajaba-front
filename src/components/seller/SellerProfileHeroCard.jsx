@@ -54,7 +54,7 @@ export default function SellerProfileHeroCard({
           <p className="mt-0.5 truncate text-xs text-brand-carmelita/80 sm:text-sm">{subtitle}</p>
           <p className="mt-1.5 text-[0.7rem] font-semibold text-brand-green/85">
             Plan {tier.name} ·{' '}
-            {BILLING_LABELS[profile?.billing_period === 'yearly' ? 'yearly' : 'monthly']}
+            {BILLING_LABELS[profile?.billing_period] ?? BILLING_LABELS.monthly}
           </p>
         </div>
 

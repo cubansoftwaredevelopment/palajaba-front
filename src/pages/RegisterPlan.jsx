@@ -6,7 +6,9 @@ import RegisterDiscountCodeField from '../components/auth/RegisterDiscountCodeFi
 import { authPageIntro } from '../components/auth/authStyles'
 import RegisterProgress from '../components/auth/RegisterProgress'
 import Button from '../components/Button'
+import { BILLING_LABELS } from '../constants/admin'
 import {
+  BILLING_PERIOD_ORDER,
   PLAN_TIER_ORDER,
   PLAN_TIERS,
   formatPlanPriceLabel,
@@ -32,32 +34,22 @@ function BillingToggle({ billing, onChange }) {
       role="radiogroup"
       aria-label="Periodo de facturación"
     >
-      <button
-        type="button"
-        role="radio"
-        aria-checked={billing === 'monthly'}
-        onClick={() => onChange('monthly')}
-        className={`flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-all ${
-          billing === 'monthly'
-            ? 'bg-brand-green text-brand-white shadow-sm'
-            : 'text-brand-green sm:hover:bg-brand-yellow/15'
-        }`}
-      >
-        Mensual
-      </button>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={billing === 'yearly'}
-        onClick={() => onChange('yearly')}
-        className={`relative flex-1 rounded-full px-3 py-2 text-sm font-semibold transition-all ${
-          billing === 'yearly'
-            ? 'bg-brand-green text-brand-white shadow-sm'
-            : 'text-brand-green sm:hover:bg-brand-yellow/15'
-        }`}
-      >
-        Anual
-      </button>
+      {BILLING_PERIOD_ORDER.map((period) => (
+        <button
+          key={period}
+          type="button"
+          role="radio"
+          aria-checked={billing === period}
+          onClick={() => onChange(period)}
+          className={`flex-1 rounded-full px-2 py-2 text-xs font-semibold transition-all sm:px-3 sm:text-sm ${
+            billing === period
+              ? 'bg-brand-green text-brand-white shadow-sm'
+              : 'text-brand-green sm:hover:bg-brand-yellow/15'
+          }`}
+        >
+          {BILLING_LABELS[period]}
+        </button>
+      ))}
     </div>
   )
 }
@@ -103,16 +95,16 @@ function PlanCard({
   selected,
   onSelect,
   getPlanPrice,
-  getPlanYearlySavings,
+  getPlanPeriodSavings: periodSavings,
   formatPlanAmount,
   discountPercent,
 }) {
   const price = getPlanPrice(tier.id, billing)
-  const yearlySavings = getPlanYearlySavings(tier.id)
-  const discountedYearlySavings =
-    discountPercent && yearlySavings != null
-      ? Math.max(0, Math.floor((yearlySavings * (100 - discountPercent)) / 100))
-      : yearlySavings
+  const periodSavingsAmount = periodSavings(tier.id, billing)
+  const discountedSavings =
+    discountPercent && periodSavingsAmount != null
+      ? Math.max(0, Math.floor((periodSavingsAmount * (100 - discountPercent)) / 100))
+      : periodSavingsAmount
 
   return (
     <button
@@ -146,9 +138,9 @@ function PlanCard({
         {tier.description}
       </p>
 
-      {billing === 'yearly' && discountedYearlySavings != null ? (
+      {discountedSavings != null && discountedSavings > 0 ? (
         <p className="mt-2 text-xs font-medium text-brand-green">
-          Ahorra {formatPlanAmount(discountedYearlySavings)} al año.
+          Ahorra {formatPlanAmount(discountedSavings)} frente al mensual.
         </p>
       ) : null}
 
@@ -221,7 +213,7 @@ export default function RegisterPlan() {
   const [planTier, setPlanTier] = useState('standard')
   const [discountCodesAvailable, setDiscountCodesAvailable] = useState(false)
   const [appliedDiscount, setAppliedDiscount] = useState(null)
-  const { getPlanPrice, getPlanYearlySavings, formatPlanAmount } = usePlanPricing()
+  const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount } = usePlanPricing()
 
   useEffect(() => {
     let active = true
@@ -279,7 +271,7 @@ export default function RegisterPlan() {
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-6">
-            <div className="min-w-0 w-full max-w-md flex-1">
+            <div className="min-w-0 w-full max-w-xl flex-1">
               {kind === 'paid' ? (
                 <BillingToggle billing={billing} onChange={setBilling} />
               ) : (
@@ -335,7 +327,7 @@ export default function RegisterPlan() {
                   setPlanTier(id)
                 }}
                 getPlanPrice={getPlanPrice}
-                getPlanYearlySavings={getPlanYearlySavings}
+                getPlanPeriodSavings={getPlanPeriodSavings}
                 formatPlanAmount={formatPlanAmount}
                 discountPercent={appliedDiscount?.percent_off ?? null}
               />

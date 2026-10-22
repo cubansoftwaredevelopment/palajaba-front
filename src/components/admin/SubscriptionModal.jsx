@@ -97,7 +97,7 @@ function PlanFields({ planTier, billingPeriod, onPlanTierChange, onBillingPeriod
           options={[
 
             { value: 'monthly', label: BILLING_LABELS.monthly },
-
+            { value: 'quarterly', label: BILLING_LABELS.quarterly },
             { value: 'yearly', label: BILLING_LABELS.yearly },
 
           ]}

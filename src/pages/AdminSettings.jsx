@@ -20,6 +20,7 @@ import LoadingState from '../components/ui/LoadingState'
 import { BILLING_LABELS, PLAN_TIER_LABELS } from '../constants/admin'
 import { DISPLAY_CURRENCIES } from '../constants/currencies'
 import {
+  BILLING_PERIOD_ORDER,
   DEFAULT_PLAN_PRICES,
   PLAN_DISPLAY_CURRENCY,
   PLAN_TIER_ORDER,
@@ -28,8 +29,6 @@ import {
 } from '../constants/plan'
 import { convertBetweenCurrencies } from '../lib/displayPrice'
 import { areExchangeRatesAvailable, getCupPerUnit, loadExchangeRates } from '../lib/exchangeRates'
-
-const PERIODS = ['monthly', 'yearly']
 
 const fieldShell =
   'flex min-h-12 overflow-hidden rounded-xl border border-zinc-800/90 bg-zinc-900/70 transition-colors focus-within:border-brand-green/35 focus-within:ring-2 focus-within:ring-brand-green/15'
@@ -40,7 +39,7 @@ const amountInputClass =
 function pricesToForm(planPrices) {
   const normalized = normalizePlanPrices(planPrices)
   return PLAN_TIER_ORDER.reduce((tiers, tier) => {
-    tiers[tier] = PERIODS.reduce((periods, period) => {
+    tiers[tier] = BILLING_PERIOD_ORDER.reduce((periods, period) => {
       periods[period] = {
         amount: String(normalized[tier][period].amount),
         currency: normalized[tier][period].currency,
@@ -178,7 +177,7 @@ export default function AdminSettings() {
     const parsedPrices = {}
     for (const tier of PLAN_TIER_ORDER) {
       parsedPrices[tier] = {}
-      for (const period of PERIODS) {
+      for (const period of BILLING_PERIOD_ORDER) {
         const amount = parseAmount(planPrices[tier][period].amount)
         if (amount == null) {
           setError('Cada precio debe ser un número mayor o igual a 0.')
@@ -278,7 +277,7 @@ export default function AdminSettings() {
                     Plan {PLAN_TIER_LABELS[tier]}
                   </h3>
                   <div className="mt-3 flex flex-col gap-3">
-                    {PERIODS.map((period) => (
+                    {BILLING_PERIOD_ORDER.map((period) => (
                       <PlanPriceField
                         key={period}
                         label={BILLING_LABELS[period]}

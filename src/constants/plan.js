@@ -5,17 +5,28 @@ import { PLAN_GESTOR_FEATURES } from '../lib/gestorPlanLimits'
 export const PLAN_SOURCE_CURRENCY = 'USD'
 export const PLAN_DISPLAY_CURRENCY = 'CUP'
 
+export const BILLING_PERIOD_ORDER = ['monthly', 'quarterly', 'yearly']
+
+export const BILLING_UNIT_LABELS = {
+  monthly: 'mes',
+  quarterly: 'trimestre',
+  yearly: 'año',
+}
+
 export const DEFAULT_PLAN_PRICES = {
   standard: {
     monthly: { amount: 2, currency: PLAN_SOURCE_CURRENCY },
+    quarterly: { amount: 5, currency: PLAN_SOURCE_CURRENCY },
     yearly: { amount: 20, currency: PLAN_SOURCE_CURRENCY },
   },
   pro: {
     monthly: { amount: 8, currency: PLAN_SOURCE_CURRENCY },
+    quarterly: { amount: 22, currency: PLAN_SOURCE_CURRENCY },
     yearly: { amount: 80, currency: PLAN_SOURCE_CURRENCY },
   },
   premium: {
     monthly: { amount: 4, currency: PLAN_SOURCE_CURRENCY },
+    quarterly: { amount: 10, currency: PLAN_SOURCE_CURRENCY },
     yearly: { amount: 30, currency: PLAN_SOURCE_CURRENCY },
   },
 }
@@ -83,7 +94,7 @@ export function normalizePlanPrices(raw) {
     const fallback = DEFAULT_PLAN_PRICES[tier]
     const configured = source[tier] && typeof source[tier] === 'object' ? source[tier] : {}
     next[tier] = {}
-    for (const period of ['monthly', 'yearly']) {
+    for (const period of BILLING_PERIOD_ORDER) {
       const item = configured[period] && typeof configured[period] === 'object' ? configured[period] : {}
       const amount = Number(item.amount)
       const currency = String(item.currency || fallback[period].currency).toUpperCase()
@@ -96,16 +107,21 @@ export function normalizePlanPrices(raw) {
   return next
 }
 
+export function normalizeBillingPeriod(billing) {
+  if (billing === 'yearly' || billing === 'quarterly') return billing
+  return 'monthly'
+}
+
 function priceMeta(billing) {
-  const period = billing === 'yearly' ? 'yearly' : 'monthly'
+  const period = normalizeBillingPeriod(billing)
   return {
-    label: period === 'yearly' ? 'año' : 'mes',
+    label: BILLING_UNIT_LABELS[period],
     period,
   }
 }
 
 export function getConfiguredPlanPrice(tier, billing, prices = DEFAULT_PLAN_PRICES) {
-  const period = billing === 'yearly' ? 'yearly' : 'monthly'
+  const period = normalizeBillingPeriod(billing)
   const configured = normalizePlanPrices(prices)[normalizePlanTier(tier)][period]
   return {
     ...priceMeta(billing),
@@ -143,10 +159,17 @@ export function getPlanPrice(tier, billing, cupPerUnit = getCupPerUnit(), prices
 }
 
 export function getPlanYearlySavings(tier, cupPerUnit = getCupPerUnit(), prices = DEFAULT_PLAN_PRICES) {
+  return getPlanPeriodSavings(tier, 'yearly', cupPerUnit, prices)
+}
+
+export function getPlanPeriodSavings(tier, billing, cupPerUnit = getCupPerUnit(), prices = DEFAULT_PLAN_PRICES) {
+  const period = normalizeBillingPeriod(billing)
+  const months = period === 'yearly' ? 12 : period === 'quarterly' ? 3 : 0
+  if (!months) return null
   const monthly = getPlanPrice(tier, 'monthly', cupPerUnit, prices)
-  const yearly = getPlanPrice(tier, 'yearly', cupPerUnit, prices)
-  if (monthly.amount == null || yearly.amount == null) return null
-  return Math.max(0, monthly.amount * 12 - yearly.amount)
+  const bundle = getPlanPrice(tier, period, cupPerUnit, prices)
+  if (monthly.amount == null || bundle.amount == null) return null
+  return Math.max(0, monthly.amount * months - bundle.amount)
 }
 
 export function formatPlanPriceLabel(price, formatter = formatPlanAmount) {

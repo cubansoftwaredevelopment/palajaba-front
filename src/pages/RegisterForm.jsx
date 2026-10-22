@@ -14,7 +14,7 @@ import {
   labelClass,
 } from '../components/auth/formStyles'
 import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../lib/phone'
-import { normalizePlanTier } from '../constants/plan'
+import { normalizeBillingPeriod, normalizePlanTier } from '../constants/plan'
 import { startRegisterOtp } from '../register/api'
 import { getRegisterSteps } from '../register/constants'
 import {
@@ -69,7 +69,7 @@ export default function RegisterForm() {
       return 'paid'
     }
   })()
-  const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
+  const billing = normalizeBillingPeriod(location.state?.billing)
   const planTier = kind === 'trial' ? 'standard' : normalizePlanTier(location.state?.planTier)
   const discountCode = kind === 'trial' ? null : location.state?.discountCode ?? null
   const discountPercent = kind === 'trial' ? null : location.state?.discountPercent ?? null

@@ -3,6 +3,7 @@ export const REJECTION_REASON =
 
 export const BILLING_LABELS = {
   monthly: 'Mensual',
+  quarterly: 'Trimestral',
   yearly: 'Anual',
 }
 
@@ -22,18 +23,21 @@ export const STATUS_LABELS = {
 export const NOTIFICATION_AUDIENCE_OPTIONS = [
   { id: 'all', label: 'Todos los vendedores activos' },
   { id: 'premium_monthly', label: 'Premium · Mensual' },
+  { id: 'premium_quarterly', label: 'Premium · Trimestral' },
   { id: 'premium_yearly', label: 'Premium · Anual' },
   { id: 'pro_monthly', label: 'Pro · Mensual' },
+  { id: 'pro_quarterly', label: 'Pro · Trimestral' },
   { id: 'pro_yearly', label: 'Pro · Anual' },
   { id: 'standard_monthly', label: 'Básico · Mensual' },
+  { id: 'standard_quarterly', label: 'Básico · Trimestral' },
   { id: 'standard_yearly', label: 'Básico · Anual' },
 ]
 
 export const NOTIFICATION_AUDIENCE_LABELS = {
   ...Object.fromEntries(NOTIFICATION_AUDIENCE_OPTIONS.map(({ id, label }) => [id, label])),
-  premium: 'Plan Premium (mensual o anual)',
-  pro: 'Plan Pro (mensual o anual)',
-  standard: 'Plan Básico (mensual o anual)',
+  premium: 'Plan Premium (cualquier periodo)',
+  pro: 'Plan Pro (cualquier periodo)',
+  standard: 'Plan Básico (cualquier periodo)',
   mixed: 'Selección múltiple',
   single: 'Negocios específicos',
 }

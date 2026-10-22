@@ -6,7 +6,8 @@ import AuthShell from '../components/auth/AuthShell'
 import { authPageIntro, authPaymentGrid } from '../components/auth/authStyles'
 import RegisterProgress from '../components/auth/RegisterProgress'
 import Button from '../components/Button'
-import { getPlanTier, normalizePlanTier, formatPlanPriceLabel } from '../constants/plan'
+import { BILLING_LABELS } from '../constants/admin'
+import { getPlanTier, normalizeBillingPeriod, normalizePlanTier, formatPlanPriceLabel } from '../constants/plan'
 import { getDiscountedPlanPrice } from '../lib/discountCode'
 import { getRegisterSteps } from '../register/constants'
 import { usePlanPricing } from '../lib/usePlanPricing'
@@ -19,7 +20,7 @@ import {
 export default function RegisterPayment() {
   const navigate = useNavigate()
   const location = useLocation()
-  const billing = location.state?.billing === 'yearly' ? 'yearly' : 'monthly'
+  const billing = normalizeBillingPeriod(location.state?.billing)
   const planTier = normalizePlanTier(location.state?.planTier)
   const discountPercent = location.state?.discountPercent ?? null
   const discountCode = location.state?.discountCode ?? null
@@ -63,7 +64,7 @@ export default function RegisterPayment() {
                     {formatPlanPriceLabel(displayPrice, formatPlanAmount)}
                   </strong>
                 )}{' '}
-                por el plan {tier.name} ({billing === 'yearly' ? 'anual' : 'mensual'})
+                por el plan {tier.name} ({(BILLING_LABELS[billing] || billing).toLowerCase()})
                 {discountCode ? ` con el código ${discountCode}` : ''} para activar tu solicitud.
               </>
             }

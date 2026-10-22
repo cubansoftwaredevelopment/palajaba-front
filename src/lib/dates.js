@@ -12,6 +12,8 @@ export function addBillingPeriod(fromDate, billingPeriod) {
   const date = parseApiDateTime(fromDate) ?? new Date(fromDate)
   if (billingPeriod === 'yearly') {
     date.setFullYear(date.getFullYear() + 1)
+  } else if (billingPeriod === 'quarterly') {
+    date.setMonth(date.getMonth() + 3)
   } else {
     date.setMonth(date.getMonth() + 1)
   }

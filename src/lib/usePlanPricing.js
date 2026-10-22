@@ -3,6 +3,7 @@ import {
   DEFAULT_PLAN_PRICES,
   formatPlanAmount,
   getPlanPrice,
+  getPlanPeriodSavings,
   getPlanYearlySavings,
   normalizePlanPrices,
 } from '../constants/plan'
@@ -40,6 +41,8 @@ export function usePlanPricing() {
     planPrices,
     getPlanPrice: (tier, billing) => getPlanPrice(tier, billing, cupPerUnit, planPrices),
     getPlanYearlySavings: (tier) => getPlanYearlySavings(tier, cupPerUnit, planPrices),
+    getPlanPeriodSavings: (tier, billing) =>
+      getPlanPeriodSavings(tier, billing, cupPerUnit, planPrices),
     formatPlanAmount,
   }
 }
