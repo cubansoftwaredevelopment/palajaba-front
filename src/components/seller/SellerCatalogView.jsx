@@ -2,6 +2,10 @@ import SellerCatalogCategoryCard from './SellerCatalogCategoryCard'
 
 export default function SellerCatalogView({
   summary,
+  selectedCategoryId,
+  selectedProductIds,
+  onToggleProduct,
+  onShareSelected,
   onAddProduct,
   onViewProduct,
   onEditProduct,
@@ -15,6 +19,9 @@ export default function SellerCatalogView({
         <SellerCatalogCategoryCard
           key={category.id}
           category={category}
+          selectedProductIds={category.id === selectedCategoryId ? selectedProductIds : []}
+          onToggleProduct={onToggleProduct}
+          onShareSelected={onShareSelected}
           onAddProduct={onAddProduct}
           onViewProduct={onViewProduct}
           onEditProduct={onEditProduct}

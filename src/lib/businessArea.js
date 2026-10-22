@@ -54,3 +54,16 @@ export function sameDeliveryAreas(a = [], b = []) {
   const right = [...b].map(areaKey).sort()
   return left.length === right.length && left.every((key, index) => key === right[index])
 }
+
+export function storeServiceAreas(profile) {
+  const areas = []
+  if (profile?.business_area?.province_id && profile?.business_area?.municipality_id) {
+    areas.push(profile.business_area)
+  }
+  if (profile?.offers_delivery !== false) {
+    areas.push(...(profile?.delivery_areas || []))
+  }
+  return dedupeDeliveryAreas(areas).filter(
+    (area) => area?.province_id && area?.municipality_id,
+  )
+}

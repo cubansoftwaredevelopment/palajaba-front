@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
+import { isScrollToTopPath } from '../lib/buyerMarketplaceHub'
 import { animateScrollTop } from '../lib/smoothScroll'
 import { subscribeOptionsFab } from '../lib/optionsFabVisibility'
 
@@ -15,6 +17,8 @@ function resolveScroller(target) {
 }
 
 export default function ScrollToTopButton() {
+  const { pathname } = useLocation()
+  const allowed = isScrollToTopPath(pathname)
   const [visible, setVisible] = useState(false)
   const [fab, setFab] = useState({ present: false, visible: true })
   const scrollerRef = useRef(null)
@@ -25,6 +29,13 @@ export default function ScrollToTopButton() {
   useEffect(() => subscribeOptionsFab(setFab), [])
 
   useEffect(() => {
+    setVisible(false)
+    window.clearTimeout(hideTimerRef.current)
+  }, [pathname, allowed])
+
+  useEffect(() => {
+    if (!allowed) return undefined
+
     function scheduleHide() {
       window.clearTimeout(hideTimerRef.current)
       hideTimerRef.current = window.setTimeout(() => setVisible(false), HIDE_AFTER_MS)
@@ -58,7 +69,7 @@ export default function ScrollToTopButton() {
       window.clearTimeout(hideTimerRef.current)
       cancelScrollRef.current?.()
     }
-  }, [fab.present, fab.visible])
+  }, [allowed, fab.present, fab.visible])
 
   useEffect(() => {
     if (!fab.present || !fab.visible) return
@@ -74,6 +85,8 @@ export default function ScrollToTopButton() {
     cancelScrollRef.current?.()
     cancelScrollRef.current = animateScrollTop(scroller)
   }
+
+  if (!allowed) return null
 
   return (
     <button

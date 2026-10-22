@@ -14,6 +14,7 @@ import SellerCatalogFab from '../../components/seller/SellerCatalogFab'
 import SellerCatalogView from '../../components/seller/SellerCatalogView'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import ShareCatalogModal from '../../components/seller/ShareCatalogModal'
+import ShareSelectedProductsModal from '../../components/seller/ShareSelectedProductsModal'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
@@ -43,6 +44,9 @@ export default function SellerCatalog() {
   const [productToView, setProductToView] = useState(null)
   const [categoryToDelete, setCategoryToDelete] = useState(null)
   const [showShareCatalog, setShowShareCatalog] = useState(false)
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+  const [selectedProductIds, setSelectedProductIds] = useState([])
+  const [shareSelection, setShareSelection] = useState(null)
   const [showReorderCategories, setShowReorderCategories] = useState(false)
   const [categoryToOrganize, setCategoryToOrganize] = useState(null)
 
@@ -92,11 +96,16 @@ export default function SellerCatalog() {
 
   function handleProductDeleted(product) {
     setProductToDelete(null)
+    setSelectedProductIds((current) => current.filter((id) => id !== product.id))
     setSuccessMessage(`Producto «${product.name}» eliminado.`)
     loadCatalog()
   }
 
   function handleCategoryDeleted(category) {
+    if (selectedCategoryId === category.id) {
+      setSelectedCategoryId('')
+      setSelectedProductIds([])
+    }
     setCategoryToDelete(null)
     const productCount = category.product_count ?? category.products?.length ?? 0
     setSuccessMessage(
@@ -111,6 +120,28 @@ export default function SellerCatalog() {
     setShowReorderCategories(false)
     setSummary(nextSummary)
     setSuccessMessage('Orden de categorías actualizado.')
+  }
+
+  function toggleProductSelection(categoryId, productId) {
+    if (selectedCategoryId !== categoryId) {
+      setSelectedCategoryId(categoryId)
+      setSelectedProductIds([productId])
+      return
+    }
+    setSelectedProductIds((current) => {
+      const next = current.includes(productId)
+        ? current.filter((id) => id !== productId)
+        : [...current, productId]
+      if (next.length === 0) setSelectedCategoryId('')
+      return next
+    })
+  }
+
+  function openShareSelected(category, productIds) {
+    const selected = new Set(productIds)
+    const products = (category.products || []).filter((product) => selected.has(product.id))
+    if (!products.length) return
+    setShareSelection({ category, products })
   }
 
   function handleProductsOrganized(nextSummary) {
@@ -185,6 +216,10 @@ export default function SellerCatalog() {
           <>
             <SellerCatalogView
               summary={summary}
+              selectedCategoryId={selectedCategoryId}
+              selectedProductIds={selectedProductIds}
+              onToggleProduct={toggleProductSelection}
+              onShareSelected={openShareSelected}
               onAddProduct={openCreateProduct}
               onViewProduct={setProductToView}
               onEditProduct={setProductToEdit}
@@ -254,6 +289,15 @@ export default function SellerCatalog() {
 
         {showShareCatalog && profile ? (
           <ShareCatalogModal profile={profile} onClose={() => setShowShareCatalog(false)} />
+        ) : null}
+
+        {shareSelection ? (
+          <ShareSelectedProductsModal
+            profile={profile}
+            products={shareSelection.products}
+            categoryName={shareSelection.category.name}
+            onClose={() => setShareSelection(null)}
+          />
         ) : null}
 
         {showReorderCategories && summary?.categories?.length >= 2 ? (

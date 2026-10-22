@@ -83,6 +83,23 @@ export function buildJabaShareMessage(items, location) {
   return `Mira mi jaba en ${place} en ${BRAND_NAME}: ${url}`
 }
 
+export function locationFromBusinessArea(area) {
+  if (!area?.province_id || !area?.municipality_id) return null
+  return {
+    province: { id: area.province_id, name: area.province_name },
+    municipality: { id: area.municipality_id, name: area.municipality_name },
+  }
+}
+
+export function buildSellerCheckoutShareMessage({ storeName, items, location }) {
+  const place = zoneLabel(location)
+  const count = items?.length ?? 0
+  const url = buildJabaShareUrl(items, location)
+  const name = storeName?.trim() || 'esta tienda'
+  const productLabel = count === 1 ? 'un producto' : `${count} productos`
+  return `Te compartí ${productLabel} de ${name} en ${place} en ${BRAND_NAME}: ${url}`
+}
+
 export function canUseSystemShare() {
   if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') return true
   return Capacitor.isNativePlatform()

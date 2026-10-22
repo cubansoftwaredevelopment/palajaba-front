@@ -21,6 +21,11 @@ const TECHNICAL_PATTERNS = [
   /cloudinary no devolvi[oó]/i,
   /^error de servidor$/i,
   /^ocurri[oó] un error\. intenta de nuevo\.$/i,
+  /is not defined/i,
+  /is not a function/i,
+  /cannot read propert/i,
+  /referenceerror/i,
+  /typeerror/i,
 ]
 
 export function isNetworkError(err) {

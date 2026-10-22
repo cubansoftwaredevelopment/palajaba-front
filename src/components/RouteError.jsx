@@ -15,9 +15,7 @@ export default function RouteError() {
     ? 'La ruta que buscas no existe o ya no está disponible.'
     : isServerFailure
       ? 'El servidor no respondió correctamente. Inténtalo de nuevo en un momento.'
-      : isRouteErrorResponse(error)
-        ? error.statusText || 'Ocurrió un error inesperado.'
-        : error?.message || 'Ocurrió un error inesperado.'
+      : 'Ocurrió un error inesperado. Inténtalo de nuevo.'
 
   if (is404) {
     return (

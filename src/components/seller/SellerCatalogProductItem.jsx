@@ -1,12 +1,29 @@
+import Checkbox from '../ui/Checkbox'
 import { resolveMediaUrl } from '../../lib/media'
 import { formatPrice } from '../../lib/money'
 import { sellerCatalogProductRow, sellerFocusRing, sellerIconBtn, sellerIconBtnDanger } from './sellerStyles'
 
-export default function SellerCatalogProductItem({ product, onView, onEdit, onDelete }) {
+export default function SellerCatalogProductItem({
+  product,
+  selected = false,
+  onToggleSelect,
+  onView,
+  onEdit,
+  onDelete,
+}) {
   const imageSrc = resolveMediaUrl(product.image_url)
 
   return (
     <div className={sellerCatalogProductRow}>
+      <label className="flex h-9 w-9 shrink-0 items-center justify-center">
+        <Checkbox
+          checked={selected}
+          onChange={() => onToggleSelect?.(product)}
+          onClick={(event) => event.stopPropagation()}
+          aria-label={`Seleccionar ${product.name}`}
+        />
+      </label>
+
       <button
         type="button"
         onClick={() => onView(product)}
