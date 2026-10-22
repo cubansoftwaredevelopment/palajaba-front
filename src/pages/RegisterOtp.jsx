@@ -13,7 +13,14 @@ import {
 } from '../components/auth/formStyles'
 import { confirmRegisterOtp, resendRegisterOtp } from '../register/api'
 import { getRegisterSteps } from '../register/constants'
-import { expiryMs, formatCountdown, useCountdown } from '../register/utils'
+import {
+  applySmsFailFromError,
+  expiryMs,
+  formatCountdown,
+  getSmsCooldownUntil,
+  smsFailUserMessage,
+  useCountdown,
+} from '../register/utils'
 import { getUserFacingMessage } from '../lib/userFacingError'
 
 function CodeField({ id, label, hint, value, onChange }) {
@@ -54,10 +61,15 @@ export default function RegisterOtp() {
   const [resending, setResending] = useState('')
   const [emailEndsAt, setEmailEndsAt] = useState(() => expiryMs(location.state?.emailExpiresAt))
   const [phoneEndsAt, setPhoneEndsAt] = useState(() => expiryMs(location.state?.phoneExpiresAt))
+  const [smsCooldownEndsAt, setSmsCooldownEndsAt] = useState(() =>
+    getSmsCooldownUntil(location.state?.phone),
+  )
   const emailRemaining = useCountdown(emailEndsAt)
   const phoneRemaining = useCountdown(phoneEndsAt)
+  const smsCooldownRemaining = useCountdown(smsCooldownEndsAt)
   const remaining = Math.max(emailRemaining, phoneRemaining)
   const expired = remaining <= 0
+  const phoneResendLocked = phoneRemaining > 0 || smsCooldownRemaining > 0
 
   useEffect(() => {
     if (!challengeId) {
@@ -107,12 +119,18 @@ export default function RegisterOtp() {
       if (channel === 'email') setEmailEndsAt(expiryMs(result.email_expires_at))
       if (channel === 'phone') setPhoneEndsAt(expiryMs(result.phone_expires_at))
     } catch (err) {
-      setError(
-        getUserFacingMessage(
-          err,
-          'No pudimos reenviar el código. Espera un momento e inténtalo de nuevo.',
-        ),
-      )
+      const cooldownUntil = applySmsFailFromError(err, phone)
+      if (cooldownUntil) {
+        setSmsCooldownEndsAt(cooldownUntil)
+        setError(smsFailUserMessage(cooldownUntil - Date.now()))
+      } else {
+        setError(
+          getUserFacingMessage(
+            err,
+            'No pudimos reenviar el código. Espera un momento e inténtalo de nuevo.',
+          ),
+        )
+      }
     } finally {
       setResending('')
     }
@@ -188,21 +206,27 @@ export default function RegisterOtp() {
           <button
             type="button"
             onClick={() => handleResend('phone')}
-            disabled={Boolean(resending) || loading || phoneRemaining > 0}
+            disabled={Boolean(resending) || loading || phoneResendLocked}
             className="self-start text-sm font-semibold text-brand-green underline-offset-2 hover:underline disabled:opacity-60"
           >
             {resending === 'phone'
               ? 'Reenviando…'
-              : phoneRemaining > 0
-                ? `Reenviar SMS en ${formatCountdown(phoneRemaining)}`
-                : 'Reenviar código de SMS'}
+              : smsCooldownRemaining > 0
+                ? `Reenviar SMS en ${formatCountdown(smsCooldownRemaining)}`
+                : phoneRemaining > 0
+                  ? `Reenviar SMS en ${formatCountdown(phoneRemaining)}`
+                  : 'Reenviar código de SMS'}
           </button>
 
-          {error && (
+          {smsCooldownRemaining > 0 ? (
+            <p className={alertErrorClass} role="alert">
+              {smsFailUserMessage(smsCooldownRemaining)}
+            </p>
+          ) : error ? (
             <p className={alertErrorClass} role="alert">
               {error}
             </p>
-          )}
+          ) : null}
 
           <Button type="submit" className="mt-1" disabled={loading}>
             {loading ? 'Verificando…' : 'Verificar y continuar'}

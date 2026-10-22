@@ -524,7 +524,7 @@ export default function AdminDashboard() {
           onSuccess={() =>
             handleMutationSuccess(
               subscriptionModal.mode === 'renew'
-                ? 'Suscripción renovada. La tienda vuelve a Aprobadas.'
+                ? 'Suscripción renovada.'
                 : subscriptionModal.mode === 'edit'
                   ? 'Suscripción actualizada.'
                   : 'Tienda aprobada.',

@@ -17,6 +17,14 @@ import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../lib/phone'
 import { normalizePlanTier } from '../constants/plan'
 import { startRegisterOtp } from '../register/api'
 import { getRegisterSteps } from '../register/constants'
+import {
+  applySmsFailFromError,
+  formatCountdown,
+  getActiveSmsCooldownPhone,
+  getSmsCooldownUntil,
+  smsFailUserMessage,
+  useCountdown,
+} from '../register/utils'
 import { getUserFacingMessage } from '../lib/userFacingError'
 
 function RequiredLabel({ htmlFor, children }) {
@@ -69,11 +77,13 @@ export default function RegisterForm() {
   const [transferId, setTransferId] = useState('')
   const [storeName, setStoreName] = useState('')
   const [email, setEmail] = useState('')
-  const [phoneDigits, setPhoneDigits] = useState('')
+  const [phoneDigits, setPhoneDigits] = useState(() => getActiveSmsCooldownPhone())
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [smsCooldownEndsAt, setSmsCooldownEndsAt] = useState(() => getSmsCooldownUntil(getActiveSmsCooldownPhone()))
+  const smsCooldownRemaining = useCountdown(smsCooldownEndsAt)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -91,6 +101,13 @@ export default function RegisterForm() {
 
     if (validationError) {
       setError(validationError)
+      return
+    }
+
+    if (getSmsCooldownUntil(phoneDigits) > Date.now()) {
+      const until = getSmsCooldownUntil(phoneDigits)
+      setSmsCooldownEndsAt(until)
+      setError(smsFailUserMessage(until - Date.now()))
       return
     }
 
@@ -130,12 +147,18 @@ export default function RegisterForm() {
         },
       })
     } catch (err) {
-      setError(
-        getUserFacingMessage(
-          err,
-          'No pudimos enviar los códigos. Revisa tus datos e inténtalo de nuevo.',
-        ),
-      )
+      const cooldownUntil = applySmsFailFromError(err, phoneDigits)
+      if (cooldownUntil) {
+        setSmsCooldownEndsAt(cooldownUntil)
+        setError(smsFailUserMessage(cooldownUntil - Date.now()))
+      } else {
+        setError(
+          getUserFacingMessage(
+            err,
+            'No pudimos enviar los códigos. Revisa tus datos e inténtalo de nuevo.',
+          ),
+        )
+      }
     } finally {
       setLoading(false)
     }
@@ -211,7 +234,13 @@ export default function RegisterForm() {
             <p className={hintClass}>Te enviaremos un código de 6 dígitos a este correo.</p>
           </div>
 
-          <PhoneField value={phoneDigits} onChange={setPhoneDigits} />
+          <PhoneField
+            value={phoneDigits}
+            onChange={(next) => {
+              setPhoneDigits(next)
+              setSmsCooldownEndsAt(getSmsCooldownUntil(next))
+            }}
+          />
 
           <PasswordField
             id="password"
@@ -229,14 +258,22 @@ export default function RegisterForm() {
             autoComplete="new-password"
           />
 
-          {error && (
+          {smsCooldownRemaining > 0 ? (
+            <p className={alertErrorClass} role="alert">
+              {smsFailUserMessage(smsCooldownRemaining)}
+            </p>
+          ) : error ? (
             <p className={alertErrorClass} role="alert">
               {error}
             </p>
-          )}
+          ) : null}
 
-          <Button type="submit" className="mt-1" disabled={loading}>
-            {loading ? 'Enviando códigos…' : 'Enviar códigos'}
+          <Button type="submit" className="mt-1" disabled={loading || smsCooldownRemaining > 0}>
+            {loading
+              ? 'Enviando códigos…'
+              : smsCooldownRemaining > 0
+                ? `Espera ${formatCountdown(smsCooldownRemaining)}`
+                : 'Enviar códigos'}
           </Button>
         </form>
       </section>

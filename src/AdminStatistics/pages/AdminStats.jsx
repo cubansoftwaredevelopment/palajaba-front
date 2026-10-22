@@ -1,6 +1,5 @@
 import AdminBusinessesByProvinceChart from '../componentes/AdminBusinessesByProvinceChart'
 import AdminDeliveryMapSection from '../componentes/AdminDeliveryMapSection'
-import AdminDeliveryMapSection from '../componentes/AdminDeliveryMapSection'
 import AdminDevicesSection from '../componentes/AdminDevicesSection'
 import AdminOrdersChart from '../componentes/AdminOrdersChart'
 import AdminOrdersLocationChart from '../componentes/AdminOrdersLocationChart'
@@ -84,7 +83,6 @@ function AdminStatsView() {
     topPopularProducts,
     ordersLocations,
     deliveryMap,
-    deliveryMap,
     deviceStats,
     loading,
     chartsLoading,
@@ -99,7 +97,6 @@ function AdminStatsView() {
     topSoldError,
     topPopularError,
     ordersLocationsError,
-    deliveryMapError,
     deliveryMapError,
     devicesError,
     pulling,

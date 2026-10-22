@@ -145,11 +145,14 @@ export default function RegistrationActionsMenu({
                   >
                     Editar plan y suscripción
                   </button>
+                  <button type="button" role="menuitem" className={menuItemClass()} onClick={() => onRenew(item)}>
+                    Renovar suscripción
+                  </button>
                 </>
               ) : null}
               {item.status === 'expired' ? (
                 <button type="button" role="menuitem" className={menuItemClass()} onClick={() => onRenew(item)}>
-                  Renovar plan
+                  Renovar suscripción
                 </button>
               ) : null}
               <div className="my-1 border-t border-zinc-800" />

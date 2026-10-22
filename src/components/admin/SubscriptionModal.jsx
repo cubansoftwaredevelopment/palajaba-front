@@ -130,7 +130,16 @@ export default function SubscriptionModal({ registration, mode, onClose: request
 
 
   const initialDate = isRenew
-    ? startOfDay(addBillingPeriod(new Date(), registration.billing_period))
+    ? startOfDay(
+        addBillingPeriod(
+          (() => {
+            const currentEnd = parseApiDate(registration.subscription_ends_at)
+            const today = startOfDay(new Date())
+            return currentEnd && currentEnd.getTime() > today.getTime() ? currentEnd : new Date()
+          })(),
+          registration.billing_period,
+        ),
+      )
     : isEdit
       ? parseApiDate(registration.subscription_ends_at) ?? startOfDay(new Date())
       : startOfDay(addBillingPeriod(new Date(), billingPeriod))
@@ -190,7 +199,7 @@ export default function SubscriptionModal({ registration, mode, onClose: request
 
 
 
-  const submitLabel = isRenew ? 'Renovar plan' : isEdit ? 'Guardar cambios' : 'Aprobar'
+  const submitLabel = isRenew ? 'Renovar suscripción' : isEdit ? 'Guardar cambios' : 'Aprobar'
 
 
 

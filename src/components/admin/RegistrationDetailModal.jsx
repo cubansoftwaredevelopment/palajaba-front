@@ -242,12 +242,13 @@ export default function RegistrationDetailModal({
           <AdminButton variant="secondary" onClick={() => onEditSubscription(item)}>
             Editar plan y suscripción
           </AdminButton>
+          <AdminButton onClick={() => onRenew(item)}>Renovar suscripción</AdminButton>
         </div>
       )}
 
       {item.status === 'expired' && (
         <div className="flex flex-col gap-2">
-          <AdminButton onClick={() => onRenew(item)}>Renovar plan</AdminButton>
+          <AdminButton onClick={() => onRenew(item)}>Renovar suscripción</AdminButton>
           <p className={`text-center text-xs ${adminSubtle}`}>
             Al renovar, la tienda vuelve a la pestaña Aprobadas.
           </p>
