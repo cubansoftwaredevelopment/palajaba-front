@@ -887,13 +887,16 @@ export function reorderCatalogProducts(token, categoryId, productIds) {
   );
 }
 
-export function updateCatalogTheme(token, catalogTheme) {
+export function updateCatalogTheme(token, catalogTheme, catalogPalette) {
   return request("/api/auth/me/catalog/theme", {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ catalog_theme: catalogTheme }),
+    body: JSON.stringify({
+      catalog_theme: catalogTheme,
+      ...(catalogPalette ? { catalog_palette: catalogPalette } : {}),
+    }),
   });
 }
 

@@ -200,13 +200,14 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
   const visibleSections = sections.filter((section) => section.products?.length);
   const hasProducts = (catalog?.total_products ?? 0) > 0;
   const catalogTheme = normalizeCatalogTheme(catalog?.catalog_theme);
+  const catalogPalette = catalog?.catalog_palette ?? null;
   const backTo = isGestorCatalog ? storePublicPath(storeSlug) : "/comprar";
   const backLabel = isGestorCatalog
     ? catalog?.store?.store_name || "Tienda"
     : MARKETPLACE_LABEL;
 
   return (
-    <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
+    <CatalogThemeScope theme={catalogTheme} palette={catalogPalette} className="flex min-h-dvh flex-col">
       <BuyerDisplayedLocationProvider location={location}>
         <BuyerShell
           flushBottom

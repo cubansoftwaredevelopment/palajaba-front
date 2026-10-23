@@ -3,10 +3,17 @@ import { test } from 'node:test'
 
 import {
   DEFAULT_CATALOG_THEME,
+  PALETTE_SLOTS,
+  clampPaletteOpacity,
   getCatalogThemeClass,
   getCatalogThemeDefinition,
   listCatalogThemes,
+  normalizeCatalogPalette,
   normalizeCatalogTheme,
+  paletteColorToCss,
+  paletteFromTheme,
+  paletteToCssVars,
+  parseHexColor,
 } from '../../src/lib/catalogThemes.js'
 
 test('normalizeCatalogTheme usa default para valores desconocidos', () => {
@@ -115,6 +122,45 @@ test('tema carmelita expone la paleta Café Cortao de cinco tonos', () => {
 
 test('DEFAULT_CATALOG_THEME es default', () => {
   assert.equal(DEFAULT_CATALOG_THEME, 'default')
+})
+
+test('parseHexColor normaliza y hace fallback', () => {
+  assert.equal(parseHexColor('#59802C'), '#59802c')
+  assert.equal(parseHexColor('ff5722'), '#ff5722')
+  assert.equal(parseHexColor('nope', '#112233'), '#112233')
+})
+
+test('clampPaletteOpacity limita entre 0 y 100', () => {
+  assert.equal(clampPaletteOpacity(40), 40)
+  assert.equal(clampPaletteOpacity(-8), 0)
+  assert.equal(clampPaletteOpacity(140), 100)
+  assert.equal(clampPaletteOpacity('x', 80), 80)
+})
+
+test('normalizeCatalogPalette completa huecos con el preset', () => {
+  const palette = normalizeCatalogPalette(
+    { primary: { hex: '#ff0000', opacity: 50 } },
+    'default',
+  )
+  assert.equal(palette.primary.hex, '#ff0000')
+  assert.equal(palette.primary.opacity, 50)
+  assert.equal(palette.background.hex, '#fdfbf2')
+  assert.equal(palette.background.opacity, 100)
+})
+
+test('paletteColorToCss y paletteToCssVars usan rgb con alfa', () => {
+  assert.equal(paletteColorToCss({ hex: '#ff0000', opacity: 50 }), 'rgb(255 0 0 / 0.5)')
+  const vars = paletteToCssVars(paletteFromTheme('grey'), 'grey')
+  assert.equal(vars['--color-brand-green'], 'rgb(43 43 43 / 1)')
+  assert.equal(vars['--color-brand-white'], 'rgb(224 224 224 / 1)')
+})
+
+test('cada tema expone tokens de paleta para los 4 tipos', () => {
+  for (const theme of listCatalogThemes()) {
+    for (const slot of PALETTE_SLOTS) {
+      assert.match(theme.tokens[slot], /^#[0-9a-f]{6}$/)
+    }
+  }
 })
 
 test('cada tema expone el nombre y la descripción de la paleta', () => {

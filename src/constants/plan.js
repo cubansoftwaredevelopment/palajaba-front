@@ -67,11 +67,11 @@ export const PLAN_TIERS = {
     id: 'premium',
     name: 'Premium',
     recommended: false,
-    description: 'Máxima visibilidad y personalización total del catálogo.',
+    description: 'Máxima visibilidad y paleta de colores a tu medida.',
     features: [
       'Todo lo del plan Pro',
       PLAN_GESTOR_FEATURES.premium,
-      'Tema y personalización total del catálogo',
+      'Personaliza la paleta de colores del catálogo',
       'Prioridad en las búsquedas de negocios',
       'Boost en recomendaciones (×4 visibilidad)',
       'Soporte VIP',

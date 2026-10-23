@@ -264,6 +264,7 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
     [catalog],
   )
   const catalogTheme = normalizeCatalogTheme(catalog?.catalog_theme)
+  const catalogPalette = catalog?.catalog_palette ?? null
   const categoryName = category?.name || decodeURIComponent(categorySlug || '')
 
   function goBack() {
@@ -275,7 +276,7 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
   }
 
   return (
-    <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
+    <CatalogThemeScope theme={catalogTheme} palette={catalogPalette} className="flex min-h-dvh flex-col">
       <BuyerDisplayedLocationProvider location={location}>
         <BuyerShell
           flushBottom

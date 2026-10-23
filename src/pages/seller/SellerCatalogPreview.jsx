@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 
 import CatalogThemePickerModal from '../../components/catalog/CatalogThemePickerModal'
@@ -18,7 +18,11 @@ import {
   fetchMarketplaceStoreCategoryProducts,
   updateCatalogTheme,
 } from '../../lib/api'
-import { DEFAULT_CATALOG_THEME, normalizeCatalogTheme } from '../../lib/catalogThemes'
+import {
+  DEFAULT_CATALOG_THEME,
+  normalizeCatalogPalette,
+  normalizeCatalogTheme,
+} from '../../lib/catalogThemes'
 import { sellerHasFullStoreCustomization } from '../../constants/plan'
 import { resolveStoreSlug } from '../../lib/storeShare'
 import { getSellerToken } from '../../lib/sellerAuth'
@@ -82,17 +86,38 @@ function SellerCatalogPreviewContent() {
         ? normalizeCatalogTheme(profile?.catalog_theme ?? catalog?.catalog_theme)
         : DEFAULT_CATALOG_THEME,
   )
+  const [catalogPalette, setCatalogPalette] = useState(() =>
+    normalizeCatalogPalette(
+      profile?.catalog_palette ?? catalog?.catalog_palette,
+      canCustomizeTheme
+        ? normalizeCatalogTheme(profile?.catalog_theme ?? catalog?.catalog_theme)
+        : DEFAULT_CATALOG_THEME,
+    ),
+  )
   const [showThemePicker, setShowThemePicker] = useState(false)
   const [savingTheme, setSavingTheme] = useState(false)
   const [themeError, setThemeError] = useState('')
+  const appearanceRef = useRef({ theme: catalogTheme, palette: catalogPalette })
+  appearanceRef.current = { theme: catalogTheme, palette: catalogPalette }
 
   useEffect(() => {
     if (!canCustomizeTheme) {
       setCatalogTheme(DEFAULT_CATALOG_THEME)
+      setCatalogPalette(normalizeCatalogPalette(null, DEFAULT_CATALOG_THEME))
       return
     }
-    setCatalogTheme(normalizeCatalogTheme(profile?.catalog_theme ?? catalog?.catalog_theme))
-  }, [canCustomizeTheme, profile?.catalog_theme, catalog?.catalog_theme])
+    const nextTheme = normalizeCatalogTheme(profile?.catalog_theme ?? catalog?.catalog_theme)
+    setCatalogTheme(nextTheme)
+    setCatalogPalette(
+      normalizeCatalogPalette(profile?.catalog_palette ?? catalog?.catalog_palette, nextTheme),
+    )
+  }, [
+    canCustomizeTheme,
+    profile?.catalog_theme,
+    profile?.catalog_palette,
+    catalog?.catalog_theme,
+    catalog?.catalog_palette,
+  ])
 
   const loadCatalog = useCallback(async () => {
     if (!storeSlug || !previewLocation) {
@@ -153,14 +178,11 @@ function SellerCatalogPreviewContent() {
     [currencies, previewLocation, storeSlug],
   )
 
-  async function handleSelectTheme(nextTheme) {
-    const normalized = normalizeCatalogTheme(nextTheme)
+  async function saveCatalogAppearance(nextTheme, nextPalette) {
+    const normalizedTheme = normalizeCatalogTheme(nextTheme)
+    const normalizedPalette = normalizeCatalogPalette(nextPalette, normalizedTheme)
     if (!canCustomizeTheme) {
       setThemeError('La personalización del catálogo está disponible en el plan Premium.')
-      return
-    }
-    if (normalized === catalogTheme) {
-      setShowThemePicker(false)
       return
     }
 
@@ -168,17 +190,46 @@ function SellerCatalogPreviewContent() {
     setSavingTheme(true)
     try {
       const token = getSellerToken()
-      const result = await updateCatalogTheme(token, normalized)
+      const result = await updateCatalogTheme(token, normalizedTheme, normalizedPalette)
       const savedTheme = normalizeCatalogTheme(result.catalog_theme)
+      const savedPalette = normalizeCatalogPalette(result.catalog_palette, savedTheme)
       setCatalogTheme(savedTheme)
-      setCatalog((current) => (current ? { ...current, catalog_theme: savedTheme } : current))
+      setCatalogPalette(savedPalette)
+      setCatalog((current) =>
+        current
+          ? { ...current, catalog_theme: savedTheme, catalog_palette: savedPalette }
+          : current,
+      )
       await refreshProfile?.()
-      setShowThemePicker(false)
     } catch (err) {
-      setThemeError(getUserFacingMessage(err, 'No se pudo guardar el tema del catálogo.'))
+      setThemeError(getUserFacingMessage(err, 'No se pudo guardar la paleta del catálogo.'))
     } finally {
       setSavingTheme(false)
     }
+  }
+
+  async function handleSelectTheme(nextTheme, nextPalette) {
+    const normalized = normalizeCatalogTheme(nextTheme)
+    const palette = normalizeCatalogPalette(nextPalette, normalized)
+    setCatalogTheme(normalized)
+    setCatalogPalette(palette)
+    await saveCatalogAppearance(normalized, palette)
+  }
+
+  function handlePaletteChange(slot, patch) {
+    setCatalogPalette((current) => {
+      const next = {
+        ...current,
+        [slot]: { ...current[slot], ...patch },
+      }
+      appearanceRef.current = { theme: catalogTheme, palette: next }
+      return next
+    })
+  }
+
+  async function handlePaletteCommit() {
+    const { theme, palette } = appearanceRef.current
+    await saveCatalogAppearance(theme, palette)
   }
 
   const sections = catalog?.sections ?? []
@@ -192,7 +243,7 @@ function SellerCatalogPreviewContent() {
   )
 
   const previewShell = (children, { header = headerEnd } = {}) => (
-    <CatalogThemeScope theme={catalogTheme} className="flex min-h-dvh flex-col">
+    <CatalogThemeScope theme={catalogTheme} palette={catalogPalette} className="flex min-h-dvh flex-col">
       <BuyerShell
         flushBottom
         mode="seller-preview"
@@ -283,6 +334,7 @@ function SellerCatalogPreviewContent() {
       {showThemePicker ? (
         <CatalogThemePickerModal
           selectedTheme={catalogTheme}
+          palette={catalogPalette}
           saving={savingTheme}
           locked={!canCustomizeTheme}
           error={themeError}
@@ -293,6 +345,8 @@ function SellerCatalogPreviewContent() {
             }
           }}
           onSelectTheme={handleSelectTheme}
+          onPaletteChange={handlePaletteChange}
+          onPaletteCommit={handlePaletteCommit}
         />
       ) : null}
     </>

@@ -97,12 +97,43 @@
 
 export const DEFAULT_CATALOG_THEME = 'default'
 
+export const PALETTE_SLOTS = ['primary', 'background', 'accent', 'secondary']
+
+export const PALETTE_SLOT_META = {
+  primary: {
+    label: 'Principal',
+    hint: 'Títulos y botones',
+    cssVar: '--color-brand-green',
+  },
+  background: {
+    label: 'Fondo',
+    hint: 'Fondo de la página',
+    cssVar: '--color-brand-white',
+  },
+  accent: {
+    label: 'Acento',
+    hint: 'Chips y avisos',
+    cssVar: '--color-brand-yellow',
+  },
+  secondary: {
+    label: 'Secundario',
+    hint: 'Texto auxiliar',
+    cssVar: '--color-brand-carmelita',
+  },
+}
+
 export const CATALOG_THEME_PALETTES = {
   default: {
     id: 'default',
     label: 'Pa\' La Jaba',
     description: 'Amarillo tamal, verde aguacate y carmelita chocolate, pa que te de hambre',
     swatches: ['#59802c', '#fdfbf2', '#f5c71a', '#7b4c38'],
+    tokens: {
+      primary: '#59802c',
+      background: '#fdfbf2',
+      accent: '#f5c71a',
+      secondary: '#7b4c38',
+    },
     className: 'catalog-theme-default',
   },
   grey: {
@@ -110,6 +141,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Apagón',
     description: 'Paleta sobria en escala de grises como el perro apagón 💡, en el que debes estar ahora mismo.',
     swatches: ['#2b2b2b', '#565656', '#848484', '#b3b3b3', '#e0e0e0'],
+    tokens: {
+      primary: '#2b2b2b',
+      background: '#e0e0e0',
+      accent: '#b3b3b3',
+      secondary: '#848484',
+    },
     className: 'catalog-theme-grey',
   },
   red: {
@@ -117,6 +154,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Marpacífico',
     description: 'Rojito marpacífico como el patio de tu abuela',
     swatches: ['#cc0000', '#e60000', '#ff2400', '#ff5722', '#fdfbf2'],
+    tokens: {
+      primary: '#cc0000',
+      background: '#fdfbf2',
+      accent: '#ff5722',
+      secondary: '#e60000',
+    },
     className: 'catalog-theme-red',
   },
   pink: {
@@ -124,6 +167,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Flamenco',
     description: 'Pa que flameenquee Santa Clo\'',
     swatches: ['#c2185b', '#e91e63', '#f48fb1', '#f8bbd0', '#fce4ec'],
+    tokens: {
+      primary: '#c2185b',
+      background: '#fce4ec',
+      accent: '#f48fb1',
+      secondary: '#e91e63',
+    },
     className: 'catalog-theme-pink',
   },
   green: {
@@ -131,6 +180,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Limonada',
     description: 'La limonada es la base de to\' 🎶',
     swatches: ['#33691e', '#558b2f', '#7cb342', '#9acd32', '#f1f8e9'],
+    tokens: {
+      primary: '#33691e',
+      background: '#f1f8e9',
+      accent: '#9acd32',
+      secondary: '#558b2f',
+    },
     className: 'catalog-theme-green',
   },
   blue: {
@@ -138,6 +193,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Varadero',
     description: 'No hay transporte para ir, pero al menos que tu catalogo te haga sentir la playa.',
     swatches: ['#092c56', '#225688', '#1976d2', '#42a5f5', '#f0f5f4'],
+    tokens: {
+      primary: '#092c56',
+      background: '#f0f5f4',
+      accent: '#2196f3',
+      secondary: '#225688',
+    },
     className: 'catalog-theme-blue',
   },
   purple: {
@@ -145,6 +206,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Uva Caleta',
     description: 'Moradito, acido y con arena en las manos.',
     swatches: ['#312a44', '#5b4b8a', '#8870e3', '#bab0c8', '#dad4df'],
+    tokens: {
+      primary: '#312a44',
+      background: '#dad4df',
+      accent: '#8870e3',
+      secondary: '#5b4b8a',
+    },
     className: 'catalog-theme-purple',
   },
   orange: {
@@ -152,6 +219,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Mango',
     description: 'Bien maduro y picao en cuadritos.',
     swatches: ['#c24100', '#ff7b00', '#ff8d21', '#ffa652', '#fff8f0'],
+    tokens: {
+      primary: '#c24100',
+      background: '#fff8f0',
+      accent: '#ff7b00',
+      secondary: '#9a3412',
+    },
     className: 'catalog-theme-orange',
   },
   yellow: {
@@ -159,6 +232,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Marcolina',
     description: 'YA EMPEZÓ LA SOMBRILLA AMARILLA, VAMOS,  VEN A LA CASA E MARCOLINA',
     swatches: ['#7a6200', '#f7c319', '#facf43', '#fcdb6d', '#fdfbcf'],
+    tokens: {
+      primary: '#7a6200',
+      background: '#fdfbcf',
+      accent: '#f7c319',
+      secondary: '#8a6d00',
+    },
     className: 'catalog-theme-yellow',
   },
   carmelita: {
@@ -166,6 +245,12 @@ export const CATALOG_THEME_PALETTES = {
     label: 'Café Cortao',
     description: '5% café, 95% chícharo',
     swatches: ['#5e3023', '#895737', '#c08552', '#e5c9a8', '#f3e9dc'],
+    tokens: {
+      primary: '#5e3023',
+      background: '#f3e9dc',
+      accent: '#c08552',
+      secondary: '#895737',
+    },
     className: 'catalog-theme-carmelita',
   },
 }
@@ -188,4 +273,76 @@ export function getCatalogThemeClass(theme) {
 
 export function listCatalogThemes() {
   return CATALOG_THEME_IDS.map((id) => CATALOG_THEME_PALETTES[id])
+}
+
+const HEX_RE = /^#?([0-9a-fA-F]{6})$/
+
+export function parseHexColor(value, fallback = '#59802c') {
+  const match = HEX_RE.exec(String(value ?? '').trim())
+  if (!match) {
+    const fallbackMatch = HEX_RE.exec(String(fallback).trim())
+    return `#${(fallbackMatch ? fallbackMatch[1] : '59802c').toLowerCase()}`
+  }
+  return `#${match[1].toLowerCase()}`
+}
+
+export function clampPaletteOpacity(value, fallback = 100) {
+  const amount = Number(value)
+  if (!Number.isFinite(amount)) {
+    const next = Number(fallback)
+    return Number.isFinite(next) ? Math.max(0, Math.min(100, Math.round(next))) : 100
+  }
+  return Math.max(0, Math.min(100, Math.round(amount)))
+}
+
+export function paletteFromTheme(theme) {
+  const tokens = getCatalogThemeDefinition(theme).tokens
+  return {
+    primary: { hex: tokens.primary, opacity: 100 },
+    background: { hex: tokens.background, opacity: 100 },
+    accent: { hex: tokens.accent, opacity: 100 },
+    secondary: { hex: tokens.secondary, opacity: 100 },
+  }
+}
+
+function normalizePaletteSlot(raw, fallback) {
+  return {
+    hex: parseHexColor(raw?.hex, fallback.hex),
+    opacity: clampPaletteOpacity(raw?.opacity, fallback.opacity),
+  }
+}
+
+export function normalizeCatalogPalette(raw, theme) {
+  const fallback = paletteFromTheme(theme)
+  if (!raw || typeof raw !== 'object') return fallback
+  return {
+    primary: normalizePaletteSlot(raw.primary, fallback.primary),
+    background: normalizePaletteSlot(raw.background, fallback.background),
+    accent: normalizePaletteSlot(raw.accent, fallback.accent),
+    secondary: normalizePaletteSlot(raw.secondary, fallback.secondary),
+  }
+}
+
+export function hexToRgb(hex) {
+  const normalized = parseHexColor(hex)
+  return {
+    r: Number.parseInt(normalized.slice(1, 3), 16),
+    g: Number.parseInt(normalized.slice(3, 5), 16),
+    b: Number.parseInt(normalized.slice(5, 7), 16),
+  }
+}
+
+export function paletteColorToCss(color) {
+  const { r, g, b } = hexToRgb(color?.hex)
+  const alpha = clampPaletteOpacity(color?.opacity) / 100
+  return `rgb(${r} ${g} ${b} / ${alpha})`
+}
+
+export function paletteToCssVars(palette, theme) {
+  const normalized = normalizeCatalogPalette(palette, theme)
+  const vars = {}
+  for (const slot of PALETTE_SLOTS) {
+    vars[PALETTE_SLOT_META[slot].cssVar] = paletteColorToCss(normalized[slot])
+  }
+  return vars
 }
