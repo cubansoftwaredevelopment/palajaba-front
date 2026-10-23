@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom'
-import CategoryAutocomplete from '../../components/seller/CategoryAutocomplete'
-import LoadingState from '../../components/ui/LoadingState'
 import LocationMapModal from '../../components/seller/LocationMapModal'
 import SellerBusinessAreaFields, {
   getBusinessAreaFromSelection,
@@ -34,7 +32,6 @@ import {
   sellerTextarea,
 } from '../../components/seller/sellerStyles'
 import {
-  fetchCategories,
   updateSellerProfile,
   uploadSellerProfilePhoto,
 } from '../../lib/api'
@@ -68,12 +65,6 @@ const BIO_MAX = 500
 
 function normalizeText(value) {
   return (value ?? '').trim()
-}
-
-function sameStringArray(a, b) {
-  const left = [...(a ?? [])].sort()
-  const right = [...(b ?? [])].sort()
-  return left.length === right.length && left.every((item, index) => item === right[index])
 }
 
 function sameLocation(a, b) {
@@ -113,14 +104,12 @@ export default function SellerProfile() {
   const menuSections = useMemo(() => getProfileMenuSections(profile), [profile])
 
   const [activePanel, setActivePanel] = useState(null)
-  const [categories, setCategories] = useState([])
   const [photoUrl, setPhotoUrl] = useState(profile?.profile_photo_url ?? null)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [location, setLocation] = useState(profile?.business_location ?? null)
   const [showMap, setShowMap] = useState(false)
   const [biography, setBiography] = useState(profile?.biography ?? '')
   const [socialLinks, setSocialLinks] = useState(() => socialLinksFromProfile(profile))
-  const [selectedCategories, setSelectedCategories] = useState(profile?.category_ids ?? [])
   const [businessProvinceId, setBusinessProvinceId] = useState(
     profile?.business_area?.province_id ?? '',
   )
@@ -130,8 +119,6 @@ export default function SellerProfile() {
   const [deliveryAreas, setDeliveryAreas] = useState(profile?.delivery_areas ?? [])
   const [gestoresEnabled, setGestoresEnabled] = useState(Boolean(profile?.gestores_enabled))
   const [loading, setLoading] = useState(false)
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
-  const [categoriesError, setCategoriesError] = useState('')
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
 
@@ -141,27 +128,6 @@ export default function SellerProfile() {
     setActivePanel(openProfilePanel(null, requested))
     navigate('.', { replace: true, state: null })
   }, [routeLocation, navigate])
-
-  useEffect(() => {
-    let cancelled = false
-    setCategoriesLoading(true)
-    setCategoriesError('')
-
-    fetchCategories()
-      .then((data) => {
-        if (!cancelled) setCategories(data)
-      })
-      .catch((err) => {
-        if (!cancelled) setCategoriesError(getUserFacingMessage(err, 'No pudimos cargar las categorías.'))
-      })
-      .finally(() => {
-        if (!cancelled) setCategoriesLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   function markDirty() {
     setSaved(false)
@@ -223,10 +189,6 @@ export default function SellerProfile() {
       setError('Sube una foto de perfil para continuar.')
       return
     }
-    if (selectedCategories.length === 0) {
-      setError('Selecciona al menos una categoría.')
-      return
-    }
     const businessArea = getBusinessAreaFromSelection(businessProvinceId, businessMunicipalityId)
     if (!businessArea) {
       setError('Selecciona la provincia y el municipio de tu negocio.')
@@ -244,7 +206,6 @@ export default function SellerProfile() {
       const payload = {
         biography: biography.trim() || null,
         social_links: socialLinksPayload(socialLinks),
-        category_ids: selectedCategories,
         offers_delivery: deliveryAreas.length > 0,
         gestores_enabled: gestoresEnabled,
         business_area: businessArea,
@@ -271,7 +232,6 @@ export default function SellerProfile() {
       normalizeText(biography) !== normalizeText(profile.biography) ||
       socialLinksSignature(socialLinks) !== socialLinksSignature(socialLinksFromProfile(profile)) ||
       gestoresEnabled !== Boolean(profile.gestores_enabled) ||
-      !sameStringArray(selectedCategories, profile.category_ids) ||
       !sameLocation(location, profile.business_location) ||
       !sameBusinessArea(
         getBusinessAreaFromSelection(businessProvinceId, businessMunicipalityId),
@@ -284,7 +244,6 @@ export default function SellerProfile() {
     biography,
     socialLinks,
     gestoresEnabled,
-    selectedCategories,
     location,
     businessProvinceId,
     businessMunicipalityId,
@@ -427,34 +386,6 @@ export default function SellerProfile() {
     </SellerSection>
   )
 
-  const categoriesFields = (
-    <SellerSection label="Categorías" required>
-      {categoriesLoading ? (
-        <LoadingState variant="compact" size="sm" message="Cargando categorías…" className="!py-2" />
-      ) : null}
-      {categoriesError && (
-        <p className={sellerAlertError} role="alert">
-          {categoriesError}
-        </p>
-      )}
-      {!categoriesLoading && !categoriesError && categories.length === 0 && (
-        <p className="text-xs text-brand-carmelita/80">No hay categorías disponibles.</p>
-      )}
-      <CategoryAutocomplete
-        id="seller-profile-categories"
-        categories={categories}
-        value={selectedCategories}
-        onChange={(nextIds) => {
-          markDirty()
-          setSelectedCategories(nextIds)
-        }}
-        multiple
-        placeholder="Buscar y agregar categorías…"
-        disabled={categoriesLoading || categories.length === 0}
-      />
-    </SellerSection>
-  )
-
   const socialFields = (
     <SellerSocialLinksEditor
       links={socialLinks}
@@ -471,8 +402,6 @@ export default function SellerProfile() {
         return identityFields
       case PROFILE_PANEL_IDS.location:
         return locationFields
-      case PROFILE_PANEL_IDS.categories:
-        return categoriesFields
       case PROFILE_PANEL_IDS.social:
         return socialFields
       case PROFILE_PANEL_IDS.gestores:

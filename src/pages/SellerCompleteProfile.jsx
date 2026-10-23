@@ -1,7 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import CategoryAutocomplete from '../components/seller/CategoryAutocomplete'
-import LoadingState from '../components/ui/LoadingState'
 import LocationMapModal from '../components/seller/LocationMapModal'
 import SellerBusinessAreaFields, {
   getBusinessAreaFromSelection,
@@ -28,7 +26,6 @@ import {
   sellerTitle,
 } from '../components/seller/sellerStyles'
 import {
-  fetchCategories,
   updateSellerProfile,
   uploadSellerProfilePhoto,
 } from '../lib/api'
@@ -43,14 +40,12 @@ export default function SellerCompleteProfile() {
   const { profile, refreshProfile } = useOutletContext()
   const fileInputRef = useRef(null)
 
-  const [categories, setCategories] = useState([])
   const [photoUrl, setPhotoUrl] = useState(profile?.profile_photo_url ?? null)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [location, setLocation] = useState(profile?.business_location ?? null)
   const [showMap, setShowMap] = useState(false)
   const [biography, setBiography] = useState(profile?.biography ?? '')
   const [socialLinks, setSocialLinks] = useState(() => socialLinksFromProfile(profile))
-  const [selectedCategories, setSelectedCategories] = useState(profile?.category_ids ?? [])
   const [businessProvinceId, setBusinessProvinceId] = useState(
     profile?.business_area?.province_id ?? '',
   )
@@ -59,30 +54,7 @@ export default function SellerCompleteProfile() {
   )
   const [deliveryAreas, setDeliveryAreas] = useState(profile?.delivery_areas ?? [])
   const [loading, setLoading] = useState(false)
-  const [categoriesLoading, setCategoriesLoading] = useState(true)
-  const [categoriesError, setCategoriesError] = useState('')
   const [error, setError] = useState('')
-
-  useEffect(() => {
-    let cancelled = false
-    setCategoriesLoading(true)
-    setCategoriesError('')
-
-    fetchCategories()
-      .then((data) => {
-        if (!cancelled) setCategories(data)
-      })
-      .catch((err) => {
-        if (!cancelled) setCategoriesError(getUserFacingMessage(err, 'No pudimos cargar las categorías.'))
-      })
-      .finally(() => {
-        if (!cancelled) setCategoriesLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   async function handlePhotoChange(event) {
     const file = event.target.files?.[0]
@@ -118,10 +90,6 @@ export default function SellerCompleteProfile() {
       setError('Sube una foto de perfil para continuar.')
       return
     }
-    if (selectedCategories.length === 0) {
-      setError('Selecciona al menos una categoría.')
-      return
-    }
 
     const businessArea = getBusinessAreaFromSelection(businessProvinceId, businessMunicipalityId)
     if (!businessArea) {
@@ -140,7 +108,6 @@ export default function SellerCompleteProfile() {
       const payload = {
         biography: biography.trim() || null,
         social_links: socialLinksPayload(socialLinks),
-        category_ids: selectedCategories,
         offers_delivery: deliveryAreas.length > 0,
         gestores_enabled: Boolean(profile?.gestores_enabled),
         business_area: businessArea,
@@ -184,7 +151,6 @@ export default function SellerCompleteProfile() {
         <div className="mt-4">
           <ProfileProgressBar
             photo={Boolean(photoUrl)}
-            categories={selectedCategories.length}
             location={Boolean(businessProvinceId && businessMunicipalityId)}
           />
         </div>
@@ -259,29 +225,6 @@ export default function SellerCompleteProfile() {
 
           <SellerSection label="Redes sociales" optional className={sellerFormFull}>
             <SellerSocialLinksEditor links={socialLinks} onChange={setSocialLinks} />
-          </SellerSection>
-
-          <SellerSection label="Categorías" required hint="Puedes elegir más de una." className={sellerFormFull}>
-            {categoriesLoading ? (
-              <LoadingState variant="compact" size="sm" message="Cargando categorías…" className="!py-2" />
-            ) : null}
-            {categoriesError && (
-              <p className={sellerAlertError} role="alert">
-                {categoriesError}
-              </p>
-            )}
-            {!categoriesLoading && !categoriesError && categories.length === 0 && (
-              <p className="text-xs text-brand-carmelita/80">No hay categorías disponibles.</p>
-            )}
-            <CategoryAutocomplete
-              id="seller-complete-profile-categories"
-              categories={categories}
-              value={selectedCategories}
-              onChange={setSelectedCategories}
-              multiple
-              placeholder="Buscar y agregar categorías…"
-              disabled={categoriesLoading || categories.length === 0}
-            />
           </SellerSection>
 
           <SellerSection

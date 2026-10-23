@@ -1,7 +1,6 @@
-export default function ProfileProgressBar({ photo, categories, location, title = 'Perfil obligatorio' }) {
+export default function ProfileProgressBar({ photo, location, title = 'Perfil obligatorio' }) {
   const steps = [
     { done: photo, label: 'Foto' },
-    { done: categories > 0, label: 'Categoría' },
     { done: location, label: 'Zona' },
   ]
   const doneCount = steps.filter((s) => s.done).length

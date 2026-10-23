@@ -28,7 +28,6 @@ test('getProfileMenuSections agrupa General y Cuenta sin solapes', () => {
     PROFILE_PANEL_IDS.identity,
     PROFILE_PANEL_IDS.banners,
     PROFILE_PANEL_IDS.location,
-    PROFILE_PANEL_IDS.categories,
     PROFILE_PANEL_IDS.social,
     PROFILE_PANEL_IDS.gestores,
     PROFILE_PANEL_IDS.advanced,

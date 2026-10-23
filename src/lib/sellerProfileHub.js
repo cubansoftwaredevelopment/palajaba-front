@@ -4,7 +4,6 @@ export const PROFILE_PANEL_IDS = Object.freeze({
   identity: 'identity',
   banners: 'banners',
   location: 'location',
-  categories: 'categories',
   social: 'social',
   gestores: 'gestores',
   advanced: 'advanced',
@@ -18,7 +17,6 @@ export const PROFILE_PANEL_IDS = Object.freeze({
 export const PROFILE_FORM_PANEL_IDS = Object.freeze([
   PROFILE_PANEL_IDS.identity,
   PROFILE_PANEL_IDS.location,
-  PROFILE_PANEL_IDS.categories,
   PROFILE_PANEL_IDS.social,
   PROFILE_PANEL_IDS.gestores,
 ])
@@ -44,13 +42,6 @@ const PANELS = Object.freeze({
     description: 'Zona, mapa y envíos',
     kind: 'form',
     icon: 'location',
-  },
-  [PROFILE_PANEL_IDS.categories]: {
-    id: PROFILE_PANEL_IDS.categories,
-    label: 'Categorías',
-    description: 'Cómo te encuentran los compradores',
-    kind: 'form',
-    icon: 'categories',
   },
   [PROFILE_PANEL_IDS.social]: {
     id: PROFILE_PANEL_IDS.social,
@@ -121,7 +112,6 @@ export const PROFILE_MENU_SECTIONS = Object.freeze([
       PROFILE_PANEL_IDS.identity,
       PROFILE_PANEL_IDS.banners,
       PROFILE_PANEL_IDS.location,
-      PROFILE_PANEL_IDS.categories,
       PROFILE_PANEL_IDS.social,
       PROFILE_PANEL_IDS.gestores,
     ],

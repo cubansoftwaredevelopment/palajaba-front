@@ -1,5 +1,5 @@
 /**
- * Categorías globales de negocio (perfil del vendedor, productos, marketplace).
+ * Categorías globales de negocio (productos y marketplace).
  *
  * La lista completa vive en el backend:
  *   backend/app/services/categories.py → DEFAULT_CATEGORIES

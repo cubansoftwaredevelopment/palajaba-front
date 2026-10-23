@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { createCatalogProduct, fetchCatalogCurrencies, fetchSellerBusinessCategories, updateCatalogProduct } from '../../lib/api'
+import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../../lib/api'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../lib/imageUpload'
 
@@ -225,11 +225,11 @@ export default function CreateCatalogProductModal({
 
         const token = getSellerToken()
 
-        const [currencyData, allowedBusinessCategories] = await Promise.all([
+        const [currencyData, allBusinessCategories] = await Promise.all([
 
           fetchCatalogCurrencies(token),
 
-          fetchSellerBusinessCategories(token),
+          fetchCategories(),
 
         ])
 
@@ -237,7 +237,7 @@ export default function CreateCatalogProductModal({
 
           setCurrencies(currencyData)
 
-          setBusinessCategories(allowedBusinessCategories)
+          setBusinessCategories(Array.isArray(allBusinessCategories) ? allBusinessCategories : [])
 
           if (currencyData.length > 0) {
 
@@ -883,7 +883,7 @@ export default function CreateCatalogProductModal({
 
                 multiple={false}
 
-                placeholder="Categoría de tu negocio…"
+                placeholder="Buscar categoría…"
 
                 disabled={businessCategories.length === 0}
 
@@ -897,7 +897,7 @@ export default function CreateCatalogProductModal({
 
             <p className={`mt-1 ${sellerHint}`}>
 
-              Una sola por producto. Sale de las categorías que definiste en tu perfil.
+              Una sola por producto. Elige la que mejor describa este artículo.
 
             </p>
 
