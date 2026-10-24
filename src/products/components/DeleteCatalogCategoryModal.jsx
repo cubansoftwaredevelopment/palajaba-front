@@ -9,7 +9,7 @@ import {
   sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
-import { deleteCatalogCategory } from '../../lib/api'
+import { deleteCatalogCategory } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'

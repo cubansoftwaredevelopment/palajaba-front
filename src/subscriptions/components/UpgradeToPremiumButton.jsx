@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { fetchRenewalContactPhone } from '../../lib/api'
+import { fetchRenewalContactPhone } from '../api.js'
 import { openPremiumUpgradeWhatsApp } from '../../lib/renewalWhatsApp'
 import { sellerBtnPrimary, sellerFocusRing } from '../../components/seller/sellerStyles'
 

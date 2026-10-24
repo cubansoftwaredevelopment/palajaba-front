@@ -34,8 +34,9 @@ import {
 import {
   updateSellerProfile,
   uploadSellerProfilePhoto,
-} from '../../lib/api'
-import { getUserFacingMessage } from '../../lib/userFacingError'
+} from '../../auth/api.js'
+import { resolveUserFacingError } from '../../lib/userFacingError'
+import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
 import { validateImageFile } from '../../lib/imageUpload'
 import {
   dedupeDeliveryAreas,
@@ -120,7 +121,23 @@ export default function SellerProfile() {
   const [gestoresEnabled, setGestoresEnabled] = useState(Boolean(profile?.gestores_enabled))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [errorToast, setErrorToast] = useState(null)
   const [saved, setSaved] = useState(false)
+
+  function showCaughtError(err) {
+    const resolved = resolveUserFacingError(err)
+    if (resolved.isServiceError) {
+      setError('')
+      setErrorToast({
+        id: `${Date.now()}`,
+        tone: 'error',
+        title: resolved.title || 'Algo salió mal',
+        content: resolved.message,
+      })
+      return
+    }
+    setError(resolved.message)
+  }
 
   useEffect(() => {
     const requested = routeLocation?.state?.panel
@@ -173,7 +190,7 @@ export default function SellerProfile() {
       updateSellerProfileCache(updated)
       await refreshProfile()
     } catch (err) {
-      setError(getUserFacingMessage(err))
+      showCaughtError(err)
     } finally {
       setPhotoUploading(false)
       event.target.value = ''
@@ -219,7 +236,7 @@ export default function SellerProfile() {
       setSaved(true)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch (err) {
-      setError(getUserFacingMessage(err))
+      showCaughtError(err)
     } finally {
       setLoading(false)
     }
@@ -526,6 +543,12 @@ export default function SellerProfile() {
           </div>
         )}
       </section>
+
+      <SellerNotificationToast
+        toast={errorToast}
+        aboveNav
+        onDone={(id) => setErrorToast((current) => (current?.id === id ? null : current))}
+      />
 
       {showMap && (
         <LocationMapModal

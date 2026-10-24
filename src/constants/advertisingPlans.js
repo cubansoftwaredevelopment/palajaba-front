@@ -3,6 +3,20 @@
 export const ADVERTISING_TAGLINE =
   'Destaca tu tienda en el marketplace. Elige el plan que mejor se ajuste a tu negocio.'
 
+export const ADVERTISING_PLAN_IDS = Object.freeze(['ads-10', 'ads-20', 'ads-30'])
+
+export const DEFAULT_ADVERTISING_PRICES = Object.freeze({
+  'ads-10': 15,
+  'ads-20': 20,
+  'ads-30': 25,
+})
+
+export const ADVERTISING_PLAN_LABELS = Object.freeze({
+  'ads-10': 'Plan 1 — 10 días',
+  'ads-20': 'Plan 2 — 20 días',
+  'ads-30': 'Plan 3 — 30 días',
+})
+
 export const ADVERTISING_PLANS = Object.freeze([
   {
     id: 'ads-10',

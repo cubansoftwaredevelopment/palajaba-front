@@ -27,11 +27,34 @@ import {
   formatPlanAmount,
   normalizePlanPrices,
 } from '../constants/plan'
+import {
+  ADVERTISING_PLAN_IDS,
+  ADVERTISING_PLAN_LABELS,
+  DEFAULT_ADVERTISING_PRICES,
+} from '../constants/advertisingPlans'
 import { convertBetweenCurrencies } from '../lib/displayPrice'
 import { areExchangeRatesAvailable, getCupPerUnit, loadExchangeRates } from '../lib/exchangeRates'
 
 const fieldShell =
   'flex min-h-12 overflow-hidden rounded-xl border border-zinc-800/90 bg-zinc-900/70 transition-colors focus-within:border-brand-green/35 focus-within:ring-2 focus-within:ring-brand-green/15'
+
+function newAdminRow(email = '', phone = '') {
+  return {
+    key: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    email,
+    phone,
+  }
+}
+
+function adminsFromSettings(data) {
+  if (Array.isArray(data?.admins) && data.admins.length) {
+    return data.admins.map((admin) => newAdminRow(admin.email ?? '', admin.phone ?? ''))
+  }
+  if (data?.admin_email || data?.admin_phone) {
+    return [newAdminRow(data.admin_email ?? '', data.admin_phone ?? '')]
+  }
+  return [newAdminRow()]
+}
 
 const amountInputClass =
   'min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-base tabular-nums text-zinc-100 placeholder:text-zinc-600 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
@@ -119,6 +142,12 @@ function PlanPriceField({ label, value, onChange, cupPerUnit }) {
 export default function AdminSettings() {
   const navigate = useNavigate()
   const [phoneDigits, setPhoneDigits] = useState('')
+  const [admins, setAdmins] = useState(() => [newAdminRow()])
+  const [advertisingPrices, setAdvertisingPrices] = useState(() => ({
+    'ads-10': String(DEFAULT_ADVERTISING_PRICES['ads-10']),
+    'ads-20': String(DEFAULT_ADVERTISING_PRICES['ads-20']),
+    'ads-30': String(DEFAULT_ADVERTISING_PRICES['ads-30']),
+  }))
   const [planPrices, setPlanPrices] = useState(() => pricesToForm(DEFAULT_PLAN_PRICES))
   const [cupPerUnit, setCupPerUnit] = useState(() => getCupPerUnit())
   const [loading, setLoading] = useState(true)
@@ -136,6 +165,24 @@ export default function AdminSettings() {
         loadExchangeRates().catch(() => null),
       ])
       setPhoneDigits(data.renewal_contact_phone ?? '')
+      setAdmins(adminsFromSettings(data))
+      setAdvertisingPrices({
+        'ads-10': String(
+          data.advertising_prices?.['ads-10']?.amount
+            ?? data.advertising_prices?.ads_10?.amount
+            ?? DEFAULT_ADVERTISING_PRICES['ads-10'],
+        ),
+        'ads-20': String(
+          data.advertising_prices?.['ads-20']?.amount
+            ?? data.advertising_prices?.ads_20?.amount
+            ?? DEFAULT_ADVERTISING_PRICES['ads-20'],
+        ),
+        'ads-30': String(
+          data.advertising_prices?.['ads-30']?.amount
+            ?? data.advertising_prices?.ads_30?.amount
+            ?? DEFAULT_ADVERTISING_PRICES['ads-30'],
+        ),
+      })
       setPlanPrices(pricesToForm(data.plan_prices ?? DEFAULT_PLAN_PRICES))
       setCupPerUnit(getCupPerUnit())
     } catch (err) {
@@ -174,6 +221,35 @@ export default function AdminSettings() {
       return
     }
 
+    const parsedAdmins = []
+    for (const admin of admins) {
+      const email = admin.email.trim()
+      const phone = admin.phone.trim()
+      if (!email && !phone) {
+        setError('Completa el correo y el teléfono de cada administrador.')
+        return
+      }
+      if (!email || !phone) {
+        setError('Cada administrador necesita correo y teléfono.')
+        return
+      }
+      parsedAdmins.push({ email, phone })
+    }
+    if (!parsedAdmins.length) {
+      setError('Agrega al menos un administrador.')
+      return
+    }
+
+    const parsedAds = {}
+    for (const planId of ADVERTISING_PLAN_IDS) {
+      const amount = parseAmount(advertisingPrices[planId])
+      if (amount == null) {
+        setError('Cada precio de publicidad debe ser un número mayor o igual a 0.')
+        return
+      }
+      parsedAds[planId] = { amount }
+    }
+
     const parsedPrices = {}
     for (const tier of PLAN_TIER_ORDER) {
       parsedPrices[tier] = {}
@@ -196,8 +272,16 @@ export default function AdminSettings() {
       const updated = await updateAdminSettings(token, {
         renewal_contact_phone: phoneDigits,
         plan_prices: parsedPrices,
+        advertising_prices: parsedAds,
+        admins: parsedAdmins,
       })
       setPhoneDigits(updated.renewal_contact_phone ?? phoneDigits)
+      setAdmins(adminsFromSettings(updated))
+      setAdvertisingPrices({
+        'ads-10': String(updated.advertising_prices?.['ads-10']?.amount ?? parsedAds['ads-10'].amount),
+        'ads-20': String(updated.advertising_prices?.['ads-20']?.amount ?? parsedAds['ads-20'].amount),
+        'ads-30': String(updated.advertising_prices?.['ads-30']?.amount ?? parsedAds['ads-30'].amount),
+      })
       setPlanPrices(pricesToForm(updated.plan_prices ?? parsedPrices))
       setSuccess('Configuración guardada.')
     } catch (err) {
@@ -224,41 +308,180 @@ export default function AdminSettings() {
       {loading ? (
         <LoadingState variant="admin" message="Cargando configuración…" />
       ) : (
-        <form onSubmit={handleSubmit} className="mx-auto flex max-w-4xl flex-col gap-4">
-          <section className={adminCard}>
-            <h2 className="text-sm font-semibold text-zinc-100">Renovaciones</h2>
-            <p className={`mt-1.5 mb-4 text-sm leading-relaxed ${adminSubtle}`}>
-              Este número recibe los mensajes de WhatsApp cuando un vendedor quiere renovar su plan.
-            </p>
-            <div>
-              <label htmlFor="renewal-contact-phone" className={adminLabel}>
-                Teléfono
-                <span className="text-orange-300" aria-hidden="true">
-                  {' '}
-                  *
-                </span>
-              </label>
-              <div className={fieldShell}>
-                <span className="flex shrink-0 items-center border-r border-zinc-800/90 bg-zinc-950/40 px-3 text-sm font-semibold text-zinc-300">
-                  {PHONE_PREFIX}
-                </span>
-                <input
-                  id="renewal-contact-phone"
-                  type="tel"
-                  inputMode="numeric"
-                  value={formatPhoneDigits(phoneDigits)}
-                  onChange={(event) => setPhoneDigits(getPhoneDigits(event.target.value))}
-                  className={`${adminInput} min-h-12 rounded-none border-0 bg-transparent focus:ring-0`}
-                  placeholder="5 123 4567"
-                  autoComplete="tel-national"
-                  required
-                />
+        <form onSubmit={handleSubmit} className="mx-auto flex max-w-6xl flex-col gap-4 pb-20">
+          <div className="grid gap-4 md:grid-cols-2 md:items-start">
+            <section className={adminCard}>
+              <div className="mb-4">
+                <h2 className="text-sm font-semibold text-zinc-100">Precios de marketing</h2>
+                <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                  Montos en USD. Al cobrar se suma 0.5% de exchange de QvaPay.
+                </p>
               </div>
-              <p className={`mt-2 text-xs ${adminMuted}`}>
-                Obligatorio para que «Renovar plan» abra WhatsApp con un mensaje listo.
+              <div className="grid gap-3 sm:grid-cols-3">
+                {ADVERTISING_PLAN_IDS.map((planId) => (
+                  <div key={planId} className="rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-3.5">
+                    <label htmlFor={`ads-${planId}`} className="text-sm font-medium text-zinc-200">
+                      {ADVERTISING_PLAN_LABELS[planId]}
+                    </label>
+                    <div className={`${fieldShell} mt-2.5`}>
+                      <input
+                        id={`ads-${planId}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        value={advertisingPrices[planId]}
+                        onChange={(event) =>
+                          setAdvertisingPrices((current) => ({
+                            ...current,
+                            [planId]: event.target.value,
+                          }))
+                        }
+                        className={amountInputClass}
+                        placeholder="0"
+                        required
+                      />
+                      <span className="flex shrink-0 items-center px-3 text-sm font-semibold text-zinc-400">
+                        USD
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-3.5">
+                <h3 className="text-sm font-semibold text-zinc-100">Renovaciones</h3>
+                <p className={`mt-1.5 mb-3 text-sm leading-relaxed ${adminSubtle}`}>
+                  Este número recibe los mensajes de WhatsApp cuando un vendedor quiere renovar su plan.
+                </p>
+                <label htmlFor="renewal-contact-phone" className={adminLabel}>
+                  Teléfono
+                  <span className="text-orange-300" aria-hidden="true">
+                    {' '}
+                    *
+                  </span>
+                </label>
+                <div className={fieldShell}>
+                  <span className="flex shrink-0 items-center border-r border-zinc-800/90 bg-zinc-950/40 px-3 text-sm font-semibold text-zinc-300">
+                    {PHONE_PREFIX}
+                  </span>
+                  <input
+                    id="renewal-contact-phone"
+                    type="tel"
+                    inputMode="numeric"
+                    value={formatPhoneDigits(phoneDigits)}
+                    onChange={(event) => setPhoneDigits(getPhoneDigits(event.target.value))}
+                    className={`${adminInput} min-h-12 rounded-none border-0 bg-transparent focus:ring-0`}
+                    placeholder="5 123 4567"
+                    autoComplete="tel-national"
+                    required
+                  />
+                </div>
+                <p className={`mt-2 text-xs ${adminMuted}`}>
+                  Obligatorio para que «Renovar plan» abra WhatsApp con un mensaje listo.
+                </p>
+              </div>
+            </section>
+
+            <section className={adminCard}>
+              <h2 className="text-sm font-semibold text-zinc-100">Administradores</h2>
+              <p className={`mt-1.5 mb-4 text-sm leading-relaxed ${adminSubtle}`}>
+                Reciben el aviso por SMS cuando un vendedor paga un plan de publicidad (solo números
+                +53).
               </p>
-            </div>
-          </section>
+              <div className="flex flex-col gap-3">
+                {admins.map((admin, index) => (
+                  <article
+                    key={admin.key}
+                    className="rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-3.5"
+                  >
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-zinc-200">
+                        Administrador {index + 1}
+                      </p>
+                      {admins.length > 1 ? (
+                        <AdminButton
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          onClick={() =>
+                            setAdmins((current) => current.filter((item) => item.key !== admin.key))
+                          }
+                        >
+                          Quitar
+                        </AdminButton>
+                      ) : null}
+                    </div>
+                    <div className="grid gap-4">
+                      <div>
+                        <label htmlFor={`admin-email-${admin.key}`} className={adminLabel}>
+                          Correo
+                          <span className="text-orange-300" aria-hidden="true">
+                            {' '}
+                            *
+                          </span>
+                        </label>
+                        <input
+                          id={`admin-email-${admin.key}`}
+                          type="email"
+                          value={admin.email}
+                          onChange={(event) =>
+                            setAdmins((current) =>
+                              current.map((item) =>
+                                item.key === admin.key
+                                  ? { ...item, email: event.target.value }
+                                  : item,
+                              ),
+                            )
+                          }
+                          className={`${adminInput} min-h-12`}
+                          placeholder="admin@palajaba.com"
+                          autoComplete="email"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`admin-phone-${admin.key}`} className={adminLabel}>
+                          Teléfono
+                          <span className="text-orange-300" aria-hidden="true">
+                            {' '}
+                            *
+                          </span>
+                        </label>
+                        <input
+                          id={`admin-phone-${admin.key}`}
+                          type="tel"
+                          value={admin.phone}
+                          onChange={(event) =>
+                            setAdmins((current) =>
+                              current.map((item) =>
+                                item.key === admin.key
+                                  ? { ...item, phone: event.target.value }
+                                  : item,
+                              ),
+                            )
+                          }
+                          className={`${adminInput} min-h-12`}
+                          placeholder="+53 5 123 4567"
+                          autoComplete="tel"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <AdminButton
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="mt-3 w-full sm:w-auto"
+                onClick={() => setAdmins((current) => [...current, newAdminRow()])}
+              >
+                Añadir administrador
+              </AdminButton>
+            </section>
+          </div>
 
           <section className={adminCard}>
             <div className="mb-4">
@@ -292,8 +515,12 @@ export default function AdminSettings() {
             </div>
           </section>
 
-          <div className="sticky bottom-[max(1rem,var(--safe-bottom))] z-10">
-            <AdminButton type="submit" disabled={saving || phoneDigits.length !== 8}>
+          <div className="pointer-events-none fixed right-4 bottom-[max(1.25rem,var(--safe-bottom))] z-30 sm:right-6 lg:right-8">
+            <AdminButton
+              type="submit"
+              className="pointer-events-auto !w-auto min-w-[12.5rem] shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
+              disabled={saving || phoneDigits.length !== 8}
+            >
               {saving ? 'Guardando…' : 'Guardar configuración'}
             </AdminButton>
           </div>

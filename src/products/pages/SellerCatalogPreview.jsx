@@ -17,7 +17,7 @@ import {
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
   updateCatalogTheme,
-} from '../../lib/api'
+} from '../api.js'
 import {
   DEFAULT_CATALOG_THEME,
   normalizeCatalogPalette,

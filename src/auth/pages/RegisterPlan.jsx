@@ -14,7 +14,7 @@ import {
   formatPlanPriceLabel,
   normalizePlanTier,
 } from '../../subscriptions/constants.js'
-import { fetchDiscountCodesAvailability } from '../../lib/api'
+import { fetchDiscountCodesAvailability } from '../api.js'
 import { getDiscountedPlanPrice } from '../../lib/discountCode'
 import { getRegisterSteps } from '../constants.js'
 import { usePlanPricing } from '../../lib/usePlanPricing'

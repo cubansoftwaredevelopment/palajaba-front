@@ -18,7 +18,7 @@ import {
   fetchMarketplaceGestorStoreCategoryProducts,
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
-} from "../../lib/api";
+} from "../../products/api.js";
 import { BuyerDisplayedLocationProvider } from "../../context/BuyerDisplayedLocationContext";
 import { useBuyerDisplayCurrency } from "../../context/BuyerDisplayCurrencyContext";
 import { normalizeCatalogTheme } from "../../lib/catalogThemes";

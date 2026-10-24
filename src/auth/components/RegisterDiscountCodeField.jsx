@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { inputClass, labelClass } from './formStyles'
 import Button from '../../components/Button'
-import { validateDiscountCode } from '../../lib/api'
+import { validateDiscountCode } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
 export default function RegisterDiscountCodeField({

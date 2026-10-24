@@ -6,7 +6,7 @@ import { adminAlertError, adminLabel } from './adminStyles'
 import { normalizePlanTier } from '../../constants/plan'
 import { parseCupInput } from '../../lib/money'
 import { usePlanPricing } from '../../lib/usePlanPricing'
-import { updateRegistrationPayment } from '../../lib/api'
+import { updateRegistrationPayment } from '../../subscriptions/api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getAdminToken } from '../../lib/adminAuth'
 

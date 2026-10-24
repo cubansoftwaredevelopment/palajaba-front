@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
-import { searchSellerOrderedProducts } from '../../lib/api'
+import { searchSellerOrderedProducts } from '../../products/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { formatPrice } from '../../lib/money'

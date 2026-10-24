@@ -23,7 +23,7 @@ import {
   fetchAdminRegistrationGestores,
   renewRegistration,
   updateRegistrationSubscription,
-} from '../../lib/api'
+} from '../api.js'
 import {
   buildReplaceSubscriptionBody,
   isKeepSelectionInvalid,

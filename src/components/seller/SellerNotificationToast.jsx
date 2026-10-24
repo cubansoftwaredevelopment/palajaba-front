@@ -11,6 +11,7 @@ const EXIT_MS = 260
 
 export default function SellerNotificationToast({ toast, aboveNav = false, onDone, onOpen }) {
   const [leaving, setLeaving] = useState(false)
+  const isError = toast?.tone === 'error'
 
   useEffect(() => {
     if (!toast) return undefined
@@ -32,17 +33,28 @@ export default function SellerNotificationToast({ toast, aboveNav = false, onDon
   return (
     <div
       className={aboveNav ? sellerNoticeToastShellNav : sellerNoticeToastShellPage}
-      aria-live="polite"
+      aria-live={isError ? 'assertive' : 'polite'}
       aria-atomic="true"
     >
       <button
         type="button"
-        className={leaving ? sellerNoticeToastLeave : sellerNoticeToastEnter}
-        onClick={() => onOpen?.()}
+        className={`${leaving ? sellerNoticeToastLeave : sellerNoticeToastEnter} ${
+          isError ? 'border-brand-carmelita/25' : ''
+        }`}
+        onClick={() => {
+          if (onOpen) onOpen()
+          else setLeaving(true)
+        }}
       >
-        <p className="font-display text-sm font-bold leading-snug text-brand-green">{toast.title}</p>
+        <p
+          className={`font-display text-sm font-bold leading-snug ${
+            isError ? 'text-brand-carmelita' : 'text-brand-green'
+          }`}
+        >
+          {toast.title}
+        </p>
         {toast.content ? (
-          <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-brand-carmelita/90">{toast.content}</p>
+          <p className="mt-1 text-xs leading-relaxed text-brand-carmelita/90">{toast.content}</p>
         ) : null}
       </button>
     </div>

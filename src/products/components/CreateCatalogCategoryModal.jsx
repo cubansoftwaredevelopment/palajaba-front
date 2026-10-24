@@ -14,7 +14,7 @@ import {
   sellerLabel,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
-import { createCatalogCategory } from '../../lib/api'
+import { createCatalogCategory } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'

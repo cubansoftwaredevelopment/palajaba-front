@@ -15,7 +15,7 @@ import {
 } from '../components/formStyles'
 import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../../lib/phone'
 import { normalizeBillingPeriod, normalizePlanTier } from '../../subscriptions/constants.js'
-import { startRegisterOtp } from '../context.js'
+import { startRegisterOtp } from '../api.js'
 import { getRegisterSteps } from '../constants.js'
 import {
   applySmsFailFromError,

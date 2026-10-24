@@ -9,7 +9,7 @@ import {
   inputClass,
   labelClass,
 } from '../components/formStyles'
-import { confirmPasswordResetOtp, resendPasswordResetOtp } from '../../lib/api'
+import { confirmPasswordResetOtp, resendPasswordResetOtp } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import {
   applySmsFailFromError,

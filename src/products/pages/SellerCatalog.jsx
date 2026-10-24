@@ -25,7 +25,7 @@ import {
   sellerSectionGap,
 } from '../../components/seller/sellerStyles'
 import { sellerHasProductDiscounts } from '../../subscriptions/constants.js'
-import { fetchSellerCatalog } from '../../lib/api'
+import { fetchSellerCatalog } from '../api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { resolveStoreSlug } from '../../lib/storeShare'
 import { getUserFacingMessage } from '../../lib/userFacingError'

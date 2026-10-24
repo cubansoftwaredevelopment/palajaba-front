@@ -7,7 +7,8 @@ import SellerNotificationsPanel from './SellerNotificationsPanel'
 import SellerShell from './SellerShell'
 import StatePanel from '../ui/StatePanel'
 import SubscriptionExpiredScreen from './SubscriptionExpiredScreen'
-import { ApiError, fetchSellerProfile, fetchSellerNotifications, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
+import { ApiError, fetchSellerNotifications, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
+import { fetchSellerProfile } from '../../auth/api.js'
 import {
   clearSellerSession,
   getSellerToken,

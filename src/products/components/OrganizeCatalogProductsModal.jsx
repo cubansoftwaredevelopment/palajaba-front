@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { PRODUCT_SORT_MODES } from '../../constants/catalog'
-import { reorderCatalogProducts, updateCatalogCategoryProductSort } from '../../lib/api'
+import { reorderCatalogProducts, updateCatalogCategoryProductSort } from '../api.js'
 import { sortProductsForPreview } from '../../lib/catalogProductSort'
 import { getCupPerUnit, loadExchangeRates } from '../../lib/exchangeRates'
 import { getUserFacingMessage } from '../../lib/userFacingError'

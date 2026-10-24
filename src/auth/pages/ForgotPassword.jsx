@@ -7,7 +7,7 @@ import MethodTabs from '../components/MethodTabs'
 import PhoneField from '../components/PhoneField'
 import Button from '../../components/Button'
 import { alertErrorClass, inputClass, labelClass } from '../components/formStyles'
-import { startPasswordReset } from '../../lib/api'
+import { startPasswordReset } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
 const METHODS = [

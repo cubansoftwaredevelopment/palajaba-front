@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../../lib/api'
+import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../lib/imageUpload'
 

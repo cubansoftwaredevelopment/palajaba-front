@@ -14,7 +14,8 @@ import StatePanel from '../../components/ui/StatePanel'
 import { BuyerDisplayedLocationProvider } from '../../context/BuyerDisplayedLocationContext'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { DEAD_MASCOT, LOADING_MASCOT } from '../../constants/branding'
-import { fetchCategories, fetchMarketplaceCategoryProducts } from '../../lib/api'
+import { fetchMarketplaceCategoryProducts } from '../../lib/api'
+import { fetchCategories } from '../../products/api.js'
 import {
   applySharedZoneFromSearch,
   getAdditionalMunicipalities,

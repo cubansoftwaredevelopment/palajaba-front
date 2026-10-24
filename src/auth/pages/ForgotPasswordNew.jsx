@@ -6,7 +6,7 @@ import AuthShell from '../components/AuthShell'
 import PasswordField from '../components/PasswordField'
 import Button from '../../components/Button'
 import { alertErrorClass } from '../components/formStyles'
-import { completePasswordReset } from '../../lib/api'
+import { completePasswordReset } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
 export default function ForgotPasswordNew() {

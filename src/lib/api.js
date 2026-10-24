@@ -155,134 +155,6 @@ export async function request(path, options = {}) {
   return response.json();
 }
 
-export function startPasswordReset(payload) {
-  return request("/api/auth/password-reset/start", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
-export function resendPasswordResetOtp(payload) {
-  return request("/api/auth/password-reset/otp/resend", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
-export function confirmPasswordResetOtp(payload) {
-  return request("/api/auth/password-reset/otp/confirm", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
-export function completePasswordReset(payload) {
-  return request("/api/auth/password-reset/complete", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function sellerLogin(payload) {
-  const data = await request("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-
-  if (data?.subscription_expired) {
-    throw new ApiError(data.subscription_expired.message, {
-      code: "subscription_expired",
-      data: data.subscription_expired,
-    });
-  }
-
-  return data;
-}
-
-export function fetchSellerProfile(token) {
-  return request("/api/auth/me", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchSellerBusinessCategories(token) {
-  return request("/api/auth/me/business-categories", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function fetchCategories() {
-  return request("/api/categories/");
-}
-
-export function fetchProductCategories() {
-  return request("/api/product-categories/");
-}
-
-export function updateSellerProfile(token, payload) {
-  return request("/api/auth/me/profile", {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function startSellerPhoneOtp(token, phone) {
-  return request("/api/auth/me/phone/otp/start", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ phone }),
-  });
-}
-
-export function startSellerEmailOtp(token, email) {
-  return request("/api/auth/me/email/otp/start", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ email }),
-  });
-}
-
-export function resendSellerContactOtp(token, challengeId) {
-  return request("/api/auth/me/contact-otp/resend", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ challenge_id: challengeId }),
-  });
-}
-
-export function confirmSellerContactOtp(token, challengeId, code) {
-  return request("/api/auth/me/contact-otp/confirm", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ challenge_id: challengeId, code }),
-  });
-}
-
-export function updateSellerStoreName(token, storeName) {
-  return request("/api/auth/me/store-name", {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ store_name: storeName }),
-  });
-}
-
 export function updateSellerStoreBanner(token, bannerId, isActive) {
   return request(`/api/auth/me/store-banners/${encodeURIComponent(bannerId)}`, {
     method: "PATCH",
@@ -326,159 +198,10 @@ export async function uploadSellerStoreBanner(token, file) {
   return response.json();
 }
 
-export async function uploadSellerProfilePhoto(token, file) {
-  const formData = new FormData();
-  formData.append("photo", file);
-
-  const response = await fetch(`${getApiBase()}/api/auth/me/profile-photo`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    const parsed = parseApiErrorDetail(data.detail);
-    throw new ApiError(parsed.message, {
-      code: parsed.code,
-      data: parsed.data,
-    });
-  }
-
-  return response.json();
-}
-
-export function adminLogin(username, password) {
-  return request("/api/admin/login", {
-    method: "POST",
-    body: JSON.stringify({ username, password }),
-  });
-}
-
-export function fetchRegistrations(token, status = "pending") {
-  return request(`/api/admin/registrations?status=${status}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function approveRegistration(
-  token,
-  id,
-  subscriptionEndsAt,
-  paymentAmountCup,
-) {
-  const params = new URLSearchParams();
-  params.set("payment_amount_cup", String(paymentAmountCup));
-  if (subscriptionEndsAt) {
-    params.set("subscription_ends_at", subscriptionEndsAt);
-  }
-
-  return request(
-    `/api/admin/registrations/${id}/approve?${params.toString()}`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-}
-
-export function rejectRegistration(token, id) {
-  return request(`/api/admin/registrations/${id}/reject`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function deleteRegistration(token, id) {
-  return request(`/api/admin/registrations/${id}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
 export function recordAppDevicePresence(payload) {
   return request("/api/marketplace/devices/presence", {
     method: "POST",
     body: JSON.stringify(payload),
-  });
-}
-
-export function updateRegistrationPayment(token, id, paymentAmountCup) {
-  const params = new URLSearchParams();
-  params.set("payment_amount_cup", String(paymentAmountCup));
-
-  return request(
-    `/api/admin/registrations/${id}/payment?${params.toString()}`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    },
-  );
-}
-
-export function fetchAdminRegistrationGestores(token, id) {
-  return request(`/api/admin/registrations/${id}/gestores`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function updateRegistrationSubscription(
-  token,
-  id,
-  { planTier, billingPeriod, keepGestorIds } = {},
-) {
-  return request(`/api/admin/registrations/${id}/subscription`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      plan_tier: planTier,
-      billing_period: billingPeriod,
-      keep_gestor_ids: keepGestorIds ?? [],
-    }),
-  });
-}
-
-/** @deprecated Use updateRegistrationSubscription */
-export function updateSubscriptionEnd(token, id, _subscriptionEndsAt) {
-  return updateRegistrationSubscription(token, id, {});
-}
-
-export function renewRegistration(
-  token,
-  id,
-  { subscriptionEndsAt, paymentAmountCup, planTier, billingPeriod, keepGestorIds } = {},
-) {
-  const params = new URLSearchParams();
-  params.set("payment_amount_cup", String(paymentAmountCup));
-  if (subscriptionEndsAt)
-    params.set("subscription_ends_at", subscriptionEndsAt);
-  if (planTier) params.set("plan_tier", planTier);
-  if (billingPeriod) params.set("billing_period", billingPeriod);
-  for (const gestorId of keepGestorIds ?? []) {
-    if (gestorId) params.append("keep_gestor_ids", String(gestorId));
-  }
-
-  return request(`/api/admin/registrations/${id}/renew?${params.toString()}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 }
 
@@ -507,14 +230,6 @@ export function submitSellerFeedback(token, payload) {
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify(payload),
-  });
-}
-
-export function fetchAdminProducts(token) {
-  return request("/api/admin/products", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 }
 
@@ -573,12 +288,18 @@ export function updateAdminSettings(token, payload) {
   });
 }
 
-export function fetchRenewalContactPhone() {
-  return request("/api/platform/renewal-contact");
+export function fetchAdvertisingPlans() {
+  return request("/api/platform/advertising-plans");
 }
 
-export function fetchPlanPrices() {
-  return request("/api/platform/plan-prices");
+export function checkoutAdvertisingPlan(token, planId) {
+  return request("/api/advertising/checkout", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ plan_id: planId }),
+  });
 }
 
 function financeAuth(token) {
@@ -675,21 +396,6 @@ export function createFinanceExtraction(token, payload) {
   });
 }
 
-export function fetchDiscountCodesAvailability() {
-  return request("/api/platform/discount-codes/availability");
-}
-
-export function validateDiscountCode({ code, planTier, billingPeriod }) {
-  return request("/api/platform/discount-codes/validate", {
-    method: "POST",
-    body: JSON.stringify({
-      code,
-      plan_tier: planTier,
-      billing_period: billingPeriod,
-    }),
-  });
-}
-
 export function fetchAdminDiscountCodes(token) {
   return request("/api/admin/discount-codes", {
     headers: {
@@ -765,26 +471,6 @@ export function markSellerSystemNotificationsRead(token) {
   });
 }
 
-export function fetchSellerCatalog(token) {
-  return request("/api/auth/me/catalog", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function searchSellerOrderedProducts(token, query = "") {
-  const params = new URLSearchParams();
-  const normalized = String(query ?? "").trim();
-  if (normalized) params.set("q", normalized);
-  const suffix = params.toString() ? `?${params}` : "";
-  return request(`/api/auth/me/catalog/products/search${suffix}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
 export function fetchSellerStatsSummary(token, { year, month } = {}) {
   const params = new URLSearchParams();
   if (year != null) params.set("year", String(year));
@@ -830,140 +516,6 @@ export function fetchSellerProductsSoldChart(
 
 export function fetchSellerTopProducts(token) {
   return request("/api/auth/me/stats/top-products", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function createCatalogCategory(token, payload) {
-  return request("/api/auth/me/catalog/categories", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function deleteCatalogCategory(token, categoryId) {
-  return request(`/api/auth/me/catalog/categories/${categoryId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function reorderCatalogCategories(token, categoryIds) {
-  return request("/api/auth/me/catalog/categories/order", {
-    method: "PUT",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ category_ids: categoryIds }),
-  });
-}
-
-export function updateCatalogCategoryProductSort(
-  token,
-  categoryId,
-  productSortMode,
-) {
-  return request(
-    `/api/auth/me/catalog/categories/${encodeURIComponent(categoryId)}/product-sort`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ product_sort_mode: productSortMode }),
-    },
-  );
-}
-
-export function reorderCatalogProducts(token, categoryId, productIds) {
-  return request(
-    `/api/auth/me/catalog/categories/${encodeURIComponent(categoryId)}/products/order`,
-    {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ product_ids: productIds }),
-    },
-  );
-}
-
-export function updateCatalogTheme(token, catalogTheme, catalogPalette) {
-  return request("/api/auth/me/catalog/theme", {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      catalog_theme: catalogTheme,
-      ...(catalogPalette ? { catalog_palette: catalogPalette } : {}),
-    }),
-  });
-}
-
-export function fetchCatalogCurrencies(token) {
-  return request("/api/auth/me/catalog/currencies", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export async function createCatalogProduct(token, formData) {
-  const response = await fetch(`${getApiBase()}/api/auth/me/catalog/products`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    const parsed = parseApiErrorDetail(data.detail);
-    throw new ApiError(parsed.message, {
-      code: parsed.code,
-      data: parsed.data,
-    });
-  }
-
-  return response.json();
-}
-
-export async function updateCatalogProduct(token, productId, formData) {
-  const response = await fetch(
-    `${getApiBase()}/api/auth/me/catalog/products/${productId}`,
-    {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    },
-  );
-
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}));
-    const parsed = parseApiErrorDetail(data.detail);
-    throw new ApiError(parsed.message, {
-      code: parsed.code,
-      data: parsed.data,
-    });
-  }
-
-  return response.json();
-}
-
-export function deleteCatalogProduct(token, productId) {
-  return request(`/api/auth/me/catalog/products/${productId}`, {
-    method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -1106,86 +658,6 @@ export function fetchMarketplaceSharedProducts({ provinceId, municipalityId, ite
 
 export function fetchMarketplaceStore(storeRef) {
   return request(`/api/marketplace/stores/${encodeURIComponent(storeRef)}`);
-}
-
-export function fetchMarketplaceStoreCatalog({
-  storeSlug,
-  provinceId,
-  municipalityId,
-  currency,
-  limitPerCategory = 20,
-}) {
-  const params = new URLSearchParams({
-    province_id: provinceId,
-    municipality_id: municipalityId,
-    limit_per_category: String(limitPerCategory),
-  });
-  appendDisplayCurrency(params, currency);
-  return request(
-    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/catalog?${params}`,
-  );
-}
-
-export function fetchMarketplaceGestorStoreCatalog({
-  storeSlug,
-  gestorUsername,
-  provinceId,
-  municipalityId,
-  currency,
-  limitPerCategory = 20,
-}) {
-  const params = new URLSearchParams({
-    province_id: provinceId,
-    municipality_id: municipalityId,
-    limit_per_category: String(limitPerCategory),
-  });
-  appendDisplayCurrency(params, currency);
-  return request(
-    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/catalog?${params}`,
-  );
-}
-
-export function fetchMarketplaceStoreCategoryProducts({
-  storeSlug,
-  localCategoryId,
-  provinceId,
-  municipalityId,
-  currency,
-  limit = 20,
-  offset = 0,
-}) {
-  const params = new URLSearchParams({
-    province_id: provinceId,
-    municipality_id: municipalityId,
-    limit: String(limit),
-    offset: String(offset),
-  });
-  appendDisplayCurrency(params, currency);
-  return request(
-    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
-  );
-}
-
-export function fetchMarketplaceGestorStoreCategoryProducts({
-  storeSlug,
-  gestorUsername,
-  localCategoryId,
-  provinceId,
-  municipalityId,
-  currency,
-  limit = 20,
-  offset = 0,
-}) {
-  const params = new URLSearchParams({
-    province_id: provinceId,
-    municipality_id: municipalityId,
-    limit: String(limit),
-    offset: String(offset),
-  });
-  appendDisplayCurrency(params, currency);
-  return request(
-    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
-  );
 }
 
 export function createMarketplaceOrder(payload) {

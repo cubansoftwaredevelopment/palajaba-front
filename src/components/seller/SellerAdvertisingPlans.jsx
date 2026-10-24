@@ -1,18 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
+import { ADVERTISING_TAGLINE, getAdvertisingPlans } from '../../constants/advertisingPlans'
+import { checkoutAdvertisingPlan, fetchAdvertisingPlans } from '../../lib/api'
+import { getSellerToken } from '../../lib/sellerAuth'
+import { resolveUserFacingError } from '../../lib/userFacingError'
+import SellerNotificationToast from './SellerNotificationToast'
 import {
-  ADVERTISING_TAGLINE,
-  getAdvertisingPlanHireLabel,
-  getAdvertisingPlans,
-} from '../../constants/advertisingPlans'
-import { fetchRenewalContactPhone } from '../../lib/api'
-import { convertBetweenCurrencies } from '../../lib/displayPrice'
-import { areExchangeRatesAvailable } from '../../lib/exchangeRates'
-import { openAdvertisingPlanWhatsApp } from '../../lib/renewalWhatsApp'
-import { usePlanPricing } from '../../lib/usePlanPricing'
-import { PLAN_DISPLAY_CURRENCY, PLAN_SOURCE_CURRENCY } from '../../constants/plan'
-import {
-  sellerAlertError,
   sellerBtnPrimary,
   sellerBtnSecondary,
   sellerHint,
@@ -34,51 +27,69 @@ function CheckIcon() {
   )
 }
 
-function formatPriceParts(plan, cupPerUnit) {
-  if (areExchangeRatesAvailable()) {
-    const amount = convertBetweenCurrencies(
-      plan.amountUsd,
-      PLAN_SOURCE_CURRENCY,
-      PLAN_DISPLAY_CURRENCY,
-      cupPerUnit,
-    )
-    return {
-      amount: Number(amount).toLocaleString('es'),
-      currency: PLAN_DISPLAY_CURRENCY,
-    }
-  }
+function toUiPlan(plan) {
   return {
-    amount: Number(plan.amountUsd).toLocaleString('es'),
-    currency: PLAN_SOURCE_CURRENCY,
+    id: plan.id,
+    name: plan.name,
+    eyebrow: plan.eyebrow,
+    features: plan.features || [],
+    recommended: Boolean(plan.recommended),
+    amountUsd: Number(plan.amount_usd ?? plan.amountUsd),
+    exchangeFeeUsd: Number(plan.exchange_fee_usd ?? 0),
+    invoiceAmountUsd: Number(plan.invoice_amount_usd ?? plan.amountUsd),
   }
 }
 
-export default function SellerAdvertisingPlans({ profile }) {
-  const plans = getAdvertisingPlans()
-  const { cupPerUnit } = usePlanPricing()
+function formatUsd(amount) {
+  return Number(amount).toLocaleString('es', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+export default function SellerAdvertisingPlans() {
+  const fallbackPlans = getAdvertisingPlans().map(toUiPlan)
+  const [plans, setPlans] = useState(fallbackPlans)
   const [hiringId, setHiringId] = useState(null)
-  const [error, setError] = useState('')
+  const [errorToast, setErrorToast] = useState(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchAdvertisingPlans()
+      .then((data) => {
+        if (cancelled || !Array.isArray(data?.plans)) return
+        setPlans(data.plans.map(toUiPlan))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  function showHireError(err, fallback) {
+    const resolved = resolveUserFacingError(err, { fallbackMessage: fallback })
+    setErrorToast({
+      id: `${Date.now()}`,
+      tone: 'error',
+      title: resolved.title || 'No pudimos crear el pago',
+      content: resolved.message,
+    })
+  }
 
   async function handleHire(plan) {
-    setError('')
+    setErrorToast(null)
     setHiringId(plan.id)
     try {
-      const data = await fetchRenewalContactPhone()
-      const phone = data.renewal_contact_phone
-      if (!phone) {
-        setError('El administrador aún no configuró un teléfono de contacto.')
+      const token = getSellerToken()
+      const checkout = await checkoutAdvertisingPlan(token, plan.id)
+      const url = checkout?.payment_url
+      if (!url) {
+        showHireError(null, 'No pudimos abrir el pago. Inténtalo más tarde.')
         return
       }
-      const opened = openAdvertisingPlanWhatsApp({
-        storeName: profile?.store_name,
-        planName: getAdvertisingPlanHireLabel(plan),
-        adminPhone: phone,
-      })
-      if (!opened) {
-        setError('No pudimos abrir WhatsApp. Revisa el número de contacto.')
-      }
-    } catch {
-      setError('No pudimos obtener el teléfono de contacto. Inténtalo más tarde.')
+      window.location.assign(url)
+    } catch (err) {
+      showHireError(err, 'No pudimos crear el pago. Inténtalo más tarde.')
     } finally {
       setHiringId(null)
     }
@@ -87,14 +98,16 @@ export default function SellerAdvertisingPlans({ profile }) {
   return (
     <div className="flex flex-col gap-3">
       <p className={sellerHint}>{ADVERTISING_TAGLINE}</p>
-      {error ? (
-        <p className={sellerAlertError} role="alert">
-          {error}
-        </p>
-      ) : null}
+      <p className={sellerHint}>
+        Al pagar se suma 0.5% de exchange de QvaPay sobre el precio del plan.
+      </p>
+      <SellerNotificationToast
+        toast={errorToast}
+        aboveNav
+        onDone={(id) => setErrorToast((current) => (current?.id === id ? null : current))}
+      />
       <ul className="flex flex-col gap-3">
         {plans.map((plan) => {
-          const price = formatPriceParts(plan, cupPerUnit)
           return (
             <li
               key={plan.id}
@@ -117,13 +130,16 @@ export default function SellerAdvertisingPlans({ profile }) {
 
               <div className="mt-3 flex items-baseline gap-1.5 text-brand-green">
                 <span className="font-display text-4xl font-bold leading-none tracking-tight">
-                  {price.amount}
+                  {formatUsd(plan.amountUsd)}
                 </span>
                 <span className="text-xs font-semibold uppercase tracking-[0.08em] text-brand-carmelita">
-                  {price.currency}
+                  USD
                 </span>
               </div>
               <p className="mt-1.5 text-sm font-semibold text-brand-carmelita/85">{plan.name}</p>
+              <p className="mt-1 text-xs text-brand-carmelita/70">
+                Cobro: {formatUsd(plan.invoiceAmountUsd)} USD (incluye 0.5% de exchange)
+              </p>
 
               <ul className="mt-3 flex flex-col gap-1">
                 {plan.features.map((feature) => (
@@ -145,7 +161,7 @@ export default function SellerAdvertisingPlans({ profile }) {
                 disabled={Boolean(hiringId)}
                 className={`${plan.recommended ? sellerBtnPrimary : sellerBtnSecondary} mt-4 w-full`}
               >
-                {hiringId === plan.id ? 'Abriendo WhatsApp…' : 'Contratar plan'}
+                {hiringId === plan.id ? 'Abriendo QvaPay…' : 'Pagar con QvaPay'}
               </button>
             </li>
           )

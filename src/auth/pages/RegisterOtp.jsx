@@ -11,7 +11,7 @@ import {
   inputClass,
   labelClass,
 } from '../components/formStyles'
-import { confirmRegisterOtp, resendRegisterOtp } from '../context.js'
+import { confirmRegisterOtp, resendRegisterOtp } from '../api.js'
 import { getRegisterSteps } from '../constants.js'
 import {
   applySmsFailFromError,

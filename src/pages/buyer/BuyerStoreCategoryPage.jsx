@@ -21,7 +21,7 @@ import {
   fetchMarketplaceGestorStoreCategoryProducts,
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
-} from '../../lib/api'
+} from '../../products/api.js'
 import { normalizeCatalogTheme } from '../../lib/catalogThemes'
 import { resolveMarketplaceCategory } from '../../lib/marketplaceCategory'
 import { storeGestorPublicPath, storePublicPath } from '../../lib/storeSlug'

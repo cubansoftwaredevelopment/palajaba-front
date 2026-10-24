@@ -28,7 +28,7 @@ import {
 import {
   updateSellerProfile,
   uploadSellerProfilePhoto,
-} from '../lib/api'
+} from '../auth/api.js'
 import { getUserFacingMessage } from '../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../lib/imageUpload'
 import { dedupeDeliveryAreas } from '../lib/businessArea'

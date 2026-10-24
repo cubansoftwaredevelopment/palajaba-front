@@ -4,7 +4,7 @@ import { adminAlertError, adminFocusRing, adminSection, adminSubtle } from '../.
 import AdminPillSelect from '../../components/admin/AdminPillSelect'
 import LoadingState from '../../components/ui/LoadingState'
 import { clearAdminToken, getAdminToken } from '../../lib/adminAuth'
-import { fetchAdminProducts } from '../../lib/api'
+import { fetchAdminProducts } from '../api.js'
 import { getUserFacingMessage, isSessionError } from '../../lib/userFacingError'
 
 const PAGE_SIZE = 25

@@ -58,7 +58,7 @@ test('flujo integrado: panel usa CTAs domicilio/recogida y no selector de moneda
 test('flujo integrado: contexto abre modal de recogida y no WhatsApp directo', () => {
   assert.match(contextSource, /BuyerPickupCheckoutModal/)
   assert.match(contextSource, /requestPickupCheckout/)
-  assert.match(contextSource, /switchDeliveryToPickup/)
+  assert.match(contextSource, /requestDeliveryCheckout/)
   assert.match(contextSource, /setPickupCheckout/)
   assert.match(pickupModalSource, /validatePickupForm/)
   assert.match(pickupModalSource, /mode: 'pickup'/)

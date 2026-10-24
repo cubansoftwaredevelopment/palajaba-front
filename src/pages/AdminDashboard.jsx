@@ -18,7 +18,7 @@ import {
 } from '../components/admin/adminStyles'
 import { BILLING_LABELS, REJECTION_REASON, STATUS_LABELS } from '../constants/admin'
 import { getSellerPlan, isTrialSeller, normalizePlanTier } from '../constants/plan'
-import { fetchRegistrations, rejectRegistration, deleteRegistration } from '../lib/api'
+import { fetchRegistrations, rejectRegistration, deleteRegistration } from '../auth/api.js'
 import { formatDateTime } from '../lib/dates'
 import { formatPrice } from '../lib/money'
 import { usePlanPricing } from '../lib/usePlanPricing'

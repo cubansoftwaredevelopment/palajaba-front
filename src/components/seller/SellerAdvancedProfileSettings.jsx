@@ -19,7 +19,7 @@ import {
   startSellerEmailOtp,
   startSellerPhoneOtp,
   updateSellerStoreName,
-} from '../../lib/api'
+} from '../../auth/api.js'
 import {
   PHONE_DIGITS_LENGTH,
   PHONE_PREFIX,

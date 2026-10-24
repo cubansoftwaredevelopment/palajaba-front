@@ -127,7 +127,10 @@ test('no abre WhatsApp si falla el guardado del pedido', async () => {
 
   assert.equal(result.ok, false)
   assert.equal(result.code, CHECKOUT_ORDER_SAVE_FAILED)
-  assert.equal(result.message, 'Error de conexión')
+  assert.equal(
+    result.message,
+    'No pudimos comunicarnos con el servidor. Revisa tu internet e inténtalo de nuevo.',
+  )
   assert.equal(calls.submit, 1)
   assert.equal(calls.whatsapp, 0)
 })
