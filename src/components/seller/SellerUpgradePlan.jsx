@@ -33,20 +33,24 @@ function CheckIcon() {
 export default function SellerUpgradePlan({ profile }) {
   const currentTierId = normalizePlanTier(profile?.plan_tier)
   const currentTier = getPlanTier(currentTierId)
-  const upgrades = upgradeablePlanTiers(currentTierId)
-  const canUpgrade = canUpgradePlan(currentTierId)
+  const isTrial = Boolean(profile?.is_trial)
+  const upgrades = upgradeablePlanTiers(profile)
+  const canUpgrade = canUpgradePlan(profile)
   const currentBilling = normalizeBillingPeriod(profile?.billing_period)
   const [billing, setBilling] = useState(currentBilling)
   const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount } = usePlanPricing()
+  const currentPlanName = isTrial ? 'prueba gratuita' : currentTier.name
 
   return (
     <div className="flex flex-col gap-3">
       <p className={sellerHint}>
-        Estás en el plan {currentTier.name} · {BILLING_LABELS[currentBilling] ?? BILLING_LABELS.monthly}
-        {profile?.is_trial ? ' (prueba gratuita)' : ''}.
-        {canUpgrade
-          ? ' Elige un plan superior y te conectamos por WhatsApp para completar el cambio.'
-          : ' Ya tienes el plan más completo.'}
+        {isTrial
+          ? 'Estás en prueba gratuita. Elige un plan de pago —incluido Básico— y te conectamos por WhatsApp para completar el cambio.'
+          : `Estás en el plan ${currentTier.name} · ${BILLING_LABELS[currentBilling] ?? BILLING_LABELS.monthly}. ${
+              canUpgrade
+                ? 'Elige un plan superior y te conectamos por WhatsApp para completar el cambio.'
+                : 'Ya tienes el plan más completo.'
+            }`}
       </p>
 
       {canUpgrade ? (
@@ -136,7 +140,7 @@ export default function SellerUpgradePlan({ profile }) {
                 <UpgradeToPremiumButton
                   className="mt-4 w-full"
                   storeName={profile?.store_name}
-                  currentPlanName={currentTier.name}
+                  currentPlanName={currentPlanName}
                   targetPlanName={tier.name}
                   billingLabel={BILLING_LABELS[billing]}
                   label={`Pasar a ${tier.name}`}

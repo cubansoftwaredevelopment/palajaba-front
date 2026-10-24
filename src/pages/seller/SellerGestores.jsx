@@ -7,7 +7,7 @@ import Checkbox from '../../components/ui/Checkbox'
 import LoadingState from '../../components/ui/LoadingState'
 import StatePanel from '../../components/ui/StatePanel'
 import { formatPrice } from '../../lib/money'
-import { getPlanTier } from '../../constants/plan'
+import { featurePlanTier, getPlanTier } from '../../constants/plan'
 import {
   createSellerGestor,
   deleteSellerGestor,
@@ -171,7 +171,7 @@ export default function SellerGestores() {
 
   const allSelected = areAllProductsSelected(products, selectedIds)
 
-  const planTier = profile?.plan_tier
+  const planTier = featurePlanTier(profile)
   const planName = getPlanTier(planTier).name
   const gestorLimit = maxGestoresForPlan(planTier)
   const atGestorLimit = !canAddGestor(planTier, gestores.length)

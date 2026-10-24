@@ -32,7 +32,7 @@ export default function RegisterSuccess() {
             {isTrial ? (
               <>
                 Tu tienda quedó activa por{' '}
-                <strong className="text-brand-green">15 días</strong> con el plan Básico.
+                <strong className="text-brand-green">15 días</strong> con las prestaciones del plan Pro.
                 Entra con tu teléfono o nombre de tienda.
               </>
             ) : (
@@ -63,7 +63,7 @@ export default function RegisterSuccess() {
                 2
               </span>
               {isTrial
-                ? 'Tienes 15 días de prueba con las prestaciones del plan Básico.'
+                ? 'Tienes 15 días de prueba con las prestaciones del plan Pro.'
                 : 'Recibirás acceso cuando tu tienda sea aprobada.'}
             </li>
             <li className="flex gap-2.5">

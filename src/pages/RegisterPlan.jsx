@@ -171,7 +171,7 @@ function PlanCard({
 }
 
 function TrialCard({ selected, onSelect }) {
-  const tier = PLAN_TIERS.standard
+  const tier = PLAN_TIERS.pro
   return (
     <button
       type="button"
@@ -198,7 +198,8 @@ function TrialCard({ selected, onSelect }) {
         </span>
       </div>
       <p className="mt-3 text-sm leading-relaxed text-pretty text-brand-carmelita/90">
-        Mismas prestaciones del plan Básico, sin pago, durante 15 días.
+        Mismas herramientas del plan Pro, sin pago, durante 15 días. No incluye menciones en
+        Instagram ni promociones en redes.
       </p>
       <ul className="mt-4 flex flex-1 flex-col gap-2">
         {tier.features.map((feature) => (
@@ -273,7 +274,7 @@ export default function RegisterPlan() {
           <AuthHeader
             eyebrow="Crear cuenta"
             title="Elige tu plan"
-            description="Prueba 15 días con el plan Básico, o elige Básico, Pro o Premium y continúa al pago."
+            description="Prueba 15 días con las prestaciones del plan Pro, o elige Básico, Pro o Premium y continúa al pago."
             layout="desktop-left"
           />
           <RegisterProgress currentStep={1} steps={getRegisterSteps(kind)} />

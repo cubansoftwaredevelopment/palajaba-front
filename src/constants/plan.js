@@ -57,10 +57,8 @@ export const PLAN_TIERS = {
       'Todo lo del plan Básico',
       'Estadísticas de tu tienda',
       PLAN_GESTOR_FEATURES.pro,
-      'Menciones en Instagram',
       'Banners de tu tienda',
       'Boost en recomendaciones (×2 visibilidad)',
-      'Promociones de tus productos en redes sociales',
     ],
   },
   premium: {
@@ -94,18 +92,21 @@ export function isRecommendedPlan(tierId) {
   return Boolean(getPlanTier(tierId).recommended)
 }
 
-export function upgradeablePlanTiers(tierId) {
-  const index = PLAN_TIER_ORDER.indexOf(normalizePlanTier(tierId))
+export function upgradeablePlanTiers(profileOrTier) {
+  if (profileOrTier && typeof profileOrTier === 'object' && profileOrTier.is_trial) {
+    return PLAN_TIER_ORDER.map((id) => PLAN_TIERS[id])
+  }
+  const tier =
+    typeof profileOrTier === 'string' || profileOrTier == null
+      ? profileOrTier
+      : profileOrTier.plan_tier
+  const index = PLAN_TIER_ORDER.indexOf(normalizePlanTier(tier))
   if (index < 0) return []
   return PLAN_TIER_ORDER.slice(index + 1).map((id) => PLAN_TIERS[id])
 }
 
 export function canUpgradePlan(profileOrTier) {
-  const tier =
-    typeof profileOrTier === 'string' || profileOrTier == null
-      ? profileOrTier
-      : profileOrTier.plan_tier
-  return upgradeablePlanTiers(tier).length > 0
+  return upgradeablePlanTiers(profileOrTier).length > 0
 }
 
 export function normalizePlanPrices(raw) {
@@ -207,18 +208,28 @@ export function formatPlanAmount(amount, currency = PLAN_DISPLAY_CURRENCY) {
   return `${Number(amount).toLocaleString('es')} ${currency}`
 }
 
+export function featurePlanTier(profileOrTier) {
+  if (typeof profileOrTier === 'string' || profileOrTier == null) {
+    return normalizePlanTier(profileOrTier)
+  }
+  const tier = normalizePlanTier(profileOrTier.plan_tier)
+  if (tier === 'pro' || tier === 'premium') return tier
+  if (profileOrTier.is_trial) return 'pro'
+  return 'standard'
+}
+
 export function sellerHasStatistics(profile) {
-  const tier = normalizePlanTier(profile?.plan_tier)
+  const tier = featurePlanTier(profile)
   return Boolean(profile?.has_statistics ?? (tier === 'pro' || tier === 'premium'))
 }
 
 export function sellerHasRecommendationBoost(profile) {
-  const tier = normalizePlanTier(profile?.plan_tier)
+  const tier = featurePlanTier(profile)
   return Boolean(profile?.has_recommendation_boost ?? (tier === 'pro' || tier === 'premium'))
 }
 
 export function sellerHasStoreBanners(profile) {
-  const tier = normalizePlanTier(profile?.plan_tier)
+  const tier = featurePlanTier(profile)
   return Boolean(profile?.has_store_banners ?? (tier === 'pro' || tier === 'premium'))
 }
 
