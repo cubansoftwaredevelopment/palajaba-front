@@ -43,21 +43,31 @@ export const NOTIFICATION_AUDIENCE_LABELS = {
   single: 'Negocios específicos',
 }
 
-export function notificationAudienceDisplay(item) {
+export function notificationAudienceDetails(item) {
   const selected = (item?.audiences ?? []).filter((id) => id && id !== 'single')
-  if (selected.length > 1) {
-    return selected
-      .map((id) => NOTIFICATION_AUDIENCE_LABELS[id] ?? id)
-      .join(' · ')
+  const plans = selected.map((id) => NOTIFICATION_AUDIENCE_LABELS[id] ?? id)
+  if (
+    !plans.length &&
+    item?.audience &&
+    item.audience !== 'single' &&
+    item.audience !== 'mixed'
+  ) {
+    const label = NOTIFICATION_AUDIENCE_LABELS[item.audience]
+    if (label) plans.push(label)
   }
-  if (item?.audience === 'single' && item?.target_store_name) {
-    return `Tienda: ${item.target_store_name}`
+  const stores = [...(item?.target_store_names ?? [])].map((name) => String(name).trim()).filter(Boolean)
+  if (!stores.length && item?.target_store_name) {
+    stores.push(String(item.target_store_name).trim())
   }
+  return { plans, stores: stores.filter(Boolean) }
+}
+
+export function notificationAudienceDisplay(item) {
+  const { plans, stores } = notificationAudienceDetails(item)
+  const parts = [...plans, ...stores]
+  if (parts.length) return parts.join(' · ')
   if (item?.audience === 'single' && item?.recipient_count > 1) {
     return `${item.recipient_count} negocios`
-  }
-  if (selected.length === 1) {
-    return NOTIFICATION_AUDIENCE_LABELS[selected[0]] ?? NOTIFICATION_AUDIENCE_LABELS.all
   }
   return NOTIFICATION_AUDIENCE_LABELS[item?.audience] ?? NOTIFICATION_AUDIENCE_LABELS.all
 }

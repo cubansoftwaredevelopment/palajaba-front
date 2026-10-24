@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AdminButton from '../components/admin/AdminButton'
 import AdminToastStack from '../components/admin/AdminToastStack'
 import SendNotificationModal from '../components/admin/SendNotificationModal'
-import { notificationAudienceDisplay } from '../constants/admin'
+import { notificationAudienceDetails, notificationAudienceDisplay } from '../constants/admin'
 import { adminAlertError, adminCard, adminMuted, adminSubtle } from '../components/admin/adminStyles'
 import { fetchAdminNotifications, sendAdminNotification, sendAdminNotificationSms } from '../lib/api'
 import { smsSendCountLabel } from '../lib/adminNotificationStores'
@@ -145,22 +145,47 @@ export default function AdminNotifications({ embedded = false }) {
 
       {!loading && items.length > 0 && (
         <ul className="flex flex-col gap-3">
-          {items.map((item) => (
+          {items.map((item) => {
+            const { plans, stores } = notificationAudienceDetails(item)
+            return (
             <li key={item.batch_id} className={adminCard}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate text-base font-semibold text-white">{item.title}</h2>
                   <p className={`mt-1 text-xs ${adminMuted}`}>{formatDateTime(item.created_at)}</p>
                 </div>
-                <div className="flex shrink-0 flex-col items-end gap-1">
-                  <span className="rounded-md border border-brand-green/25 bg-brand-green/10 px-2 py-1 text-[0.65rem] font-semibold text-emerald-200/90">
-                    {item.recipient_count} vendedor{item.recipient_count === 1 ? '' : 'es'}
-                  </span>
-                  <span className="text-[0.65rem] text-zinc-500">
-                    {notificationAudienceDisplay(item)}
-                  </span>
-                </div>
+                <span className="shrink-0 rounded-md border border-brand-green/25 bg-brand-green/10 px-2 py-1 text-[0.65rem] font-semibold text-emerald-200/90">
+                  {item.recipient_count} vendedor{item.recipient_count === 1 ? '' : 'es'}
+                </span>
               </div>
+              {plans.length || stores.length ? (
+                <div className="mt-3 flex flex-col gap-2">
+                  {plans.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {plans.map((label) => (
+                        <span
+                          key={label}
+                          className="rounded-md border border-brand-green/25 bg-brand-green/10 px-2 py-1 text-[0.7rem] font-medium text-emerald-100"
+                        >
+                          {label}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {stores.length ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {stores.map((name) => (
+                        <span
+                          key={name}
+                          className="rounded-md border border-zinc-700/90 bg-zinc-950/50 px-2 py-1 text-[0.7rem] font-medium text-zinc-200"
+                        >
+                          {name}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
               <p className={`mt-3 whitespace-pre-wrap text-sm leading-relaxed ${adminSubtle}`}>
                 {item.content}
               </p>
@@ -178,7 +203,8 @@ export default function AdminNotifications({ embedded = false }) {
                 </AdminButton>
               </div>
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
 

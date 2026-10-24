@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { notificationAudienceDisplay } from '../../src/constants/admin.js'
+import { notificationAudienceDetails, notificationAudienceDisplay } from '../../src/constants/admin.js'
 import {
   buildAdminNotificationPayload,
   matchesStoreQuery,
@@ -14,7 +14,21 @@ test('notificationAudienceDisplay muestra tienda en envíos single', () => {
       audience: 'single',
       target_store_name: 'Los Reyes',
     }),
-    'Tienda: Los Reyes',
+    'Los Reyes',
+  )
+})
+
+test('notificationAudienceDetails lista tiendas y planes seleccionados', () => {
+  assert.deepEqual(
+    notificationAudienceDetails({
+      audience: 'mixed',
+      audiences: ['premium_monthly', 'pro_yearly'],
+      target_store_names: ['Los Reyes', 'Sasha'],
+    }),
+    {
+      plans: ['Premium · Mensual', 'Pro · Anual'],
+      stores: ['Los Reyes', 'Sasha'],
+    },
   )
 })
 
