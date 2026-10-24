@@ -40,9 +40,10 @@ test('validateGestorUsername rechaza demasiado corto', () => {
   assert.match(result.message, /2 y 32/)
 })
 
-test('gestorSetupStatus distingue pendiente y activo', () => {
+test('gestorSetupStatus distingue pendiente, activo y desactivado', () => {
   assert.equal(gestorSetupStatus({ has_password: false }).pending, true)
   assert.equal(gestorSetupStatus({ has_password: true }).label, 'Activo')
+  assert.equal(gestorSetupStatus({ has_password: true, is_active: false }).label, 'Desactivado')
 })
 
 test('buildCatalogAccessPayload en mode all limpia product_ids', () => {
@@ -102,6 +103,10 @@ test('gestorEligibleForCheckoutPhone exige activo con teléfono', () => {
   assert.equal(gestorEligibleForCheckoutPhone({ has_password: true, phone: '51234567' }), true)
   assert.equal(gestorEligibleForCheckoutPhone({ has_password: true, phone: null }), false)
   assert.equal(gestorEligibleForCheckoutPhone({ has_password: false, phone: '51234567' }), false)
+  assert.equal(
+    gestorEligibleForCheckoutPhone({ has_password: true, phone: '51234567', is_active: false }),
+    false,
+  )
 })
 
 test('buildCheckoutPhonesPayload deduplica ids e incluye flag del negocio', () => {

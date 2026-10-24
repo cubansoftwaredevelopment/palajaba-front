@@ -16,8 +16,8 @@ import {
   adminSection,
   adminSubtle,
 } from '../components/admin/adminStyles'
-import { BILLING_LABELS, PLAN_TIER_LABELS, REJECTION_REASON, STATUS_LABELS } from '../constants/admin'
-import { normalizePlanTier } from '../constants/plan'
+import { BILLING_LABELS, REJECTION_REASON, STATUS_LABELS } from '../constants/admin'
+import { getSellerPlan, isTrialSeller, normalizePlanTier } from '../constants/plan'
 import { fetchRegistrations, rejectRegistration, deleteRegistration } from '../lib/api'
 import { formatDateTime } from '../lib/dates'
 import { formatPrice } from '../lib/money'
@@ -84,7 +84,9 @@ function includesText(value, query) {
 }
 
 function subscriptionTime(item) {
-  const period = BILLING_LABELS[item.billing_period] ?? item.billing_period
+  const period = item.is_trial
+    ? 'Prueba'
+    : (BILLING_LABELS[item.billing_period] ?? item.billing_period)
   if (item.subscription_starts_at && item.subscription_ends_at) {
     return `${period} · ${formatDateTime(item.subscription_starts_at)} – ${formatDateTime(item.subscription_ends_at)}`
   }
@@ -200,7 +202,7 @@ export default function AdminDashboard() {
         item.status === 'approved' &&
         inCurrentMonth(item.subscription_starts_at) &&
         !inCurrentMonth(item.created_at)
-      if (dueThisMonth || renewedThisMonth) {
+      if ((dueThisMonth || renewedThisMonth) && !isTrialSeller(item)) {
         const planAmount = getPlanPrice(normalizePlanTier(item.plan_tier), item.billing_period)?.amount
         const amount = Number(item.expected_payment_cup ?? planAmount ?? 0)
         expectedAmount += Number.isFinite(amount) ? amount : 0
@@ -228,7 +230,7 @@ export default function AdminDashboard() {
         if (!includesText(transferLabel, filters.transfer)) return false
         if (filters.status !== 'all' && item.status !== filters.status) return false
         if (!includesText(item.approved_at ? formatDateTime(item.approved_at) : '', filters.approved)) return false
-        if (filters.plan !== 'all' && normalizePlanTier(item.plan_tier) !== filters.plan) return false
+        if (filters.plan !== 'all' && getSellerPlan(item).id !== filters.plan) return false
         if (filters.billing !== 'all' && item.billing_period !== filters.billing) return false
         if (!matchesSales(item, filters.sales)) return false
         return true
@@ -359,6 +361,7 @@ export default function AdminDashboard() {
                       allLabel="Todos"
                       ariaLabel="Filtrar por plan"
                       options={[
+                        { value: 'trial', label: 'Prueba' },
                         { value: 'standard', label: 'Básico' },
                         { value: 'pro', label: 'Pro' },
                         { value: 'premium', label: 'Premium' },
@@ -423,10 +426,7 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-3 py-3 text-zinc-300">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span>{PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}</span>
-                          {item.is_trial ? (
-                            <span className={adminBadgePending}>Prueba</span>
-                          ) : null}
+                          <span>{getSellerPlan(item).name}</span>
                         </div>
                       </td>
                       <td className="px-3 py-3 text-zinc-300">{subscriptionTime(item)}</td>

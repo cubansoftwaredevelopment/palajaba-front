@@ -141,7 +141,7 @@ export default function SellerStatsPremiumPreview({ storeName = '', onUpgradeCli
               Tus estadísticas te están esperando
             </h3>
             <p className={`mt-2 ${sellerHint}`}>
-              Visitas, ingresos, pedidos y productos más vendidos. Disponibles en la prueba gratuita
+              Visitas, ingresos, pedidos y productos más vendidos. Disponibles en el plan Prueba
               y en los planes Pro y Premium.
             </p>
             <ul className="mt-4 space-y-1.5 text-left text-sm text-brand-carmelita/90">

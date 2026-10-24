@@ -26,8 +26,15 @@ export function validateGestorUsername(value) {
   return { ok: true, username }
 }
 
+export function isGestorActive(gestor) {
+  return gestor?.is_active !== false
+}
+
 export function gestorSetupStatus(gestor) {
   if (!gestor) return { label: '—', pending: true }
+  if (!isGestorActive(gestor)) {
+    return { label: 'Desactivado', pending: false }
+  }
   if (gestor.has_password) {
     return { label: 'Activo', pending: false }
   }
@@ -104,7 +111,7 @@ export function catalogAccessDirty(saved, draft) {
 
 /** Gestor listo para habilitar su teléfono en ventas de la tienda. */
 export function gestorEligibleForCheckoutPhone(gestor) {
-  return Boolean(gestor?.has_password && gestor?.phone)
+  return Boolean(isGestorActive(gestor) && gestor?.has_password && gestor?.phone)
 }
 
 export function buildCheckoutPhonesPayload(gestorIds = [], includeStorePhone = true) {

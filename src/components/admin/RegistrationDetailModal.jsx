@@ -2,7 +2,7 @@ import { useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
 import { BILLING_LABELS, PLAN_TIER_LABELS, REJECTION_REASON, STATUS_LABELS } from '../../constants/admin'
-import { normalizePlanTier } from '../../constants/plan'
+import { getSellerPlan, normalizePlanTier } from '../../constants/plan'
 import { daysUntil, formatDateTime } from '../../lib/dates'
 import { formatPrice } from '../../lib/money'
 import { storePublicPath } from '../../lib/storeSlug'
@@ -82,9 +82,13 @@ export default function RegistrationDetailModal({
             {STATUS_LABELS[item.status]}
           </span>
           <span>·</span>
-          <span>{PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}</span>
-          <span>·</span>
-          <span>{BILLING_LABELS[item.billing_period]}</span>
+          <span>{getSellerPlan(item).name}</span>
+          {item.is_trial ? null : (
+            <>
+              <span>·</span>
+              <span>{BILLING_LABELS[item.billing_period]}</span>
+            </>
+          )}
         </span>
       }
       onClose={onClose}
@@ -159,8 +163,9 @@ export default function RegistrationDetailModal({
           </DetailRow>
         )}
         <DetailRow label="Plan contratado">
-          {PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]} · {BILLING_LABELS[item.billing_period]}
-          {item.is_trial ? ' · Prueba 15 días' : ''}
+          {item.is_trial
+            ? 'Prueba · 15 días'
+            : `${PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]} · ${BILLING_LABELS[item.billing_period]}`}
         </DetailRow>
         {item.discount_code ? (
           <DetailRow label="Código de descuento">

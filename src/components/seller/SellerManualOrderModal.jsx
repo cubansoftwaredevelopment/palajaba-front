@@ -4,6 +4,7 @@ import { searchSellerOrderedProducts } from '../../lib/api'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { formatPrice } from '../../lib/money'
+import { productDiscountPercent, productSaleAmount } from '../../lib/displayPrice'
 import {
   buildManualOrderPayload,
   createManualOrderLineItem,
@@ -291,7 +292,15 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                             </span>
                           </span>
                           <span className="shrink-0 text-xs font-semibold text-brand-green">
-                            {formatPrice(product.base_price, product.base_currency)}
+                            {formatPrice(
+                              productSaleAmount(product),
+                              product.base_currency,
+                            )}
+                            {productDiscountPercent(product) ? (
+                              <span className="ml-1 font-bold">
+                                -{productDiscountPercent(product)}%
+                              </span>
+                            ) : null}
                           </span>
                         </button>
                       </li>

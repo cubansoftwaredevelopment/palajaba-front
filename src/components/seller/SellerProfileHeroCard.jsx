@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { BILLING_LABELS } from '../../constants/admin'
-import { canUpgradePlan, getPlanTier } from '../../constants/plan'
+import { canUpgradePlan, getSellerPlan } from '../../constants/plan'
 import { getProfileHubSubtitle } from '../../lib/sellerProfileHub'
 import { sellerFocusRing } from './sellerStyles'
 import PhotoLightbox from '../PhotoLightbox'
@@ -31,8 +31,9 @@ export default function SellerProfileHeroCard({
   onEditClick,
   onUpgradeClick,
 }) {
-  const tier = getPlanTier(profile?.plan_tier)
+  const plan = getSellerPlan(profile)
   const subtitle = getProfileHubSubtitle(profile)
+  const isTrial = plan.id === 'trial'
   const handleEdit = onEditClick ?? onPhotoClick
   const [photoOpen, setPhotoOpen] = useState(false)
   const showUpgrade = canUpgradePlan(profile) && typeof onUpgradeClick === 'function'
@@ -55,8 +56,9 @@ export default function SellerProfileHeroCard({
           </h3>
           <p className="mt-0.5 truncate text-xs text-brand-carmelita/80 sm:text-sm">{subtitle}</p>
           <p className="mt-1.5 text-[0.7rem] font-semibold text-brand-green/85">
-            Plan {tier.name} ·{' '}
-            {BILLING_LABELS[profile?.billing_period] ?? BILLING_LABELS.monthly}
+            {isTrial
+              ? 'Plan Prueba'
+              : `Plan ${plan.name} · ${BILLING_LABELS[profile?.billing_period] ?? BILLING_LABELS.monthly}`}
           </p>
           {showUpgrade ? (
             <button

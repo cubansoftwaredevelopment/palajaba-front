@@ -8,6 +8,7 @@ export const BILLING_LABELS = {
 }
 
 export const PLAN_TIER_LABELS = {
+  trial: 'Prueba',
   standard: 'Básico',
   pro: 'Pro',
   premium: 'Premium',

@@ -1,5 +1,8 @@
 import { formatPrice } from './money'
 import { areExchangeRatesAvailable, getCupPerUnit } from './exchangeRates'
+import { productDiscountPercent, productSaleAmount } from '../products/context.js'
+
+export { productDiscountPercent, productSaleAmount }
 
 function productAcceptsCurrency(product, currencyCode) {
   if (product.base_currency === currencyCode) return true
@@ -64,46 +67,79 @@ export function convertBetweenCurrencies(
  * El listado ya dejó solo negocios que aceptan la moneda elegida.
  * Si faltan tasas reales, muestra el precio base sin convertir.
  */
+function withDiscount(price, product, originalAmount) {
+  const discountPercent = productDiscountPercent(product)
+  if (!discountPercent || originalAmount == null) return price
+  return {
+    ...price,
+    originalAmount,
+    originalLabel: formatPrice(originalAmount, price.currency),
+    discountPercent,
+  }
+}
+
 export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCupPerUnit()) {
-  const baseAmount = Number(product.base_price)
+  const listAmount = Number(product.base_price)
+  const saleAmount = productSaleAmount(product)
   const baseCurrency = product.base_currency
+  const discountPercent = productDiscountPercent(product)
 
   if (!productAcceptsCurrency(product, displayCurrency)) {
-    return {
-      amount: baseAmount,
-      currency: baseCurrency,
-      converted: false,
-      conversionPending: false,
-      label: formatPrice(baseAmount, baseCurrency),
-    }
+    return withDiscount(
+      {
+        amount: saleAmount,
+        currency: baseCurrency,
+        converted: false,
+        conversionPending: false,
+        label: formatPrice(saleAmount, baseCurrency),
+      },
+      product,
+      discountPercent ? listAmount : null,
+    )
   }
 
   if (displayCurrency === baseCurrency) {
-    return {
-      amount: baseAmount,
-      currency: baseCurrency,
-      converted: false,
-      conversionPending: false,
-      label: formatPrice(baseAmount, baseCurrency),
-    }
+    return withDiscount(
+      {
+        amount: saleAmount,
+        currency: baseCurrency,
+        converted: false,
+        conversionPending: false,
+        label: formatPrice(saleAmount, baseCurrency),
+      },
+      product,
+      discountPercent ? listAmount : null,
+    )
   }
 
-  const amount = convertBetweenCurrencies(baseAmount, baseCurrency, displayCurrency, cupPerUnit)
+  const amount = convertBetweenCurrencies(saleAmount, baseCurrency, displayCurrency, cupPerUnit)
   if (amount === null) {
-    return {
-      amount: baseAmount,
-      currency: baseCurrency,
-      converted: false,
-      conversionPending: true,
-      label: formatPrice(baseAmount, baseCurrency),
-    }
+    return withDiscount(
+      {
+        amount: saleAmount,
+        currency: baseCurrency,
+        converted: false,
+        conversionPending: true,
+        label: formatPrice(saleAmount, baseCurrency),
+      },
+      product,
+      discountPercent ? listAmount : null,
+    )
   }
 
-  return {
-    amount,
-    currency: displayCurrency,
-    converted: true,
-    conversionPending: false,
-    label: formatPrice(amount, displayCurrency),
-  }
+  const originalAmount = discountPercent
+    ? convertBetweenCurrencies(listAmount, baseCurrency, displayCurrency, cupPerUnit)
+    : null
+
+  return withDiscount(
+    {
+      amount,
+      currency: displayCurrency,
+      converted: true,
+      conversionPending: false,
+      label: formatPrice(amount, displayCurrency),
+    },
+    product,
+    originalAmount,
+  )
 }

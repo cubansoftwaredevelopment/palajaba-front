@@ -1,10 +1,10 @@
-/** Límites de gestores de venta por plan (Básico / Pro / Premium). */
+/** Límites de gestores de venta por plan (Básico 10 / Pro 25 / Premium ilimitado). */
 
-export const STANDARD_GESTOR_LIMIT = 1
-export const PRO_GESTOR_LIMIT = 3
+export const STANDARD_GESTOR_LIMIT = 10
+export const PRO_GESTOR_LIMIT = 25
 
 export const PLAN_GESTOR_FEATURES = Object.freeze({
-  standard: `Hasta ${STANDARD_GESTOR_LIMIT} gestor de venta`,
+  standard: `Hasta ${STANDARD_GESTOR_LIMIT} gestores de venta`,
   pro: `Hasta ${PRO_GESTOR_LIMIT} gestores de venta`,
   premium: 'Gestores de venta ilimitados',
 })

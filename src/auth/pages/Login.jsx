@@ -1,0 +1,195 @@
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import AuthCard from '../components/AuthCard'
+import AuthHeader from '../components/AuthHeader'
+import AuthShell from '../components/AuthShell'
+import MethodTabs from '../components/MethodTabs'
+import PasswordField from '../components/PasswordField'
+import PhoneField from '../components/PhoneField'
+import Button from '../../components/Button'
+import SubscriptionExpiredScreen from '../../components/seller/SubscriptionExpiredScreen'
+import { alertErrorClass, inputClass, labelClass } from '../components/formStyles'
+import { ApiError, adminLogin, sellerLogin } from '../../lib/api'
+import { setAdminToken } from '../../lib/adminAuth'
+import { isSellerAuthenticated, setSellerSession } from '../../lib/sellerAuth'
+import { getUserFacingMessage } from '../../lib/userFacingError'
+const LOGIN_METHODS = [
+  { id: 'phone', label: 'Teléfono' },
+  { id: 'store_name', label: 'Tienda' },
+]
+
+function loginBackTarget(state) {
+  const backTo = state?.backTo
+  if (
+    typeof backTo !== 'string' ||
+    !backTo.startsWith('/') ||
+    backTo.startsWith('//') ||
+    backTo.startsWith('/login')
+  ) {
+    return { backTo: '/', backLabel: 'Inicio' }
+  }
+  return { backTo, backLabel: 'Volver' }
+}
+
+export default function Login() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const redirectTo = location.state?.from ?? '/tienda'
+  const { backTo, backLabel } = loginBackTarget(location.state)
+  const [method, setMethod] = useState('phone')
+  const [phoneDigits, setPhoneDigits] = useState('')
+  const [storeName, setStoreName] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [expiredInfo, setExpiredInfo] = useState(null)
+  const notice = typeof location.state?.notice === 'string' ? location.state.notice : ''
+
+  useEffect(() => {
+    if (isSellerAuthenticated()) {
+      navigate(redirectTo, { replace: true })
+    }
+  }, [navigate, redirectTo])
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setError('')
+    setExpiredInfo(null)
+    setLoading(true)
+
+    try {
+      const payload = {
+        method,
+        password,
+        ...(method === 'phone'
+          ? { phone: phoneDigits }
+          : { store_name: storeName.trim() }),
+      }
+      const data = await sellerLogin(payload)
+      setSellerSession(data.access_token, data.seller)
+      navigate(redirectTo, { replace: true })
+    } catch (err) {
+      if (method === 'store_name' && err instanceof ApiError && err.status === 401) {
+        try {
+          const admin = await adminLogin(storeName.trim(), password)
+          setAdminToken(admin.access_token)
+          navigate('/admin/estadisticas', { replace: true })
+          return
+        } catch {
+          // Las credenciales tampoco son de administrador.
+        }
+      }
+      if (err instanceof ApiError && err.code === 'subscription_expired') {
+        setExpiredInfo(err.data)
+        return
+      }
+      setError(
+        getUserFacingMessage(
+          err,
+          'No pudimos iniciar sesión. Revisa tus datos e inténtalo de nuevo.',
+        ),
+      )
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (expiredInfo) {
+    return (
+      <SubscriptionExpiredScreen
+        storeName={expiredInfo.store_name}
+        subscriptionEndsAt={expiredInfo.subscription_ends_at}
+        renewalContactPhone={expiredInfo.renewal_contact_phone}
+        onBack={() => setExpiredInfo(null)}
+      />
+    )
+  }
+
+  return (
+    <AuthShell backTo={backTo} backLabel={backLabel} contentWidth="narrow">
+      <section className="animate-fade-in lg:mx-auto lg:max-w-md" aria-labelledby="login-title">
+        <AuthHeader
+          eyebrow="Vendedores"
+          title="Inicia sesión"
+          description="Accede con tu teléfono o el nombre de tu tienda y tu contraseña."
+        />
+
+        <AuthCard>
+          {notice ? (
+            <p className="mb-4 rounded-xl border border-brand-yellow/30 bg-brand-yellow/10 px-3.5 py-2.5 text-sm text-brand-green">
+              {notice}
+            </p>
+          ) : null}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+            <MethodTabs
+              options={LOGIN_METHODS}
+              value={method}
+              onChange={setMethod}
+              ariaLabel="Método de inicio de sesión"
+            />
+
+            {method === 'phone' ? (
+              <PhoneField
+                id="login-phone"
+                value={phoneDigits}
+                onChange={setPhoneDigits}
+              />
+            ) : (
+              <div>
+                <label htmlFor="login-store" className={labelClass}>
+                  Nombre de la tienda <span className="text-brand-carmelita">*</span>
+                </label>
+                <input
+                  id="login-store"
+                  type="text"
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  className={inputClass}
+                  placeholder="Ej. Mi Tienda"
+                  autoComplete="organization"
+                  required
+                />
+              </div>
+            )}
+
+            <PasswordField
+              id="login-password"
+              label="Contraseña"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <p className="-mt-1 text-right text-sm">
+              <Link
+                to="/recuperar"
+                className="font-semibold text-brand-green underline-offset-2 hover:underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </p>
+
+            {error && (
+              <p className={alertErrorClass} role="alert">
+                {error}
+              </p>
+            )}
+
+            <Button type="submit" disabled={loading} className="mt-1">
+              {loading ? 'Entrando…' : 'Entrar'}
+            </Button>
+          </form>
+        </AuthCard>
+
+        <p className="mt-6 text-center text-sm text-brand-carmelita/90">
+          ¿Aún no tienes cuenta?{' '}
+          <Link
+            to="/registro"
+            className="font-semibold text-brand-green underline-offset-2 hover:underline"
+          >
+            Crear cuenta
+          </Link>
+        </p>
+      </section>
+    </AuthShell>
+  )
+}

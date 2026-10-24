@@ -1,3 +1,1 @@
-import RegisterPlan from './RegisterPlan'
-
-export default RegisterPlan
+export { default } from '../auth/pages/RegisterEntry.jsx'

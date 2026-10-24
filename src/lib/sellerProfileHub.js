@@ -88,7 +88,7 @@ const PANELS = Object.freeze({
   [PROFILE_PANEL_IDS.plan]: {
     id: PROFILE_PANEL_IDS.plan,
     label: 'Mejorar plan',
-    description: 'Pasa a Pro o Premium y desbloquea más funciones',
+    description: 'Pasa a Básico, Pro o Premium',
     kind: 'panel',
     icon: 'plan',
   },
@@ -165,7 +165,7 @@ export function closeProfilePanel() {
 
 function planMenuItem(profile) {
   const panel = PANELS[PROFILE_PANEL_IDS.plan]
-  if (profile?.plan_tier === 'premium') {
+  if (!profile?.is_trial && profile?.plan_tier === 'premium') {
     return {
       ...panel,
       label: 'Tu plan',

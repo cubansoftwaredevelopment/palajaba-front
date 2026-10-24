@@ -6,7 +6,7 @@ import {
   getPlanPeriodSavings,
   getPlanYearlySavings,
   normalizePlanPrices,
-} from '../constants/plan'
+} from '../subscriptions/constants.js'
 import { fetchPlanPrices } from './api'
 import { areExchangeRatesAvailable, getCupPerUnit, loadExchangeRates } from './exchangeRates'
 

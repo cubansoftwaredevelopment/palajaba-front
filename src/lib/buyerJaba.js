@@ -114,6 +114,7 @@ function normalizeProduct(product) {
     image_url: product.image_url,
     base_price: product.base_price,
     base_currency: product.base_currency,
+    discount_percent: product.discount_percent ?? null,
     accepted_currencies: Array.isArray(product.accepted_currencies) ? product.accepted_currencies : [],
     offers_delivery: Boolean(product.offers_delivery),
     store_id: product.store?.id,
@@ -161,6 +162,8 @@ export function addToJaba(product) {
     }
     if (product.base_price != null) existing.base_price = product.base_price
     if (product.base_currency) existing.base_currency = product.base_currency
+    if (product.discount_percent != null) existing.discount_percent = product.discount_percent
+    else existing.discount_percent = null
     // Marketplace / tienda del negocio: limpia atribución de gestor.
     existing.gestor_id = hasGestor ? product.gestor_id : null
     existing.gestor_username = hasGestor ? product.gestor_username ?? null : null

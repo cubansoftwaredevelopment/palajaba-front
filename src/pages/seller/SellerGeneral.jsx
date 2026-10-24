@@ -247,7 +247,7 @@ export default function SellerGeneral() {
             <p className="text-xs text-brand-carmelita/85">{seller.phone}</p>
             {seller.subscription_ends_at && (
               <p className="mt-1.5 text-[0.65rem] text-brand-green/90">
-                {seller.is_trial ? 'Prueba gratuita hasta' : 'Suscripción hasta'}{' '}
+                {seller.is_trial ? 'Plan Prueba hasta' : 'Suscripción hasta'}{' '}
                 {formatDateTime(seller.subscription_ends_at)}
               </p>
             )}

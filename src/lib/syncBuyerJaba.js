@@ -9,6 +9,7 @@ function jabaItemFromApiProduct(product, quantity, previousItem = null) {
     image_url: product.image_url,
     base_price: product.base_price,
     base_currency: product.base_currency,
+    discount_percent: product.discount_percent ?? previousItem?.discount_percent ?? null,
     accepted_currencies: Array.isArray(product.accepted_currencies) ? product.accepted_currencies : [],
     offers_delivery: Boolean(product.offers_delivery),
     store_id: product.store?.id,

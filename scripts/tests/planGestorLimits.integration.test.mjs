@@ -18,7 +18,7 @@ import {
 } from '../../src/lib/sellerProfileHub.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const planSource = readFileSync(join(__dirname, '../../src/constants/plan.js'), 'utf8')
+const planSource = readFileSync(join(__dirname, '../../src/subscriptions/constants.js'), 'utf8')
 
 /**
  * Simula crear gestores hasta el tope del plan Básico.
@@ -33,20 +33,20 @@ function simulateCreateUntilLimit(planTier, existingCount = 0) {
   return { count, created, blocked: !canAddGestor(planTier, count) }
 }
 
-test('flujo integrado: Básico crea 1 y bloquea el siguiente', () => {
+test('flujo integrado: Básico crea 10 y bloquea el siguiente', () => {
   const result = simulateCreateUntilLimit('standard')
-  assert.equal(result.created.length, 1)
-  assert.equal(result.count, 1)
+  assert.equal(result.created.length, 10)
+  assert.equal(result.count, 10)
   assert.equal(result.blocked, true)
-  assert.equal(maxGestoresForPlan('standard'), 1)
+  assert.equal(maxGestoresForPlan('standard'), 10)
 })
 
-test('flujo integrado: Pro crea 3 y bloquea el siguiente', () => {
+test('flujo integrado: Pro crea 25 y bloquea el siguiente', () => {
   const result = simulateCreateUntilLimit('pro')
-  assert.equal(result.created.length, 3)
-  assert.equal(result.count, 3)
+  assert.equal(result.created.length, 25)
+  assert.equal(result.count, 25)
   assert.equal(result.blocked, true)
-  assert.equal(maxGestoresForPlan('pro'), 3)
+  assert.equal(maxGestoresForPlan('pro'), 25)
 })
 
 test('flujo integrado: Premium no se bloquea al crear muchos', () => {
@@ -63,8 +63,8 @@ test('flujo integrado: tarjetas de registro usan PLAN_GESTOR_FEATURES', () => {
   assert.match(planSource, /PLAN_GESTOR_FEATURES\.standard/)
   assert.match(planSource, /PLAN_GESTOR_FEATURES\.pro/)
   assert.match(planSource, /PLAN_GESTOR_FEATURES\.premium/)
-  assert.equal(PLAN_GESTOR_FEATURES.standard, 'Hasta 1 gestor de venta')
-  assert.equal(PLAN_GESTOR_FEATURES.pro, 'Hasta 3 gestores de venta')
+  assert.equal(PLAN_GESTOR_FEATURES.standard, 'Hasta 10 gestores de venta')
+  assert.equal(PLAN_GESTOR_FEATURES.pro, 'Hasta 25 gestores de venta')
   assert.equal(PLAN_GESTOR_FEATURES.premium, 'Gestores de venta ilimitados')
 })
 

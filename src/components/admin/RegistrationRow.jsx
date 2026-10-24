@@ -1,5 +1,5 @@
-import { BILLING_LABELS, PLAN_TIER_LABELS, STATUS_LABELS } from '../../constants/admin'
-import { normalizePlanTier } from '../../constants/plan'
+import { BILLING_LABELS, STATUS_LABELS } from '../../constants/admin'
+import { getSellerPlan } from '../../constants/plan'
 import {
   adminBadgeApproved,
   adminBadgeExpired,
@@ -30,9 +30,13 @@ export default function RegistrationRow({ item, onViewDetails }) {
         <div className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs ${adminSubtle}`}>
           <span className="font-mono text-zinc-400">{item.transfer_id}</span>
           <span className={adminMuted}>·</span>
-          <span>{PLAN_TIER_LABELS[normalizePlanTier(item.plan_tier)]}</span>
-          <span className={adminMuted}>·</span>
-          <span>{BILLING_LABELS[item.billing_period]}</span>
+          <span>{getSellerPlan(item).name}</span>
+          {item.is_trial ? null : (
+            <>
+              <span className={adminMuted}>·</span>
+              <span>{BILLING_LABELS[item.billing_period]}</span>
+            </>
+          )}
           {(item.status === 'approved' || item.status === 'expired') && (
             <>
               <span className={adminMuted}>·</span>

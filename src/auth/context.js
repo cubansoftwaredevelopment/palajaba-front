@@ -5,7 +5,7 @@ import {
   OTP_SMS_FAILED_CODE,
   OTP_SMS_FAILED_MESSAGE,
   SMS_COOLDOWN_MS,
-} from './constants'
+} from './constants.js'
 
 const SMS_COOLDOWN_STORAGE_KEY = 'palajaba.register.smsCooldown'
 
@@ -107,4 +107,27 @@ export function smsFailUserMessage(remainingMs = 0) {
     return `${OTP_SMS_FAILED_MESSAGE} Tiempo restante: ${formatCountdown(remainingMs)}.`
   }
   return OTP_SMS_FAILED_MESSAGE
+}
+
+import { request } from '../lib/api'
+
+export function startRegisterOtp(payload) {
+  return request('/api/register/otp/start', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function resendRegisterOtp(payload) {
+  return request('/api/register/otp/resend', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function confirmRegisterOtp(payload) {
+  return request('/api/register/otp/confirm', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
 }

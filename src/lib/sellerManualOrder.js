@@ -1,3 +1,5 @@
+import { productSaleAmount } from './productDiscount.js'
+
 export function flattenCatalogProducts(catalog) {
   if (!catalog?.categories?.length) return []
 
@@ -56,7 +58,7 @@ export function createManualOrderLineItem(product, quantity = 1) {
     product_id: product.id,
     name: product.name,
     quantity: Math.min(99, Math.max(1, Number(quantity) || 1)),
-    unit_price: Number(product.base_price),
+    unit_price: productSaleAmount(product),
     currency: product.base_currency,
     stock_quantity: product.stock_quantity ?? null,
   }

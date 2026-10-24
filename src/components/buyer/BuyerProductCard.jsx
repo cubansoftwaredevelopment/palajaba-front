@@ -8,13 +8,14 @@ import {
   BUYER_PRODUCT_CARD_ACTIONS,
   resolveBuyerProductStorePath,
 } from '../../lib/buyerProductCardView'
-import { resolveDisplayPrices } from '../../lib/displayPrice'
+import { productDiscountPercent, resolveDisplayPrices } from '../../lib/displayPrice'
 import { resolveMediaUrl } from '../../lib/media'
 import { isProductPurchasable, isProductSoldOut } from '../../lib/marketplaceProduct'
 import BuyerProductDetailModal from './BuyerProductDetailModal'
 import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
 import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerShare'
 import BuyerProductImage from './BuyerProductImage'
+import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
 import {
   buyerProductActions,
@@ -26,6 +27,7 @@ import {
   buyerProductCardCompact,
   buyerProductImageWrap,
   buyerProductName,
+  buyerProductDiscountBadge,
   buyerProductPrice,
   buyerProductStore,
 } from './buyerStyles'
@@ -55,6 +57,7 @@ export default function BuyerProductCard({ product, compact = false }) {
   const { isInJaba: checkInJaba, addProduct, buyProduct } = useBuyerJaba()
   const imageSrc = resolveMediaUrl(product.image_url, { width: 400 })
   const displayPrices = resolveDisplayPrices(product, displayCurrencies, cupPerUnit)
+  const discountPercent = productDiscountPercent(product)
   const [buyPulse, setBuyPulse] = useState(false)
   const [jabaPulse, setJabaPulse] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
@@ -129,17 +132,17 @@ export default function BuyerProductCard({ product, compact = false }) {
           >
             <div className={buyerProductImageWrap}>
               <BuyerProductImage src={imageSrc} />
+              {discountPercent ? (
+                <span className={buyerProductDiscountBadge}>-{discountPercent}%</span>
+              ) : null}
             </div>
 
             <div className={buyerProductBody}>
               <h3 className={buyerProductName}>{product.name}</h3>
-              <div className="mt-1 flex flex-col gap-0.5">
-                {displayPrices.map((price) => (
-                  <p key={price.currency} className={`${buyerProductPrice} !mt-0`}>
-                    {price.label}
-                  </p>
-                ))}
-              </div>
+              <BuyerProductPrices
+                prices={displayPrices}
+                priceClassName={`${buyerProductPrice} !mt-0`}
+              />
             </div>
           </button>
 

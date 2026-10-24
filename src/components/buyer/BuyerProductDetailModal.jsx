@@ -8,6 +8,7 @@ import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerS
 import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
 
 import { resolveDisplayPrices } from '../../lib/displayPrice'
+import { productSaleAmount } from '../../lib/productDiscount'
 
 import { formatPrice } from '../../lib/money'
 
@@ -17,6 +18,7 @@ import { recordProductPopularity } from '../../lib/productPopularity'
 
 import BuyerModalPortal from './BuyerModalPortal'
 import { useDismissibleModal } from './useOrderModalPresence'
+import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
 import ProductPhotoGallery from './ProductPhotoGallery'
 
@@ -329,19 +331,16 @@ export default function BuyerProductDetailModal({
 
             <div className="px-5 pt-4">
 
-              <div className="flex flex-col gap-1">
-                {displayPrices.map((price) => (
-                  <p key={price.currency} className={buyerProductDetailPrice}>
-                    {price.label}
-                  </p>
-                ))}
-              </div>
+              <BuyerProductPrices
+                prices={displayPrices}
+                priceClassName={buyerProductDetailPrice}
+              />
 
               {convertedFromBase ? (
 
                 <p className="mt-1 text-xs font-medium text-brand-carmelita/75">
 
-                  Precio en tienda: {formatPrice(product.base_price, product.base_currency)}
+                  Precio en tienda: {formatPrice(productSaleAmount(product), product.base_currency)}
 
                 </p>
 

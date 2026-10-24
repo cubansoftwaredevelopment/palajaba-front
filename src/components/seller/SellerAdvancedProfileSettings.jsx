@@ -36,7 +36,7 @@ import {
   getSmsCooldownUntil,
   smsFailUserMessage,
   useCountdown,
-} from '../../register/utils'
+} from '../../auth/context.js'
 
 function isValidEmail(value) {
   const email = value.trim()

@@ -166,7 +166,10 @@ export const buyerProductName =
   'truncate font-display text-[0.82rem] font-bold leading-snug text-brand-green sm:text-[0.9rem]'
 
 export const buyerProductPrice =
-  'mt-1 text-[0.72rem] font-semibold leading-none text-brand-green sm:text-[0.78rem]'
+  'mt-1 text-[0.72rem] font-semibold leading-snug text-brand-green sm:text-[0.78rem]'
+
+export const buyerProductDiscountBadge =
+  'absolute left-2 top-2 z-10 rounded-full bg-brand-yellow px-1.5 py-0.5 text-[0.62rem] font-bold leading-none text-brand-green shadow-[0_1px_6px_rgba(28,33,24,0.18)]'
 
 export const buyerProductStore =
   'mt-0 truncate text-[0.62rem] font-semibold text-brand-carmelita underline-offset-2 transition-colors touch-manipulation hover:text-brand-green hover:underline focus-visible:text-brand-green focus-visible:underline focus-visible:outline-none'
@@ -358,7 +361,7 @@ export const buyerProductDetailHeroImage =
   'relative mx-auto aspect-[4/5] w-full max-w-[11rem] overflow-hidden rounded-2xl bg-brand-white shadow-[0_8px_28px_rgba(89,128,44,0.12)] ring-1 ring-brand-green/10 sm:max-w-[12rem]'
 
 export const buyerProductDetailPrice =
-  'font-display text-2xl font-bold leading-none text-brand-green sm:text-[1.65rem]'
+  'font-display text-2xl font-bold leading-snug text-brand-green sm:text-[1.65rem]'
 
 export const buyerProductDetailName =
   'mt-2 font-display text-lg font-bold leading-snug text-brand-green sm:text-xl'

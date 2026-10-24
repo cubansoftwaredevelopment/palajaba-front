@@ -7,7 +7,7 @@ import Checkbox from '../../components/ui/Checkbox'
 import LoadingState from '../../components/ui/LoadingState'
 import StatePanel from '../../components/ui/StatePanel'
 import { formatPrice } from '../../lib/money'
-import { featurePlanTier, getPlanTier } from '../../constants/plan'
+import { featurePlanTier, getSellerPlan } from '../../constants/plan'
 import {
   createSellerGestor,
   deleteSellerGestor,
@@ -33,6 +33,7 @@ import {
   deriveSelectionFromAccess,
   gestorEligibleForCheckoutPhone,
   gestorSetupStatus,
+  isGestorActive,
   selectAllProductIds,
   toggleGestorCheckoutId,
   toggleProductId,
@@ -172,10 +173,11 @@ export default function SellerGestores() {
   const allSelected = areAllProductsSelected(products, selectedIds)
 
   const planTier = featurePlanTier(profile)
-  const planName = getPlanTier(planTier).name
+  const planName = getSellerPlan(profile).name
   const gestorLimit = maxGestoresForPlan(planTier)
-  const atGestorLimit = !canAddGestor(planTier, gestores.length)
-  const gestorUsageLabel = formatGestorUsage(planTier, gestores.length)
+  const activeGestorCount = gestores.filter(isGestorActive).length
+  const atGestorLimit = !canAddGestor(planTier, activeGestorCount)
+  const gestorUsageLabel = formatGestorUsage(planTier, activeGestorCount)
 
   async function handleCreate(e) {
     e.preventDefault()

@@ -84,7 +84,7 @@ export default function SellerStoreBanners({ profile, onUpdated }) {
       </p>
       {canManageBanners ? null : (
         <p className={sellerAlertError} role="status">
-          Los banners de tienda están disponibles en la prueba gratuita y en los planes Pro y Premium.
+          Los banners de tienda están disponibles en el plan Prueba y en los planes Pro y Premium.
           Los que ya tengas se ocultan en el catálogo público hasta que subas de plan.
         </p>
       )}

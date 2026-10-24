@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 
@@ -341,13 +341,7 @@ const municipalityMap = Object.fromEntries(
 
 const provinceNames = Object.fromEntries(provinces.map((p) => [p.id, p.name]))
 
-const pyOutput = `"""Provincias y municipios de Cuba. Generado por scripts/gen-cuba-locations.mjs."""
-
-from __future__ import annotations
-
-from fastapi import HTTPException, status
-
-PROVINCE_NAMES: dict[str, str] = ${JSON.stringify(provinceNames, null, 4)}
+const pyOutput = `PROVINCE_NAMES: dict[str, str] = ${JSON.stringify(provinceNames, null, 4)}
 
 MUNICIPALITIES_BY_PROVINCE: dict[str, dict[str, str]] = ${JSON.stringify(municipalityMap, null, 4)}
 
@@ -391,5 +385,11 @@ def validate_business_area(
     }
 `
 
-writeFileSync(join(__dirname, '../../backend/app/services/cuba_locations.py'), pyOutput, 'utf8')
+const constantsPath = join(__dirname, '../../palajaba-back/app/constants.py')
+const existing = readFileSync(constantsPath, 'utf8')
+const start = existing.indexOf('PROVINCE_NAMES:')
+if (start < 0) {
+  throw new Error('PROVINCE_NAMES not found in palajaba-back/app/constants.py')
+}
+writeFileSync(constantsPath, `${existing.slice(0, start)}${pyOutput}`, 'utf8')
 console.log('Wrote', provinces.length, 'provinces')
