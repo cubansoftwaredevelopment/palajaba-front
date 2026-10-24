@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import { notificationAudienceDisplay } from '../../src/constants/admin.js'
-import { matchesStoreQuery } from '../../src/lib/adminNotificationStores.js'
+import { buildAdminNotificationPayload, matchesStoreQuery } from '../../src/lib/adminNotificationStores.js'
 
 test('notificationAudienceDisplay muestra tienda en envíos single', () => {
   assert.equal(
@@ -29,6 +29,31 @@ test('notificationAudienceDisplay junta varios grupos seleccionados', () => {
     }),
     'Premium · Mensual · Premium · Anual',
   )
+})
+
+test('buildAdminNotificationPayload no cae en todos si hay varios grupos', () => {
+  const payload = buildAdminNotificationPayload({
+    title: 'Aviso',
+    content: 'Texto',
+    audiences: ['premium_monthly', 'pro_yearly'],
+    sellerIds: [],
+  })
+  assert.deepEqual(payload.audiences, ['premium_monthly', 'pro_yearly'])
+  assert.equal(payload.audience, 'premium_monthly')
+  assert.deepEqual(payload.seller_ids, [])
+  assert.equal('seller_id' in payload, false)
+})
+
+test('buildAdminNotificationPayload usa negocios concretos sin ampliar a todos', () => {
+  const payload = buildAdminNotificationPayload({
+    title: 'Aviso',
+    content: 'Texto',
+    audiences: [],
+    sellerIds: ['abc', 'def'],
+  })
+  assert.equal(payload.audience, 'single')
+  assert.deepEqual(payload.audiences, [])
+  assert.deepEqual(payload.seller_ids, ['abc', 'def'])
 })
 
 test('matchesStoreQuery filtra por nombre y teléfono', () => {
