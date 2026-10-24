@@ -5,7 +5,8 @@ import AdminToastStack from '../components/admin/AdminToastStack'
 import SendNotificationModal from '../components/admin/SendNotificationModal'
 import { notificationAudienceDisplay } from '../constants/admin'
 import { adminAlertError, adminCard, adminMuted, adminSubtle } from '../components/admin/adminStyles'
-import { fetchAdminNotifications, sendAdminNotification } from '../lib/api'
+import { fetchAdminNotifications, sendAdminNotification, sendAdminNotificationSms } from '../lib/api'
+import { smsSendCountLabel } from '../lib/adminNotificationStores'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatDateTime } from '../lib/dates'
@@ -18,6 +19,7 @@ export default function AdminNotifications({ embedded = false }) {
   const [error, setError] = useState('')
   const [toasts, setToasts] = useState([])
   const [showModal, setShowModal] = useState(false)
+  const [smsSendingId, setSmsSendingId] = useState('')
 
   const loadNotifications = useCallback(async () => {
     setError('')
@@ -67,19 +69,47 @@ export default function AdminNotifications({ embedded = false }) {
         result.audience === 'single' && result.recipient_count === 1
           ? `Aviso enviado a ${result.target_store_name || 'la tienda'}`
           : `Aviso enviado a ${result.recipient_count} vendedor${result.recipient_count === 1 ? '' : 'es'} (${targetLabel})`
-      pushEvents([
-        { type: 'success', message: avisoLabel },
-        result.sms_sent
-          ? { type: 'success', message: 'También se envió por SMS.' }
-          : {
-              type: 'error',
-              message: result.sms_error
-                ? `El SMS no se pudo enviar: ${result.sms_error}`
-                : 'El SMS no se pudo enviar.',
-            },
-      ])
+      pushEvents([{ type: 'success', message: avisoLabel }])
     }
     await loadNotifications()
+  }
+
+  async function handleSendSms(batchId) {
+    setSmsSendingId(batchId)
+    try {
+      const token = getAdminToken()
+      const result = await sendAdminNotificationSms(token, batchId)
+      if (result.events?.length) {
+        pushEvents(result.events)
+      } else if (result.sms_sent) {
+        pushEvents([{ type: 'success', message: 'SMS enviado.' }])
+      } else {
+        pushEvents([
+          {
+            type: 'error',
+            message: result.sms_error
+              ? `El SMS no se pudo enviar: ${result.sms_error}`
+              : 'El SMS no se pudo enviar.',
+          },
+        ])
+      }
+      if (typeof result.sms_send_count === 'number') {
+        setItems((current) =>
+          current.map((item) =>
+            item.batch_id === batchId ? { ...item, sms_send_count: result.sms_send_count } : item,
+          ),
+        )
+      }
+    } catch (err) {
+      if (isSessionError(err)) {
+        clearAdminToken()
+        navigate('/admin', { replace: true })
+        return
+      }
+      pushEvents([{ type: 'error', message: getUserFacingMessage(err, 'No pudimos enviar el SMS.') }])
+    } finally {
+      setSmsSendingId('')
+    }
   }
 
   return (
@@ -87,7 +117,7 @@ export default function AdminNotifications({ embedded = false }) {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
           Envía avisos a uno o varios grupos (plan y facturación) y a negocios concretos.
-          Cada aviso llega al panel del vendedor. Si el SMS está disponible, también se envía al teléfono.
+          Cada aviso llega al panel del vendedor. El SMS se envía después, desde cada fila.
         </p>
         <AdminButton type="button" className="sm:w-auto" onClick={() => setShowModal(true)}>
           Nueva notificación
@@ -134,6 +164,19 @@ export default function AdminNotifications({ embedded = false }) {
               <p className={`mt-3 whitespace-pre-wrap text-sm leading-relaxed ${adminSubtle}`}>
                 {item.content}
               </p>
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                <p className={`text-xs ${adminMuted}`}>{smsSendCountLabel(item.sms_send_count)}</p>
+                <AdminButton
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="sm:w-auto"
+                  disabled={smsSendingId === item.batch_id}
+                  onClick={() => handleSendSms(item.batch_id)}
+                >
+                  {smsSendingId === item.batch_id ? 'Enviando SMS…' : 'Enviar SMS'}
+                </AdminButton>
+              </div>
             </li>
           ))}
         </ul>

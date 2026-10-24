@@ -5,8 +5,8 @@ import AdminMultiSelect from './AdminMultiSelect'
 import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { adminAlertError, adminInput, adminLabel, adminMuted, adminSubtle } from './adminStyles'
 import { NOTIFICATION_AUDIENCE_LABELS, NOTIFICATION_AUDIENCE_OPTIONS } from '../../constants/admin'
-import { matchesStoreQuery } from '../../lib/adminNotificationStores'
-import { fetchRegistrations } from '../../auth/api.js'
+import { buildAdminNotificationPayload, matchesStoreQuery } from '../../lib/adminNotificationStores'
+import { fetchRegistrations } from '../../lib/api'
 import { getAdminToken } from '../../lib/adminAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
@@ -106,13 +106,14 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
 
     setLoading(true)
     try {
-      await onSubmit({
-        title: trimmedTitle,
-        content: trimmedContent,
-        audience: audiences.length === 1 ? audiences[0] : selectedSellerIds.length ? 'single' : 'all',
-        audiences,
-        seller_ids: selectedSellerIds,
-      })
+      await onSubmit(
+        buildAdminNotificationPayload({
+          title: trimmedTitle,
+          content: trimmedContent,
+          audiences,
+          sellerIds: selectedSellerIds,
+        }),
+      )
       onClose()
     } catch (err) {
       setError(getUserFacingMessage(err, 'No pudimos enviar la notificación.'))
@@ -246,7 +247,7 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className={`${adminInput} min-h-32 resize-y py-3`}
-            placeholder="Este texto llega a la app y por SMS al teléfono del negocio…"
+            placeholder="Este texto llega al panel del vendedor…"
             maxLength={2000}
             required
           />
