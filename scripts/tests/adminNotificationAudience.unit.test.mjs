@@ -2,7 +2,11 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import { notificationAudienceDisplay } from '../../src/constants/admin.js'
-import { buildAdminNotificationPayload, matchesStoreQuery } from '../../src/lib/adminNotificationStores.js'
+import {
+  buildAdminNotificationPayload,
+  matchesStoreQuery,
+  smsSendCountLabel,
+} from '../../src/lib/adminNotificationStores.js'
 
 test('notificationAudienceDisplay muestra tienda en envíos single', () => {
   assert.equal(
@@ -54,6 +58,12 @@ test('buildAdminNotificationPayload usa negocios concretos sin ampliar a todos',
   assert.equal(payload.audience, 'single')
   assert.deepEqual(payload.audiences, [])
   assert.deepEqual(payload.seller_ids, ['abc', 'def'])
+})
+
+test('smsSendCountLabel usa el plural en español', () => {
+  assert.equal(smsSendCountLabel(0), 'Enviado 0 veces por SMS')
+  assert.equal(smsSendCountLabel(1), 'Enviado 1 vez por SMS')
+  assert.equal(smsSendCountLabel(4), 'Enviado 4 veces por SMS')
 })
 
 test('matchesStoreQuery filtra por nombre y teléfono', () => {

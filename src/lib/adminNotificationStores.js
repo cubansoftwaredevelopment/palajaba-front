@@ -1,3 +1,8 @@
+export function smsSendCountLabel(count) {
+  const n = Number(count) || 0
+  return n === 1 ? 'Enviado 1 vez por SMS' : `Enviado ${n} veces por SMS`
+}
+
 export function matchesStoreQuery(store, query) {
   const q = query.trim().toLowerCase()
   if (!q) return true

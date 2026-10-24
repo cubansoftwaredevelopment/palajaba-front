@@ -500,6 +500,15 @@ export function sendAdminNotification(token, payload) {
   });
 }
 
+export function sendAdminNotificationSms(token, batchId) {
+  return request(`/api/admin/notifications/${encodeURIComponent(batchId)}/sms`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
 export function submitSellerFeedback(token, payload) {
   return request("/api/auth/me/feedback", {
     method: "POST",

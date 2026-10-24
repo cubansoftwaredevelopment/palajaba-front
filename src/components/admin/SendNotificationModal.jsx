@@ -247,7 +247,7 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
             value={content}
             onChange={(e) => setContent(e.target.value)}
             className={`${adminInput} min-h-32 resize-y py-3`}
-            placeholder="Este texto llega a la app y por SMS al teléfono del negocio…"
+            placeholder="Este texto llega al panel del vendedor…"
             maxLength={2000}
             required
           />
