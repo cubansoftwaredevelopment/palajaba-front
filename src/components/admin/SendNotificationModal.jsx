@@ -6,7 +6,7 @@ import { useDismissibleModal } from '../buyer/useOrderModalPresence'
 import { adminAlertError, adminInput, adminLabel, adminMuted, adminSubtle } from './adminStyles'
 import { NOTIFICATION_AUDIENCE_LABELS, NOTIFICATION_AUDIENCE_OPTIONS } from '../../constants/admin'
 import { buildAdminNotificationPayload, matchesStoreQuery } from '../../lib/adminNotificationStores'
-import { fetchRegistrations } from '../../lib/api'
+import { fetchRegistrations } from '../../auth/api.js'
 import { getAdminToken } from '../../lib/adminAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
