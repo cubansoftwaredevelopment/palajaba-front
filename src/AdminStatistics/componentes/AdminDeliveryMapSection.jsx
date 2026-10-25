@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -22,7 +23,7 @@ function pinLabel(pin) {
   return `${pin.store_name} · ${place}`
 }
 
-function OrderPinsMap({ pins, frameKey }) {
+function OrderPinsCanvas({ pins, frameKey, interactive }) {
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const layerRef = useRef(null)
@@ -34,23 +35,26 @@ function OrderPinsMap({ pins, frameKey }) {
     const map = L.map(node, {
       center: SELLER_MAP_DEFAULT_CENTER,
       zoom: SELLER_MAP_DEFAULT_ZOOM,
-      zoomControl: true,
-      scrollWheelZoom: true,
-      doubleClickZoom: true,
-      touchZoom: true,
-      boxZoom: true,
-      keyboard: true,
+      zoomControl: interactive,
+      scrollWheelZoom: interactive,
+      doubleClickZoom: interactive,
+      touchZoom: interactive,
+      boxZoom: interactive,
+      keyboard: interactive,
+      dragging: interactive,
     })
     addSellerMapTiles(map)
     layerRef.current = L.layerGroup().addTo(map)
     mapRef.current = map
     requestAnimationFrame(() => map.invalidateSize())
+    const timer = window.setTimeout(() => map.invalidateSize(), 80)
     return () => {
+      window.clearTimeout(timer)
       map.remove()
       mapRef.current = null
       layerRef.current = null
     }
-  }, [])
+  }, [interactive])
 
   useEffect(() => {
     const map = mapRef.current
@@ -63,16 +67,18 @@ function OrderPinsMap({ pins, frameKey }) {
       if (pin.lat == null || pin.lng == null) continue
       const latLng = [pin.lat, pin.lng]
       points.push(latLng)
-      L.marker(latLng, { icon: pinIcon }).bindTooltip(pinLabel(pin), { direction: 'top' }).addTo(layer)
+      L.marker(latLng, { icon: pinIcon, interactive })
+        .bindTooltip(pinLabel(pin), { direction: 'top' })
+        .addTo(layer)
     }
     if (points.length && fittedKey.current !== frameKey) {
       map.fitBounds(L.latLngBounds(points), { padding: [28, 28], maxZoom: 15 })
       fittedKey.current = frameKey
     }
-  }, [frameKey, pins])
+  }, [frameKey, interactive, pins])
 
   return (
-    <div className="admin-device-map relative h-80 overflow-hidden rounded-xl border border-zinc-800/80">
+    <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
       {(pins ?? []).length === 0 ? (
         <p className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg bg-zinc-950/80 px-3 py-2 text-center text-xs text-zinc-300">
@@ -80,6 +86,73 @@ function OrderPinsMap({ pins, frameKey }) {
         </p>
       ) : null}
     </div>
+  )
+}
+
+function OrderPinsMap({ pins, frameKey }) {
+  const [expanded, setExpanded] = useState(false)
+
+  useEffect(() => {
+    if (!expanded) return undefined
+    function onKey(event) {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setExpanded(false)
+      }
+    }
+    document.addEventListener('keydown', onKey, true)
+    const previous = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey, true)
+      document.body.style.overflow = previous
+    }
+  }, [expanded])
+
+  return (
+    <>
+      <div className="admin-device-map relative h-80 overflow-hidden rounded-xl border border-zinc-800/80">
+        <OrderPinsCanvas pins={pins} frameKey={frameKey} interactive={false} />
+        {expanded ? null : (
+          <>
+            <button
+              type="button"
+              className="absolute inset-0 z-10 cursor-pointer bg-transparent"
+              onClick={() => setExpanded(true)}
+              aria-label="Ver mapa de domicilios a pantalla completa"
+            />
+            <p className="pointer-events-none absolute inset-x-3 top-3 z-20 rounded-lg bg-zinc-950/75 px-3 py-1.5 text-center text-xs text-zinc-200">
+              Toca para ver a pantalla completa
+            </p>
+          </>
+        )}
+      </div>
+      {expanded
+        ? createPortal(
+            <div
+              className="admin-theme fixed inset-0 z-[120] flex h-dvh flex-col bg-zinc-950"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mapa de domicilios"
+            >
+              <button
+                type="button"
+                onClick={() => setExpanded(false)}
+                className="absolute right-3 top-[max(0.75rem,var(--safe-top))] z-[1000] flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-zinc-700 touch-manipulation"
+                aria-label="Cerrar mapa"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+              <div className="admin-device-map min-h-0 flex-1 overflow-hidden">
+                <OrderPinsCanvas pins={pins} frameKey={`${frameKey}:screen`} interactive />
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
   )
 }
 

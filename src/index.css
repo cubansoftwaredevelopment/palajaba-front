@@ -511,6 +511,10 @@
     display: none;
   }
 
+  .admin-device-map {
+    isolation: isolate;
+  }
+
   .admin-device-map .leaflet-container {
     z-index: 0;
     height: 100%;
