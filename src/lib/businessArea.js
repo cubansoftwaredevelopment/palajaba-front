@@ -1,4 +1,4 @@
-import { getMunicipalityById, getProvinceById } from '../constants/cubaLocations'
+import { getMunicipalityById, getProvinceById } from '../constants/cubaLocations.js'
 
 export const MAX_DELIVERY_AREAS = 30
 
@@ -60,10 +60,18 @@ export function storeServiceAreas(profile) {
   if (profile?.business_area?.province_id && profile?.business_area?.municipality_id) {
     areas.push(profile.business_area)
   }
-  if (profile?.offers_delivery !== false) {
-    areas.push(...(profile?.delivery_areas || []))
-  }
+  areas.push(...(profile?.delivery_areas || []))
   return dedupeDeliveryAreas(areas).filter(
     (area) => area?.province_id && area?.municipality_id,
   )
+}
+
+export function productServiceAreas(profile) {
+  return storeServiceAreas(profile)
+}
+
+export function selectedProductSalesAreas(profile, selectedKeys) {
+  const allowed = productServiceAreas(profile)
+  const wanted = new Set(selectedKeys)
+  return allowed.filter((area) => wanted.has(areaKey(area)))
 }

@@ -86,7 +86,7 @@ export default function SellerDeliveryZonesEditor({
     const merged = dedupeDeliveryAreas([...zones, ...newAreas], businessArea)
     if (merged.length > MAX_DELIVERY_AREAS) {
       setLocalError(
-        `Solo puedes tener hasta ${MAX_DELIVERY_AREAS} zonas de envío. Quita algunas o agrega municipios de a uno.`,
+        `Solo puedes tener hasta ${MAX_DELIVERY_AREAS} zonas de venta. Quita algunas o agrega municipios de a uno.`,
       )
       return
     }
@@ -130,7 +130,7 @@ export default function SellerDeliveryZonesEditor({
       )}
 
       <div className="rounded-2xl border border-brand-green/12 bg-brand-green/[0.02] p-3.5">
-        <p className={sellerLabel}>Agregar zona de envío</p>
+        <p className={sellerLabel}>Agregar zona de venta</p>
         <div className="mt-3 grid grid-cols-1 gap-3">
           <CategoryAutocomplete
             id={`${idPrefix}-province`}

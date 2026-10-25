@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../api.js'
+import ProductSalesZonesField from './ProductSalesZonesField'
+import { areaKey, productServiceAreas, selectedProductSalesAreas } from '../../lib/businessArea'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../lib/imageUpload'
 
@@ -131,6 +133,8 @@ export default function CreateCatalogProductModal({
 
   defaultOffersDelivery = false,
 
+  profile = null,
+
   product = null,
 
   allowProductDiscount = false,
@@ -178,6 +182,18 @@ export default function CreateCatalogProductModal({
   const [viewOnly, setViewOnly] = useState(product?.view_only ?? false)
 
   const [isAvailable, setIsAvailable] = useState(product?.is_available ?? true)
+
+  const zoneOptions = useMemo(
+    () => productServiceAreas(profile),
+    [profile],
+  )
+
+  const [selectedZoneKeys, setSelectedZoneKeys] = useState(() => {
+    const options = productServiceAreas(profile)
+    const optionKeys = options.map(areaKey)
+    const stored = (product?.sales_areas ?? []).map(areaKey).filter((key) => optionKeys.includes(key))
+    return stored.length ? stored : optionKeys
+  })
 
   const [discountPercent, setDiscountPercent] = useState(
     product?.discount_percent ? String(product.discount_percent) : '',
@@ -367,7 +383,14 @@ export default function CreateCatalogProductModal({
 
       photosChanged(photos, product) ||
 
-      !sameStringArray(acceptedCurrencies, product.accepted_currencies)
+      !sameStringArray(acceptedCurrencies, product.accepted_currencies) ||
+      !sameStringArray(
+        selectedZoneKeys,
+        (product.sales_areas?.length
+          ? product.sales_areas
+          : productServiceAreas(profile)
+        ).map(areaKey),
+      )
 
     )
 
@@ -400,6 +423,8 @@ export default function CreateCatalogProductModal({
     photos,
 
     acceptedCurrencies,
+
+    selectedZoneKeys,
 
   ])
 
@@ -513,6 +538,12 @@ export default function CreateCatalogProductModal({
 
     }
 
+    const salesAreas = selectedProductSalesAreas(profile, selectedZoneKeys)
+    if (zoneOptions.length && !salesAreas.length) {
+      setError('Elige al menos una zona de venta.')
+      return
+    }
+
 
 
     const formData = new FormData()
@@ -541,6 +572,7 @@ export default function CreateCatalogProductModal({
     formData.append('global_category_id', globalCategoryId)
 
     formData.append('offers_delivery', String(offersDelivery))
+    formData.append('sales_areas', JSON.stringify(salesAreas))
 
     formData.append('view_only', String(viewOnly))
 
@@ -1052,6 +1084,12 @@ export default function CreateCatalogProductModal({
             )}
 
 
+
+            <ProductSalesZonesField
+              areas={zoneOptions}
+              selectedKeys={selectedZoneKeys}
+              onChange={setSelectedZoneKeys}
+            />
 
             <div className="mt-4 space-y-2">
 

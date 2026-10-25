@@ -262,6 +262,7 @@ export default function SellerCatalog() {
             product={productToEdit}
             allowProductDiscount={sellerHasProductDiscounts(profile)}
             defaultOffersDelivery={Boolean(profile?.offers_delivery)}
+            profile={profile}
             onClose={() => {
               setShowCreateProduct(false)
               setCreateProductLocalCategoryId('')

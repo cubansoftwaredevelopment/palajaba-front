@@ -228,7 +228,7 @@ export default function SellerCompleteProfile() {
           </SellerSection>
 
           <SellerSection
-            label="Zonas de envío"
+            label="Zonas de venta"
             optional
             hint="Otros municipios donde entregas además del tuyo. Cada producto indica si acepta domicilio."
             className={sellerFormFull}
