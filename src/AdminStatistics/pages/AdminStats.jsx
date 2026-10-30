@@ -26,9 +26,6 @@ import LoadingState from '../../components/ui/LoadingState'
 import { formatPrice } from '../../lib/money'
 import { AdminStatisticsProvider, useAdminStatistics } from '../context/AdminStatisticsContext'
 
-const chartCell = 'min-w-[min(100%,26rem)] max-w-full flex-[1_1_calc(50%-0.5rem)]'
-const quarterCard = 'min-w-[min(100%,14rem)] flex-[1_1_calc(25%-1rem)]'
-
 const METRIC_ACCENTS = {
   payments: 'border-t-brand-green',
   traffic: 'border-t-sky-300/80',
@@ -41,13 +38,13 @@ const METRIC_ACCENTS = {
 function MetricCard({ label, hint, value, subvalue, comingSoon, accent = 'payments', className }) {
   return (
     <article
-      className={`${adminCard} border-t-2 ${METRIC_ACCENTS[accent] ?? METRIC_ACCENTS.payments} ${
-        className ?? 'min-w-[min(100%,12rem)] flex-[1_1_calc(25%-0.75rem)]'
+        className={`${adminCard} border-t-2 ${METRIC_ACCENTS[accent] ?? METRIC_ACCENTS.payments} ${
+        className ?? 'w-full min-w-0'
       }`}
     >
       <p className={`text-xs font-medium uppercase tracking-wide ${adminMuted}`}>{label}</p>
       <p
-        className={`mt-3 text-3xl font-semibold tabular-nums ${
+        className={`mt-3 break-words text-3xl font-semibold tabular-nums ${
           comingSoon ? 'text-zinc-600' : 'text-zinc-50'
         }`}
       >
@@ -122,7 +119,7 @@ function AdminStatsView() {
             onRangeChange={setRange}
           />
 
-          <div className="mt-4 flex flex-wrap gap-3">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
             <MetricCard
               accent="payments"
               label="Pagos del mes"
@@ -133,6 +130,12 @@ function AdminStatsView() {
                   ? `${stats.payments_count} pago${stats.payments_count === 1 ? '' : 's'}`
                   : undefined
               }
+            />
+            <MetricCard
+              accent="payments"
+              label="Monto movido en la plataforma"
+              hint="Pedidos completados, artículos más mensajería este mes"
+              value={(stats?.platform_moved_by_currency ?? []).map((item) => formatPrice(item.total, item.currency)).join(' · ') || '0'}
             />
             <MetricCard
               accent="traffic"
@@ -152,97 +155,87 @@ function AdminStatsView() {
               hint="Por revisar y aprobar"
               value={String(stats?.pending_registrations ?? 0)}
             />
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-start gap-4">
             <MetricCard
-              className={quarterCard}
               accent="products"
               label="Productos publicados"
               hint="Total en catálogos de todas las tiendas"
               value={String(stats?.published_products ?? 0)}
             />
             <MetricCard
-              className={quarterCard}
               accent="orders"
               label="Pedidos realizados"
               hint="Compras registradas en la plataforma"
               value={String(stats?.orders_total ?? 0)}
             />
-            <div className="min-w-[min(100%,18rem)] flex-[2_1_calc(50%-1rem)]">
-              <AdminBusinessesByProvinceChart data={provinceStats} loading={loading} />
-            </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-start gap-4">
-            <div className={chartCell}>
+          <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
+            <div className="min-w-0">
+              <AdminBusinessesByProvinceChart data={provinceStats} loading={loading} />
+            </div>
+            <div className="min-w-0">
               <AdminOrdersChart chart={ordersChart} loading={chartsLoading} error={ordersError} />
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminSalesChart chart={salesChart} loading={chartsLoading} error={salesError} />
             </div>
-            <div className={chartCell}>
-              <AdminDevicesSection
-                data={deviceStats}
-                loading={chartsLoading}
-                error={devicesError}
-                multiDay={multiDay}
-              />
+            <div className="min-w-0">
+              <AdminDevicesSection data={deviceStats} loading={chartsLoading} error={devicesError} multiDay={multiDay} />
+              <div className="mt-4">
+                <AdminRevenueChart chart={revenueChart} loading={chartsLoading} error={revenueError} />
+              </div>
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminTopBusinessesChart
                 data={topBusinesses}
                 loading={chartsLoading}
                 error={topBusinessesError}
               />
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminTopSoldProductsChart
                 data={topSoldProducts}
                 loading={chartsLoading}
                 error={topSoldError}
               />
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminTopPopularProductsChart
                 data={topPopularProducts}
                 loading={chartsLoading}
                 error={topPopularError}
               />
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminOrdersLocationChart
                 data={ordersLocations}
                 loading={chartsLoading}
                 error={ordersLocationsError}
               />
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminDeliveryMapSection
                 data={deliveryMap}
                 loading={chartsLoading}
                 error={deliveryMapError}
               />
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminTrafficChart chart={trafficChart} loading={chartsLoading} error={trafficError} />
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminTrafficLocationChart
                 data={trafficLocations}
                 loading={chartsLoading}
                 error={locationsError}
               />
             </div>
-            <div className={chartCell}>
+            <div className="min-w-0">
               <AdminTrafficPatternsChart
                 data={trafficPatterns}
                 loading={chartsLoading}
                 error={patternsError}
               />
-            </div>
-            <div className={chartCell}>
-              <AdminRevenueChart chart={revenueChart} loading={chartsLoading} error={revenueError} />
             </div>
           </div>
         </>
