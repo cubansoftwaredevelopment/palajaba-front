@@ -119,7 +119,7 @@ function AdminStatsView() {
             onRangeChange={setRange}
           />
 
-          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-8">
             <MetricCard
               accent="payments"
               label="Pagos del mes"
@@ -136,6 +136,13 @@ function AdminStatsView() {
               label="Monto movido en la plataforma"
               hint="Pedidos completados, artículos más mensajería este mes"
               value={(stats?.platform_moved_by_currency ?? []).map((item) => formatPrice(item.total, item.currency)).join(' · ') || '0'}
+            />
+            <MetricCard
+              accent="pending"
+              label="Pedidos sin confirmar"
+              hint="Importe de artículos esperando confirmación de la tienda"
+              value={(stats?.unconfirmed_orders_by_currency ?? []).map((item) => formatPrice(item.total, item.currency)).join(' · ') || '0'}
+              subvalue={stats ? `${Number(stats.unconfirmed_orders_count ?? 0)} pedido${Number(stats.unconfirmed_orders_count ?? 0) === 1 ? '' : 's'}` : undefined}
             />
             <MetricCard
               accent="traffic"
@@ -157,9 +164,9 @@ function AdminStatsView() {
             />
             <MetricCard
               accent="products"
-              label="Productos publicados"
-              hint="Total en catálogos de todas las tiendas"
-              value={String(stats?.published_products ?? 0)}
+              label="Productos visibles vs existentes"
+              hint="Visibles en tiendas activas / total de productos en la plataforma"
+              value={`${stats?.products_visible ?? 0} / ${stats?.products_existing ?? stats?.published_products ?? 0}`}
             />
             <MetricCard
               accent="orders"
