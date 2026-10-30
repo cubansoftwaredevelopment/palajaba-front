@@ -30,10 +30,10 @@ const CURRENCY_GRADIENTS = {
   MLC: ['#c9970a', '#c9970a22'],
 }
 
-function formatRevenueTick(value) {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${Math.round(value / 1_000)}k`
-  return String(Math.round(value))
+function formatRevenueTick(value, currency) {
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M ${currency}`
+  if (value >= 1_000) return `${Math.round(value / 1_000)}k ${currency}`
+  return `${Math.round(value)} ${currency}`
 }
 
 function formatRevenueAmount(value, currency) {
@@ -87,11 +87,11 @@ function RevenueCurrencyChart({ series }) {
               minTickGap={24}
             />
             <YAxis
-              tickFormatter={formatRevenueTick}
+              tickFormatter={(value) => formatRevenueTick(value, series.currency)}
               tick={{ fill: '#7b4c38aa', fontSize: 11 }}
               axisLine={false}
               tickLine={false}
-              width={42}
+              width={76}
             />
             <Tooltip
               cursor={{ stroke: '#59802c33', strokeWidth: 1 }}

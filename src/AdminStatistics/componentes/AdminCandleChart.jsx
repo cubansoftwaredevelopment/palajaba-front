@@ -142,7 +142,7 @@ function CandleTooltip({ active, payload, formatValue, level, change }) {
   )
 }
 
-export default function AdminCandleChart({ points, formatValue, formatTick, level = false, change = false }) {
+export default function AdminCandleChart({ points, formatValue, formatTick, level = false, change = false, yAxisWidth }) {
   const source = change ? withChange(points ?? []) : (points ?? [])
   const rows = source.map((point) => ({
     ...point,
@@ -186,7 +186,7 @@ export default function AdminCandleChart({ points, formatValue, formatTick, leve
             tick={{ fill: '#a1a1aa', fontSize: 11 }}
             axisLine={false}
             tickLine={false}
-            width={change ? 52 : 42}
+            width={yAxisWidth ?? (change ? 52 : 42)}
           />
           <Tooltip
             cursor={{ stroke: '#59802c33', strokeWidth: 1 }}

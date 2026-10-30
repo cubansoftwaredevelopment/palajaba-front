@@ -3,14 +3,17 @@ import { adminCard, adminMuted, adminSubtle } from '../../components/admin/admin
 import AdminCandleChart from './AdminCandleChart'
 
 function formatMoneyTick(value) {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-  if (value >= 1_000) return `${Math.round(value / 1_000)}k`
-  return String(Math.round(value))
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M CUP`
+  if (value >= 1_000) return `${Math.round(value / 1_000)}k CUP`
+  return `${Math.round(value)} CUP`
 }
 
 export default function AdminSalesChart({ chart, loading, error }) {
+  const currencies = chart?.currencies ?? []
   const points = chart?.points ?? []
-  const hasData = points.some((point) => Number(point.count) > 0 || Number(point.close) > 0)
+  const hasData = currencies.length
+    ? currencies.some((series) => series.points?.some((point) => Number(point.count) > 0 || Number(point.close) > 0))
+    : points.some((point) => Number(point.count) > 0 || Number(point.close) > 0)
 
   return (
     <section className={adminCard}>
@@ -48,19 +51,23 @@ export default function AdminSalesChart({ chart, loading, error }) {
               Total del periodo
             </p>
             <p className="mt-1 text-2xl font-semibold tabular-nums text-zinc-50 sm:text-3xl">
-              {formatPrice(chart.total_cup ?? 0, 'CUP')}
+              {currencies.length
+                ? currencies.map((series) => formatPrice(series.total, series.currency)).join(' · ')
+                : formatPrice(chart.total_cup ?? 0, 'CUP')}
             </p>
             <p className={`mt-1 text-xs tabular-nums ${adminMuted}`}>
               {(chart.orders_counted ?? 0).toLocaleString('es')} pedido
               {chart.orders_counted === 1 ? '' : 's'} con moneda convertible
             </p>
           </div>
-          <AdminCandleChart
-            points={points}
-            change
-            formatValue={(value) => formatPrice(value, 'CUP')}
-            formatTick={formatMoneyTick}
-          />
+          {currencies.length ? currencies.map((series) => (
+            <div key={series.currency} className="mb-3">
+              <p className={`mb-1 text-xs font-semibold uppercase ${adminMuted}`}>{series.currency}</p>
+              <AdminCandleChart points={series.points} change
+                formatValue={(value) => formatPrice(value, series.currency)}
+                formatTick={(value) => formatMoneyTick(value).replace('CUP', series.currency)} yAxisWidth={88} />
+            </div>
+          )) : <AdminCandleChart points={points} change formatValue={(value) => formatPrice(value, 'CUP')} formatTick={formatMoneyTick} yAxisWidth={78} />}
         </>
       ) : null}
     </section>

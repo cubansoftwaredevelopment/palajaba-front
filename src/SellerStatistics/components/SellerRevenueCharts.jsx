@@ -66,11 +66,11 @@ export default function SellerRevenueCharts({ loading, error, chart }) {
                       minTickGap={24}
                     />
                     <YAxis
-                      tickFormatter={formatAxisTick}
+                      tickFormatter={(value) => `${formatAxisTick(value)} ${item.currency}`}
                       tick={{ fill: '#7b4c38aa', fontSize: 11 }}
                       axisLine={false}
                       tickLine={false}
-                      width={42}
+                      width={76}
                     />
                     <Tooltip
                       cursor={{ stroke: '#59802c33', strokeWidth: 1 }}
