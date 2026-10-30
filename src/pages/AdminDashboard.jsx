@@ -39,7 +39,6 @@ const EMPTY_FILTERS = {
   approved: '',
   plan: 'all',
   billing: 'all',
-  sales: '',
 }
 
 const STATUS_BADGES = {
@@ -99,14 +98,6 @@ function inCurrentMonth(value) {
   if (Number.isNaN(day.getTime())) return false
   const now = new Date()
   return day.getFullYear() === now.getFullYear() && day.getMonth() === now.getMonth()
-}
-
-function matchesSales(item, query) {
-  const needle = query.trim().toLowerCase().replace(',', '.')
-  if (!needle) return true
-  const amount = String(item.sales_total_cup ?? 0)
-  const label = formatPrice(item.sales_total_cup ?? 0, 'CUP').toLowerCase()
-  return amount.includes(needle) || label.includes(needle)
 }
 
 export default function AdminDashboard() {
@@ -232,7 +223,6 @@ export default function AdminDashboard() {
         if (!includesText(item.approved_at ? formatDateTime(item.approved_at) : '', filters.approved)) return false
         if (filters.plan !== 'all' && getSellerPlan(item).id !== filters.plan) return false
         if (filters.billing !== 'all' && item.billing_period !== filters.billing) return false
-        if (!matchesSales(item, filters.sales)) return false
         return true
       }),
     [filters, registrations],
@@ -300,7 +290,7 @@ export default function AdminDashboard() {
                   <th className="px-3 py-2">Aprobada</th>
                   <th className="px-3 py-2">Plan</th>
                   <th className="px-3 py-2">Tiempo de suscripción</th>
-                  <th className="px-3 py-2">Vendido</th>
+                  <th className="px-3 py-2">Pedidos pendientes / confirmados</th>
                   <th className="px-3 py-2">Acciones</th>
                 </tr>
                 <tr className="border-b border-zinc-800 bg-zinc-950/40">
@@ -381,16 +371,7 @@ export default function AdminDashboard() {
                       ]}
                     />
                   </th>
-                  <th className="px-2 py-2">
-                    <input
-                      value={filters.sales}
-                      onChange={(event) => updateFilter('sales', event.target.value)}
-                      className={filterInput}
-                      placeholder="Filtrar monto"
-                      aria-label="Filtrar por vendido"
-                      inputMode="decimal"
-                    />
-                  </th>
+                  <th className="px-2 py-2" />
                   <th className="px-2 py-2" />
                 </tr>
               </thead>
@@ -431,7 +412,10 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-3 py-3 text-zinc-300">{subscriptionTime(item)}</td>
                       <td className="px-3 py-3 tabular-nums text-zinc-100">
-                        {formatPrice(item.sales_total_cup ?? 0, 'CUP')}
+                        <div>{item.unconfirmed_orders_count ?? 0} sin confirmar</div>
+                        <div className="mt-1 text-xs text-zinc-400">
+                          {item.completed_orders_count ?? 0} confirmados
+                        </div>
                       </td>
                       <td className="px-3 py-3">
                         <RegistrationActionsMenu
