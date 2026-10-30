@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { searchSellerOrderedProducts } from '../../products/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
 import { formatPrice } from '../../lib/money'
 import { productDiscountPercent, productSaleAmount } from '../../lib/displayPrice'
 import {
@@ -79,6 +80,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [productSearch, setProductSearch] = useState('')
+  const [catalogRevision, setCatalogRevision] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -106,7 +108,13 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
       cancelled = true
       clearTimeout(handle)
     }
-  }, [productSearch])
+  }, [catalogRevision, productSearch])
+
+  useEffect(() => {
+    const refresh = () => setCatalogRevision((revision) => revision + 1)
+    window.addEventListener(SELLER_PRODUCTS_REFRESH_EVENT, refresh)
+    return () => window.removeEventListener(SELLER_PRODUCTS_REFRESH_EVENT, refresh)
+  }, [])
 
   useEffect(() => {
     function onKeyDown(event) {

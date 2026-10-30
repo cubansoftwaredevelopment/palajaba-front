@@ -76,6 +76,7 @@ export default function SellerShell({
   onLogout,
   onNotifications,
   notificationCount = 0,
+  pendingOrderCount = 0,
   showBottomNav = false,
   catalogLayout = false,
   navItems,
@@ -115,7 +116,7 @@ export default function SellerShell({
             <div className={sellerSidebarLogoWrap}>
               <Logo className="h-20 w-20 shrink-0 xl:h-24 xl:w-24" priority />
             </div>
-            <SellerSidebarNav items={navItems} />
+            <SellerSidebarNav items={navItems} pendingOrderCount={pendingOrderCount} />
           </aside>
         )}
 
@@ -151,7 +152,7 @@ export default function SellerShell({
         </div>
       </div>
 
-      {showBottomNav && <SellerBottomNav items={navItems} />}
+      {showBottomNav && <SellerBottomNav items={navItems} pendingOrderCount={pendingOrderCount} />}
     </>
   )
 }

@@ -59,12 +59,6 @@ export default function SellerRevenueCharts({ loading, error, chart }) {
       <RevenueSeriesList series={chart?.series ?? []} title="Artículos" />
     </SellerChartCard>
     <SellerChartCard title="Mensajería" hint="Importe diario del envío, agrupado por moneda. Los pedidos sin envío suman 0." loading={loading} error={error} empty={!deliverySeries.length} emptyMessage="No hay importes de mensajería en este periodo.">
-      <div className="mb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-brand-carmelita/75">Total del periodo</p>
-        <p className="mt-1 font-display text-2xl font-bold text-brand-green">
-          {deliverySeries.map((item) => formatRevenueAmount(item.total, item.currency)).join(' · ')}
-        </p>
-      </div>
       <RevenueSeriesList series={deliverySeries} title="Mensajería" />
     </SellerChartCard>
     </>

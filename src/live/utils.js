@@ -6,7 +6,7 @@ export function isNativeApp() {
   return Capacitor.isNativePlatform()
 }
 
-export function connectSellerEvents(accessToken, onNotification) {
+export function connectSellerEvents(accessToken, onNotification, onDataUpdate) {
   let socket
   let retryId
   let stopped = false
@@ -18,6 +18,8 @@ export function connectSellerEvents(accessToken, onNotification) {
         const data = JSON.parse(event.data)
         if (data?.type === LIVE_EVENT_NOTIFICATION && data.notification) {
           onNotification(data.notification)
+        } else if (data?.type === 'seller_data_update') {
+          onDataUpdate?.(data)
         }
       } catch {
         /* mensaje ignorado */

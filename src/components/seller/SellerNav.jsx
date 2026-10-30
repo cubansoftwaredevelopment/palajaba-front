@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { SELLER_NAV } from '../../constants/sellerNav'
 import { sellerFocusRing } from './sellerStyles'
 
-export const SELLER_NAV_ICONS = {
+const SELLER_NAV_ICONS = {
   general: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
       <path d="M3 10.5 12 3l9 7.5" />
@@ -55,7 +55,11 @@ function sideLinkClass(isActive) {
   }`
 }
 
-export function SellerBottomNav({ items = SELLER_NAV }) {
+function PendingOrderMark() {
+  return <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[0.65rem] font-extrabold leading-none text-white ring-2 ring-brand-white" aria-label="Pedidos sin confirmar">!</span>
+}
+
+export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0 }) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 w-full max-w-[100dvw] border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md lg:hidden"
@@ -68,11 +72,12 @@ export function SellerBottomNav({ items = SELLER_NAV }) {
             {({ isActive }) => (
               <>
                 <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors sm:h-9 sm:w-9 sm:rounded-xl ${
+                  className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors sm:h-9 sm:w-9 sm:rounded-xl ${
                     isActive ? 'bg-brand-green text-brand-white' : 'text-current'
                   }`}
                 >
                   {SELLER_NAV_ICONS[item.id]}
+                  {item.id === 'pedidos' && pendingOrderCount > 0 ? <PendingOrderMark /> : null}
                 </span>
                 <span className="w-full truncate px-0.5 text-center">{item.label}</span>
               </>
@@ -84,13 +89,14 @@ export function SellerBottomNav({ items = SELLER_NAV }) {
   )
 }
 
-export function SellerSidebarNav({ items = SELLER_NAV }) {
+export function SellerSidebarNav({ items = SELLER_NAV, pendingOrderCount = 0 }) {
   return (
     <nav className="hidden lg:flex lg:flex-col lg:gap-1" aria-label="Secciones de tu tienda">
       {items.map((item) => (
         <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => sideLinkClass(isActive)}>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-current/10">
+          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-current/10">
             {SELLER_NAV_ICONS[item.id]}
+            {item.id === 'pedidos' && pendingOrderCount > 0 ? <PendingOrderMark /> : null}
           </span>
           {item.label}
         </NavLink>

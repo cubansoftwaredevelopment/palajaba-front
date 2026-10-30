@@ -26,6 +26,7 @@ import {
 } from '../../components/seller/sellerStyles'
 import { sellerHasProductDiscounts } from '../../subscriptions/constants.js'
 import { fetchSellerCatalog } from '../api.js'
+import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { resolveStoreSlug } from '../../lib/storeShare'
 import { getUserFacingMessage } from '../../lib/userFacingError'
@@ -67,6 +68,11 @@ export default function SellerCatalog() {
 
   useEffect(() => {
     loadCatalog()
+  }, [loadCatalog])
+
+  useEffect(() => {
+    window.addEventListener(SELLER_PRODUCTS_REFRESH_EVENT, loadCatalog)
+    return () => window.removeEventListener(SELLER_PRODUCTS_REFRESH_EVENT, loadCatalog)
   }, [loadCatalog])
 
   function openCreateProduct(localCategoryId = '') {

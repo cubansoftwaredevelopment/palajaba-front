@@ -17,6 +17,10 @@ function KpiCard({ label, value, hint, loading }) {
 
 export default function SellerStatsKpis({ kpis, loading = false }) {
   const revenueItems = kpis?.revenue ?? []
+  const deliveryItems = kpis?.delivery ?? []
+  const deliveryValue = deliveryItems.length
+    ? deliveryItems.map((item) => formatRevenueAmount(item.total, item.currency)).join(' · ')
+    : '0'
   const revenueHint =
     revenueItems.length > 0
       ? revenueItems.map((item) => formatRevenueAmount(item.total, item.currency)).join(' · ')
@@ -37,13 +41,19 @@ export default function SellerStatsKpis({ kpis, loading = false }) {
         loading={loading}
         label="Ingresos globales"
         value={revenueValue}
-        hint={revenueItems.length > 1 ? 'Total por moneda' : revenueHint}
+        hint={revenueItems.length > 1 ? 'Total del periodo por moneda, incluidos artículos y mensajería' : revenueHint}
       />
       <KpiCard
         loading={loading}
         label="Conversión sitio"
         value={formatPercent(kpis?.site_conversion_rate)}
         hint={`${formatCount(kpis?.site_jabas)} jabas / ${formatCount(kpis?.visitors)} visitas`}
+      />
+      <KpiCard
+        loading={loading}
+        label="Gasto en mensajería"
+        value={deliveryValue}
+        hint={deliveryItems.length ? 'Total del periodo por moneda' : 'Sin gastos de mensajería en el periodo'}
       />
     </div>
   )

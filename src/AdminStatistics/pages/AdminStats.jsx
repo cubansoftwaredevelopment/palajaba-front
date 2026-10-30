@@ -145,6 +145,13 @@ function AdminStatsView() {
               subvalue={stats ? `${Number(stats.unconfirmed_orders_count ?? 0)} pedido${Number(stats.unconfirmed_orders_count ?? 0) === 1 ? '' : 's'}` : undefined}
             />
             <MetricCard
+              accent="pending"
+              label="Pedidos cancelados"
+              hint="Importe de artículos en pedidos cancelados, por moneda"
+              value={(stats?.cancelled_orders_by_currency ?? []).map((item) => formatPrice(item.total, item.currency)).join(' · ') || '0'}
+              subvalue={stats ? `${Number(stats.cancelled_orders_count ?? 0)} pedido${Number(stats.cancelled_orders_count ?? 0) === 1 ? '' : 's'}` : undefined}
+            />
+            <MetricCard
               accent="traffic"
               label="Tráfico marketplace"
               hint="Visitantes únicos (sesión/día) en /comprar este mes"

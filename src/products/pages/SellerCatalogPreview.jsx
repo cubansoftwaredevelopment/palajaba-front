@@ -12,6 +12,7 @@ import { buyerHomeSections } from '../../components/buyer/buyerStyles'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import { BuyerDisplayCurrencyProvider, useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
+import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
 import { BuyerJabaProvider } from '../../context/BuyerJabaContext'
 import {
   fetchMarketplaceStoreCatalog,
@@ -157,6 +158,11 @@ function SellerCatalogPreviewContent() {
 
   useEffect(() => {
     loadCatalog()
+  }, [loadCatalog])
+
+  useEffect(() => {
+    window.addEventListener(SELLER_PRODUCTS_REFRESH_EVENT, loadCatalog)
+    return () => window.removeEventListener(SELLER_PRODUCTS_REFRESH_EVENT, loadCatalog)
   }, [loadCatalog])
 
   const createLoadMore = useCallback(

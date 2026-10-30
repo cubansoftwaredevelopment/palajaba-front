@@ -7,7 +7,7 @@ import SellerNotificationsPanel from './SellerNotificationsPanel'
 import SellerShell from './SellerShell'
 import StatePanel from '../ui/StatePanel'
 import SubscriptionExpiredScreen from './SubscriptionExpiredScreen'
-import { ApiError, fetchSellerNotifications, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
+import { ApiError, fetchSellerNotifications, fetchSellerOrders, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
 import { fetchSellerProfile } from '../../auth/api.js'
 import {
   clearSellerSession,
@@ -16,7 +16,8 @@ import {
 } from '../../lib/sellerAuth'
 import { clearSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
 import { getSellerDefaultPath, getSellerNavItems, sellerHasGestores } from '../../lib/planAccess'
-import { requestSellerOrdersRefresh } from '../../lib/sellerOrdersRefresh'
+import { requestSellerOrdersRefresh, SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
+import { requestSellerProductsRefresh } from '../../lib/sellerProductsRefresh'
 import { SELLER_LIVE_POLL_MS } from '../../live/constants'
 import { connectSellerEvents, startSellerPush, stopSellerPush } from '../../live/utils'
 import { isSessionError, resolveUserFacingError } from '../../lib/userFacingError'
@@ -33,6 +34,7 @@ export default function SellerLayout() {
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
+  const [pendingOrderCount, setPendingOrderCount] = useState(0)
   const [expiredInfo, setExpiredInfo] = useState(null)
   const previousNotificationCountRef = useRef(null)
 
@@ -53,7 +55,18 @@ export default function SellerLayout() {
     navigate('/login', { replace: true })
   }
 
-  async function refreshUnreadCount() {
+  const refreshPendingOrderCount = useCallback(async () => {
+    const token = getSellerToken()
+    if (!token) return
+    try {
+      const orders = await fetchSellerOrders(token)
+      setPendingOrderCount(orders.filter((order) => order.status === 'pending_confirmation').length)
+    } catch {
+      // Mantén el último conteo durante fallos temporales de red.
+    }
+  }, [])
+
+  const refreshUnreadCount = useCallback(async () => {
     const token = getSellerToken()
     if (!token) return
     try {
@@ -68,7 +81,7 @@ export default function SellerLayout() {
       previousNotificationCountRef.current = 0
       setNotificationCount(0)
     }
-  }
+  }, [])
 
   async function loadNotifications() {
     const token = getSellerToken()
@@ -133,6 +146,7 @@ export default function SellerLayout() {
         if (!cancelled) {
           setProfile(data)
           await refreshUnreadCount()
+          await refreshPendingOrderCount()
         }
       } catch (err) {
         if (!cancelled) {
@@ -160,7 +174,7 @@ export default function SellerLayout() {
     return () => {
       cancelled = true
     }
-  }, [refreshProfile])
+  }, [refreshProfile, refreshPendingOrderCount, refreshUnreadCount])
 
   useEffect(() => {
     if (!profile?.profile_completed) return undefined
@@ -168,11 +182,17 @@ export default function SellerLayout() {
     function handleVisible() {
       if (document.visibilityState === 'visible') {
         refreshUnreadCount()
+        refreshPendingOrderCount()
       }
+    }
+
+    function handleOrdersRefresh() {
+      refreshPendingOrderCount()
     }
 
     const intervalId = window.setInterval(refreshUnreadCount, SELLER_LIVE_POLL_MS)
     document.addEventListener('visibilitychange', handleVisible)
+    window.addEventListener(SELLER_ORDERS_REFRESH_EVENT, handleOrdersRefresh)
 
     const token = getSellerToken()
     if (token) startSellerPush(token)
@@ -195,15 +215,22 @@ export default function SellerLayout() {
             title: notification.title,
             content: String(notification.content ?? '').replace(/\s+/g, ' ').trim(),
           })
+        }, (event) => {
+          if (Number.isFinite(Number(event.pending_order_count))) {
+            setPendingOrderCount(Number(event.pending_order_count))
+          }
+          if (event.resources?.includes('orders')) requestSellerOrdersRefresh()
+          if (event.resources?.includes('products')) requestSellerProductsRefresh()
         })
       : () => {}
 
     return () => {
       window.clearInterval(intervalId)
       document.removeEventListener('visibilitychange', handleVisible)
+      window.removeEventListener(SELLER_ORDERS_REFRESH_EVENT, handleOrdersRefresh)
       stopEvents()
     }
-  }, [profile?.profile_completed])
+  }, [profile?.profile_completed, refreshPendingOrderCount, refreshUnreadCount])
 
   if (loading) {
     return <SellerLoadingScreen />
@@ -293,6 +320,7 @@ export default function SellerLayout() {
         onLogout={() => setShowLogoutConfirm(true)}
         onNotifications={openNotifications}
         notificationCount={notificationCount}
+        pendingOrderCount={pendingOrderCount}
         showBottomNav={showBottomNav}
         catalogLayout={isCatalogPage}
         navItems={sellerNavItems}

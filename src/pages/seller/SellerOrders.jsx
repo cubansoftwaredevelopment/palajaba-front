@@ -64,6 +64,9 @@ export default function SellerOrders() {
       const token = getSellerToken()
       const data = await fetchSellerOrders(token)
       setOrders(data)
+      setSelectedOrder((current) =>
+        current ? data.find((order) => order.id === current.id) ?? null : null,
+      )
     } catch (err) {
       if (!silent) {
         setOrders([])
