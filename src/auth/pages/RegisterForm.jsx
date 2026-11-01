@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AuthHeader from '../components/AuthHeader'
 import AuthShell from '../components/AuthShell'
@@ -14,7 +14,7 @@ import {
   labelClass,
 } from '../components/formStyles'
 import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../../lib/phone'
-import { normalizeBillingPeriod, normalizePlanTier } from '../../subscriptions/constants.js'
+import { BILLING_UNIT_LABELS, normalizeBillingPeriod, normalizePlanTier, PLAN_TIERS } from '../../subscriptions/constants.js'
 import { confirmRegisterOtp, startRegisterOtp } from '../api.js'
 import { setSellerSession } from '../../lib/sellerAuth'
 import { getRegisterSteps } from '../constants.js'
@@ -66,8 +66,9 @@ export default function RegisterForm() {
     if (location.state?.kind === 'paid') return 'paid'
     return 'account'
   })()
+  const hasSelectedAccountPlan = kind !== 'account' || ['standard', 'pro', 'premium'].includes(location.state?.planTier)
   const billing = normalizeBillingPeriod(location.state?.billing)
-  const planTier = kind === 'trial' || kind === 'account' ? 'standard' : normalizePlanTier(location.state?.planTier)
+  const planTier = kind === 'trial' ? 'standard' : normalizePlanTier(location.state?.planTier)
   const discountCode = kind === 'trial' || kind === 'account' ? null : location.state?.discountCode ?? null
   const discountPercent = kind === 'trial' || kind === 'account' ? null : location.state?.discountPercent ?? null
 
@@ -81,6 +82,14 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false)
   const [smsCooldownEndsAt, setSmsCooldownEndsAt] = useState(() => getSmsCooldownUntil(getActiveSmsCooldownPhone()))
   const smsCooldownRemaining = useCountdown(smsCooldownEndsAt)
+
+  useEffect(() => {
+    if (kind === 'account' && !hasSelectedAccountPlan) {
+      navigate('/registro/planes', { replace: true })
+    }
+  }, [hasSelectedAccountPlan, kind, navigate])
+
+  if (kind === 'account' && !hasSelectedAccountPlan) return null
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -136,7 +145,7 @@ export default function RegisterForm() {
         })
         if (confirmed.access_token) {
           setSellerSession(confirmed.access_token, { id: confirmed.id })
-          navigate('/tienda/completar-perfil', { replace: true })
+          navigate('/tienda', { replace: true })
         } else {
           navigate('/registro/exito', {
             replace: true,
@@ -181,24 +190,24 @@ export default function RegisterForm() {
 
   return (
     <AuthShell
-      backTo="/crear-cuenta"
-      backLabel="Tipo de cuenta"
+      backTo={kind === 'account' ? '/registro/planes' : '/crear-cuenta'}
+      backLabel={kind === 'account' ? 'Elegir plan' : 'Tipo de cuenta'}
     >
       <section className="animate-fade-in" aria-labelledby="register-form-title">
         <div className={authPageIntro}>
           <AuthHeader
-            eyebrow={kind === 'account' ? 'Paso 1 · Datos' : kind === 'trial' ? 'Paso 2 · Datos' : 'Paso 3 · Datos'}
+            eyebrow={kind === 'account' ? 'Paso 2 · Datos' : kind === 'trial' ? 'Paso 2 · Datos' : 'Paso 3 · Datos'}
             title="Tu tienda"
             description={
               kind === 'account'
-                ? 'Crea el perfil de tu tienda gratis. Podrás elegir un plan desde tu perfil cuando quieras activarla.'
+                ? `Plan ${PLAN_TIERS[planTier].name} · ${BILLING_UNIT_LABELS[billing]}. Completa tus datos para crear la cuenta de tu tienda.`
                 : kind === 'trial'
                   ? 'Verificaremos tu correo y teléfono antes de activar la prueba.'
                   : 'Verificaremos tu correo y teléfono antes de enviar la solicitud.'
             }
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={kind === 'account' ? 1 : kind === 'trial' ? 2 : 3} steps={getRegisterSteps(kind)} />
+          <RegisterProgress currentStep={kind === 'account' ? 2 : kind === 'trial' ? 2 : 3} steps={getRegisterSteps(kind)} />
         </div>
 
         <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>

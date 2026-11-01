@@ -96,7 +96,7 @@ export default function RegisterOtp() {
       })
       if (result.access_token) {
         setSellerSession(result.access_token, { id: result.id })
-        navigate('/tienda/completar-perfil', { replace: true })
+        navigate('/tienda', { replace: true })
         return
       }
       navigate('/registro/exito', {
@@ -151,12 +151,12 @@ export default function RegisterOtp() {
       <section className="animate-fade-in" aria-labelledby="register-otp-title">
         <div className={authPageIntro}>
           <AuthHeader
-            eyebrow={kind === 'account' ? 'Paso 2 · Verificar' : kind === 'trial' ? 'Paso 3 · Verificar' : 'Paso 4 · Verificar'}
+            eyebrow={kind === 'account' ? 'Paso 3 · Verificar' : kind === 'trial' ? 'Paso 3 · Verificar' : 'Paso 4 · Verificar'}
             title="Confirma tu correo y teléfono"
             description="Enviamos un código a tu correo y otro por SMS. Tienes 10 minutos para introducirlos."
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={kind === 'account' ? 2 : kind === 'trial' ? 3 : 4} steps={getRegisterSteps(kind)} />
+          <RegisterProgress currentStep={kind === 'account' ? 3 : kind === 'trial' ? 3 : 4} steps={getRegisterSteps(kind)} />
         </div>
 
         <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>

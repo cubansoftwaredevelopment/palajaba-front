@@ -18,8 +18,9 @@ export const TRIAL_REGISTER_STEPS = [
 ]
 
 export const ACCOUNT_REGISTER_STEPS = [
-  { id: 1, label: 'Datos' },
-  { id: 2, label: 'Verificar' },
+  { id: 1, label: 'Plan' },
+  { id: 2, label: 'Datos' },
+  { id: 3, label: 'Verificar' },
 ]
 
 export const REGISTER_STEPS = ACCOUNT_REGISTER_STEPS

@@ -3,16 +3,11 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { BRAND_NAME } from '../../constants/branding'
 import { downloadBlob } from '../../lib/downloadFile'
-import { isNativeAppShell, openExternalUrl } from '../../lib/nativeApp'
-import {
-  buildTelegramShareUrl,
-  buildWhatsAppShareUrl,
-  getStoreCatalogUrl,
-  getStoreShareMessage,
-} from '../../lib/storeShare'
+import { isNativeAppShell } from '../../lib/nativeApp'
+import { getStoreCatalogUrl, getStoreShareMessage } from '../../lib/storeShare'
+import { canUseSystemShare, shareWithSystem } from '../../lib/buyerShare'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import { useDismissibleModal } from '../../components/buyer/useOrderModalPresence'
-import { TelegramIcon, WhatsAppIcon } from '../../components/seller/ShareBrandIcons'
 import {
   sellerAlertSuccess,
   sellerBtnSecondary,
@@ -59,16 +54,13 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [view, setView] = useState('options')
   const [copyStatus, setCopyStatus] = useState('')
+  const [shareError, setShareError] = useState('')
   const [qrDataUrl, setQrDataUrl] = useState('')
   const [qrLoading, setQrLoading] = useState(false)
   const [qrError, setQrError] = useState('')
 
   const catalogUrl = useMemo(() => getStoreCatalogUrl(profile), [profile])
   const shareMessage = useMemo(() => getStoreShareMessage(profile), [profile])
-  const telegramText = useMemo(() => {
-    const storeName = profile?.store_name?.trim() || 'mi tienda'
-    return `Mira el catálogo de ${storeName} en ${BRAND_NAME}`
-  }, [profile?.store_name])
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -123,12 +115,20 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
     }
   }
 
-  function handleWhatsAppShare() {
-    openExternalUrl(buildWhatsAppShareUrl(shareMessage))
-  }
-
-  function handleTelegramShare() {
-    openExternalUrl(buildTelegramShareUrl(catalogUrl, telegramText))
+  async function handleSystemShare() {
+    setShareError('')
+    if (!canUseSystemShare()) {
+      setShareError('Tu dispositivo no tiene disponible el panel para compartir.')
+      return
+    }
+    try {
+      await shareWithSystem({ title: `Catálogo de ${profile?.store_name?.trim() || BRAND_NAME}`, text: shareMessage, url: catalogUrl })
+      onClose()
+    } catch (error) {
+      const reason = String(error?.name || error?.message || '').toLowerCase()
+      if (reason.includes('cancel') || reason.includes('abort')) return
+      setShareError('No se pudo abrir el panel para compartir. Inténtalo de nuevo.')
+    }
   }
 
   async function handleDownloadQr() {
@@ -193,19 +193,17 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
 
                 <div className="mt-4 flex flex-col gap-2.5">
                   <ShareOption
-                    label="WhatsApp"
-                    hint="Enviar enlace por chat"
-                    onClick={handleWhatsAppShare}
-                    iconWrapClassName="bg-[#25D366]/12 text-[#25D366]"
-                    icon={<WhatsAppIcon className="h-6 w-6" />}
-                  />
-
-                  <ShareOption
-                    label="Telegram"
-                    hint="Compartir en Telegram"
-                    onClick={handleTelegramShare}
-                    iconWrapClassName="bg-[#229ED9]/12 text-[#229ED9]"
-                    icon={<TelegramIcon className="h-6 w-6" />}
+                    label={qrLoading ? 'Generando QR…' : 'Generar QR'}
+                    hint="Mostrar código para escanear"
+                    onClick={handleShowQr}
+                    disabled={qrLoading}
+                    iconWrapClassName="bg-brand-yellow/20 text-brand-green"
+                    icon={
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                        <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4z" />
+                        <path d="M10 4h4M4 10v4M20 10v4M10 20h4M14 14h2v2h-2zM16 16h2v2h-2z" />
+                      </svg>
+                    }
                   />
 
                   <ShareOption
@@ -222,15 +220,16 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
                   />
 
                   <ShareOption
-                    label={qrLoading ? 'Generando QR…' : 'Generar QR'}
-                    hint="Mostrar código para escanear"
-                    onClick={handleShowQr}
-                    disabled={qrLoading}
-                    iconWrapClassName="bg-brand-yellow/20 text-brand-green"
+                    label="Compartir por…"
+                    hint="Elegir una aplicación disponible"
+                    onClick={handleSystemShare}
+                    iconWrapClassName="bg-brand-green/10 text-brand-green"
                     icon={
                       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-                        <path d="M4 4h4v4H4zM16 4h4v4h-4zM4 16h4v4H4z" />
-                        <path d="M10 4h4M4 10v4M20 10v4M10 20h4M14 14h2v2h-2zM16 16h2v2h-2z" />
+                        <circle cx="18" cy="5" r="3" />
+                        <circle cx="6" cy="12" r="3" />
+                        <circle cx="18" cy="19" r="3" />
+                        <path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4" />
                       </svg>
                     }
                   />
@@ -242,6 +241,12 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
                     role={copyStatus.includes('copiado') ? 'status' : 'alert'}
                   >
                     {copyStatus}
+                  </p>
+                ) : null}
+
+                {shareError ? (
+                  <p className="mt-3 rounded-xl border border-brand-carmelita/15 bg-brand-carmelita/8 px-3 py-2.5 text-center text-xs text-brand-carmelita sm:text-sm" role="alert">
+                    {shareError}
                   </p>
                 ) : null}
 

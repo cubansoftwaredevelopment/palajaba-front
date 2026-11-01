@@ -26,6 +26,7 @@ import SellerCompleteProfile from './pages/SellerCompleteProfile'
 import RegisterEntry from './auth/pages/RegisterEntry'
 import RegisterForm from './auth/pages/RegisterForm'
 import RegisterOtp from './auth/pages/RegisterOtp'
+import RegisterPlan from './auth/pages/RegisterPlan'
 import RegisterSuccess from './auth/pages/RegisterSuccess'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
@@ -130,6 +131,7 @@ const router = createBrowserRouter([
         ],
       },
       { path: 'registro', element: <RegisterEntry /> },
+      { path: 'registro/planes', element: <RegisterPlan /> },
       { path: 'crear-cuenta', element: <CreateAccount /> },
       { path: 'registro/promo/datos', element: <Navigate to="/registro" replace /> },
       { path: 'registro/pago', element: <Navigate to="/registro" replace /> },
