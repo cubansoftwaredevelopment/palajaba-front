@@ -1,8 +1,8 @@
-import { sellerHint, sellerLabel, sellerSection } from './sellerStyles'
+import { sellerHint, sellerLabel } from './sellerStyles'
 
-export default function SellerSection({ label, hint, required, optional, children, className = '' }) {
+export default function SellerSection({ label, hint, required, optional, children }) {
   return (
-    <section className={`${sellerSection} ${className}`}>
+    <section>
       {label && (
         <div className="mb-2.5">
           <p className={sellerLabel}>
@@ -16,6 +16,6 @@ export default function SellerSection({ label, hint, required, optional, childre
         </div>
       )}
       {children}
-    </section>
+    </section >
   )
 }
