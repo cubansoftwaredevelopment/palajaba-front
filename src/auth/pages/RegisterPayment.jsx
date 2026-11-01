@@ -72,7 +72,7 @@ export default function RegisterPayment() {
     const interval = window.setInterval(async () => {
       try {
         const result = await fetchInitialSubscriptionQvaPayCheckout(checkoutPurchaseId)
-        if (!stopped) setCheckout(result)
+        if (!stopped) setCheckout((current) => ({ ...result, payment_url: current?.payment_url || result.payment_url || '' }))
       } catch {
         // Mantiene el último estado visible y vuelve a consultar.
       }

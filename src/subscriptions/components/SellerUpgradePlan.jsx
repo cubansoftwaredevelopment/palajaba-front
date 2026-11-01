@@ -16,7 +16,7 @@ import { getSellerToken } from '../../lib/sellerAuth.js'
 import { createSubscriptionQvaPayCheckout, fetchSubscriptionQvaPayCheckout } from '../api.js'
 import { isSubscriptionCheckoutClosed, isSubscriptionCheckoutPaid, subscriptionCheckoutStatusMessage } from '../qvapay.js'
 
-function QvaPayCheckout({ tier, billing, onActivated }) {
+function QvaPayCheckout({ tier, billing, onActivated, secondaryAction }) {
   const [checkout, setCheckout] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -35,7 +35,7 @@ function QvaPayCheckout({ tier, billing, onActivated }) {
       try {
         const result = await fetchSubscriptionQvaPayCheckout(getSellerToken(), checkoutPurchaseId)
         if (stopped) return
-        setCheckout(result)
+        setCheckout((current) => ({ ...result, payment_url: current?.payment_url || result.payment_url || '' }))
         if (isSubscriptionCheckoutPaid(result)) {
           setPaid(true)
           await onActivatedRef.current?.()
@@ -69,15 +69,16 @@ function QvaPayCheckout({ tier, billing, onActivated }) {
   }
 
   return (
-    <div className="mt-4 flex flex-col gap-2">
-      <button type="button" className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-green px-4 py-2.5 text-sm font-bold text-brand-white shadow-sm transition hover:bg-brand-green/90 disabled:opacity-60" onClick={beginCheckout} disabled={busy || paid}>
+    <div className="mt-4 grid grid-cols-2 gap-2">
+      <button type="button" className="inline-flex min-h-11 min-w-0 w-full items-center justify-center rounded-xl bg-brand-green px-2 py-2.5 text-center text-sm font-bold text-brand-white shadow-sm transition hover:bg-brand-green/90 disabled:opacity-60" onClick={beginCheckout} disabled={busy || paid}>
         {busy ? 'Creando factura…' : paid ? 'Plan activado' : 'Pagar con QvaPay'}
       </button>
+      {secondaryAction}
       {checkout?.payment_url && checkout.status === 'pending' ? (
-        <a className="text-center text-sm font-semibold text-brand-green underline underline-offset-2" href={checkout.payment_url} target="_blank" rel="noreferrer">Abrir factura QvaPay</a>
+        <a className="col-span-2 text-center text-sm font-semibold text-brand-green underline underline-offset-2" href={checkout.payment_url} target="_blank" rel="noreferrer">Abrir factura QvaPay</a>
       ) : null}
-      {checkout ? <p className={`text-center text-sm ${paid ? 'font-semibold text-brand-green' : 'text-brand-carmelita/80'}`} role="status">{subscriptionCheckoutStatusMessage(checkout)}</p> : null}
-      {error ? <p className="text-sm text-red-700" role="alert">{error}</p> : null}
+      {checkout ? <p className={`col-span-2 text-center text-sm ${paid ? 'font-semibold text-brand-green' : 'text-brand-carmelita/80'}`} role="status">{subscriptionCheckoutStatusMessage(checkout)}</p> : null}
+      {error ? <p className="col-span-2 text-sm text-red-700" role="alert">{error}</p> : null}
     </div>
   )
 }
@@ -208,14 +209,20 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
                   ))}
                 </ul>
 
-                <QvaPayCheckout tier={tier} billing={billing} onActivated={onUpdated} />
-                <UpgradeToPremiumButton
-                  className="mt-2 w-full"
-                  storeName={profile?.store_name}
-                  currentPlanName={currentPlanName}
-                  targetPlanName={tier.name}
-                  billingLabel={BILLING_LABELS[billing]}
-                  label={`Pasar a ${tier.name}`}
+                <QvaPayCheckout
+                  tier={tier}
+                  billing={billing}
+                  onActivated={onUpdated}
+                  secondaryAction={(
+                    <UpgradeToPremiumButton
+                      className="min-w-0 w-full px-2 text-sm"
+                      storeName={profile?.store_name}
+                      currentPlanName={currentPlanName}
+                      targetPlanName={tier.name}
+                      billingLabel={BILLING_LABELS[billing]}
+                      label={`Pasar a ${tier.name}`}
+                    />
+                  )}
                 />
               </li>
             )
