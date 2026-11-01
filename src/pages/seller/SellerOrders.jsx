@@ -24,6 +24,7 @@ import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import AdminDateRangeControls, { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
+import { acceptSellerQvaPayOrder, rejectSellerQvaPayOrder, submitSellerOrderEvidence } from '../../auth/api.js'
 import { orderModalMotionClass, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
 import { sellerModalOverlay, sellerModalSheet } from '../../components/seller/sellerStyles'
 
@@ -327,6 +328,43 @@ export default function SellerOrders() {
     }
   }
 
+  async function handleQvaAccept(payload) {
+    if (!selectedOrder) return
+    setSaving(true); setSaveError('')
+    try {
+      await acceptSellerQvaPayOrder(getSellerToken(), selectedOrder.id, payload)
+      await loadOrders({ silent: true })
+      window.alert('La factura QvaPay se envió al cliente.')
+    } catch (err) {
+      setSaveError(getUserFacingMessage(err, 'No pudimos aceptar el pago QvaPay.'))
+    } finally { setSaving(false) }
+  }
+
+  async function handleQvaReject() {
+    if (!selectedOrder) return
+    setCancelling(true); setSaveError('')
+    try {
+      await rejectSellerQvaPayOrder(getSellerToken(), selectedOrder.id)
+      setOrders((current) => current.filter((order) => order.id !== selectedOrder.id))
+      setSelectedOrder(null)
+      setOrderStatusCounts((current) => ({ ...current, pending: Math.max(0, current.pending - 1) }))
+    } catch (err) {
+      setSaveError(getUserFacingMessage(err, 'No pudimos rechazar el pedido.'))
+    } finally { setCancelling(false) }
+  }
+
+  async function handleSubmitEvidence(content) {
+    if (!selectedOrder) return
+    setSaving(true); setSaveError('')
+    try {
+      await submitSellerOrderEvidence(getSellerToken(), selectedOrder.id, content)
+      await loadOrders({ silent: true })
+    } catch (err) {
+      setSaveError(getUserFacingMessage(err, 'No pudimos enviar la evidencia.'))
+      throw err
+    } finally { setSaving(false) }
+  }
+
   return (
     <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
       <SellerPageHeader
@@ -363,7 +401,7 @@ export default function SellerOrders() {
         <SellerEmptyState
           icon={EmptyOrdersIcon}
           title="Sin pedidos por ahora"
-          description="Cuando un cliente pida por WhatsApp desde Pa' La Jaba, aparecerá en la pestaña Por confirmar."
+          description="Cuando un cliente solicite un pedido desde Pa' La Jaba, aparecerá en la pestaña Por procesar."
           badge={null}
         />
       ) : null}
@@ -532,6 +570,9 @@ export default function SellerOrders() {
           onSave={handleSaveOrder}
           onCancel={handleCancelOrder}
           onDownloadInvoice={handleDownloadInvoice}
+          onQvaAccept={handleQvaAccept}
+          onQvaReject={handleQvaReject}
+          onSubmitEvidence={handleSubmitEvidence}
         />
       ) : null}
 

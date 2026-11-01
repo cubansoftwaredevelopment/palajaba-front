@@ -11,6 +11,7 @@ export const PROFILE_PANEL_IDS = Object.freeze({
   marketplace: 'marketplace',
   advertising: 'advertising',
   plan: 'plan',
+  payments: 'payments',
 })
 
 /** Paneles que editan el formulario principal (Guardar cambios). */
@@ -92,6 +93,13 @@ const PANELS = Object.freeze({
     kind: 'panel',
     icon: 'plan',
   },
+  [PROFILE_PANEL_IDS.payments]: {
+    id: PROFILE_PANEL_IDS.payments,
+    label: 'Métodos de pagos',
+    description: 'Configura tu cuenta QvaPay para recibir pagos',
+    kind: 'panel',
+    icon: 'payments',
+  },
 })
 
 export const PROFILE_MENU_SECTIONS = Object.freeze([
@@ -114,6 +122,7 @@ export const PROFILE_MENU_SECTIONS = Object.freeze([
       PROFILE_PANEL_IDS.location,
       PROFILE_PANEL_IDS.social,
       PROFILE_PANEL_IDS.gestores,
+      PROFILE_PANEL_IDS.payments,
     ],
   },
   {

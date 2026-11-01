@@ -181,13 +181,20 @@ export function BuyerJabaProvider({ children }) {
   const [customerLoginOpen, setCustomerLoginOpen] = useState(false)
   const [pendingCustomerCheckout, setPendingCustomerCheckout] = useState(null)
 
-  const continueCheckout = useCallback((type, payload) => {
+  const continueCheckout = useCallback(async (type, payload) => {
+    let enrichedPayload = payload
+    try {
+      const store = await fetchMarketplaceStore(payload.storeId)
+      enrichedPayload = { ...payload, qvapayEnabled: Boolean(store?.qvapay_enabled) }
+    } catch {
+      enrichedPayload = { ...payload, qvapayEnabled: false }
+    }
     if (type === 'delivery') {
       setPickupCheckout(null)
-      setDeliveryCheckout(payload)
+      setDeliveryCheckout(enrichedPayload)
     } else {
       setDeliveryCheckout(null)
-      setPickupCheckout(payload)
+      setPickupCheckout(enrichedPayload)
     }
   }, [])
 
@@ -281,7 +288,7 @@ export function BuyerJabaProvider({ children }) {
   const count = useMemo(() => items.reduce((total, item) => total + (item.quantity ?? 1), 0), [items])
   const groups = useMemo(() => groupJabaByStore(items), [items])
 
-  const runWhatsAppCheckout = useCallback(async (payload, delivery = null) => {
+  const runWhatsAppCheckout = useCallback(async (payload, delivery = null, paymentMethod = 'contact') => {
     if (!payload?.items?.length || !payload.storePhone) return false
 
     setCheckoutSubmittingStoreId(payload.storeId ?? '__checkout__')
@@ -297,6 +304,7 @@ export function BuyerJabaProvider({ children }) {
         needsExchangeRatesForDisplay,
         submitStoreOrder,
         openWhatsAppCheckout,
+        paymentMethod,
       })
 
       if (!result.ok) {
@@ -318,6 +326,9 @@ export function BuyerJabaProvider({ children }) {
       if (result.warning) {
         window.alert(result.warning)
       }
+      if (paymentMethod === 'qvapay') {
+        window.alert('La solicitud de pago fue enviada a la tienda. Te avisaremos cuando acepte y comparta la factura QvaPay.')
+      }
 
       return true
     } finally {
@@ -328,6 +339,11 @@ export function BuyerJabaProvider({ children }) {
   const beginWhatsAppCheckout = useCallback(
     async (payload, delivery = null) => {
       if (!payload?.items?.length || !payload.storePhone) return 'fail'
+
+      if (delivery?.payment_method === 'qvapay') {
+        if (!payload.qvapayEnabled) return 'fail'
+        return (await runWhatsAppCheckout(payload, delivery, 'qvapay')) ? 'done' : 'fail'
+      }
 
       // Catálogo de gestor: WhatsApp ya apunta al gestor; no mostrar selector.
       if (payload.gestorId) {

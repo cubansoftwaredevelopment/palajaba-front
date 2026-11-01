@@ -22,15 +22,15 @@ import {
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const panelSource = readFileSync(
-  join(__dirname, '../../src/components/buyer/BuyerJabaPanel.jsx'),
+  join(__dirname, '../../src/buyer/components/BuyerJabaPanel.jsx'),
   'utf8',
 )
 const contextSource = readFileSync(
-  join(__dirname, '../../src/context/BuyerJabaContext.jsx'),
+  join(__dirname, '../../src/buyer/context.js'),
   'utf8',
 )
 const pickupModalSource = readFileSync(
-  join(__dirname, '../../src/components/buyer/BuyerPickupCheckoutModal.jsx'),
+  join(__dirname, '../../src/buyer/components/BuyerPickupCheckoutModal.jsx'),
   'utf8',
 )
 const whatsappSource = readFileSync(join(__dirname, '../../src/lib/whatsappOrder.js'), 'utf8')
@@ -62,7 +62,7 @@ test('flujo integrado: contexto abre modal de recogida y no WhatsApp directo', (
   assert.match(contextSource, /setPickupCheckout/)
   assert.match(pickupModalSource, /validatePickupForm/)
   assert.match(pickupModalSource, /mode: 'pickup'/)
-  assert.doesNotMatch(pickupModalSource, /address/)
+  assert.doesNotMatch(pickupModalSource, /id="delivery-address"|Dirección de entrega/)
 })
 
 test('flujo integrado: mensaje WhatsApp contempla bloque de recogida', () => {

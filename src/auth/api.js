@@ -109,6 +109,46 @@ export function updateSellerProfile(token, payload) {
   })
 }
 
+export function fetchSellerQvaPayAccount(token) {
+  return request('/api/auth/me/payment-methods/qvapay', { headers: authHeaders(token) })
+}
+
+export function saveSellerQvaPayAccount(token, username) {
+  return request('/api/auth/me/payment-methods/qvapay', {
+    method: 'PUT', headers: authHeaders(token), body: JSON.stringify({ username }),
+  })
+}
+
+export function deleteSellerQvaPayAccount(token) {
+  return request('/api/auth/me/payment-methods/qvapay', { method: 'DELETE', headers: authHeaders(token) })
+}
+
+export function acceptSellerQvaPayOrder(token, orderId, payload = {}) {
+  return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/qvapay/accept`, {
+    method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload),
+  })
+}
+
+export function rejectSellerQvaPayOrder(token, orderId) {
+  return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/qvapay/reject`, {
+    method: 'POST', headers: authHeaders(token),
+  })
+}
+
+export function uploadSellerOrderEvidenceImage(token, orderId, file) {
+  const body = new FormData()
+  body.append('photo', file)
+  return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/evidence/images`, {
+    method: 'POST', headers: authHeaders(token), body,
+  })
+}
+
+export function submitSellerOrderEvidence(token, orderId, content) {
+  return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/evidence`, {
+    method: 'POST', headers: authHeaders(token), body: JSON.stringify({ content }),
+  })
+}
+
 export function startSellerPhoneOtp(token, phone) {
   return request('/api/auth/me/phone/otp/start', {
     method: 'POST',

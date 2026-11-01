@@ -208,3 +208,19 @@ test('recogida en tienda: WhatsApp recibe datos y el API no marca domicilio', as
   assert.equal(calls.submitArgs.delivery, null)
   assert.deepEqual(calls.whatsappArgs.delivery, pickup)
 })
+
+test('checkout QvaPay guarda el método y no abre WhatsApp', async () => {
+  const { submitStoreOrder, openWhatsAppCheckout, calls } = createMocks()
+
+  const result = await runStoreCheckout({
+    ...baseOptions,
+    paymentMethod: 'qvapay',
+    submitStoreOrder,
+    openWhatsAppCheckout,
+  })
+
+  assert.equal(result.ok, true)
+  assert.equal(result.paymentMethod, 'qvapay')
+  assert.equal(calls.submitArgs.paymentMethod, 'qvapay')
+  assert.equal(calls.whatsapp, 0)
+})

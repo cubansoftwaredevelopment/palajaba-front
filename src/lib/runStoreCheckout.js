@@ -35,6 +35,7 @@ export async function runStoreCheckout({
   needsExchangeRatesForDisplay,
   submitStoreOrder,
   openWhatsAppCheckout,
+  paymentMethod = 'contact',
 }) {
   if (!payload?.items?.length || !payload.storePhone) {
     return { ok: false, code: CHECKOUT_INVALID_PAYLOAD }
@@ -61,6 +62,7 @@ export async function runStoreCheckout({
       cupPerUnit,
       gestorId: payload.gestorId ?? null,
       gestorUsername: payload.gestorUsername ?? null,
+      paymentMethod,
     })
   } catch (error) {
     return {
@@ -77,6 +79,10 @@ export async function runStoreCheckout({
       code: CHECKOUT_ORDER_SAVE_FAILED,
       message: CHECKOUT_SAVE_FAILED_MESSAGE,
     }
+  }
+
+  if (paymentMethod === 'qvapay') {
+    return { ok: true, order, whatsappOpened: false, paymentMethod }
   }
 
   const whatsappOpened = openWhatsAppCheckout({

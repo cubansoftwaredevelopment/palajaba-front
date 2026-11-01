@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core'
 import { LIVE_EVENT_NOTIFICATION } from './constants'
 import { registerSellerDevice, sellerEventsUrl, unregisterSellerDevice } from './api'
+import { registerCustomerDevice, unregisterCustomerDevice } from '../buyer/api.js'
 
 export function isNativeApp() {
   return Capacitor.isNativePlatform()
@@ -42,9 +43,11 @@ export function connectSellerEvents(accessToken, onNotification, onDataUpdate) {
 let pushAuthToken = ''
 let deviceToken = ''
 let pushListening = false
+let pushRole = 'seller'
 
 export async function startSellerPush(accessToken) {
   if (!isNativeApp()) return
+  pushRole = 'seller'
   pushAuthToken = accessToken
   const { PushNotifications } = await import('@capacitor/push-notifications')
   const permission = await PushNotifications.requestPermissions()
@@ -57,13 +60,37 @@ export async function startSellerPush(accessToken) {
       const platform = Capacitor.getPlatform()
       if (platform !== 'android' && platform !== 'ios') return
       try {
-        await registerSellerDevice({ token: event.value, platform })
-      } catch {
-        /* el aviso local del socket sigue disponible */
-      }
+        if (pushRole === 'customer') {
+          await registerCustomerDevice({ token: event.value, platform }, pushAuthToken)
+        } else {
+          await registerSellerDevice({ token: event.value, platform })
+        }
+      } catch { /* push no disponible; la bandeja queda guardada en el servidor */ }
     })
   }
 
+  await PushNotifications.register()
+}
+
+export async function startCustomerPush(accessToken) {
+  if (!isNativeApp() || !accessToken) return
+  pushRole = 'customer'
+  pushAuthToken = accessToken
+  const { PushNotifications } = await import('@capacitor/push-notifications')
+  const permission = await PushNotifications.requestPermissions()
+  if (permission.receive !== 'granted') return
+  if (!pushListening) {
+    pushListening = true
+    await PushNotifications.addListener('registration', async (event) => {
+      deviceToken = event.value
+      const platform = Capacitor.getPlatform()
+      if (platform !== 'android' && platform !== 'ios') return
+      try {
+        if (pushRole === 'customer') await registerCustomerDevice({ token: event.value, platform }, pushAuthToken)
+        else await registerSellerDevice({ token: event.value, platform })
+      } catch { /* la bandeja persistente sigue disponible */ }
+    })
+  }
   await PushNotifications.register()
 }
 
@@ -81,6 +108,15 @@ export async function stopSellerPush() {
   } catch {
     /* la sesión ya se cierra */
   }
+}
+
+export async function stopCustomerPush(accessToken = pushAuthToken) {
+  if (!deviceToken || !accessToken || pushRole !== 'customer') return
+  const token = deviceToken
+  deviceToken = ''
+  pushAuthToken = ''
+  pushRole = 'seller'
+  try { await unregisterCustomerDevice(token, accessToken) } catch { /* sesión finalizada */ }
 }
 
 function readPosition(position) {

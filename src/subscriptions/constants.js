@@ -34,6 +34,9 @@ export const DEFAULT_PLAN_PRICES = {
 export const PLAN_TAGLINE =
   'Elige el plan que mejor se adapte a tu negocio y empieza a vender sin complicaciones.'
 
+export const QVAPAY_ESCROW_FEATURE =
+  'Pagos QvaPay protegidos: fondos retenidos hasta aceptar la entrega o vencer 48 horas.'
+
 export const PLAN_TIERS = {
   standard: {
     id: 'standard',
@@ -45,6 +48,7 @@ export const PLAN_TIERS = {
       'Pedidos directos a Whatsapp',
       'Control total de tus ganancias',
       'Impresión de tickets para mensajeros',
+      QVAPAY_ESCROW_FEATURE,
       PLAN_GESTOR_FEATURES.standard,
     ],
   },
@@ -60,6 +64,7 @@ export const PLAN_TIERS = {
       'Banners de tu tienda',
       'Boost en recomendaciones (×2 visibilidad)',
       'Descuentos en productos',
+      QVAPAY_ESCROW_FEATURE,
     ],
   },
   premium: {
@@ -74,6 +79,7 @@ export const PLAN_TIERS = {
       'Prioridad en las búsquedas de negocios',
       'Boost en recomendaciones (×4 visibilidad)',
       'Soporte VIP',
+      QVAPAY_ESCROW_FEATURE,
     ],
   },
 }
@@ -85,6 +91,7 @@ export const TRIAL_PLAN = Object.freeze({
   name: 'Prueba',
   recommended: false,
   description: '15 días con las herramientas del plan Pro. Puedes pasar a Básico, Pro o Premium cuando quieras.',
+  features: [QVAPAY_ESCROW_FEATURE],
 })
 
 export function normalizePlanTier(tier) {

@@ -131,6 +131,35 @@ export function createMarketplaceOrder(payload, token = null) {
   })
 }
 
+export function decideCustomerOrderEvidence(orderId, accept, token) {
+  const action = accept ? 'accept' : 'reject'
+  return request(`/api/customers/me/orders/${encodeURIComponent(orderId)}/qvapay/evidence/${action}`, {
+    method: 'POST', headers: authHeaders(token),
+  })
+}
+
+export function fetchCustomerPaymentNotifications(token) {
+  return request('/api/customers/me/notifications', { headers: authHeaders(token) })
+}
+
+export function markCustomerPaymentNotificationRead(token, id) {
+  return request(`/api/customers/me/notifications/${encodeURIComponent(id)}/read`, {
+    method: 'PATCH', headers: authHeaders(token),
+  })
+}
+
+export function registerCustomerDevice(device, token) {
+  return request('/api/live/customer-devices', {
+    method: 'POST', headers: authHeaders(token), body: JSON.stringify(device),
+  })
+}
+
+export function unregisterCustomerDevice(tokenValue, token) {
+  return request('/api/live/customer-devices', {
+    method: 'DELETE', headers: authHeaders(token), body: JSON.stringify({ token: tokenValue }),
+  })
+}
+
 export function syncBuyerJaba({ items, provinceId, municipalityId, additionalMunicipalityIds }) {
   const body = {
     items,

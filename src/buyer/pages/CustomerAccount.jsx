@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard } from '../api.js'
+import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, decideCustomerOrderEvidence } from '../api.js'
 import { clearCustomerSession, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
 import { fetchMarketplaceProduct } from '../api.js'
 import { getBuyerLocation } from '../../lib/buyerLocation'
 import { resolveMediaUrl } from '../../lib/media'
 import { formatPrice } from '../../lib/money'
+import { canRespondToQvaPayEvidence, QVAPAY_EVIDENCE_WARNING } from '../../lib/qvapayEvidence.js'
 import BuyerOrderLocationMap from '../components/BuyerOrderLocationMap'
 import BuyerProductCard from '../components/BuyerProductCard'
 import BuyerModalPortal from '../components/BuyerModalPortal'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../components/useOrderModalPresence'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { startCustomerPush, stopCustomerPush } from '../../live/utils'
 
 const sectionClass = 'rounded-2xl border border-brand-green/10 bg-brand-white p-4 shadow-sm sm:p-6'
-const statusLabel = { pending_confirmation: 'Pendiente de confirmación', completed: 'Completado', cancelled: 'Cancelado' }
+const statusLabel = { pending_confirmation: 'Por procesar', completed: 'Completado', cancelled: 'Cancelado' }
 const CUSTOMER_NAV = [
   { id: 'pedidos', path: '/cliente/pedidos', label: 'Mis pedidos', icon: <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0" /> },
+  { id: 'avisos', path: '/cliente/avisos', label: 'Avisos', icon: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></> },
   { id: 'favoritos', path: '/cliente/favoritos', label: 'Guardados', icon: <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z" /> },
   { id: 'direcciones', path: '/cliente/direcciones', label: 'Direcciones', icon: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></> },
   { id: 'perfil', path: '/cliente/perfil', label: 'Perfil', icon: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></> },
@@ -39,13 +42,55 @@ function formatDate(value) {
   return new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(dateValue)
 }
 
+function EvidenceNode({ node }) {
+  if (!node) return null
+  if (node.type === 'text') {
+    let child = node.text || ''
+    for (const mark of node.marks || []) {
+      if (mark.type === 'bold') child = <strong>{child}</strong>
+      else if (mark.type === 'italic') child = <em>{child}</em>
+      else if (mark.type === 'strike') child = <s>{child}</s>
+    }
+    return child
+  }
+  if (node.type === 'image') return <img src={node.attrs?.src} alt="Imagen de evidencia" className="my-2 max-h-72 rounded-xl object-contain" />
+  const children = (node.content || []).map((child, index) => <EvidenceNode key={`${child.type}-${index}`} node={child} />)
+  if (node.type === 'paragraph') return <p className="my-2 min-h-4">{children}</p>
+  if (node.type === 'heading') return <h4 className="my-2 font-bold">{children}</h4>
+  if (node.type === 'bulletList') return <ul className="my-2 list-disc pl-5">{children}</ul>
+  if (node.type === 'orderedList') return <ol className="my-2 list-decimal pl-5">{children}</ol>
+  if (node.type === 'listItem') return <li>{children}</li>
+  if (node.type === 'blockquote') return <blockquote className="my-2 border-l-2 border-brand-green/30 pl-3">{children}</blockquote>
+  if (node.type === 'hardBreak') return <br />
+  return <>{children}</>
+}
+
+function EvidenceContent({ content }) {
+  return <div className="prose prose-sm max-w-none break-words text-brand-carmelita">{(content?.content || []).map((node, index) => <EvidenceNode key={`${node.type}-${index}`} node={node} />)}</div>
+}
+
 function normalizedPhoneDigits(value) {
   const digits = String(value || '').replace(/\D/g, '')
   return digits.startsWith('53') && digits.length === 10 ? digits.slice(2) : digits
 }
 
-function CustomerOrderDetailModal({ order, onClose }) {
+function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
   const { dismiss, motionClass } = useDismissibleModal(onClose)
+  const [decisionLoading, setDecisionLoading] = useState(false)
+  const [decisionError, setDecisionError] = useState('')
+  const [supportUrl, setSupportUrl] = useState('')
+  const qvapay = order.qvapay
+  const evidence = qvapay?.evidence
+
+  async function decideEvidence(accept) {
+    setDecisionLoading(true); setDecisionError('')
+    try {
+      const result = await decideCustomerOrderEvidence(order.id, accept, getCustomerToken())
+      if (!accept) setSupportUrl(result.support_url || 'https://palajaba.com/soporte')
+      await onUpdated?.()
+    } catch (cause) { setDecisionError(getUserFacingMessage(cause, 'No pudimos guardar tu respuesta.')) }
+    finally { setDecisionLoading(false) }
+  }
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -89,6 +134,34 @@ function CustomerOrderDetailModal({ order, onClose }) {
           <span className="text-sm font-semibold">Estado</span>
           <span className="rounded-full bg-brand-green/10 px-3 py-1 text-xs font-bold text-brand-green">{statusLabel[order.status] || order.status}</span>
         </div>
+
+        {order.payment_method === 'qvapay' ? (
+          <section className="mt-4 rounded-2xl border border-brand-green/12 bg-brand-green/[0.035] p-4">
+            <h3 className="font-bold text-brand-green">Pago protegido por Pa’ La Jaba</h3>
+            {qvapay?.payment_status === 'awaiting_payment' && qvapay.invoice_url ? (
+              <a href={qvapay.invoice_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-green px-4 font-bold text-white">Abrir factura QvaPay</a>
+            ) : null}
+            {qvapay?.payment_status === 'paid' && evidence?.status !== 'pending' && evidence?.status !== 'accepted' && evidence?.status !== 'expired' ? (
+              <p className="mt-2 text-sm text-brand-carmelita">El pago está retenido. La tienda aún debe enviar la evidencia de entrega.</p>
+            ) : null}
+            {canRespondToQvaPayEvidence(qvapay) ? (
+              <>
+                <p className="mt-2 text-sm font-semibold text-brand-carmelita">La evidencia vence: {formatDate(evidence.deadline)}.</p>
+                <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold leading-relaxed text-amber-950">
+                  {QVAPAY_EVIDENCE_WARNING}
+                </div>
+                <div className="mt-3 rounded-xl border border-brand-green/10 bg-white p-3"><EvidenceContent content={evidence.content} /></div>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <button type="button" disabled={decisionLoading} onClick={() => decideEvidence(false)} className="min-h-11 rounded-xl border border-brand-green/20 px-3 text-sm font-bold text-brand-green disabled:opacity-50">{decisionLoading ? 'Guardando…' : 'No recibí el pedido · Rechazar'}</button>
+                  <button type="button" disabled={decisionLoading} onClick={() => decideEvidence(true)} className="min-h-11 rounded-xl bg-brand-green px-3 text-sm font-bold text-white disabled:opacity-50">{decisionLoading ? 'Guardando…' : 'Recibí el pedido · Aceptar'}</button>
+                </div>
+              </>
+            ) : null}
+            {evidence?.status === 'rejected' ? <p className="mt-2 text-sm text-brand-carmelita">Rechazaste la evidencia. El pago sigue retenido mientras contactas a soporte o la tienda envía otra evidencia.</p> : null}
+            {supportUrl || evidence?.status === 'rejected' ? <a className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green" href={supportUrl || 'https://palajaba.com/soporte'} target="_blank" rel="noreferrer">Contactar soporte de Pa’ La Jaba</a> : null}
+            {decisionError ? <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{decisionError}</p> : null}
+          </section>
+        ) : null}
 
         <h3 className="mt-5 font-bold">Artículos</h3>
         <ul className="mt-2 divide-y divide-brand-green/10 rounded-xl border border-brand-green/10 px-3">
@@ -158,6 +231,7 @@ export default function CustomerAccount() {
   const token = getCustomerToken()
   const [profile, setProfile] = useState(null)
   const [orders, setOrders] = useState([])
+  const [paymentNotifications, setPaymentNotifications] = useState([])
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [favoriteProducts, setFavoriteProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -181,11 +255,15 @@ export default function CustomerAccount() {
     setLoading(true)
     setError('')
     try {
-      const [customer, customerOrders] = await Promise.all([fetchCustomerProfile(token), fetchCustomerOrders(token)])
+      const [customer, customerOrders, notifications] = await Promise.all([
+        fetchCustomerProfile(token), fetchCustomerOrders(token), fetchCustomerPaymentNotifications(token),
+      ])
       setProfile(customer)
       setContactDraft({ email: customer.email || '', phone: customer.phone || '', identity_card: customer.identity_card || '' })
       updateCustomerProfile(customer)
       setOrders(customerOrders)
+      setSelectedOrder((current) => current ? customerOrders.find((order) => order.id === current.id) ?? current : current)
+      setPaymentNotifications(notifications)
       const location = getBuyerLocation()
       const ids = customer.favorite_product_ids ?? []
       const savedById = new Map((customer.favorites ?? []).map((product) => [product.id, product]))
@@ -210,6 +288,24 @@ export default function CustomerAccount() {
   useEffect(() => {
     queueMicrotask(() => { void load() })
   }, [load])
+
+  useEffect(() => {
+    if (!token) return undefined
+    void startCustomerPush(token)
+    return () => { void stopCustomerPush(token) }
+  }, [token])
+
+  async function openPaymentNotification(notification) {
+    try {
+      const updated = notification.read_at ? notification : await markCustomerPaymentNotificationRead(token, notification.id)
+      setPaymentNotifications((current) => current.map((item) => item.id === notification.id ? updated : item))
+      const order = orders.find((item) => item.id === notification.order_id)
+      if (order) setSelectedOrder(order)
+      else await load()
+    } catch (cause) {
+      setError(getUserFacingMessage(cause, 'No pudimos abrir la notificación.'))
+    }
+  }
 
   async function saveAddress(event) {
     event.preventDefault()
@@ -779,6 +875,21 @@ export default function CustomerAccount() {
                 </section>
               ) : null}
 
+              {section === "avisos" ? (
+                <section className="space-y-3">
+                  {paymentNotifications.length ? paymentNotifications.map((notification) => (
+                    <button key={notification.id} type="button" onClick={() => openPaymentNotification(notification)} className={`w-full rounded-2xl border p-4 text-left transition ${notification.read_at ? 'border-brand-green/10 bg-brand-white' : 'border-brand-green/25 bg-brand-green/[0.04]'}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <strong className="text-brand-green">{notification.title}</strong>
+                        {!notification.read_at ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green" aria-label="Sin leer" /> : null}
+                      </div>
+                      <p className="mt-1 whitespace-pre-line text-sm text-brand-carmelita">{notification.content}</p>
+                      <p className="mt-2 text-xs text-brand-carmelita/60">{formatDate(notification.created_at)} · Toca para abrir el pedido</p>
+                    </button>
+                  )) : <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">No tienes avisos de pagos.</p></div>}
+                </section>
+              ) : null}
+
               {section === "favoritos" ? (
                 <section className="space-y-4">
                   {favoriteProducts.length ? (
@@ -823,7 +934,7 @@ export default function CustomerAccount() {
       </main>
       <CustomerNavigation mobile />
 
-      {selectedOrder ? <CustomerOrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} /> : null}
+      {selectedOrder ? <CustomerOrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onUpdated={load} /> : null}
       {logoutOpen ? <SellerLogoutModal onClose={() => setLogoutOpen(false)} onConfirm={logout} /> : null}
 
       {addressPresent ? (

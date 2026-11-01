@@ -9,6 +9,8 @@ import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
+import SellerOrderEvidenceEditor from './SellerOrderEvidenceEditor'
+import { canSendQvaPayEvidence } from '../../lib/qvapayEvidence.js'
 import {
   sellerAlertError,
   sellerAlertSuccess,
@@ -78,6 +80,9 @@ export default function SellerOrderDetailModal({
   onSave,
   onCancel,
   onDownloadInvoice,
+  onQvaAccept,
+  onQvaReject,
+  onSubmitEvidence,
 }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [editableItems, setEditableItems] = useState(order.items)
@@ -128,7 +133,12 @@ export default function SellerOrderDetailModal({
   }, [onClose, mapPresent])
 
   const isPending = order.status === 'pending_confirmation'
-  const canEditItems = isPending
+  const isQvaOrder = order.payment_method === 'qvapay'
+  const qvapay = order.qvapay
+  const evidence = qvapay?.evidence
+  const qvaAwaitingStore = isQvaOrder && qvapay?.request_status === 'pending_seller'
+  const qvaAwaitingEvidence = isQvaOrder && qvapay?.payment_status === 'paid'
+  const canEditItems = isPending && !isQvaOrder
   const resolvedPaymentCurrency = paymentCurrency || order.payment_currency || null
 
   const itemsDirty = useMemo(() => {
@@ -231,6 +241,23 @@ export default function SellerOrderDetailModal({
     }
 
     onSave(payload)
+  }
+
+  function handleAcceptQvaPay() {
+    if (order.delivery_requested) {
+      const parsed = parseCupInput(deliveryPrice)
+      if (parsed == null) {
+        setLocalError('Indica un precio válido para el domicilio antes de enviar la factura.')
+        return
+      }
+      onQvaAccept?.({ delivery_price: parsed, delivery_currency: deliveryCurrency })
+      return
+    }
+    onQvaAccept?.({})
+  }
+
+  function handleRejectQvaPay() {
+    if (window.confirm('¿Rechazar esta solicitud de pago y cancelar el pedido?')) onQvaReject?.()
   }
 
   function handleDownload(type) {
@@ -384,7 +411,7 @@ export default function SellerOrderDetailModal({
             </p>
           ) : null}
 
-          <div className="mt-4">
+          {!isQvaOrder ? <div className="mt-4">
             <label htmlFor="payment-currency" className={sellerLabel}>
               Moneda de pago
             </label>
@@ -412,7 +439,7 @@ export default function SellerOrderDetailModal({
                 Total en {resolvedPaymentCurrency}: {formatPrice(paymentTotal, resolvedPaymentCurrency)}
               </p>
             ) : null}
-          </div>
+          </div> : null}
 
           {order.buyer_zone ? (
             <p className="mt-3 text-xs text-brand-carmelita/85">
@@ -464,7 +491,7 @@ export default function SellerOrderDetailModal({
             </div>
           ) : null}
 
-          {order.delivery_requested && isPending ? (
+          {order.delivery_requested && isPending && (!isQvaOrder || qvaAwaitingStore) ? (
             <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
               <div>
                 <label htmlFor="delivery-price" className={sellerLabel}>
@@ -496,7 +523,7 @@ export default function SellerOrderDetailModal({
                 />
               </div>
               <p className={`col-span-2 ${sellerHint}`}>
-                Agrega el costo del domicilio antes de marcar el pedido como realizado.
+                {isQvaOrder ? 'Define el costo de entrega para emitir la factura QvaPay.' : 'Agrega el costo del domicilio antes de marcar el pedido como realizado.'}
               </p>
             </div>
           ) : null}
@@ -505,6 +532,21 @@ export default function SellerOrderDetailModal({
             <p className={`mt-4 ${sellerAlertSuccess}`}>
               Domicilio: {formatPrice(order.delivery_price, order.delivery_currency ?? 'CUP')}
             </p>
+          ) : null}
+
+          {isQvaOrder ? (
+            <section className="mt-4 rounded-2xl border border-brand-green/12 bg-brand-green/[0.03] p-4">
+              <h3 className="font-bold text-brand-green">Pago QvaPay retenido</h3>
+              {qvaAwaitingStore ? <p className="mt-1 text-sm text-brand-carmelita">Acepta el pedido para crear y enviar la factura, o recházalo para cancelar la solicitud.</p> : null}
+              {qvapay?.payment_status === 'awaiting_payment' ? <p className="mt-1 text-sm text-brand-carmelita">Factura enviada al cliente. Esperando confirmación del pago QvaPay.</p> : null}
+              {qvapay?.payment_status === 'paid' ? <p className="mt-1 text-sm text-brand-carmelita">Pago confirmado. Los fondos siguen retenidos hasta que el cliente acepte la evidencia o venza su plazo de 48 horas.</p> : null}
+              {evidence?.status === 'pending' ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950">Evidencia enviada; espera la respuesta del cliente hasta {evidence.deadline ? formatOrderDateTime(evidence.deadline) : '48 horas'}.</p> : null}
+              {evidence?.status === 'rejected' ? <p className="mt-3 rounded-xl bg-brand-yellow/15 p-3 text-sm text-brand-carmelita">El cliente rechazó la evidencia. Puedes preparar una nueva; el pago continúa retenido.</p> : null}
+            </section>
+          ) : null}
+
+          {qvaAwaitingEvidence && canSendQvaPayEvidence(qvapay) ? (
+            <SellerOrderEvidenceEditor orderId={order.id} submitting={saving} onSubmit={onSubmitEvidence} />
           ) : null}
 
           <div className="mt-4 flex gap-2">
@@ -533,7 +575,7 @@ export default function SellerOrderDetailModal({
             </p>
           ) : null}
 
-          {isPending ? (
+          {isPending && !isQvaOrder ? (
             <div className="mt-5 rounded-2xl border border-dashed border-brand-green/18 bg-gradient-to-br from-brand-green/[0.03] to-brand-white px-4 py-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-yellow/25 text-brand-carmelita">
@@ -577,7 +619,7 @@ export default function SellerOrderDetailModal({
           >
             Cerrar
           </button>
-          {isPending && hasPendingChanges ? (
+          {isPending && !isQvaOrder && hasPendingChanges ? (
             <button
               type="button"
               onClick={handleSaveChanges}
@@ -587,7 +629,12 @@ export default function SellerOrderDetailModal({
               {saving ? 'Guardando…' : 'Guardar cambios'}
             </button>
           ) : null}
-          {isPending ? (
+          {qvaAwaitingStore ? (
+            <>
+              <button type="button" onClick={handleRejectQvaPay} disabled={saving || cancelling} className={`${sellerBtnDanger} min-w-0 flex-1 px-2 text-center leading-tight`}>Rechazar solicitud</button>
+              <button type="button" onClick={handleAcceptQvaPay} disabled={saving || cancelling} className={`${sellerBtnPrimary} min-w-0 flex-1 px-2 text-center leading-tight`}>{saving ? 'Creando…' : 'Aceptar y enviar factura'}</button>
+            </>
+          ) : isPending && !isQvaOrder ? (
             <button
               type="button"
               onClick={handleComplete}
@@ -596,6 +643,10 @@ export default function SellerOrderDetailModal({
             >
               {saving ? 'Guardando…' : 'Marcar realizada'}
             </button>
+          ) : isQvaOrder && order.status === 'completed' ? (
+            <span className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-center text-xs font-semibold leading-tight ${sellerAlertSuccess}`}>Pago liberado</span>
+          ) : isQvaOrder ? (
+            <span className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-brand-green/10 px-3 py-2.5 text-center text-xs font-semibold text-brand-carmelita">Esperando al cliente</span>
           ) : (
             <span className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-center text-xs font-semibold leading-tight ${sellerAlertSuccess}`}>
               Pedido cerrado

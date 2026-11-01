@@ -86,6 +86,9 @@ export default function RegisterPlan() {
             <span className="mt-3 flex flex-col gap-1">
               <span className="flex items-start gap-2 text-xs leading-relaxed text-brand-green"><span aria-hidden="true" className="font-bold">✓</span>Prueba las herramientas del plan Pro</span>
               <span className="flex items-start gap-2 text-xs leading-relaxed text-brand-green"><span aria-hidden="true" className="font-bold">✓</span>Sin pago para empezar</span>
+              {TRIAL_PLAN.features.map((feature) => (
+                <span key={feature} className="flex items-start gap-2 text-xs leading-relaxed text-brand-green"><span aria-hidden="true" className="font-bold">✓</span>{feature}</span>
+              ))}
             </span>
           </button>
           {Object.values(PLAN_TIERS).map((plan) => {

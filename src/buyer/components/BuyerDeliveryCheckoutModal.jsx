@@ -152,7 +152,7 @@ export default function BuyerDeliveryCheckoutModal({
     setStep(3)
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event, paymentMethod = 'contact') {
     event.preventDefault()
     if (step === 1) {
       goNextFromContact()
@@ -200,7 +200,7 @@ export default function BuyerDeliveryCheckoutModal({
     }
 
     saveBuyerDeliveryDefaults(form)
-    await onConfirm(delivery)
+    await onConfirm({ ...delivery, payment_method: paymentMethod })
   }
 
   const zoneHint =
@@ -411,14 +411,29 @@ export default function BuyerDeliveryCheckoutModal({
             ) : null}
 
             {step === 3 ? (
-              <button
-                type="submit"
-                disabled={checkoutSubmitting}
-                className={`${buyerJabaWhatsAppBtn} w-full px-3 text-center leading-tight`}
-              >
-                <WhatsAppIcon />
-                {checkoutSubmitting ? 'Registrando pedido…' : 'Enviar por WhatsApp'}
-              </button>
+              <div className="flex w-full flex-col gap-2">
+                {shownCheckout.qvapayEnabled ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={checkoutSubmitting}
+                      onClick={(event) => handleSubmit(event, 'qvapay')}
+                      className={`${buyerJabaPrimaryBtn} w-full px-3 text-center leading-tight`}
+                    >
+                      {checkoutSubmitting ? 'Enviando solicitud…' : 'Pagar por QvaPay'}
+                    </button>
+                    <p className="text-center text-xs text-brand-carmelita/75">El dinero se libera a la tienda después de que aceptes la evidencia o venza el plazo de 48 horas.</p>
+                  </>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={checkoutSubmitting}
+                  className={`${buyerJabaWhatsAppBtn} w-full px-3 text-center leading-tight`}
+                >
+                  <WhatsAppIcon />
+                  {checkoutSubmitting ? 'Registrando pedido…' : 'Contactar directamente a la tienda'}
+                </button>
+              </div>
             ) : null}
 
           </div>

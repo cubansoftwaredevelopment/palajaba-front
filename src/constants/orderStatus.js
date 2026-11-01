@@ -1,5 +1,5 @@
 export const ORDER_STATUS_LABELS = {
-  pending_confirmation: 'Pendiente de confirmar',
+  pending_confirmation: 'Por procesar',
   completed: 'Compra realizada',
 }
 

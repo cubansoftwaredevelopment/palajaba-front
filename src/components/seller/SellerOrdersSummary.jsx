@@ -28,7 +28,7 @@ function SummaryCard({ label, value, tone = 'default' }) {
 export default function SellerOrdersSummary({ pendingCount, completedCount }) {
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
-      <SummaryCard label="Por confirmar" value={pendingCount} tone="pending" />
+      <SummaryCard label="Por procesar" value={pendingCount} tone="pending" />
       <SummaryCard label="Compras realizadas" value={completedCount} tone="completed" />
     </div>
   )

@@ -38,7 +38,7 @@ export default function SellerOrdersTabs({ activeTab, onTabChange, pendingCount,
       <TabButton
         active={activeTab === 'pending'}
         onClick={() => onTabChange('pending')}
-        label="Por confirmar"
+        label="Por procesar"
         count={pendingCount}
         tone="pending"
       />

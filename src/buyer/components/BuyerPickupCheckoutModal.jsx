@@ -15,6 +15,7 @@ import {
   buyerDeliveryModalFooter,
   buyerDeliveryModalHeader,
   buyerDeliveryOverlay,
+  buyerJabaPrimaryBtn,
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
 import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
@@ -79,7 +80,7 @@ export default function BuyerPickupCheckoutModal({
     if (error) setError('')
   }
 
-  async function handleSubmit(event) {
+  async function handleSubmit(event, paymentMethod = 'contact') {
     event.preventDefault()
 
     const validationError = validatePickupForm(form)
@@ -103,7 +104,7 @@ export default function BuyerPickupCheckoutModal({
       phone_secondary: form.phone_secondary,
     })
 
-    await onConfirm(pickup)
+    await onConfirm({ ...pickup, payment_method: paymentMethod })
   }
 
   return (
@@ -165,10 +166,18 @@ export default function BuyerPickupCheckoutModal({
             </div>
           </div>
 
-          <div className={buyerDeliveryModalFooter}>
+          <div className={`${buyerDeliveryModalFooter} flex-col`}>
+            {shownCheckout.qvapayEnabled ? (
+              <>
+                <button type="button" disabled={checkoutSubmitting} onClick={(event) => handleSubmit(event, 'qvapay')} className={buyerJabaPrimaryBtn}>
+                  {checkoutSubmitting ? 'Enviando solicitud…' : 'Pagar por QvaPay'}
+                </button>
+                <p className="text-center text-xs text-brand-carmelita/75">El dinero se libera después de que aceptes la evidencia o venza el plazo de 48 horas.</p>
+              </>
+            ) : null}
             <button type="submit" disabled={checkoutSubmitting} className={buyerJabaWhatsAppBtn}>
               <WhatsAppIcon />
-              {checkoutSubmitting ? 'Registrando pedido…' : 'Enviar por WhatsApp'}
+              {checkoutSubmitting ? 'Registrando pedido…' : 'Contactar directamente a la tienda'}
             </button>
             <button
               type="button"

@@ -45,6 +45,7 @@ export async function submitStoreOrder({
   cupPerUnit,
   gestorId = null,
   gestorUsername = null,
+  paymentMethod = 'contact',
 }) {
   if (!storeId || !items?.length) return null
 
@@ -57,6 +58,7 @@ export async function submitStoreOrder({
     payment_currency: paymentCurrency,
     delivery: buildDeliveryPayload(delivery),
     buyer_zone: buildBuyerZone(),
+    payment_method: paymentMethod,
   }
   if (gestorId) body.gestor_id = gestorId
   if (gestorUsername) body.gestor_username = gestorUsername

@@ -10,6 +10,7 @@ import SellerAdvancedProfileSettings from '../../components/seller/SellerAdvance
 import SellerAdvertisingPlans from '../../components/seller/SellerAdvertisingPlans'
 import SellerStoreBanners from '../../components/seller/SellerStoreBanners'
 import SellerUpgradePlan from '../../components/seller/SellerUpgradePlan'
+import SellerQvaPaySettings from '../../components/seller/SellerQvaPaySettings'
 import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection'
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
 import SellerProfileMenuList from '../../components/seller/SellerProfileMenuList'
@@ -433,6 +434,8 @@ export default function SellerProfile() {
         return <SellerUpgradePlan profile={profile} />
       case PROFILE_PANEL_IDS.banners:
         return <SellerStoreBanners profile={profile} onUpdated={refreshProfile} />
+      case PROFILE_PANEL_IDS.payments:
+        return <SellerQvaPaySettings onUpdated={refreshProfile} />
       default:
         return null
     }
