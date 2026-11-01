@@ -611,14 +611,16 @@ export default function SellerOrderDetailModal({
         </div>
 
         <div className="shrink-0 flex gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={cancelling}
-            className={`${sellerBtnSecondary} min-w-0 flex-1 px-3 text-center leading-tight`}
-          >
-            Cerrar
-          </button>
+          {!qvaAwaitingStore ? (
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={cancelling}
+              className={`${sellerBtnSecondary} min-w-0 flex-1 px-3 text-center leading-tight`}
+            >
+              Cerrar
+            </button>
+          ) : null}
           {isPending && !isQvaOrder && hasPendingChanges ? (
             <button
               type="button"

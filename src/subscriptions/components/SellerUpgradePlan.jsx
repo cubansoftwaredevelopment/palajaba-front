@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { BILLING_LABELS } from '../../constants/admin.js'
 import {
@@ -12,6 +12,75 @@ import {
 import { usePlanPricing } from '../../lib/usePlanPricing'
 import UpgradeToPremiumButton from './UpgradeToPremiumButton'
 import { sellerHint } from '../../components/seller/sellerStyles.js'
+import { getSellerToken } from '../../lib/sellerAuth.js'
+import { createSubscriptionQvaPayCheckout, fetchSubscriptionQvaPayCheckout } from '../api.js'
+import { isSubscriptionCheckoutClosed, isSubscriptionCheckoutPaid, subscriptionCheckoutStatusMessage } from '../qvapay.js'
+
+function QvaPayCheckout({ tier, billing, onActivated }) {
+  const [checkout, setCheckout] = useState(null)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [paid, setPaid] = useState(false)
+  const onActivatedRef = useRef(onActivated)
+  const checkoutPurchaseId = checkout?.purchase_id
+  const checkoutStatus = checkout?.status
+
+  useEffect(() => { onActivatedRef.current = onActivated }, [onActivated])
+
+  useEffect(() => {
+    if (!checkoutPurchaseId || isSubscriptionCheckoutClosed({ status: checkoutStatus })) return undefined
+    let stopped = false
+    const check = async () => {
+      if (stopped) return
+      try {
+        const result = await fetchSubscriptionQvaPayCheckout(getSellerToken(), checkoutPurchaseId)
+        if (stopped) return
+        setCheckout(result)
+        if (isSubscriptionCheckoutPaid(result)) {
+          setPaid(true)
+          await onActivatedRef.current?.()
+        }
+      } catch {
+        // Se reintenta en la próxima consulta mientras el usuario termina de pagar.
+      }
+    }
+    const interval = window.setInterval(check, 4000)
+    return () => {
+      stopped = true
+      window.clearInterval(interval)
+    }
+  }, [checkoutPurchaseId, checkoutStatus])
+
+  async function beginCheckout() {
+    setBusy(true)
+    setError('')
+    try {
+      const result = await createSubscriptionQvaPayCheckout(getSellerToken(), {
+        planTier: tier.id,
+        billingPeriod: billing,
+      })
+      setCheckout(result)
+      if (result.payment_url) window.open(result.payment_url, '_blank', 'noopener,noreferrer')
+    } catch (err) {
+      setError(err?.message || 'No pudimos crear la factura QvaPay. Inténtalo de nuevo.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="mt-4 flex flex-col gap-2">
+      <button type="button" className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-brand-green px-4 py-2.5 text-sm font-bold text-brand-white shadow-sm transition hover:bg-brand-green/90 disabled:opacity-60" onClick={beginCheckout} disabled={busy || paid}>
+        {busy ? 'Creando factura…' : paid ? 'Plan activado' : 'Pagar con QvaPay'}
+      </button>
+      {checkout?.payment_url && checkout.status === 'pending' ? (
+        <a className="text-center text-sm font-semibold text-brand-green underline underline-offset-2" href={checkout.payment_url} target="_blank" rel="noreferrer">Abrir factura QvaPay</a>
+      ) : null}
+      {checkout ? <p className={`text-center text-sm ${paid ? 'font-semibold text-brand-green' : 'text-brand-carmelita/80'}`} role="status">{subscriptionCheckoutStatusMessage(checkout)}</p> : null}
+      {error ? <p className="text-sm text-red-700" role="alert">{error}</p> : null}
+    </div>
+  )
+}
 
 function CheckIcon() {
   return (
@@ -29,7 +98,7 @@ function CheckIcon() {
   )
 }
 
-export default function SellerUpgradePlan({ profile }) {
+export default function SellerUpgradePlan({ profile, onUpdated }) {
   const currentPlan = getSellerPlan(profile)
   const isTrial = currentPlan.id === 'trial'
   const upgrades = upgradeablePlanTiers(profile)
@@ -39,22 +108,25 @@ export default function SellerUpgradePlan({ profile }) {
   const [billing, setBilling] = useState(currentBilling)
   const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount } = usePlanPricing()
   const currentPlanName = currentPlan.name
+  const planOptions = subscriptionInactive || isTrial
+    ? upgrades
+    : [...upgrades, currentPlan].filter((tier, index, all) => all.findIndex((item) => item.id === tier.id) === index)
 
   return (
     <div className="flex flex-col gap-3">
       <p className={sellerHint}>
         {subscriptionInactive
-          ? 'Tu tienda aún no tiene una suscripción activa. Elige un plan para activarla; te conectamos por WhatsApp para completar el cambio.'
+          ? 'Tu tienda aún no tiene una suscripción activa. Elige un plan y paga con QvaPay o solicita el cambio por WhatsApp.'
           : isTrial
-          ? 'Estás en el plan Prueba. Puedes mejorarlo a Básico, Pro o Premium; te conectamos por WhatsApp para completar el cambio.'
+          ? 'Estás en el plan Prueba. Puedes mejorarlo a Básico, Pro o Premium con QvaPay o por WhatsApp.'
           : `Estás en el plan ${currentPlan.name} · ${BILLING_LABELS[currentBilling] ?? BILLING_LABELS.monthly}. ${
               canUpgrade
-                ? 'Elige un plan superior y te conectamos por WhatsApp para completar el cambio.'
-                : 'Ya tienes el plan más completo.'
+                ? 'Elige un plan superior y págalo con QvaPay o solicita el cambio por WhatsApp.'
+                : 'Ya tienes el plan más completo; puedes renovarlo con QvaPay.'
             }`}
       </p>
 
-      {canUpgrade ? (
+      {planOptions.length > 0 ? (
         <div
           className="flex rounded-full border border-brand-green/15 bg-brand-white p-1"
           role="radiogroup"
@@ -79,13 +151,11 @@ export default function SellerUpgradePlan({ profile }) {
         </div>
       ) : null}
 
-      {upgrades.length === 0 ? (
-        <p className={sellerHint} role="status">
-          Si quieres cambiar el periodo de cobro, escribe al administrador al renovar.
-        </p>
+      {planOptions.length === 0 ? (
+        <p className={sellerHint} role="status">No hay planes disponibles para esta cuenta.</p>
       ) : (
         <ul className="flex flex-col gap-3">
-          {upgrades.map((tier) => {
+          {planOptions.map((tier) => {
             const price = getPlanPrice(tier.id, billing)
             const savings = getPlanPeriodSavings(tier.id, billing)
             const recommended = Boolean(tier.recommended)
@@ -138,8 +208,9 @@ export default function SellerUpgradePlan({ profile }) {
                   ))}
                 </ul>
 
+                <QvaPayCheckout tier={tier} billing={billing} onActivated={onUpdated} />
                 <UpgradeToPremiumButton
-                  className="mt-4 w-full"
+                  className="mt-2 w-full"
                   storeName={profile?.store_name}
                   currentPlanName={currentPlanName}
                   targetPlanName={tier.name}

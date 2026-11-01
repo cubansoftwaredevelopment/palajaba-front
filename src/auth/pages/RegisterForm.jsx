@@ -134,6 +134,7 @@ export default function RegisterForm() {
         password,
         billing_period: billing,
         plan_tier: planTier,
+        ...(kind === 'account' ? { qvapay_purchase_id: location.state?.qvapayPurchaseId } : {}),
         ...(discountCode ? { discount_code: discountCode } : {}),
       })
 
@@ -160,6 +161,7 @@ export default function RegisterForm() {
           kind,
           billing,
           planTier,
+          qvapayPurchaseId: location.state?.qvapayPurchaseId,
           discountCode,
           discountPercent,
           challengeId: result.challenge_id,
@@ -190,8 +192,8 @@ export default function RegisterForm() {
 
   return (
     <AuthShell
-      backTo={kind === 'account' ? '/registro/planes' : '/crear-cuenta'}
-      backLabel={kind === 'account' ? 'Elegir plan' : 'Tipo de cuenta'}
+      backTo="/registro/planes"
+      backLabel="Elegir plan"
     >
       <section className="animate-fade-in" aria-labelledby="register-form-title">
         <div className={authPageIntro}>

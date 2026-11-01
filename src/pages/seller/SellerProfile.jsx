@@ -431,7 +431,7 @@ export default function SellerProfile() {
       case PROFILE_PANEL_IDS.advertising:
         return <SellerAdvertisingPlans profile={profile} />
       case PROFILE_PANEL_IDS.plan:
-        return <SellerUpgradePlan profile={profile} />
+        return <SellerUpgradePlan profile={profile} onUpdated={refreshProfile} />
       case PROFILE_PANEL_IDS.banners:
         return <SellerStoreBanners profile={profile} onUpdated={refreshProfile} />
       case PROFILE_PANEL_IDS.payments:

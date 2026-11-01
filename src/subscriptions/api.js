@@ -1,4 +1,5 @@
 import { request } from '../lib/api'
+import { subscriptionCheckoutPayload } from './qvapay.js'
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` }
@@ -10,6 +11,31 @@ export function fetchRenewalContactPhone() {
 
 export function fetchPlanPrices() {
   return request('/api/platform/plan-prices')
+}
+
+export function createSubscriptionQvaPayCheckout(token, { planTier, billingPeriod }) {
+  return request('/api/auth/me/subscriptions/qvapay', {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(subscriptionCheckoutPayload(planTier, billingPeriod)),
+  })
+}
+
+export function fetchSubscriptionQvaPayCheckout(token, purchaseId) {
+  return request(`/api/auth/me/subscriptions/qvapay/${encodeURIComponent(purchaseId)}`, {
+    headers: authHeaders(token),
+  })
+}
+
+export function createInitialSubscriptionQvaPayCheckout({ planTier, billingPeriod }) {
+  return request('/api/register/qvapay', {
+    method: 'POST',
+    body: JSON.stringify({ plan_tier: planTier, billing_period: billingPeriod }),
+  })
+}
+
+export function fetchInitialSubscriptionQvaPayCheckout(purchaseId) {
+  return request(`/api/register/qvapay/${encodeURIComponent(purchaseId)}`)
 }
 
 export function approveRegistration(token, id, subscriptionEndsAt, paymentAmountCup) {
@@ -59,6 +85,7 @@ export function updateRegistrationSubscription(
 
 /** @deprecated Use updateRegistrationSubscription */
 export function updateSubscriptionEnd(token, id, _subscriptionEndsAt) {
+  void _subscriptionEndsAt
   return updateRegistrationSubscription(token, id, {})
 }
 

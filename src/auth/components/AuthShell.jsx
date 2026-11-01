@@ -4,7 +4,7 @@ import Logo from '../../components/Logo'
 const CONTENT_WIDTH = {
   default: 'max-w-md lg:max-w-5xl',
   wide: 'max-w-md lg:max-w-5xl',
-  plans: 'max-w-md lg:max-w-6xl',
+  plans: 'max-w-md lg:max-w-7xl',
   narrow: 'max-w-md lg:max-w-2xl',
 }
 

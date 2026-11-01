@@ -27,6 +27,7 @@ import RegisterEntry from './auth/pages/RegisterEntry'
 import RegisterForm from './auth/pages/RegisterForm'
 import RegisterOtp from './auth/pages/RegisterOtp'
 import RegisterPlan from './auth/pages/RegisterPlan'
+import RegisterPayment from './auth/pages/RegisterPayment'
 import RegisterSuccess from './auth/pages/RegisterSuccess'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
@@ -133,7 +134,7 @@ const router = createBrowserRouter([
       { path: 'registro/planes', element: <RegisterPlan /> },
       { path: 'crear-cuenta', element: <CreateAccount /> },
       { path: 'registro/promo/datos', element: <Navigate to="/registro" replace /> },
-      { path: 'registro/pago', element: <Navigate to="/registro" replace /> },
+      { path: 'registro/pago', element: <RegisterPayment /> },
       { path: 'registro/verificacion', element: <RegisterForm /> },
       { path: 'registro/otp', element: <RegisterOtp /> },
       { path: 'registro/exito', element: <RegisterSuccess /> },
