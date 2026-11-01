@@ -35,7 +35,6 @@ function loginBackTarget(state) {
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectTo = location.state?.backTo ?? location.state?.from ?? (location.state?.accountType === 'customer' ? '/cliente' : '/tienda')
   const { backTo, backLabel } = loginBackTarget(location.state)
   const [accountType, setAccountType] = useState(location.state?.accountType === 'customer' ? 'customer' : 'store')
   const [identifier, setIdentifier] = useState('')
@@ -46,11 +45,11 @@ export default function Login() {
 
   useEffect(() => {
     if (isSellerAuthenticated()) {
-      navigate(redirectTo, { replace: true })
+      navigate('/tienda', { replace: true })
     } else if (isCustomerAuthenticated()) {
       navigate('/comprar/provincia', { replace: true })
     }
-  }, [navigate, redirectTo])
+  }, [navigate])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -78,7 +77,7 @@ export default function Login() {
           : { method: 'store_name', store_name: normalizedIdentifier, password }
         const data = await sellerLogin(payload)
         setSellerSession(data.access_token, data.seller)
-        navigate(redirectTo, { replace: true })
+        navigate('/tienda', { replace: true })
       }
     } catch (err) {
       if (accountType === 'store' && err instanceof ApiError && err.status === 401) {
