@@ -41,8 +41,7 @@ function isValidEmail(value) {
   return email.includes('@') && email.split('@')[1]?.includes('.')
 }
 
-function validateForm({ kind, transferId, storeName, email, phone, password, confirmPassword }) {
-  if (kind === 'paid' && !transferId.trim()) return 'El ID de la transferencia es obligatorio.'
+function validateForm({ storeName, email, phone, password, confirmPassword }) {
   if (!storeName.trim()) return 'El nombre de la tienda es obligatorio.'
   if (!email.trim()) return 'El correo es obligatorio.'
   if (!isValidEmail(email)) return 'El correo no es válido.'
@@ -72,7 +71,6 @@ export default function RegisterForm() {
   const discountCode = kind === 'trial' || kind === 'account' ? null : location.state?.discountCode ?? null
   const discountPercent = kind === 'trial' || kind === 'account' ? null : location.state?.discountPercent ?? null
 
-  const [transferId, setTransferId] = useState('')
   const [storeName, setStoreName] = useState('')
   const [email, setEmail] = useState('')
   const [phoneDigits, setPhoneDigits] = useState(() => getActiveSmsCooldownPhone())
@@ -96,8 +94,6 @@ export default function RegisterForm() {
     setError('')
 
     const validationError = validateForm({
-      kind,
-      transferId,
       storeName,
       email,
       phone: phoneDigits,
@@ -127,7 +123,6 @@ export default function RegisterForm() {
       }
       const result = await startRegisterOtp({
         kind,
-        ...(kind === 'paid' ? { transfer_id: transferId.trim() } : {}),
         store_name: storeName.trim(),
         email: email.trim().toLowerCase(),
         phone: phoneDigits,
@@ -147,6 +142,11 @@ export default function RegisterForm() {
         if (confirmed.access_token) {
           setSellerSession(confirmed.access_token, { id: confirmed.id })
           navigate('/tienda', { replace: true })
+        } else if (kind === 'paid') {
+          navigate('/registro/pago', {
+            replace: true,
+            state: { kind, planTier, billing, challengeId: result.challenge_id },
+          })
         } else {
           navigate('/registro/exito', {
             replace: true,
@@ -198,40 +198,21 @@ export default function RegisterForm() {
       <section className="animate-fade-in" aria-labelledby="register-form-title">
         <div className={authPageIntro}>
           <AuthHeader
-            eyebrow={kind === 'account' ? 'Paso 2 · Datos' : kind === 'trial' ? 'Paso 2 · Datos' : 'Paso 3 · Datos'}
+            eyebrow="Paso 2 · Datos"
             title="Tu tienda"
             description={
               kind === 'account'
                 ? `Plan ${PLAN_TIERS[planTier].name} · ${BILLING_UNIT_LABELS[billing]}. Completa tus datos para crear la cuenta de tu tienda.`
                 : kind === 'trial'
                   ? 'Verificaremos tu correo y teléfono antes de activar la prueba.'
-                  : 'Verificaremos tu correo y teléfono antes de enviar la solicitud.'
+                  : 'Verificaremos tu correo y teléfono antes de pasar al pago del plan.'
             }
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={kind === 'account' ? 2 : kind === 'trial' ? 2 : 3} steps={getRegisterSteps(kind)} />
+          <RegisterProgress currentStep={2} steps={getRegisterSteps(kind)} />
         </div>
 
         <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>
-          {kind === 'paid' ? (
-            <div>
-              <RequiredLabel htmlFor="transfer-id">ID de la transferencia</RequiredLabel>
-              <input
-                id="transfer-id"
-                type="text"
-                value={transferId}
-                onChange={(e) => setTransferId(e.target.value)}
-                className={inputClass}
-                placeholder="Ej. 1234567890"
-                autoComplete="off"
-                required
-              />
-              <p className={hintClass}>
-                Lo encuentras en el mensaje de confirmación del pago.
-              </p>
-            </div>
-          ) : null}
-
           <div>
             <RequiredLabel htmlFor="store-name">Nombre de la tienda</RequiredLabel>
             <input

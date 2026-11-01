@@ -12,6 +12,8 @@ import { createInitialSubscriptionQvaPayCheckout, fetchInitialSubscriptionQvaPay
 import { isSubscriptionCheckoutClosed, isSubscriptionCheckoutPaid, subscriptionCheckoutStatusMessage } from '../../subscriptions/qvapay.js'
 import { getRegisterSteps } from '../constants.js'
 import { PAYMENT_CARD_NUMBER, PAYMENT_PHONE, PAYMENT_QR_IMAGE } from '../../constants/payment.js'
+import { completeRegistrationPayment } from '../api.js'
+import { setSellerSession } from '../../lib/sellerAuth'
 
 export default function RegisterPayment() {
   const navigate = useNavigate()
@@ -29,20 +31,28 @@ export default function RegisterPayment() {
     : `${usdEquivalent.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
   const [checkout, setCheckout] = useState(null)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('cup')
   const [retryCount, setRetryCount] = useState(0)
+  const [transferId, setTransferId] = useState('')
   const creationRef = useRef(null)
   const checkoutPurchaseId = checkout?.purchase_id
   const checkoutStatus = checkout?.status
 
   useEffect(() => {
+    if (!location.state?.challengeId || !['standard', 'pro', 'premium'].includes(location.state?.planTier)) {
+      navigate('/registro/planes', { replace: true })
+    }
+  }, [location.state?.challengeId, location.state?.planTier, navigate])
+
+  useEffect(() => {
     if (paymentMethod !== 'qvapay') return undefined
-    if (!['standard', 'pro', 'premium'].includes(location.state?.planTier)) {
+    if (!['standard', 'pro', 'premium'].includes(location.state?.planTier) || !location.state?.challengeId) {
       navigate('/registro/planes', { replace: true })
       return undefined
     }
     let stopped = false
+    setLoading(true)
     if (!creationRef.current) {
       creationRef.current = createInitialSubscriptionQvaPayCheckout({ planTier, billingPeriod: billing })
     }
@@ -73,23 +83,31 @@ export default function RegisterPayment() {
     }
   }, [checkoutPurchaseId, checkoutStatus, paymentMethod])
 
-  function continueToDetails() {
-    if (paymentMethod === 'cup') {
-      navigate('/registro', {
-        state: { kind: 'paid', planTier, billing, backTo: location.state?.backTo },
-      })
+  async function completePayment() {
+    if (paymentMethod === 'qvapay' && !isSubscriptionCheckoutPaid(checkout)) return
+    if (paymentMethod === 'cup' && !transferId.trim()) {
+      setError('Escribe el ID de la transferencia para continuar.')
       return
     }
-    if (!isSubscriptionCheckoutPaid(checkout)) return
-    navigate('/registro', {
-      state: {
-        kind: 'account',
-        planTier,
-        billing,
-        qvapayPurchaseId: checkout.purchase_id,
-        backTo: location.state?.backTo,
-      },
-    })
+    setLoading(true)
+    setError('')
+    try {
+      const result = await completeRegistrationPayment({
+        challenge_id: location.state.challengeId,
+        payment_method: paymentMethod,
+        ...(paymentMethod === 'cup' ? { transfer_id: transferId.trim() } : { qvapay_purchase_id: checkout.purchase_id }),
+      })
+      if (result.access_token) {
+        setSellerSession(result.access_token, { id: result.id })
+        navigate('/tienda', { replace: true })
+      } else {
+        navigate('/registro/exito', { replace: true, state: { kind: result.kind, message: result.message } })
+      }
+    } catch (err) {
+      setError(err?.message || 'No pudimos completar el registro. Inténtalo nuevamente.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   function retryInvoice() {
@@ -107,10 +125,10 @@ export default function RegisterPayment() {
           <AuthHeader
             eyebrow="Crear cuenta"
             title="Paga tu plan"
-            description={`Completa el pago de tu plan ${tier.name} para continuar con los datos de tu tienda.`}
+            description={`Tus datos ya fueron verificados. Completa el pago del plan ${tier.name} para terminar el registro.`}
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={2} steps={getRegisterSteps('paid')} className="mx-auto mb-4 w-full max-w-sm sm:mb-6" />
+          <RegisterProgress currentStep={4} steps={getRegisterSteps('paid')} className="mx-auto mb-4 w-full max-w-sm sm:mb-6" />
         </div>
 
         <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
@@ -148,8 +166,11 @@ export default function RegisterPayment() {
                   <div className="flex items-start justify-between gap-3"><dt className="text-brand-carmelita/80">Número de tarjeta</dt><dd className="font-mono font-bold text-brand-green">{PAYMENT_CARD_NUMBER}</dd></div>
                   <div className="flex items-start justify-between gap-3 border-t border-brand-green/10 pt-3"><dt className="text-brand-carmelita/80">Teléfono a confirmar</dt><dd className="font-semibold text-brand-green">{PAYMENT_PHONE}</dd></div>
                 </dl>
-                <p className="text-sm leading-relaxed text-brand-carmelita/85">Transfiere el importe indicado y, en el siguiente paso, escribe el identificador de la transferencia para que podamos revisarla.</p>
-                <Button type="button" onClick={continueToDetails}>Continuar con mis datos</Button>
+                <p className="text-sm leading-relaxed text-brand-carmelita/85">Transfiere el importe indicado y escribe el identificador de la transferencia para que podamos revisarla.</p>
+                <label htmlFor="registration-transfer-id" className="text-sm font-semibold text-brand-green">ID de la transferencia</label>
+                <input id="registration-transfer-id" type="text" value={transferId} onChange={(event) => setTransferId(event.target.value)} className="w-full rounded-xl border border-brand-green/20 bg-brand-white px-3 py-3 text-sm text-brand-green outline-none focus:border-brand-green" placeholder="Ej. 1234567890" autoComplete="off" />
+                {error ? <p className="text-sm text-red-700" role="alert">{error}</p> : null}
+                <Button type="button" disabled={loading} onClick={completePayment}>{loading ? 'Completando…' : 'Confirmar pago y crear tienda'}</Button>
               </AuthCard>
             </div>
           ) : (
@@ -167,7 +188,7 @@ export default function RegisterPayment() {
                 {!checkout?.purchase_id && !loading && error ? (
                   <Button type="button" className="min-w-0 flex-1 px-2 text-xs sm:text-sm" onClick={retryInvoice}>Reintentar</Button>
                 ) : null}
-                <Button type="button" className="min-w-0 flex-1 px-2 text-xs sm:text-sm" disabled={!isSubscriptionCheckoutPaid(checkout)} onClick={continueToDetails}>Continuar con mis datos</Button>
+                <Button type="button" className="min-w-0 flex-1 px-2 text-xs sm:text-sm" disabled={!isSubscriptionCheckoutPaid(checkout) || loading} onClick={completePayment}>{loading ? 'Completando…' : 'Confirmar pago y crear tienda'}</Button>
               </div>
             </AuthCard>
           )}

@@ -41,8 +41,9 @@ export default function RegisterPlan() {
       return
     }
     if (!planTier) return
-    navigate('/registro/pago', {
+    navigate('/registro', {
       state: {
+        kind: 'paid',
         planTier,
         billing,
         backTo: location.state?.backTo,

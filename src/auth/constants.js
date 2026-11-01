@@ -6,9 +6,9 @@ export const OTP_SMS_FAILED_MESSAGE =
 
 export const PAID_REGISTER_STEPS = [
   { id: 1, label: 'Plan' },
-  { id: 2, label: 'Pago' },
-  { id: 3, label: 'Datos' },
-  { id: 4, label: 'Verificar' },
+  { id: 2, label: 'Datos' },
+  { id: 3, label: 'Verificar' },
+  { id: 4, label: 'Pago' },
 ]
 
 export const TRIAL_REGISTER_STEPS = [

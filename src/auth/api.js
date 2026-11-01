@@ -89,6 +89,13 @@ export function confirmRegisterOtp(payload) {
   })
 }
 
+export function completeRegistrationPayment(payload) {
+  return request('/api/register/payment/complete', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
 export function fetchSellerProfile(token) {
   return request('/api/auth/me', {
     headers: authHeaders(token),
