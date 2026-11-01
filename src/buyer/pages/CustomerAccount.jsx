@@ -10,6 +10,7 @@ import { canRespondToQvaPayEvidence, QVAPAY_EVIDENCE_WARNING } from '../../lib/q
 import BuyerOrderLocationMap from '../components/BuyerOrderLocationMap'
 import BuyerProductCard from '../components/BuyerProductCard'
 import BuyerModalPortal from '../components/BuyerModalPortal'
+import Logo from '../../components/Logo'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../components/useOrderModalPresence'
 import { getUserFacingMessage } from '../../lib/userFacingError'
@@ -19,7 +20,6 @@ const sectionClass = 'rounded-2xl border border-brand-green/10 bg-brand-white p-
 const statusLabel = { pending_confirmation: 'Por procesar', completed: 'Completado', cancelled: 'Cancelado' }
 const CUSTOMER_NAV = [
   { id: 'pedidos', path: '/cliente/pedidos', label: 'Mis pedidos', icon: <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0" /> },
-  { id: 'avisos', path: '/cliente/avisos', label: 'Avisos', icon: <><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></> },
   { id: 'favoritos', path: '/cliente/favoritos', label: 'Guardados', icon: <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z" /> },
   { id: 'direcciones', path: '/cliente/direcciones', label: 'Direcciones', icon: <><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></> },
   { id: 'perfil', path: '/cliente/perfil', label: 'Perfil', icon: <><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></> },
@@ -445,9 +445,47 @@ export default function CustomerAccount() {
         </Link>
         <CustomerNavigation />
       </aside>
-      <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+var(--safe-bottom))] pt-6 sm:px-6 lg:px-8 lg:pb-8">
-        <div className="mx-auto max-w-5xl">
-          <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-green/10 bg-brand-white/75 px-4 py-3 shadow-sm sm:px-5">
+      <main className="min-w-0 flex-1 pb-[calc(5.5rem+var(--safe-bottom))] lg:pb-8">
+        <header className="z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 pt-[max(0.75rem,var(--safe-top))] pb-3 backdrop-blur-md sm:px-5 lg:px-8 lg:pt-[max(1rem,var(--safe-top))] lg:pb-4">
+          <div className="mx-auto flex w-full max-w-md items-center gap-2.5 sm:gap-3 lg:max-w-none">
+            <Logo className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
+            <p className="min-w-0 flex-1 truncate font-display text-sm font-bold text-brand-green sm:text-base lg:text-lg">
+              Bienvenido{' '}
+              <span className="text-brand-carmelita">{profile?.full_name || ''}</span>
+            </p>
+            <NavLink
+              to="/cliente/avisos"
+              aria-label={unreadNotificationCount ? `Notificaciones, ${unreadNotificationCount} sin leer` : 'Notificaciones'}
+              title="Notificaciones"
+              className={({ isActive }) => `relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35 ${isActive ? 'bg-brand-green/8 text-brand-green' : ''}`}
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {unreadNotificationCount > 0 ? (
+                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-carmelita px-1 text-[0.6rem] font-bold leading-none text-brand-white">
+                  {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+                </span>
+              ) : null}
+            </NavLink>
+            <button
+              type="button"
+              onClick={() => setLogoutOpen(true)}
+              aria-label="Cerrar sesión"
+              title="Cerrar sesión"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35"
+            >
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" x2="9" y1="12" y2="12" />
+              </svg>
+            </button>
+          </div>
+        </header>
+        <div className="mx-auto w-full max-w-5xl px-4 pt-6 sm:px-6 lg:px-8">
+          <header className="mb-6">
             <div>
               <Link
                 to="/comprar"
@@ -460,42 +498,6 @@ export default function CustomerAccount() {
                   "Mi cuenta"}
               </h1>
             </div>
-            {profile ? (
-              <div className="ml-auto flex max-w-full items-center gap-2 sm:gap-3">
-                <NavLink
-                  to="/cliente/avisos"
-                  aria-label={unreadNotificationCount ? `Avisos, ${unreadNotificationCount} sin leer` : 'Avisos'}
-                  title="Avisos"
-                  className={({ isActive }) => `relative grid h-10 w-10 shrink-0 place-items-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35 ${isActive ? 'border-brand-green/25 bg-brand-green/10 text-brand-green' : 'border-brand-green/15 text-brand-green hover:bg-brand-green/5'}`}
-                >
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-                    <path d="M10 21h4" />
-                  </svg>
-                  {unreadNotificationCount ? (
-                    <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand-carmelita px-1 text-[10px] font-bold leading-none text-white">
-                      {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
-                    </span>
-                  ) : null}
-                </NavLink>
-                <p className="max-w-[9rem] text-right text-xs font-semibold leading-snug text-brand-carmelita sm:max-w-[15rem] sm:text-sm">
-                  Bienvenido, <span className="text-brand-green">{profile.full_name}</span>
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setLogoutOpen(true)}
-                  aria-label="Cerrar sesión"
-                  title="Cerrar sesión"
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-brand-green/15 text-brand-green transition hover:bg-brand-green/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35"
-                >
-                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M10 17l5-5-5-5" />
-                    <path d="M15 12H3" />
-                    <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
-                  </svg>
-                </button>
-              </div>
-            ) : null}
           </header>
           {error ? (
             <p
