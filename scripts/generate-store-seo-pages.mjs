@@ -60,13 +60,11 @@ function buildStoreHtml(page, assetTags) {
 
 function locToSlug(loc) {
   if (!loc) return ''
-  const normalized = loc.replace(/\/+$/, '')
-  if (normalized === siteUrl) return ''
-  const prefix = `${siteUrl}/`
-  if (normalized.startsWith(prefix)) {
-    return normalized.slice(prefix.length)
+  try {
+    return new URL(loc, siteUrl).pathname.replace(/^\/+|\/+$/g, '')
+  } catch {
+    return ''
   }
-  return ''
 }
 
 function escapeXml(value) {

@@ -82,7 +82,17 @@ async function main() {
     process.exit(1)
   }
 
-  const urls = (await fetchIndexableUrls()) ?? STATIC_URLS
+  const apiUrls = await fetchIndexableUrls()
+  const urls = apiUrls
+    ? apiUrls.map((entry) => {
+        try {
+          const parsed = new URL(entry.loc)
+          return { ...entry, loc: `${siteUrl}${parsed.pathname.replace(/\/+$/, '')}` }
+        } catch {
+          return entry
+        }
+      })
+    : STATIC_URLS
   writeFileSync(outputPath, buildSitemapXml(urls), 'utf8')
   console.log(`generate-sitemap: ${outputPath} (${urls.length} URLs)`)
 }
