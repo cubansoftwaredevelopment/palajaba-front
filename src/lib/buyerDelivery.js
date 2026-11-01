@@ -71,6 +71,11 @@ export function validatePickupForm(form) {
   const phoneDigits = String(form.phone_primary ?? '').replace(/\D/g, '')
   if (phoneDigits.length !== 8) return 'Ingresa un teléfono de contacto válido (8 dígitos).'
 
+  const secondaryDigits = String(form.phone_secondary ?? '').replace(/\D/g, '')
+  if (secondaryDigits && secondaryDigits.length !== 8) {
+    return 'El teléfono adicional debe tener 8 dígitos.'
+  }
+
   return null
 }
 

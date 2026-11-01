@@ -241,7 +241,7 @@ function StoreGroup({
                 type="button"
                 onClick={() => onRequestPickup(group.store_id)}
                 disabled={!canCheckout}
-                className={buyerJabaPrimaryBtn}
+                className={`${buyerJabaPrimaryBtn} col-span-2`}
               >
                 {checkoutSubmitting ? 'Registrando pedido…' : 'Recoger en la tienda'}
               </button>

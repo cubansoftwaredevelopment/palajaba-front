@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import PhoneField from '../auth/PhoneField'
+import { getCustomerProfile } from '../../lib/customerAuth'
 import { alertErrorClass } from '../auth/formStyles'
 import {
   getBuyerDeliveryDefaults,
@@ -39,11 +40,15 @@ export default function BuyerPickupCheckoutModal({
   const shownCheckout = checkout ?? shownCheckoutRef.current
   const { present, closing } = useOrderModalPresence(open)
   const motionClass = orderModalMotionClass(closing)
+  const sheetMotionClass = closing
+    ? 'pointer-events-none motion-safe:animate-address-sheet-out'
+    : 'motion-safe:animate-address-sheet-in'
   const [form, setForm] = useState(() => {
     const defaults = getBuyerDeliveryDefaults()
     return {
       recipient_name: defaults.recipient_name,
-      phone_primary: defaults.phone_primary,
+      phone_primary: String(getCustomerProfile()?.phone ?? '').replace(/\D/g, '').slice(-8),
+      phone_secondary: defaults.phone_secondary,
     }
   })
   const [error, setError] = useState('')
@@ -54,7 +59,8 @@ export default function BuyerPickupCheckoutModal({
     const defaults = getBuyerDeliveryDefaults()
     setForm({
       recipient_name: defaults.recipient_name,
-      phone_primary: defaults.phone_primary,
+      phone_primary: String(getCustomerProfile()?.phone ?? '').replace(/\D/g, '').slice(-8),
+      phone_secondary: defaults.phone_secondary,
     })
     setError('')
 
@@ -86,6 +92,7 @@ export default function BuyerPickupCheckoutModal({
       mode: 'pickup',
       recipient_name: form.recipient_name.trim(),
       phone_primary: form.phone_primary,
+      phone_secondary: form.phone_secondary,
     }
 
     const defaults = getBuyerDeliveryDefaults()
@@ -93,6 +100,7 @@ export default function BuyerPickupCheckoutModal({
       ...defaults,
       recipient_name: form.recipient_name.trim(),
       phone_primary: form.phone_primary,
+      phone_secondary: form.phone_secondary,
     })
 
     await onConfirm(pickup)
@@ -107,7 +115,7 @@ export default function BuyerPickupCheckoutModal({
         onClick={onClose}
       />
 
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} ${motionClass}`}>
+      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} ${sheetMotionClass}`}>
         <div className={buyerDeliveryModalHeader}>
           <h2 id={titleId} className="font-display text-lg font-bold text-brand-green">
             Recoger en la tienda
@@ -138,9 +146,19 @@ export default function BuyerPickupCheckoutModal({
 
               <PhoneField
                 id="pickup-phone-primary"
-                label="Teléfono de contacto"
+                label="Teléfono de tu cuenta"
                 value={form.phone_primary}
                 onChange={(value) => updateField('phone_primary', value)}
+                readOnly
+                required={false}
+              />
+
+              <PhoneField
+                id="pickup-phone-secondary"
+                label="Teléfono adicional (opcional)"
+                value={form.phone_secondary}
+                onChange={(value) => updateField('phone_secondary', value)}
+                required={false}
               />
 
               {error ? <p className={alertErrorClass}>{error}</p> : null}

@@ -31,6 +31,7 @@
   --animate-success-rise: success-rise 0.65s ease-out forwards;
   --animate-float: float 5s ease-in-out infinite;
   --animate-float-delayed: float 6s ease-in-out 1s infinite;
+  --animate-avatar-halo: avatar-halo 2.2s ease-out infinite;
   --animate-levitate: levitate 2.8s ease-in-out infinite;
   --animate-pulse-soft: pulse-soft 4s ease-in-out infinite;
   --animate-jaba-badge-bump: jaba-badge-bump 0.35s ease-out;
@@ -68,6 +69,18 @@
     to {
       opacity: 0;
       transform: translateY(8px);
+    }
+  }
+
+  @keyframes avatar-halo {
+    0% {
+      opacity: 0.85;
+      transform: scale(0.92);
+    }
+    75%,
+    100% {
+      opacity: 0;
+      transform: scale(1.5);
     }
   }
 

@@ -48,7 +48,7 @@ function formatContact(digits) {
 function buyerDeliveryDefaults() {
   const defaults = getBuyerDeliveryDefaults()
   const customerPhone = String(getCustomerProfile()?.phone ?? '').replace(/\D/g, '').slice(-8)
-  return { ...defaults, phone_primary: defaults.phone_primary || customerPhone }
+  return { ...defaults, phone_primary: customerPhone }
 }
 
 export default function BuyerDeliveryCheckoutModal({
@@ -70,6 +70,9 @@ export default function BuyerDeliveryCheckoutModal({
   const shownCheckout = checkout ?? shownCheckoutRef.current
   const { present, closing } = useOrderModalPresence(open)
   const motionClass = orderModalMotionClass(closing)
+  const sheetMotionClass = closing
+    ? 'pointer-events-none motion-safe:animate-address-sheet-out'
+    : 'motion-safe:animate-address-sheet-in'
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
     setWasOpen(open)
@@ -90,7 +93,7 @@ export default function BuyerDeliveryCheckoutModal({
     if (!checkout) return undefined
 
     setForm(buyerDeliveryDefaults())
-      setSelectedAddressId('')
+    setSelectedAddressId('')
     setError('')
 
     function handleKeyDown(event) {
@@ -220,7 +223,7 @@ export default function BuyerDeliveryCheckoutModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`${buyerDeliveryModal} ${motionClass} ${step === 2 ? '!h-[min(92dvh,52rem)] !max-h-[min(92dvh,52rem)]' : ''}`}
+        className={`${buyerDeliveryModal} ${sheetMotionClass} ${step === 2 ? '!h-[min(92dvh,52rem)] !max-h-[min(92dvh,52rem)]' : ''}`}
       >
         <div className={buyerDeliveryModalHeader}>
           <div className="flex items-start gap-1">
@@ -273,9 +276,11 @@ export default function BuyerDeliveryCheckoutModal({
 
                 <PhoneField
                   id="delivery-phone-primary"
-                  label="Teléfono de contacto"
+                  label="Teléfono de tu cuenta"
                   value={form.phone_primary}
                   onChange={(value) => updateField('phone_primary', value)}
+                  readOnly
+                  required={false}
                 />
 
                 <PhoneField
@@ -385,7 +390,7 @@ export default function BuyerDeliveryCheckoutModal({
 
           <div className={buyerDeliveryModalFooter}>
             {step === 1 ? (
-              <button type="submit" className={`${buyerJabaPrimaryBtn} mx-auto !w-auto min-w-36 px-8`}>
+              <button type="submit" className={`${buyerJabaPrimaryBtn} self-end !w-auto min-w-36 px-8`}>
                 Siguiente
               </button>
             ) : null}

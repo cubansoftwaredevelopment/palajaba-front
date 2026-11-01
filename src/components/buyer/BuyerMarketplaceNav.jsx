@@ -374,8 +374,6 @@ export default function BuyerMarketplaceNav({
       <path d="M5.5 19.2c1.4-2.6 3.6-3.7 6.5-3.7s5.1 1.1 6.5 3.7" />
     </svg>
   )
-  const backTo = `${route.pathname}${route.search}${route.hash}`
-
   const menu = (
     <>
       {menuOpen ? (
@@ -451,7 +449,7 @@ export default function BuyerMarketplaceNav({
           ) : (
             <NavLink
               to="/login"
-              state={{ backTo, accountType: 'customer' }}
+              state={{ backTo: '/cliente', accountType: 'customer' }}
               className={optionClass}
               aria-label="Iniciar sesión"
               onClick={() => setMenuOpen(false)}
@@ -461,22 +459,27 @@ export default function BuyerMarketplaceNav({
             </NavLink>
           )}
         </ArcOption>
-        <button
-          type="button"
-          className="relative z-10 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-brand-yellow shadow-[0_14px_28px_rgba(28,33,24,0.28)] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40"
-          aria-label={menuOpen ? 'Cerrar navegación' : 'Abrir navegación'}
-          aria-expanded={menuOpen}
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          {signedInProfile ? (
-            <>
-              <span className="flex h-full w-full items-center justify-center bg-brand-yellow font-display text-xl font-bold text-brand-green" aria-hidden="true">{profileInitial}</span>
-              {profileImageUrl ? <img src={profileImageUrl} alt="" className="absolute inset-0 h-full w-full rounded-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} /> : null}
-            </>
-          ) : (
-            <img src="/images/welcome/lali.png" alt="" className="h-12 w-12 object-contain" />
-          )}
-        </button>
+        <span className="relative z-10 flex h-14 w-14 items-center justify-center">
+          {signedInProfile && profileImageUrl ? (
+            <span className="pointer-events-none absolute -inset-1 rounded-full border-2 border-brand-yellow/75 motion-safe:animate-avatar-halo" aria-hidden="true" />
+          ) : null}
+          <button
+            type="button"
+            className="relative z-10 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-brand-yellow shadow-[0_14px_28px_rgba(28,33,24,0.28)] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40"
+            aria-label={menuOpen ? 'Cerrar navegación' : 'Abrir navegación'}
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {signedInProfile ? (
+              <>
+                <span className="flex h-full w-full items-center justify-center bg-brand-yellow font-display text-xl font-bold text-brand-green" aria-hidden="true">{profileInitial}</span>
+                {profileImageUrl ? <img src={profileImageUrl} alt="" className="absolute inset-0 h-full w-full rounded-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} /> : null}
+              </>
+            ) : (
+              <img src="/images/welcome/lali.png" alt="" className="h-12 w-12 object-contain" />
+            )}
+          </button>
+        </span>
       </nav>
       {categoryOpen ? (
         <CategoryModal

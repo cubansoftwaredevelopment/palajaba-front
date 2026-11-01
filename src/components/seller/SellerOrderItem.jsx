@@ -24,6 +24,8 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
   const isPending = variant === 'pending'
   const orderCode = order.id.slice(-6).toUpperCase()
   const totalLabel = formatSubtotals(order.subtotals, order.payment_currency)
+  const buyerName = order.buyer_name || order.delivery?.recipient_name || 'Comprador'
+  const buyerPhone = order.buyer_phone || order.delivery?.phone_primary
 
   function handleActivate() {
     onOpen(order)
@@ -78,6 +80,12 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
                 ? `Recibido ${formatOrderDateTime(order.created_at)}`
                 : `Completada ${formatOrderDateTime(order.completed_at ?? order.updated_at)}`}
             </span>
+            <span className="mt-1.5 block truncate text-xs font-semibold text-brand-carmelita">
+              {buyerName}
+            </span>
+            {buyerPhone ? (
+              <span className="mt-0.5 block text-xs text-brand-green">{buyerPhone}</span>
+            ) : null}
           </span>
 
           <span

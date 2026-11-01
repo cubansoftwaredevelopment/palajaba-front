@@ -44,6 +44,19 @@ function isInRange(order, tab, range) {
   return date >= from && date <= to
 }
 
+function normalizeClientLabel(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('es')
+}
+
+function getOrderClientLabels(order) {
+  return [...new Set([
+    order.buyer_name,
+    order.delivery?.recipient_name,
+    order.buyer_phone,
+    order.delivery?.phone_primary,
+  ].map((value) => String(value || '').trim().replace(/\s+/g, ' ')).filter(Boolean))]
+}
+
 function FilterDropdown({ label, placeholder, options, value, onChange, multiple = false }) {
   const [open, setOpen] = useState(false)
   const rootRef = useRef(null)
@@ -234,11 +247,11 @@ export default function SellerOrders() {
     const tabOrders = activeTab === 'pending' ? pendingOrders : completedOrders
     const query = search.trim().toLocaleLowerCase('es')
     return tabOrders.filter((order) => {
-      const clientName = String(order.buyer_name || '').toLocaleLowerCase('es')
-      const searchable = [order.buyer_name, order.buyer_phone, order.buyer_email, order.id]
+      const clientLabels = getOrderClientLabels(order)
+      const searchable = [...clientLabels, order.buyer_email, order.id]
         .filter(Boolean).join(' ').toLocaleLowerCase('es')
       if (query && !searchable.includes(query)) return false
-      if (clientFilter && clientName !== clientFilter) return false
+      if (clientFilter && !clientLabels.some((label) => normalizeClientLabel(label) === normalizeClientLabel(clientFilter))) return false
       if (productFilters.length && !order.items?.some((item) => productFilters.includes(item.name))) return false
       if (currencyFilter && order.payment_currency !== currencyFilter) return false
       if (deliveryFilter === 'yes' && !order.delivery_requested) return false
@@ -250,7 +263,7 @@ export default function SellerOrders() {
   const filterOptions = useMemo(() => {
     const allOrders = [...pendingOrders, ...completedOrders]
     return {
-      clients: [...new Set(allOrders.map((order) => order.buyer_name).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')),
+      clients: [...new Map(allOrders.flatMap(getOrderClientLabels).map((label) => [normalizeClientLabel(label), label])).values()].sort((a, b) => a.localeCompare(b, 'es')),
       products: [...new Set(allOrders.flatMap((order) => (order.items || []).map((item) => item.name).filter(Boolean)))].sort((a, b) => a.localeCompare(b, 'es')),
       currencies: [...new Set(allOrders.map((order) => order.payment_currency).filter(Boolean))].sort(),
     }

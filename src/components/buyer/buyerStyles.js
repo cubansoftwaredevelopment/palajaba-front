@@ -275,7 +275,7 @@ export const buyerJabaSecondaryBtn =
 /** @deprecated Use buyerJabaPrimaryBtn — kept for existing imports */
 export const buyerJabaDeliveryBtn = buyerJabaPrimaryBtn
 
-export const buyerJabaCheckoutActions = 'mt-3 grid gap-2'
+export const buyerJabaCheckoutActions = 'mt-3 grid grid-cols-2 gap-2'
 export const buyerJabaShippingNote = 'mt-1 text-xs leading-snug text-brand-carmelita'
 
 export const buyerJabaSyncOverlay =
@@ -325,7 +325,7 @@ export const buyerDeliveryOverlay =
   'fixed inset-0 z-[90] bg-brand-green/25 backdrop-blur-[2px]'
 
 export const buyerDeliveryModal =
-  'fixed inset-x-3 bottom-3 top-auto z-[100] flex max-h-[min(90dvh,40rem)] flex-col rounded-3xl border border-brand-green/10 bg-brand-white shadow-[0_16px_48px_rgba(89,128,44,0.2)] sm:inset-x-auto sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:w-[min(24rem,calc(100vw-2rem))] sm:max-h-[min(88dvh,40rem)] sm:-translate-x-1/2 sm:-translate-y-1/2 lg:w-[26rem]'
+  'fixed inset-x-0 bottom-0 top-auto z-[100] flex w-full max-h-[min(92dvh,42rem)] flex-col rounded-t-[1.75rem] rounded-b-none border border-b-0 border-brand-green/10 bg-brand-white shadow-[0_-12px_40px_rgba(89,128,44,0.18)] sm:inset-x-auto sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:w-[min(24rem,calc(100vw-2rem))] sm:max-h-[min(88dvh,40rem)] sm:rounded-3xl sm:border-b sm:shadow-[0_16px_48px_rgba(89,128,44,0.2)] sm:-translate-x-1/2 sm:-translate-y-1/2 lg:w-[26rem]'
 
 export const buyerDeliveryModalHeader =
   'shrink-0 border-b border-brand-green/8 px-5 py-4'
@@ -334,7 +334,7 @@ export const buyerDeliveryModalBody =
   'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4'
 
 export const buyerDeliveryModalFooter =
-  'shrink-0 flex flex-col gap-2 border-t border-brand-green/8 px-5 py-4'
+  'shrink-0 flex flex-col gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]'
 
 export const buyerDeliveryFieldLabel =
   'mb-1 block text-xs font-semibold text-brand-green sm:text-sm'

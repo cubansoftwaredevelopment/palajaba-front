@@ -288,6 +288,23 @@ export default function SellerOrderDetailModal({
             {ORDER_STATUS_LABELS[order.status]}
           </p>
 
+          <section className="mb-4 rounded-2xl border border-brand-green/10 bg-brand-green/[0.035] px-4 py-3" aria-label="Información del comprador">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-brand-green">Comprador</h3>
+            <p className="mt-1 text-sm font-semibold text-brand-carmelita">
+              {order.buyer_name || order.delivery?.recipient_name || 'No se registró el nombre del comprador'}
+            </p>
+            {order.buyer_phone || order.delivery?.phone_primary ? (
+              <a className="mt-1 block text-sm text-brand-green" href={`tel:${order.buyer_phone || order.delivery.phone_primary}`}>
+                {order.buyer_phone || order.delivery.phone_primary}
+              </a>
+            ) : null}
+            {order.buyer_email ? (
+              <a className="mt-1 block break-all text-sm text-brand-green" href={`mailto:${order.buyer_email}`}>
+                {order.buyer_email}
+              </a>
+            ) : null}
+          </section>
+
           <div className="rounded-2xl border border-brand-green/10 bg-brand-green/[0.02] px-4">
             {canEditItems ? (
               <ul className="divide-y divide-brand-green/8">
