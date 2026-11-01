@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { DayPicker } from 'react-day-picker'
 import { es } from 'date-fns/locale'
 import { format } from 'date-fns'
-import { adminFocusRing, adminSubtle } from './adminStyles'
 
 export const DATE_RANGE_PERIODS = [
   { id: 'daily', label: 'Diario' },
@@ -15,26 +15,26 @@ const pickerClassNames = {
   months: 'flex flex-col',
   month: 'w-full',
   month_caption: 'mb-2 flex items-center justify-center',
-  caption_label: 'text-sm font-semibold text-white',
+  caption_label: 'text-sm font-semibold text-brand-green',
   nav: 'flex items-center gap-1',
   button_previous:
-    'inline-flex h-7 w-7 items-center justify-center rounded-md text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white',
+    'inline-flex h-8 w-8 items-center justify-center rounded-lg text-brand-green/70 transition-colors hover:bg-brand-green/8 hover:text-brand-green',
   button_next:
-    'inline-flex h-7 w-7 items-center justify-center rounded-md text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white',
+    'inline-flex h-8 w-8 items-center justify-center rounded-lg text-brand-green/70 transition-colors hover:bg-brand-green/8 hover:text-brand-green',
   month_grid: 'w-full border-collapse',
-  weekdays: 'text-[0.65rem] font-medium uppercase text-zinc-500',
+  weekdays: 'text-[0.65rem] font-medium uppercase text-brand-carmelita/65',
   weekday: 'pb-1 text-center',
   week: 'text-xs',
   day: 'p-0 text-center',
   day_button:
-    'mx-auto flex h-7 w-7 items-center justify-center rounded-md font-medium text-zinc-200 transition-colors hover:bg-zinc-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30',
-  selected: '[&>button]:bg-white [&>button]:text-zinc-950 [&>button]:hover:bg-zinc-200',
-  range_start: '[&>button]:bg-white [&>button]:text-zinc-950',
-  range_end: '[&>button]:bg-white [&>button]:text-zinc-950',
-  range_middle: '[&>button]:bg-brand-green/20 [&>button]:text-zinc-100',
-  today: '[&>button]:ring-1 [&>button]:ring-zinc-500',
-  outside: 'text-zinc-600',
-  disabled: '[&>button]:cursor-not-allowed [&>button]:text-zinc-700 [&>button]:hover:bg-transparent',
+    'mx-auto flex h-8 w-8 items-center justify-center rounded-lg font-medium text-brand-carmelita transition-colors hover:bg-brand-green/8 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30',
+  selected: '[&>button]:bg-brand-green [&>button]:text-white [&>button]:hover:bg-brand-green',
+  range_start: '[&>button]:bg-brand-green [&>button]:text-white',
+  range_end: '[&>button]:bg-brand-green [&>button]:text-white',
+  range_middle: '[&>button]:bg-brand-green/12 [&>button]:text-brand-green',
+  today: '[&>button]:ring-1 [&>button]:ring-brand-green/45',
+  outside: 'text-brand-carmelita/35',
+  disabled: '[&>button]:cursor-not-allowed [&>button]:text-brand-carmelita/30 [&>button]:hover:bg-transparent',
 }
 
 export function startOfToday() {
@@ -76,10 +76,10 @@ export function rangeForPeriod(period) {
 }
 
 function periodClass(active) {
-  return `inline-flex h-7 items-center rounded-lg border px-2.5 text-xs font-medium transition-colors ${adminFocusRing} ${
+  return `inline-flex h-8 items-center rounded-lg border px-3 text-xs font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 ${
     active
-      ? 'border-brand-green/40 bg-brand-green/15 text-brand-green'
-      : 'border-transparent text-zinc-400 hover:bg-zinc-800/70 hover:text-zinc-100'
+      ? 'border-brand-green/15 bg-brand-green/10 text-brand-green'
+      : 'border-transparent text-brand-carmelita/65 hover:bg-brand-green/5 hover:text-brand-green'
   }`
 }
 
@@ -97,8 +97,10 @@ export default function AdminDateRangeControls({
   const [draft, setDraft] = useState(range)
   const rootRef = useRef(null)
   const maxDay = allowUntilTomorrow ? startOfTomorrow() : startOfToday()
-  const customActive = Boolean(range?.from && range?.to)
-  const periodLabel = DATE_RANGE_PERIODS.find((option) => option.id === period)?.label ?? 'Diario'
+  const customActive = period === 'custom' && Boolean(range?.from && range?.to)
+  const periodLabel = period === 'custom'
+    ? 'Personalizado'
+    : DATE_RANGE_PERIODS.find((option) => option.id === period)?.label ?? 'Diario'
   const menuOpen = open || periodOpen
 
   useEffect(() => {
@@ -124,12 +126,12 @@ export default function AdminDateRangeControls({
 
   function applyRange() {
     if (!draft?.from || !draft?.to) return
-    onRangeChange({ from: draft.from, to: draft.to })
+    onRangeChange({ from: draft.from, to: draft.to }, 'custom')
     setOpen(false)
   }
 
   function clearRange() {
-    onRangeChange(null)
+    onRangeChange(null, null)
     setDraft(null)
     setOpen(false)
   }
@@ -138,23 +140,25 @@ export default function AdminDateRangeControls({
     ? `${format(range.from, 'd MMM', { locale: es })} – ${format(range.to, 'd MMM yyyy', { locale: es })}`
     : 'Fechas'
 
-  const floatButton = `inline-flex h-10 items-center rounded-full border px-4 text-xs font-medium shadow-[0_8px_24px_rgba(0,0,0,0.28)] ${adminFocusRing}`
+  const floatButton = 'inline-flex min-h-11 items-center rounded-full border border-white bg-brand-green px-4 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(41,55,29,0.24)] transition hover:bg-brand-green/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35'
 
-  return (
+  if (typeof document === 'undefined') return null
+
+  return createPortal((
     <div
       ref={rootRef}
-      className={`fixed right-4 bottom-[max(1.25rem,var(--safe-bottom))] z-30 flex items-end gap-2 ${className}`}
+      className={`fixed right-4 bottom-[calc(5.5rem+var(--safe-bottom))] z-40 flex items-end gap-2 lg:bottom-5 ${className}`}
     >
       <div className="relative">
         {periodOpen ? (
-          <div className="absolute right-0 bottom-full mb-2 flex w-36 flex-col gap-1 rounded-xl border border-brand-green/15 bg-[var(--admin-header)] p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
+          <div className="absolute right-0 bottom-full mb-2 flex w-40 flex-col gap-1 rounded-2xl border border-white bg-brand-white p-2 shadow-[0_16px_40px_rgba(41,55,29,0.2)] motion-safe:animate-order-modal-in">
             {DATE_RANGE_PERIODS.map((option) => (
               <button
                 key={option.id}
                 type="button"
                 onClick={() => {
                   onPeriodChange?.(option.id)
-                  if (applyPeriodToRange) onRangeChange(rangeForPeriod(option.id))
+                  if (applyPeriodToRange) onRangeChange(rangeForPeriod(option.id), option.id)
                   setPeriodOpen(false)
                 }}
                 className={`${periodClass(period === option.id)} justify-center`}
@@ -170,11 +174,7 @@ export default function AdminDateRangeControls({
             setOpen(false)
             setPeriodOpen((value) => !value)
           }}
-          className={`${floatButton} ${
-            periodOpen
-              ? 'border-brand-green/40 bg-brand-green text-brand-white'
-              : 'border-zinc-700/80 bg-[var(--admin-header)] text-zinc-100'
-          }`}
+          className={`${floatButton} ${periodOpen ? 'ring-2 ring-brand-green/20' : ''}`}
           aria-expanded={periodOpen}
           aria-label="Cambiar temporalidad"
         >
@@ -183,7 +183,7 @@ export default function AdminDateRangeControls({
       </div>
       <div className="relative flex items-end gap-1">
         {open ? (
-          <div className="absolute right-0 bottom-full mb-2 w-[17.5rem] rounded-xl border border-brand-green/15 bg-[var(--admin-header)] p-2 shadow-[0_16px_40px_rgba(0,0,0,0.28)]">
+          <div className="absolute right-0 bottom-full mb-2 w-[19rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-white bg-brand-white p-3 shadow-[0_16px_40px_rgba(41,55,29,0.2)] motion-safe:animate-order-modal-in">
             <DayPicker
               mode="range"
               selected={draft ?? undefined}
@@ -193,7 +193,7 @@ export default function AdminDateRangeControls({
               defaultMonth={draft?.from ?? range?.from ?? startOfToday()}
               classNames={pickerClassNames}
             />
-            <p className={`mt-1 text-[0.65rem] leading-relaxed ${adminSubtle}`}>
+            <p className="mt-2 text-[0.68rem] leading-relaxed text-brand-carmelita/70">
               {allowUntilTomorrow
                 ? 'Incluye ambos días, hasta mañana (hora de Cuba).'
                 : 'Incluye ambos días, hasta hoy.'}
@@ -212,7 +212,7 @@ export default function AdminDateRangeControls({
           <button
             type="button"
             onClick={clearRange}
-            className={`inline-flex h-10 w-10 items-center justify-center rounded-full border border-zinc-700/80 bg-[var(--admin-header)] text-lg text-zinc-300 shadow-[0_8px_24px_rgba(0,0,0,0.28)] hover:text-zinc-50 ${adminFocusRing}`}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white bg-brand-green text-lg text-white shadow-[0_8px_24px_rgba(41,55,29,0.24)] hover:bg-brand-green/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35"
             aria-label="Quitar rango"
           >
             ×
@@ -225,16 +225,12 @@ export default function AdminDateRangeControls({
             setDraft(range)
             setOpen((value) => !value)
           }}
-          className={`${floatButton} ${
-            customActive || open
-              ? 'border-brand-green/40 bg-brand-green text-brand-white'
-              : 'border-zinc-700/80 bg-[var(--admin-header)] text-zinc-100'
-          }`}
+          className={`${floatButton} ${customActive || open ? 'ring-2 ring-brand-green/20' : ''}`}
           aria-expanded={open}
         >
           {rangeLabel}
         </button>
       </div>
     </div>
-  )
+  ), document.body)
 }

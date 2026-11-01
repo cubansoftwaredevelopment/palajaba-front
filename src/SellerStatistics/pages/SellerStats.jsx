@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
+import AdminDateRangeControls from '../../components/admin/AdminDateRangeControls'
 import SellerStatsPremiumPreview from '../../components/seller/SellerStatsPremiumPreview'
 import { sellerHasStatistics } from '../../constants/plan'
 import { PROFILE_PANEL_IDS } from '../../lib/sellerProfileHub'
@@ -19,7 +20,6 @@ import {
   fetchSellerTraffic,
   fetchSellerViewsByZone,
 } from '../api'
-import SellerDateRangeControls from '../components/SellerDateRangeControls'
 import SellerHighViewsLowSales from '../components/SellerHighViewsLowSales'
 import SellerProductConversionChart from '../components/SellerProductConversionChart'
 import SellerRevenueCharts from '../components/SellerRevenueCharts'
@@ -44,8 +44,8 @@ const EMPTY_BUNDLE = {
 export default function SellerStats() {
   const navigate = useNavigate()
   const { profile: seller } = useOutletContext()
-  const [period, setPeriod] = useState('monthly')
-  const [range, setRange] = useState(() => rangeForPeriod('monthly'))
+  const [period, setPeriod] = useState('daily')
+  const [range, setRange] = useState(() => rangeForPeriod('daily'))
   const [bundle, setBundle] = useState(EMPTY_BUNDLE)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -58,16 +58,6 @@ export default function SellerStats() {
     }),
     [period, range],
   )
-
-  function handlePeriodChange(nextPeriod, nextRange) {
-    setPeriod(nextPeriod)
-    if (nextRange) setRange(nextRange)
-  }
-
-  function handleRangeChange(nextRange) {
-    setPeriod('custom')
-    setRange(nextRange)
-  }
 
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
@@ -152,11 +142,21 @@ export default function SellerStats() {
 
       {hasStatistics ? (
         <>
-          <SellerDateRangeControls
+          <AdminDateRangeControls
             period={period}
             range={range}
-            onPeriodChange={handlePeriodChange}
-            onRangeChange={handleRangeChange}
+            onPeriodChange={setPeriod}
+            onRangeChange={(nextRange, nextPeriod) => {
+              if (nextRange) {
+                setPeriod(nextPeriod || 'custom')
+                setRange(nextRange)
+              }
+              else {
+                setPeriod('daily')
+                setRange(rangeForPeriod('daily'))
+              }
+            }}
+            applyPeriodToRange
           />
 
           {error ? (
