@@ -86,7 +86,7 @@ export default function Welcome() {
           <Button variant="primary" onClick={() => navigate('/login')}>
             Iniciar sesión
           </Button>
-          <Button variant="secondary" onClick={() => navigate('/registro')}>
+          <Button variant="secondary" onClick={() => navigate('/crear-cuenta')}>
             Crear cuenta
           </Button>
           <Button variant="tertiary" onClick={goToBuy}>

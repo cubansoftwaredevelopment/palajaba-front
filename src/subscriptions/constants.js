@@ -110,6 +110,13 @@ export function isRecommendedPlan(tierId) {
 }
 
 export function upgradeablePlanTiers(profileOrTier) {
+  if (
+    profileOrTier &&
+    typeof profileOrTier === 'object' &&
+    profileOrTier.subscription_active === false
+  ) {
+    return PLAN_TIER_ORDER.map((id) => PLAN_TIERS[id])
+  }
   if (isTrialSeller(profileOrTier)) {
     return PLAN_TIER_ORDER.map((id) => PLAN_TIERS[id])
   }

@@ -12,6 +12,7 @@ import {
   labelClass,
 } from '../components/formStyles'
 import { confirmRegisterOtp, resendRegisterOtp } from '../api.js'
+import { setSellerSession } from '../../lib/sellerAuth'
 import { getRegisterSteps } from '../constants.js'
 import {
   applySmsFailFromError,
@@ -48,7 +49,9 @@ function CodeField({ id, label, hint, value, onChange }) {
 export default function RegisterOtp() {
   const navigate = useNavigate()
   const location = useLocation()
-  const kind = location.state?.kind === 'trial' ? 'trial' : 'paid'
+  const kind = location.state?.kind === 'trial' || location.state?.kind === 'paid'
+    ? location.state.kind
+    : 'account'
   const challengeId = location.state?.challengeId
   const email = location.state?.email || ''
   const phone = location.state?.phone || ''
@@ -91,6 +94,11 @@ export default function RegisterOtp() {
         email_code: emailCode,
         phone_code: phoneCode,
       })
+      if (result.access_token) {
+        setSellerSession(result.access_token, { id: result.id })
+        navigate('/tienda/completar-perfil', { replace: true })
+        return
+      }
       navigate('/registro/exito', {
         replace: true,
         state: { kind: result.kind || kind, message: result.message },
@@ -139,16 +147,16 @@ export default function RegisterOtp() {
   if (!challengeId) return null
 
   return (
-    <AuthShell backTo="/registro/verificacion" backLabel="Datos">
+    <AuthShell backTo="/registro" backLabel="Datos">
       <section className="animate-fade-in" aria-labelledby="register-otp-title">
         <div className={authPageIntro}>
           <AuthHeader
-            eyebrow={kind === 'trial' ? 'Paso 3 · Verificar' : 'Paso 4 · Verificar'}
+            eyebrow={kind === 'account' ? 'Paso 2 · Verificar' : kind === 'trial' ? 'Paso 3 · Verificar' : 'Paso 4 · Verificar'}
             title="Confirma tu correo y teléfono"
             description="Enviamos un código a tu correo y otro por SMS. Tienes 10 minutos para introducirlos."
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={kind === 'trial' ? 3 : 4} steps={getRegisterSteps(kind)} />
+          <RegisterProgress currentStep={kind === 'account' ? 2 : kind === 'trial' ? 3 : 4} steps={getRegisterSteps(kind)} />
         </div>
 
         <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>

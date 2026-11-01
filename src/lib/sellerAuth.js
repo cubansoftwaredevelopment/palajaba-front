@@ -1,5 +1,10 @@
 const TOKEN_KEY = 'pala_jaba_seller_token'
 const SELLER_KEY = 'pala_jaba_seller_profile'
+export const SELLER_AUTH_CHANGE_EVENT = 'pala-jaba:seller-auth-change'
+
+function notifySellerAuthChange() {
+  window.dispatchEvent(new Event(SELLER_AUTH_CHANGE_EVENT))
+}
 
 function readStoredValue(key) {
   const fromLocal = localStorage.getItem(key)
@@ -35,10 +40,12 @@ export function getSellerToken() {
 export function setSellerSession(token, seller) {
   writeStoredValue(TOKEN_KEY, token)
   writeStoredValue(SELLER_KEY, JSON.stringify(seller))
+  notifySellerAuthChange()
 }
 
 export function updateSellerProfileCache(seller) {
   writeStoredValue(SELLER_KEY, JSON.stringify(seller))
+  notifySellerAuthChange()
 }
 
 export function isSellerProfileComplete(seller) {
@@ -58,6 +65,7 @@ export function getSellerProfile() {
 export function clearSellerSession() {
   removeStoredValue(TOKEN_KEY)
   removeStoredValue(SELLER_KEY)
+  notifySellerAuthChange()
 }
 
 export function isSellerAuthenticated() {

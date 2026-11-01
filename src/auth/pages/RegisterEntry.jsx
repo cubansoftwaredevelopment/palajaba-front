@@ -1,3 +1,3 @@
-import RegisterPlan from './RegisterPlan'
+import RegisterForm from './RegisterForm'
 
-export default RegisterPlan
+export default RegisterForm

@@ -13,6 +13,8 @@ import { formatPhoneDigits, PHONE_PREFIX } from '../../lib/phone'
 import { useLiveLocation } from '../../live/context/LiveLocationContext.jsx'
 import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import BuyerOrderLocationMap from './BuyerOrderLocationMap'
+import SellerSelect from '../seller/SellerSelect'
+import { getCustomerProfile } from '../../lib/customerAuth'
 import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 import {
   buyerDeliveryFieldLabel,
@@ -41,6 +43,12 @@ function WhatsAppIcon() {
 function formatContact(digits) {
   if (!digits) return null
   return `${PHONE_PREFIX} ${formatPhoneDigits(digits)}`
+}
+
+function buyerDeliveryDefaults() {
+  const defaults = getBuyerDeliveryDefaults()
+  const customerPhone = String(getCustomerProfile()?.phone ?? '').replace(/\D/g, '').slice(-8)
+  return { ...defaults, phone_primary: defaults.phone_primary || customerPhone }
 }
 
 export default function BuyerDeliveryCheckoutModal({
@@ -73,13 +81,16 @@ export default function BuyerDeliveryCheckoutModal({
     }
   }
   const mapUrl = buildOpenStreetMapUrl(point?.lat, point?.lng)
-  const [form, setForm] = useState(() => getBuyerDeliveryDefaults())
+  const [form, setForm] = useState(buyerDeliveryDefaults)
+  const [selectedAddressId, setSelectedAddressId] = useState('')
+  const savedAddresses = getCustomerProfile()?.addresses ?? []
   const [error, setError] = useState('')
 
   useEffect(() => {
     if (!checkout) return undefined
 
-    setForm(getBuyerDeliveryDefaults())
+    setForm(buyerDeliveryDefaults())
+      setSelectedAddressId('')
     setError('')
 
     function handleKeyDown(event) {
@@ -95,6 +106,17 @@ export default function BuyerDeliveryCheckoutModal({
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
     if (error) setError('')
+  }
+
+  function applySavedAddress(addressId) {
+    const saved = savedAddresses.find((address) => address.id === addressId)
+    if (!saved) return
+    updateField('address', saved.address)
+    const savedPoint = saved.latitude == null || saved.longitude == null
+      ? null
+      : { lat: Number(saved.latitude), lng: Number(saved.longitude) }
+    setPoint(savedPoint)
+    setMapSession((current) => current + 1)
   }
 
   function goBack() {
@@ -281,6 +303,28 @@ export default function BuyerDeliveryCheckoutModal({
 
             {step === 2 ? (
               <div className="flex min-h-0 flex-1 flex-col gap-3">
+                {savedAddresses.length ? (
+                  <div className="shrink-0">
+                    <p className={buyerDeliveryFieldLabel}>Usar dirección guardada</p>
+                    <SellerSelect
+                      id="saved-delivery-address"
+                      modal
+                      ariaLabel="Seleccionar dirección guardada"
+                      value={selectedAddressId}
+                      onChange={(addressId) => {
+                        setSelectedAddressId(addressId)
+                        applySavedAddress(addressId)
+                      }}
+                      options={[
+                        { value: '', label: 'Selecciona una dirección' },
+                        ...savedAddresses.map((address) => ({
+                          value: address.id,
+                          label: `${address.label} · ${address.address}`,
+                        })),
+                      ]}
+                    />
+                  </div>
+                ) : null}
                 <div className="shrink-0">
                   <label htmlFor="delivery-address" className={buyerDeliveryFieldLabel}>
                     Dirección de entrega <span className="text-brand-carmelita">*</span>
@@ -289,7 +333,10 @@ export default function BuyerDeliveryCheckoutModal({
                     id="delivery-address"
                     type="text"
                     value={form.address}
-                    onChange={(event) => updateField('address', event.target.value)}
+                    onChange={(event) => {
+                      setSelectedAddressId('')
+                      updateField('address', event.target.value)
+                    }}
                     className={buyerDeliveryInput}
                     placeholder={
                       zoneHint

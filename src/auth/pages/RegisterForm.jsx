@@ -15,7 +15,8 @@ import {
 } from '../components/formStyles'
 import { PHONE_DIGITS_LENGTH, getPhoneDigits } from '../../lib/phone'
 import { normalizeBillingPeriod, normalizePlanTier } from '../../subscriptions/constants.js'
-import { startRegisterOtp } from '../api.js'
+import { confirmRegisterOtp, startRegisterOtp } from '../api.js'
+import { setSellerSession } from '../../lib/sellerAuth'
 import { getRegisterSteps } from '../constants.js'
 import {
   applySmsFailFromError,
@@ -41,7 +42,7 @@ function isValidEmail(value) {
 }
 
 function validateForm({ kind, transferId, storeName, email, phone, password, confirmPassword }) {
-  if (kind !== 'trial' && !transferId.trim()) return 'El ID de la transferencia es obligatorio.'
+  if (kind === 'paid' && !transferId.trim()) return 'El ID de la transferencia es obligatorio.'
   if (!storeName.trim()) return 'El nombre de la tienda es obligatorio.'
   if (!email.trim()) return 'El correo es obligatorio.'
   if (!isValidEmail(email)) return 'El correo no es válido.'
@@ -63,16 +64,12 @@ export default function RegisterForm() {
   const kind = (() => {
     if (location.state?.kind === 'trial') return 'trial'
     if (location.state?.kind === 'paid') return 'paid'
-    try {
-      return sessionStorage.getItem('registerKind') === 'trial' ? 'trial' : 'paid'
-    } catch {
-      return 'paid'
-    }
+    return 'account'
   })()
   const billing = normalizeBillingPeriod(location.state?.billing)
-  const planTier = kind === 'trial' ? 'standard' : normalizePlanTier(location.state?.planTier)
-  const discountCode = kind === 'trial' ? null : location.state?.discountCode ?? null
-  const discountPercent = kind === 'trial' ? null : location.state?.discountPercent ?? null
+  const planTier = kind === 'trial' || kind === 'account' ? 'standard' : normalizePlanTier(location.state?.planTier)
+  const discountCode = kind === 'trial' || kind === 'account' ? null : location.state?.discountCode ?? null
+  const discountPercent = kind === 'trial' || kind === 'account' ? null : location.state?.discountPercent ?? null
 
   const [transferId, setTransferId] = useState('')
   const [storeName, setStoreName] = useState('')
@@ -131,6 +128,24 @@ export default function RegisterForm() {
         ...(discountCode ? { discount_code: discountCode } : {}),
       })
 
+      if (result.otp_bypassed) {
+        const confirmed = await confirmRegisterOtp({
+          challenge_id: result.challenge_id,
+          email_code: '000000',
+          phone_code: '000000',
+        })
+        if (confirmed.access_token) {
+          setSellerSession(confirmed.access_token, { id: confirmed.id })
+          navigate('/tienda/completar-perfil', { replace: true })
+        } else {
+          navigate('/registro/exito', {
+            replace: true,
+            state: { kind: confirmed.kind || kind, message: confirmed.message },
+          })
+        }
+        return
+      }
+
       navigate('/registro/otp', {
         state: {
           kind,
@@ -166,22 +181,24 @@ export default function RegisterForm() {
 
   return (
     <AuthShell
-      backTo={kind === 'trial' ? '/registro' : '/registro/pago'}
-      backLabel={kind === 'trial' ? 'Plan' : 'Pago'}
+      backTo="/crear-cuenta"
+      backLabel="Tipo de cuenta"
     >
       <section className="animate-fade-in" aria-labelledby="register-form-title">
         <div className={authPageIntro}>
           <AuthHeader
-            eyebrow={kind === 'trial' ? 'Paso 2 · Datos' : 'Paso 3 · Datos'}
+            eyebrow={kind === 'account' ? 'Paso 1 · Datos' : kind === 'trial' ? 'Paso 2 · Datos' : 'Paso 3 · Datos'}
             title="Tu tienda"
             description={
-              kind === 'trial'
-                ? 'Verificaremos tu correo y teléfono antes de activar la prueba.'
-                : 'Verificaremos tu correo y teléfono antes de enviar la solicitud.'
+              kind === 'account'
+                ? 'Crea el perfil de tu tienda gratis. Podrás elegir un plan desde tu perfil cuando quieras activarla.'
+                : kind === 'trial'
+                  ? 'Verificaremos tu correo y teléfono antes de activar la prueba.'
+                  : 'Verificaremos tu correo y teléfono antes de enviar la solicitud.'
             }
             layout="desktop-left"
           />
-          <RegisterProgress currentStep={kind === 'trial' ? 2 : 3} steps={getRegisterSteps(kind)} />
+          <RegisterProgress currentStep={kind === 'account' ? 1 : kind === 'trial' ? 2 : 3} steps={getRegisterSteps(kind)} />
         </div>
 
         <form onSubmit={handleSubmit} className={`flex flex-col gap-3.5 ${authFormWrap}`} noValidate>

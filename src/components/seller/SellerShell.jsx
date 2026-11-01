@@ -73,6 +73,7 @@ function LogoutButton({ onClick }) {
 
 export default function SellerShell({
   storeName,
+  subscriptionActive = true,
   onLogout,
   onNotifications,
   notificationCount = 0,
@@ -131,6 +132,9 @@ export default function SellerShell({
                 Bienvenido{' '}
                 <span className="text-brand-carmelita">{storeName}</span>
               </p>
+              <span className={`mr-1 shrink-0 rounded-full px-2 py-1 text-[0.55rem] font-extrabold uppercase tracking-wide sm:mr-2 sm:px-2.5 sm:text-[0.65rem] ${subscriptionActive ? 'bg-brand-green/10 text-brand-green' : 'bg-amber-100 text-amber-800'}`} role="status">
+                {subscriptionActive ? 'Activa' : 'Inactiva'}
+              </span>
               <div className="flex shrink-0 items-center">
                 <NotificationsButton onClick={onNotifications} unreadCount={notificationCount} />
                 {onLogout && <LogoutButton onClick={onLogout} />}

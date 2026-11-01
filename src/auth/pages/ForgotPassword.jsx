@@ -7,7 +7,7 @@ import MethodTabs from '../components/MethodTabs'
 import PhoneField from '../components/PhoneField'
 import Button from '../../components/Button'
 import { alertErrorClass, inputClass, labelClass } from '../components/formStyles'
-import { startPasswordReset } from '../api.js'
+import { confirmPasswordResetOtp, startPasswordReset } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
 const METHODS = [
@@ -33,6 +33,18 @@ export default function ForgotPassword() {
           ? { method: 'phone', phone: phoneDigits }
           : { method: 'store_name', store_name: storeName.trim() }
       const result = await startPasswordReset(payload)
+      if (result.otp_bypassed) {
+        const confirmed = await confirmPasswordResetOtp({
+          challenge_id: result.challenge_id,
+          email_code: '000000',
+          phone_code: '000000',
+        })
+        navigate('/recuperar/nueva', {
+          replace: true,
+          state: { challengeId: result.challenge_id, message: confirmed.message },
+        })
+        return
+      }
       navigate('/recuperar/codigo', {
         replace: true,
         state: {

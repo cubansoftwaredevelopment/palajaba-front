@@ -6,6 +6,7 @@ import SellerRoute from './components/SellerRoute'
 import SellerLayout from './components/seller/SellerLayout'
 import WelcomeGate from './pages/WelcomeGate'
 import Login from './auth/pages/Login'
+import CreateAccount from './auth/pages/CreateAccount'
 import ForgotPassword from './auth/pages/ForgotPassword'
 import ForgotPasswordOtp from './auth/pages/ForgotPasswordOtp'
 import ForgotPasswordNew from './auth/pages/ForgotPasswordNew'
@@ -14,6 +15,7 @@ import SellerStats from './SellerStatistics/pages/SellerStats'
 import SellerCatalog from './products/pages/SellerCatalog'
 import SellerCatalogPreview from './products/pages/SellerCatalogPreview'
 import SellerOrders from './pages/seller/SellerOrders'
+import SellerCustomers from './pages/seller/SellerCustomers'
 import SellerGestores from './pages/seller/SellerGestores'
 import SellerProfile from './pages/seller/SellerProfile'
 import GestorRoute from './components/gestor/GestorRoute'
@@ -22,7 +24,6 @@ import GestorSetup from './pages/gestor/GestorSetup'
 import GestorPanel from './pages/gestor/GestorPanel'
 import SellerCompleteProfile from './pages/SellerCompleteProfile'
 import RegisterEntry from './auth/pages/RegisterEntry'
-import RegisterPayment from './auth/pages/RegisterPayment'
 import RegisterForm from './auth/pages/RegisterForm'
 import RegisterOtp from './auth/pages/RegisterOtp'
 import RegisterSuccess from './auth/pages/RegisterSuccess'
@@ -36,6 +37,8 @@ import AdminDiscountCodes from './pages/AdminDiscountCodes'
 import AdminSettings from './pages/AdminSettings'
 import AdminFinance from './pages/AdminFinance'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
+import { BuyerDisplayCurrencyProvider } from './context/BuyerDisplayCurrencyContext'
+import { BuyerJabaProvider } from './context/BuyerJabaContext'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './pages/buyer/BuyerHome'
 import BuyerCategoryPage from './pages/buyer/BuyerCategoryPage'
@@ -43,6 +46,10 @@ import BuyerBusinessesPage from './pages/buyer/BuyerBusinessesPage'
 import { BUYER_BUSINESSES_SECTION_ENABLED } from './constants/buyerMarketplaceNav'
 import BuyerSelectMunicipality from './pages/buyer/BuyerSelectMunicipality'
 import BuyerSelectProvince from './pages/buyer/BuyerSelectProvince'
+import CustomerRegister from './pages/buyer/CustomerRegister'
+import CustomerAccount from './pages/buyer/CustomerAccount'
+import CustomerPasswordReset from './pages/buyer/CustomerPasswordReset'
+import CustomerRoute from './components/buyer/CustomerRoute'
 import PublicStoreRoute from './components/buyer/PublicStoreRoute'
 import RedirectLegacyStoreRoute from './components/buyer/RedirectLegacyStoreRoute'
 import DownloadAppPage from './pages/DownloadAppPage'
@@ -97,6 +104,9 @@ const router = createBrowserRouter([
         ],
       },
       { path: 'login', element: <Login /> },
+      { path: 'cliente/registro', element: <CustomerRegister /> },
+      { path: 'cliente/recuperar', element: <CustomerPasswordReset /> },
+      { path: 'cliente/*', element: <CustomerRoute><BuyerDisplayCurrencyProvider><BuyerJabaProvider><CustomerAccount /></BuyerJabaProvider></BuyerDisplayCurrencyProvider></CustomerRoute> },
       { path: 'recuperar', element: <ForgotPassword /> },
       { path: 'recuperar/codigo', element: <ForgotPasswordOtp /> },
       { path: 'recuperar/nueva', element: <ForgotPasswordNew /> },
@@ -113,14 +123,16 @@ const router = createBrowserRouter([
           { path: 'catalogo/vista-previa', element: <SellerCatalogPreview /> },
           { path: 'gestores', element: <SellerGestores /> },
           { path: 'pedidos', element: <SellerOrders /> },
+          { path: 'clientes', element: <SellerCustomers /> },
           { path: 'estadisticas', element: <SellerStats /> },
           { path: 'perfil', element: <SellerProfile /> },
           { path: 'completar-perfil', element: <SellerCompleteProfile /> },
         ],
       },
       { path: 'registro', element: <RegisterEntry /> },
+      { path: 'crear-cuenta', element: <CreateAccount /> },
       { path: 'registro/promo/datos', element: <Navigate to="/registro" replace /> },
-      { path: 'registro/pago', element: <RegisterPayment /> },
+      { path: 'registro/pago', element: <Navigate to="/registro" replace /> },
       { path: 'registro/verificacion', element: <RegisterForm /> },
       { path: 'registro/otp', element: <RegisterOtp /> },
       { path: 'registro/exito', element: <RegisterSuccess /> },

@@ -158,6 +158,10 @@ export default function BuyerProductDetailModal({
 
   inJaba,
 
+  favorite = false,
+
+  onFavorite,
+
   onClose: requestClose,
 
   onBuy,
@@ -321,6 +325,15 @@ export default function BuyerProductDetailModal({
                       </span>
                     ) : null}
                     {soldOut ? <BuyerProductSoldOutOverlay /> : null}
+                    <button
+                      type="button"
+                      onClick={(event) => onFavorite?.(event)}
+                      className="pointer-events-auto absolute bottom-3 right-3 z-[2] grid h-10 w-10 place-items-center rounded-full bg-brand-white/95 text-brand-carmelita shadow-[0_2px_10px_rgba(28,33,24,0.2)]"
+                      aria-label={favorite ? 'Quitar de guardados' : 'Guardar oferta'}
+                      title={favorite ? 'Quitar de guardados' : 'Guardar oferta'}
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill={favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z" /></svg>
+                    </button>
                   </>
                 )}
               />

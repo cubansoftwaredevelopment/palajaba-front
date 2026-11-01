@@ -35,6 +35,7 @@ export default function SellerUpgradePlan({ profile }) {
   const upgrades = upgradeablePlanTiers(profile)
   const canUpgrade = canUpgradePlan(profile)
   const currentBilling = normalizeBillingPeriod(profile?.billing_period)
+  const subscriptionInactive = profile?.subscription_active === false
   const [billing, setBilling] = useState(currentBilling)
   const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount } = usePlanPricing()
   const currentPlanName = currentPlan.name
@@ -42,7 +43,9 @@ export default function SellerUpgradePlan({ profile }) {
   return (
     <div className="flex flex-col gap-3">
       <p className={sellerHint}>
-        {isTrial
+        {subscriptionInactive
+          ? 'Tu tienda aún no tiene una suscripción activa. Elige un plan para activarla; te conectamos por WhatsApp para completar el cambio.'
+          : isTrial
           ? 'Estás en el plan Prueba. Puedes mejorarlo a Básico, Pro o Premium; te conectamos por WhatsApp para completar el cambio.'
           : `Estás en el plan ${currentPlan.name} · ${BILLING_LABELS[currentBilling] ?? BILLING_LABELS.monthly}. ${
               canUpgrade

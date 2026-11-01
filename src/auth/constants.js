@@ -17,8 +17,15 @@ export const TRIAL_REGISTER_STEPS = [
   { id: 3, label: 'Verificar' },
 ]
 
-export const REGISTER_STEPS = PAID_REGISTER_STEPS
+export const ACCOUNT_REGISTER_STEPS = [
+  { id: 1, label: 'Datos' },
+  { id: 2, label: 'Verificar' },
+]
+
+export const REGISTER_STEPS = ACCOUNT_REGISTER_STEPS
 
 export function getRegisterSteps(kind) {
-  return kind === 'trial' ? TRIAL_REGISTER_STEPS : PAID_REGISTER_STEPS
+  if (kind === 'trial') return TRIAL_REGISTER_STEPS
+  if (kind === 'paid') return PAID_REGISTER_STEPS
+  return ACCOUNT_REGISTER_STEPS
 }

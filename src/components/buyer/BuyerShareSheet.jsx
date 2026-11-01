@@ -113,8 +113,8 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
             </button>
           </div>
           {destinationsOpen ? (
-            <div className="mt-4 flex flex-col gap-2">
-              <p className="text-sm text-brand-carmelita/90">Enviar por…</p>
+            <div className="mt-4 grid grid-cols-2 gap-2">
+              <p className="col-span-2 text-sm text-brand-carmelita/90">Enviar por…</p>
               <button
                 type="button"
                 onClick={sendWhatsApp}
@@ -137,7 +137,7 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
               </button>
             </div>
           ) : (
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
                 onClick={copyLink}

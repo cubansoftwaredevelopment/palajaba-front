@@ -1,4 +1,5 @@
 import { createMarketplaceOrder, ApiError } from './api'
+import { getCustomerToken } from './customerAuth'
 import { getBuyerLocation } from './buyerLocation'
 import { CHECKOUT_SAVE_FAILED_MESSAGE } from './checkoutMessages.js'
 import { isSavedMarketplaceOrder } from './marketplaceOrder.js'
@@ -59,7 +60,7 @@ export async function submitStoreOrder({
   if (gestorId) body.gestor_id = gestorId
   if (gestorUsername) body.gestor_username = gestorUsername
 
-  const order = await createMarketplaceOrder(body)
+  const order = await createMarketplaceOrder(body, getCustomerToken())
 
   if (!isSavedMarketplaceOrder(order)) {
     throw new ApiError(CHECKOUT_SAVE_FAILED_MESSAGE)

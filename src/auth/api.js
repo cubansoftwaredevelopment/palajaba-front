@@ -48,6 +48,94 @@ export async function sellerLogin(payload) {
   return data
 }
 
+export function customerLogin(phone, password) {
+  return request('/api/customers/login', { method: 'POST', body: JSON.stringify({ phone, password }) })
+}
+
+export function startCustomerPasswordReset(phone) {
+  return request('/api/customers/password-reset/start', { method: 'POST', body: JSON.stringify({ phone }) })
+}
+
+export function resendCustomerPasswordReset(challengeId) {
+  return request('/api/customers/password-reset/otp/resend', { method: 'POST', body: JSON.stringify({ challenge_id: challengeId }) })
+}
+
+export function confirmCustomerPasswordReset(challengeId, code) {
+  return request('/api/customers/password-reset/otp/confirm', { method: 'POST', body: JSON.stringify({ challenge_id: challengeId, code }) })
+}
+
+export function completeCustomerPasswordReset(challengeId, password) {
+  return request('/api/customers/password-reset/complete', { method: 'POST', body: JSON.stringify({ challenge_id: challengeId, password }) })
+}
+
+export function startCustomerRegistration(payload) {
+  return request('/api/customers/register/otp/start', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export function resendCustomerRegistration(payload) {
+  return request('/api/customers/register/otp/resend', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export function confirmCustomerRegistration(payload) {
+  return request('/api/customers/register/otp/confirm', { method: 'POST', body: JSON.stringify(payload) })
+}
+
+function customerHeaders(token) { return { Authorization: `Bearer ${token}` } }
+
+export function fetchCustomerProfile(token) {
+  return request('/api/customers/me', { headers: customerHeaders(token) })
+}
+
+export function startCustomerEmailOtp(token, email) {
+  return request('/api/customers/me/email/otp/start', { method: 'POST', headers: customerHeaders(token), body: JSON.stringify({ email }) })
+}
+
+export function startCustomerPhoneOtp(token, phone) {
+  return request('/api/customers/me/phone/otp/start', { method: 'POST', headers: customerHeaders(token), body: JSON.stringify({ phone }) })
+}
+
+export function confirmCustomerContactOtp(token, challengeId, code) {
+  return request('/api/customers/me/contact-otp/confirm', { method: 'POST', headers: customerHeaders(token), body: JSON.stringify({ challenge_id: challengeId, code }) })
+}
+
+export function updateCustomerIdentityCard(token, identityCard) {
+  return request('/api/customers/me/identity-card', { method: 'PATCH', headers: customerHeaders(token), body: JSON.stringify({ identity_card: identityCard }) })
+}
+
+export function fetchCustomerOrders(token) {
+  return request('/api/customers/me/orders', { headers: customerHeaders(token) })
+}
+
+export function addCustomerAddress(token, address) {
+  return request('/api/customers/me/addresses', { method: 'POST', headers: customerHeaders(token), body: JSON.stringify(address) })
+}
+
+export function updateCustomerAddress(token, addressId, address) {
+  return request(`/api/customers/me/addresses/${encodeURIComponent(addressId)}`, { method: 'PUT', headers: customerHeaders(token), body: JSON.stringify(address) })
+}
+
+export function deleteCustomerAddress(token, addressId) {
+  return request(`/api/customers/me/addresses/${encodeURIComponent(addressId)}`, { method: 'DELETE', headers: customerHeaders(token) })
+}
+
+export function addCustomerFavorite(token, productId) {
+  return request(`/api/customers/me/favorites/${encodeURIComponent(productId)}`, { method: 'PUT', headers: customerHeaders(token) })
+}
+
+export function removeCustomerFavorite(token, productId) {
+  return request(`/api/customers/me/favorites/${encodeURIComponent(productId)}`, { method: 'DELETE', headers: customerHeaders(token) })
+}
+
+export function fetchStoreCustomers(token) {
+  return request('/api/customers/store/customers', { headers: customerHeaders(token) })
+}
+
+export function uploadCustomerPhoto(token, file) {
+  const formData = new FormData()
+  formData.append('photo', file)
+  return request('/api/customers/me/profile-photo', { method: 'POST', headers: customerHeaders(token), body: formData })
+}
+
 export function adminLogin(username, password) {
   return request('/api/admin/login', {
     method: 'POST',

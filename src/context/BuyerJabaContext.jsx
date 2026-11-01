@@ -39,6 +39,8 @@ import BuyerPickupCheckoutModal from '../components/buyer/BuyerPickupCheckoutMod
 import BuyerPhoneCheckoutModal from '../components/buyer/BuyerPhoneCheckoutModal'
 import BuyerJabaSyncAlert from '../components/buyer/BuyerJabaSyncAlert'
 import BuyerJabaToast from '../components/buyer/BuyerJabaToast'
+import BuyerCustomerLoginModal from '../components/buyer/BuyerCustomerLoginModal'
+import { clearCustomerSession, getCustomerToken } from '../lib/customerAuth'
 
 function buildJabaAddedToastMessage(productName) {
   const name = String(productName ?? '').trim() || 'Producto'
@@ -80,18 +82,54 @@ async function loadCheckoutPhonesForStore(storeId) {
   return null
 }
 
+function readRestoredCheckout() {
+  if (!getCustomerToken()) return null
+  try {
+    const pending = JSON.parse(sessionStorage.getItem('pala_jaba_pending_customer_checkout') || 'null')
+    return pending?.payload && ['delivery', 'pickup'].includes(pending.type) ? pending : null
+  } catch { return null }
+}
+
 export function BuyerJabaProvider({ children }) {
   const { currency: displayCurrency, cupPerUnit, ratesReady } = useBuyerDisplayCurrency()
+  const [restoredCheckout] = useState(readRestoredCheckout)
   const [items, setItems] = useState(getJabaItems)
   const [open, setOpen] = useState(false)
   const [syncingContacts, setSyncingContacts] = useState(false)
-  const [deliveryCheckout, setDeliveryCheckout] = useState(null)
-  const [pickupCheckout, setPickupCheckout] = useState(null)
+  const [deliveryCheckout, setDeliveryCheckout] = useState(() => restoredCheckout?.type === 'delivery' ? restoredCheckout.payload : null)
+  const [pickupCheckout, setPickupCheckout] = useState(() => restoredCheckout?.type === 'pickup' ? restoredCheckout.payload : null)
   const [phonePicker, setPhonePicker] = useState(null)
   const [syncRemoved, setSyncRemoved] = useState(null)
   const [checkoutSubmittingStoreId, setCheckoutSubmittingStoreId] = useState(null)
   const [jabaToast, setJabaToast] = useState(null)
   const [badgePulseId, setBadgePulseId] = useState(0)
+  const [customerLoginOpen, setCustomerLoginOpen] = useState(false)
+  const [pendingCustomerCheckout, setPendingCustomerCheckout] = useState(null)
+
+  const continueCheckout = useCallback((type, payload) => {
+    if (type === 'delivery') {
+      setPickupCheckout(null)
+      setDeliveryCheckout(payload)
+    } else {
+      setDeliveryCheckout(null)
+      setPickupCheckout(payload)
+    }
+  }, [])
+
+  const requestCustomerCheckout = useCallback((type, payload) => {
+    if (!getCustomerToken()) {
+      setPendingCustomerCheckout({ type, payload })
+      try { sessionStorage.setItem('pala_jaba_pending_customer_checkout', JSON.stringify({ type, payload })) } catch { /* ignore */ }
+      setCustomerLoginOpen(true)
+      return true
+    }
+    continueCheckout(type, payload)
+    return true
+  }, [continueCheckout])
+
+  useEffect(() => {
+    if (restoredCheckout) sessionStorage.removeItem('pala_jaba_pending_customer_checkout')
+  }, [restoredCheckout])
 
   useEffect(() => {
     function onChange(event) {
@@ -187,6 +225,15 @@ export function BuyerJabaProvider({ children }) {
       })
 
       if (!result.ok) {
+        if (result.error?.status === 401) {
+          clearCustomerSession()
+          const type = delivery?.mode === 'pickup' ? 'pickup' : 'delivery'
+          const pending = { type, payload }
+          setPendingCustomerCheckout(pending)
+          try { sessionStorage.setItem('pala_jaba_pending_customer_checkout', JSON.stringify(pending)) } catch { /* ignore */ }
+          setCustomerLoginOpen(true)
+          return true
+        }
         if (result.message) {
           window.alert(result.message)
         }
@@ -286,11 +333,9 @@ export function BuyerJabaProvider({ children }) {
       const payload = buildCheckoutPayload(group, storeItems)
       if (!payload.storePhone) return false
 
-      setPickupCheckout(null)
-      setDeliveryCheckout(payload)
-      return true
+      return requestCustomerCheckout('delivery', payload)
     },
-    [groups],
+    [groups, requestCustomerCheckout],
   )
 
   const requestPickupCheckout = useCallback(
@@ -302,11 +347,9 @@ export function BuyerJabaProvider({ children }) {
       const payload = buildCheckoutPayload(group, storeItems)
       if (!payload.storePhone) return false
 
-      setDeliveryCheckout(null)
-      setPickupCheckout(payload)
-      return true
+      return requestCustomerCheckout('pickup', payload)
     },
-    [groups],
+    [groups, requestCustomerCheckout],
   )
 
   /** @deprecated Prefer requestPickupCheckout — kept for callers that still use checkoutStore */
@@ -322,31 +365,32 @@ export function BuyerJabaProvider({ children }) {
       if (!payload.storePhone) return false
 
       if (allItemsOfferDelivery(storeItems)) {
-        setPickupCheckout(null)
-        setDeliveryCheckout(payload)
-        return true
+        return requestCustomerCheckout('delivery', payload)
       }
 
-      setDeliveryCheckout(null)
-      setPickupCheckout(payload)
-      return true
+      return requestCustomerCheckout('pickup', payload)
     },
-    [groups],
+    [groups, requestCustomerCheckout],
   )
 
   const buyProduct = useCallback((product) => {
     const payload = buildDirectBuyCheckoutPayload(product)
     if (!payload?.storePhone) return false
 
-    if (payload.items[0]?.offers_delivery) {
-      setPickupCheckout(null)
-      setDeliveryCheckout(payload)
-      return true
-    }
+    return requestCustomerCheckout(payload.items[0]?.offers_delivery ? 'delivery' : 'pickup', payload)
+  }, [requestCustomerCheckout])
 
-    setDeliveryCheckout(null)
-    setPickupCheckout(payload)
-    return true
+  const finishCustomerLogin = useCallback(() => {
+    setCustomerLoginOpen(false)
+    setPendingCustomerCheckout(null)
+    if (pendingCustomerCheckout) continueCheckout(pendingCustomerCheckout.type, pendingCustomerCheckout.payload)
+    try { sessionStorage.removeItem('pala_jaba_pending_customer_checkout') } catch { /* ignore */ }
+  }, [continueCheckout, pendingCustomerCheckout])
+
+  const closeCustomerLogin = useCallback(() => {
+    setCustomerLoginOpen(false)
+    setPendingCustomerCheckout(null)
+    try { sessionStorage.removeItem('pala_jaba_pending_customer_checkout') } catch { /* ignore */ }
   }, [])
 
   const closeDeliveryCheckout = useCallback(() => {
@@ -500,6 +544,9 @@ export function BuyerJabaProvider({ children }) {
         onClose={closePhonePicker}
         onConfirm={confirmPhonePicker}
       />
+      {customerLoginOpen ? (
+        <BuyerCustomerLoginModal onClose={closeCustomerLogin} onLogin={finishCustomerLogin} />
+      ) : null}
       {syncRemoved?.length ? (
         <BuyerJabaSyncAlert removed={syncRemoved} onClose={dismissSyncAlert} />
       ) : null}

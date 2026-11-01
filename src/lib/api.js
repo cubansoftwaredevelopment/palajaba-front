@@ -669,9 +669,10 @@ export function fetchMarketplaceStore(storeRef) {
   return request(`/api/marketplace/stores/${encodeURIComponent(storeRef)}`);
 }
 
-export function createMarketplaceOrder(payload) {
+export function createMarketplaceOrder(payload, token = null) {
   return request("/api/marketplace/orders", {
     method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: JSON.stringify(payload),
   });
 }

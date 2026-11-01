@@ -62,8 +62,13 @@ export default function ProductPhotoGallery({
 
   if (images.length === 0) {
     return (
-      <div className="flex aspect-[4/5] w-full items-center justify-center rounded-2xl bg-brand-white text-sm font-semibold text-brand-carmelita/60">
-        {emptyLabel}
+      <div className="relative">
+        <div className="flex aspect-[4/5] w-full items-center justify-center rounded-2xl bg-brand-white text-sm font-semibold text-brand-carmelita/60">
+          {emptyLabel}
+        </div>
+        {overlay ? (
+          <div className="pointer-events-none absolute inset-0 z-[1]">{overlay}</div>
+        ) : null}
       </div>
     )
   }
@@ -79,11 +84,19 @@ export default function ProductPhotoGallery({
         {images.map((image, index) => {
           const src = resolveMediaUrl(image.image_url, { width: 800 })
           return (
-            <button
+            <div
               key={image.id}
-              type="button"
               data-photo-card
               onClick={() => setViewerIndex(index)}
+              onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  setViewerIndex(index)
+                }
+              }}
+              role="button"
+              tabIndex={0}
               className={`relative shrink-0 snap-start overflow-hidden rounded-2xl bg-brand-white shadow-[0_8px_28px_rgba(89,128,44,0.12)] ring-1 ring-brand-green/10 touch-manipulation ${several ? 'aspect-[4/5] w-[68%]' : 'aspect-[4/5] w-full max-w-[11rem]'}`}
               aria-label={image.is_frontal ? 'Ampliar foto frontal' : 'Ampliar foto'}
             >
@@ -97,7 +110,7 @@ export default function ProductPhotoGallery({
               {index === 0 && overlay ? (
                 <div className="pointer-events-none absolute inset-0 z-[1]">{overlay}</div>
               ) : null}
-            </button>
+            </div>
           )
         })}
       </div>

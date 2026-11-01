@@ -183,6 +183,7 @@ export default function SellerLayout() {
       if (document.visibilityState === 'visible') {
         refreshUnreadCount()
         refreshPendingOrderCount()
+        refreshProfile().catch(() => {})
       }
     }
 
@@ -190,7 +191,10 @@ export default function SellerLayout() {
       refreshPendingOrderCount()
     }
 
-    const intervalId = window.setInterval(refreshUnreadCount, SELLER_LIVE_POLL_MS)
+    const intervalId = window.setInterval(() => {
+      refreshUnreadCount()
+      refreshProfile().catch(() => {})
+    }, SELLER_LIVE_POLL_MS)
     document.addEventListener('visibilitychange', handleVisible)
     window.addEventListener(SELLER_ORDERS_REFRESH_EVENT, handleOrdersRefresh)
 
@@ -230,7 +234,7 @@ export default function SellerLayout() {
       window.removeEventListener(SELLER_ORDERS_REFRESH_EVENT, handleOrdersRefresh)
       stopEvents()
     }
-  }, [profile?.profile_completed, refreshPendingOrderCount, refreshUnreadCount])
+  }, [profile?.profile_completed, refreshPendingOrderCount, refreshProfile, refreshUnreadCount])
 
   if (loading) {
     return <SellerLoadingScreen />
@@ -317,6 +321,7 @@ export default function SellerLayout() {
     <>
       <SellerShell
         storeName={profile.store_name}
+        subscriptionActive={profile.subscription_active}
         onLogout={() => setShowLogoutConfirm(true)}
         onNotifications={openNotifications}
         notificationCount={notificationCount}

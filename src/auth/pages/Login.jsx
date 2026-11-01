@@ -5,18 +5,18 @@ import AuthHeader from '../components/AuthHeader'
 import AuthShell from '../components/AuthShell'
 import MethodTabs from '../components/MethodTabs'
 import PasswordField from '../components/PasswordField'
-import PhoneField from '../components/PhoneField'
 import Button from '../../components/Button'
-import SubscriptionExpiredScreen from '../../components/seller/SubscriptionExpiredScreen'
 import { alertErrorClass, inputClass, labelClass } from '../components/formStyles'
 import { ApiError } from '../../lib/api'
 import { adminLogin, sellerLogin } from '../api.js'
+import { addCustomerFavorite, customerLogin } from '../api.js'
 import { setAdminToken } from '../../lib/adminAuth'
 import { isSellerAuthenticated, setSellerSession } from '../../lib/sellerAuth'
+import { isCustomerAuthenticated, setCustomerSession, updateCustomerProfile } from '../../lib/customerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
-const LOGIN_METHODS = [
-  { id: 'phone', label: 'Teléfono' },
-  { id: 'store_name', label: 'Tienda' },
+const ACCOUNT_TYPES = [
+  { id: 'store', label: 'Tienda' },
+  { id: 'customer', label: 'Cliente' },
 ]
 
 function loginBackTarget(state) {
@@ -35,54 +35,61 @@ function loginBackTarget(state) {
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectTo = location.state?.from ?? '/tienda'
+  const redirectTo = location.state?.backTo ?? location.state?.from ?? (location.state?.accountType === 'customer' ? '/cliente' : '/tienda')
   const { backTo, backLabel } = loginBackTarget(location.state)
-  const [method, setMethod] = useState('phone')
-  const [phoneDigits, setPhoneDigits] = useState('')
-  const [storeName, setStoreName] = useState('')
+  const [accountType, setAccountType] = useState(location.state?.accountType === 'customer' ? 'customer' : 'store')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [expiredInfo, setExpiredInfo] = useState(null)
   const notice = typeof location.state?.notice === 'string' ? location.state.notice : ''
 
   useEffect(() => {
     if (isSellerAuthenticated()) {
       navigate(redirectTo, { replace: true })
+    } else if (isCustomerAuthenticated()) {
+      navigate('/cliente', { replace: true })
     }
   }, [navigate, redirectTo])
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError('')
-    setExpiredInfo(null)
     setLoading(true)
 
     try {
-      const payload = {
-        method,
-        password,
-        ...(method === 'phone'
-          ? { phone: phoneDigits }
-          : { store_name: storeName.trim() }),
-      }
-      const data = await sellerLogin(payload)
-      setSellerSession(data.access_token, data.seller)
-      navigate(redirectTo, { replace: true })
-    } catch (err) {
-      if (method === 'store_name' && err instanceof ApiError && err.status === 401) {
+      if (accountType === 'customer') {
+        const data = await customerLogin(identifier.trim(), password)
+        setCustomerSession(data.access_token, data.customer)
         try {
-          const admin = await adminLogin(storeName.trim(), password)
+          const favoriteId = sessionStorage.getItem('pala_jaba_pending_favorite')
+          if (favoriteId) {
+            updateCustomerProfile(await addCustomerFavorite(data.access_token, favoriteId))
+            sessionStorage.removeItem('pala_jaba_pending_favorite')
+          }
+        } catch { /* account sign-in succeeds even if saving a favorite temporarily fails */ }
+        navigate(redirectTo !== '/tienda' ? redirectTo : '/cliente', { replace: true })
+      } else {
+        const normalizedIdentifier = identifier.trim()
+        const phoneDigits = normalizedIdentifier.replace(/\D/g, '')
+        const isPhone = /^[+\d()\s-]+$/.test(normalizedIdentifier) && [8, 10].includes(phoneDigits.length)
+        const payload = isPhone
+          ? { method: 'phone', phone: phoneDigits.slice(-8), password }
+          : { method: 'store_name', store_name: normalizedIdentifier, password }
+        const data = await sellerLogin(payload)
+        setSellerSession(data.access_token, data.seller)
+        navigate(redirectTo, { replace: true })
+      }
+    } catch (err) {
+      if (accountType === 'store' && err instanceof ApiError && err.status === 401) {
+        try {
+          const admin = await adminLogin(identifier.trim(), password)
           setAdminToken(admin.access_token)
           navigate('/admin/estadisticas', { replace: true })
           return
         } catch {
           // Las credenciales tampoco son de administrador.
         }
-      }
-      if (err instanceof ApiError && err.code === 'subscription_expired') {
-        setExpiredInfo(err.data)
-        return
       }
       setError(
         getUserFacingMessage(
@@ -95,24 +102,15 @@ export default function Login() {
     }
   }
 
-  if (expiredInfo) {
-    return (
-      <SubscriptionExpiredScreen
-        storeName={expiredInfo.store_name}
-        subscriptionEndsAt={expiredInfo.subscription_ends_at}
-        renewalContactPhone={expiredInfo.renewal_contact_phone}
-        onBack={() => setExpiredInfo(null)}
-      />
-    )
-  }
-
   return (
     <AuthShell backTo={backTo} backLabel={backLabel} contentWidth="narrow">
       <section className="animate-fade-in lg:mx-auto lg:max-w-md" aria-labelledby="login-title">
         <AuthHeader
-          eyebrow="Vendedores"
+          eyebrow={accountType === 'customer' ? 'Clientes' : 'Pa’ La Jaba · cuentas'}
           title="Inicia sesión"
-          description="Accede con tu teléfono o el nombre de tu tienda y tu contraseña."
+          description={accountType === 'customer'
+            ? 'Accede con tu teléfono y tu contraseña.'
+            : 'Accede con el nombre de tu tienda o tu teléfono y tu contraseña.'}
         />
 
         <AuthCard>
@@ -123,31 +121,40 @@ export default function Login() {
           ) : null}
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
             <MethodTabs
-              options={LOGIN_METHODS}
-              value={method}
-              onChange={setMethod}
-              ariaLabel="Método de inicio de sesión"
+              options={ACCOUNT_TYPES}
+              value={accountType}
+              onChange={(next) => { setAccountType(next); setError('') }}
+              ariaLabel="Tipo de cuenta"
             />
-
-            {method === 'phone' ? (
-              <PhoneField
-                id="login-phone"
-                value={phoneDigits}
-                onChange={setPhoneDigits}
-              />
-            ) : (
+            {accountType === 'customer' ? (
               <div>
-                <label htmlFor="login-store" className={labelClass}>
-                  Nombre de la tienda <span className="text-brand-carmelita">*</span>
+                <label htmlFor="login-customer-identifier" className={labelClass}>
+                  Teléfono <span className="text-brand-carmelita">*</span>
                 </label>
                 <input
-                  id="login-store"
-                  type="text"
-                  value={storeName}
-                  onChange={(e) => setStoreName(e.target.value)}
+                  id="login-customer-identifier"
+                  type="tel"
+                  value={identifier}
+                  onChange={(event) => setIdentifier(event.target.value)}
                   className={inputClass}
-                  placeholder="Ej. Mi Tienda"
-                  autoComplete="organization"
+                  placeholder="Tu número de teléfono"
+                  autoComplete="tel"
+                  required
+                />
+              </div>
+            ) : (
+              <div>
+                <label htmlFor="login-store-identifier" className={labelClass}>
+                  Nombre de la tienda o teléfono <span className="text-brand-carmelita">*</span>
+                </label>
+                <input
+                  id="login-store-identifier"
+                  type="text"
+                  value={identifier}
+                  onChange={(event) => setIdentifier(event.target.value)}
+                  className={inputClass}
+                  placeholder="Nombre de la tienda o número de teléfono"
+                  autoComplete="username"
                   required
                 />
               </div>
@@ -162,7 +169,7 @@ export default function Login() {
 
             <p className="-mt-1 text-right text-sm">
               <Link
-                to="/recuperar"
+                to={accountType === 'customer' ? '/cliente/recuperar' : '/recuperar'}
                 className="font-semibold text-brand-green underline-offset-2 hover:underline"
               >
                 ¿Olvidaste tu contraseña?
@@ -184,7 +191,8 @@ export default function Login() {
         <p className="mt-6 text-center text-sm text-brand-carmelita/90">
           ¿Aún no tienes cuenta?{' '}
           <Link
-            to="/registro"
+            to="/crear-cuenta"
+            state={{ backTo: location.state?.backTo || '/login' }}
             className="font-semibold text-brand-green underline-offset-2 hover:underline"
           >
             Crear cuenta

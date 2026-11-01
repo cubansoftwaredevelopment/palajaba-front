@@ -27,6 +27,12 @@ const SELLER_NAV_ICONS = {
       <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
     </svg>
   ),
+  clientes: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20v-1a6.5 6.5 0 0 1 13 0v1M17 5.2a3.5 3.5 0 0 1 0 6.7M18 14.2a5.5 5.5 0 0 1 3.5 5.2v.6" />
+    </svg>
+  ),
   estadisticas: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
       <path d="M3 3v18h18" />

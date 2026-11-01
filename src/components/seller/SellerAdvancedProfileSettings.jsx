@@ -203,6 +203,13 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
     try {
       const token = getSellerToken()
       const result = await startSellerPhoneOtp(token, phoneDigits)
+      if (result.otp_bypassed) {
+        const updated = await confirmSellerContactOtp(token, result.challenge_id, '000000')
+        updateSellerProfileCache(updated)
+        await onUpdated?.()
+        setPhoneSaved(true)
+        return
+      }
       setPhoneChallengeId(result.challenge_id)
       setPhoneEndsAt(expiryMs(result.expires_at))
     } catch (err) {
@@ -273,6 +280,13 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
     try {
       const token = getSellerToken()
       const result = await startSellerEmailOtp(token, normalizedEmail)
+      if (result.otp_bypassed) {
+        const updated = await confirmSellerContactOtp(token, result.challenge_id, '000000')
+        updateSellerProfileCache(updated)
+        await onUpdated?.()
+        setEmailSaved(true)
+        return
+      }
       setEmailChallengeId(result.challenge_id)
       setEmailEndsAt(expiryMs(result.expires_at))
     } catch (err) {

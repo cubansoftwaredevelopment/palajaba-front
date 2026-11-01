@@ -47,7 +47,7 @@ function formatUsd(amount) {
   })
 }
 
-export default function SellerAdvertisingPlans() {
+export default function SellerAdvertisingPlans({ profile }) {
   const fallbackPlans = getAdvertisingPlans().map(toUiPlan)
   const [plans, setPlans] = useState(fallbackPlans)
   const [hiringId, setHiringId] = useState(null)
@@ -101,6 +101,7 @@ export default function SellerAdvertisingPlans() {
       <p className={sellerHint}>
         Al pagar se suma 0.5% de exchange de QvaPay sobre el precio del plan.
       </p>
+      {profile?.subscription_active === false ? <p className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Activa o renueva tu suscripción para comprar planes de marketing.</p> : null}
       <SellerNotificationToast
         toast={errorToast}
         aboveNav
@@ -158,7 +159,7 @@ export default function SellerAdvertisingPlans() {
               <button
                 type="button"
                 onClick={() => handleHire(plan)}
-                disabled={Boolean(hiringId)}
+                disabled={Boolean(hiringId) || profile?.subscription_active === false}
                 className={`${plan.recommended ? sellerBtnPrimary : sellerBtnSecondary} mt-4 w-full`}
               >
                 {hiringId === plan.id ? 'Abriendo QvaPay…' : 'Pagar con QvaPay'}

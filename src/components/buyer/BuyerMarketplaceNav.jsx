@@ -8,7 +8,9 @@ import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyConte
 import { getAdditionalMunicipalities, getBuyerLocation, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
 import { marketplaceCategoryPath, resolveMarketplaceCategory, storeCategoryPath } from '../../lib/marketplaceCategory'
 import { storeGestorPublicPath, storePublicPath } from '../../lib/storeSlug'
-import { isSellerAuthenticated } from '../../lib/sellerAuth'
+import { getSellerProfile, isSellerAuthenticated, SELLER_AUTH_CHANGE_EVENT } from '../../lib/sellerAuth'
+import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerProfile, isCustomerAuthenticated } from '../../lib/customerAuth'
+import { resolveMediaUrl } from '../../lib/media'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { useDismissibleModal } from './useOrderModalPresence'
@@ -187,6 +189,19 @@ export default function BuyerMarketplaceNav({
   const hideTimerRef = useRef(null)
   const [helpPhone, setHelpPhone] = useState('')
   const [menuOpen, setMenuOpen] = useState(false)
+  const [, refreshAuthState] = useState(0)
+
+  useEffect(() => {
+    const refresh = () => refreshAuthState((current) => current + 1)
+    window.addEventListener(CUSTOMER_AUTH_CHANGE_EVENT, refresh)
+    window.addEventListener(SELLER_AUTH_CHANGE_EVENT, refresh)
+    window.addEventListener('storage', refresh)
+    return () => {
+      window.removeEventListener(CUSTOMER_AUTH_CHANGE_EVENT, refresh)
+      window.removeEventListener(SELLER_AUTH_CHANGE_EVENT, refresh)
+      window.removeEventListener('storage', refresh)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -344,7 +359,13 @@ export default function BuyerMarketplaceNav({
     if (url) openExternalUrl(url)
   }
 
-  const accountSignedIn = isSellerAuthenticated() || isAdminAuthenticated()
+  const sellerSignedIn = isSellerAuthenticated()
+  const accountSignedIn = sellerSignedIn || isAdminAuthenticated()
+  const customerSignedIn = isCustomerAuthenticated()
+  const signedInProfile = customerSignedIn ? getCustomerProfile() : sellerSignedIn ? getSellerProfile() : null
+  const profileName = signedInProfile?.full_name || signedInProfile?.store_name || signedInProfile?.username || ''
+  const profileInitial = Array.from(profileName.trim())[0]?.toUpperCase() || 'C'
+  const profileImageUrl = resolveMediaUrl(signedInProfile?.profile_photo_url)
   const activeCategoryId = isCatalog ? selectedCatalogCategoryId : selectedCategoryId
   const categoryActive = categoryOpen || Boolean(activeCategoryId)
   const accountIcon = (
@@ -417,7 +438,12 @@ export default function BuyerMarketplaceNav({
           </button>
         </ArcOption>
         <ArcOption open={menuOpen} from={ORIGIN} to={MAIN_POINTS[2]} index={2}>
-          {accountSignedIn ? (
+          {customerSignedIn ? (
+            <NavLink to="/cliente" className={optionClass} aria-label="Mi cuenta de cliente" onClick={() => setMenuOpen(false)}>
+              <OptionLabel open={menuOpen} life={lifeFor(2)}>Mi cuenta</OptionLabel>
+              <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
+            </NavLink>
+          ) : accountSignedIn ? (
             <button type="button" className={optionClass} aria-label="Cuenta" disabled>
               <OptionLabel open={menuOpen} life={lifeFor(2)}>Cuenta</OptionLabel>
               <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
@@ -425,7 +451,7 @@ export default function BuyerMarketplaceNav({
           ) : (
             <NavLink
               to="/login"
-              state={{ backTo }}
+              state={{ backTo, accountType: 'customer' }}
               className={optionClass}
               aria-label="Iniciar sesión"
               onClick={() => setMenuOpen(false)}
@@ -442,7 +468,14 @@ export default function BuyerMarketplaceNav({
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((open) => !open)}
         >
-          <img src="/images/welcome/lali.png" alt="" className="h-12 w-12 object-contain" />
+          {signedInProfile ? (
+            <>
+              <span className="flex h-full w-full items-center justify-center bg-brand-yellow font-display text-xl font-bold text-brand-green" aria-hidden="true">{profileInitial}</span>
+              {profileImageUrl ? <img src={profileImageUrl} alt="" className="absolute inset-0 h-full w-full rounded-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} /> : null}
+            </>
+          ) : (
+            <img src="/images/welcome/lali.png" alt="" className="h-12 w-12 object-contain" />
+          )}
         </button>
       </nav>
       {categoryOpen ? (

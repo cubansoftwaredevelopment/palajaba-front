@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useBuyerJaba } from '../../context/BuyerJabaContext'
 import { useBuyerDisplayCurrency } from '../../context/BuyerDisplayCurrencyContext'
 import { useDisplayedLocation } from '../../context/BuyerDisplayedLocationContext'
@@ -17,6 +18,8 @@ import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerS
 import BuyerProductImage from './BuyerProductImage'
 import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
+import { isCustomerAuthenticated, getCustomerProfile, getCustomerToken, updateCustomerProfile, CUSTOMER_AUTH_CHANGE_EVENT } from '../../lib/customerAuth'
+import { addCustomerFavorite, removeCustomerFavorite } from '../../auth/api'
 import {
   buyerProductActions,
   buyerProductBody,
@@ -51,7 +54,9 @@ function JabaBagIcon() {
   )
 }
 
-export default function BuyerProductCard({ product, compact = false }) {
+export default function BuyerProductCard({ product, compact = false, onFavoriteChange, buyWarning = '', allowBuyAfterWarning = false }) {
+  const navigate = useNavigate()
+  const route = useLocation()
   const { currencies: displayCurrencies, cupPerUnit } = useBuyerDisplayCurrency()
   const location = useDisplayedLocation()
   const { isInJaba: checkInJaba, addProduct, buyProduct } = useBuyerJaba()
@@ -62,7 +67,10 @@ export default function BuyerProductCard({ product, compact = false }) {
   const [jabaPulse, setJabaPulse] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
+  const [buyWarningOpen, setBuyWarningOpen] = useState(false)
+  const [warningAction, setWarningAction] = useState('buy')
   const [inJaba, setInJaba] = useState(() => checkInJaba(product.id))
+  const [favorite, setFavorite] = useState(() => getCustomerProfile()?.favorite_product_ids?.includes(product.id) ?? false)
 
   const storePath = resolveBuyerProductStorePath(product.store)
 
@@ -75,22 +83,63 @@ export default function BuyerProductCard({ product, compact = false }) {
     return () => window.removeEventListener(JABA_CHANGE_EVENT, syncJabaState)
   }, [checkInJaba, product.id])
 
+  useEffect(() => {
+    const syncFavorite = (event) => setFavorite((event.detail?.favorite_product_ids ?? []).includes(product.id))
+    window.addEventListener(CUSTOMER_AUTH_CHANGE_EVENT, syncFavorite)
+    return () => window.removeEventListener(CUSTOMER_AUTH_CHANGE_EVENT, syncFavorite)
+  }, [product.id])
+
+  async function handleFavorite(event) {
+    event.stopPropagation()
+    if (!isCustomerAuthenticated()) {
+      try { sessionStorage.setItem('pala_jaba_pending_favorite', product.id) } catch { /* ignore */ }
+      navigate('/login', { state: { accountType: 'customer', backTo: `${route.pathname}${route.search}${route.hash}` } })
+      return
+    }
+    try {
+      const result = favorite
+        ? await removeCustomerFavorite(getCustomerToken(), product.id)
+        : await addCustomerFavorite(getCustomerToken(), product.id)
+      updateCustomerProfile(result)
+      setFavorite(!favorite)
+      onFavoriteChange?.(!favorite, result)
+    } catch {
+      window.alert('No pudimos actualizar tus favoritos. Inténtalo de nuevo.')
+    }
+  }
+
   function pulse(setter) {
     setter(true)
     window.setTimeout(() => setter(false), 450)
   }
 
-  async function handleBuy(event) {
+  async function handleBuy(event, acknowledged = false) {
     event?.stopPropagation?.()
-    const success = await buyProduct(product)
+    if (buyWarning && !acknowledged) {
+      setWarningAction('buy')
+      setBuyWarningOpen(true)
+      return false
+    }
+    const checkoutProduct = acknowledged && product.pickup_required
+      ? { ...product, offers_delivery: false }
+      : product
+    const success = await buyProduct(checkoutProduct)
     if (!success) return
     pulse(setBuyPulse)
     setDetailOpen(false)
   }
 
-  function handleAddToJaba(event) {
+  function handleAddToJaba(event, acknowledged = false) {
     event?.stopPropagation?.()
-    addProduct(product)
+    if (buyWarning && !acknowledged) {
+      setWarningAction('add')
+      setBuyWarningOpen(true)
+      return
+    }
+    const jabaProduct = acknowledged && product.pickup_required
+      ? { ...product, offers_delivery: false }
+      : product
+    addProduct(jabaProduct)
     setInJaba(true)
     pulse(setJabaPulse)
   }
@@ -124,26 +173,24 @@ export default function BuyerProductCard({ product, compact = false }) {
               : 'flex min-h-0 flex-1 flex-col'
           }
         >
-          <button
-            type="button"
-            onClick={openDetail}
-            className="flex w-full shrink-0 flex-col text-left touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/25"
-            aria-label={`Ver detalles de ${product.name}${soldOut ? ' (agotado)' : ''}`}
-          >
-            <div className={buyerProductImageWrap}>
+          <div className={buyerProductImageWrap}>
+            <button type="button" onClick={openDetail} className="absolute inset-0 h-full w-full touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/25" aria-label={`Ver detalles de ${product.name}${soldOut ? ' (agotado)' : ''}`}>
               <BuyerProductImage src={imageSrc} />
               {discountPercent ? (
                 <span className={buyerProductDiscountBadge}>-{discountPercent}%</span>
               ) : null}
-            </div>
+            </button>
+            <button type="button" onClick={handleFavorite} className="absolute bottom-2 right-2 z-10 grid h-9 w-9 place-items-center rounded-full bg-brand-white/95 text-brand-carmelita shadow-[0_2px_8px_rgba(28,33,24,0.2)]" aria-label={favorite ? 'Quitar de guardados' : 'Guardar oferta'} title={favorite ? 'Quitar de guardados' : 'Guardar oferta'}>
+              <svg width="19" height="19" viewBox="0 0 24 24" fill={favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z" /></svg>
+            </button>
+          </div>
 
-            <div className={buyerProductBody}>
+          <button type="button" onClick={openDetail} className={`${buyerProductBody} w-full text-left touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/25`} aria-label={`Ver detalles de ${product.name}${soldOut ? ' (agotado)' : ''}`}>
               <h3 className={buyerProductName}>{product.name}</h3>
               <BuyerProductPrices
                 prices={displayPrices}
                 priceClassName={`${buyerProductPrice} !mt-0`}
               />
-            </div>
           </button>
 
           {product.store?.store_name && storePath ? (
@@ -197,6 +244,8 @@ export default function BuyerProductCard({ product, compact = false }) {
         <BuyerProductDetailModal
           product={product}
           inJaba={inJaba}
+          favorite={favorite}
+          onFavorite={handleFavorite}
           onClose={() => setDetailOpen(false)}
           onBuy={handleBuy}
           onAddToJaba={handleAddToJaba}
@@ -209,6 +258,18 @@ export default function BuyerProductCard({ product, compact = false }) {
           url={buildProductShareUrl(product.id, location)}
           onClose={() => setShareOpen(false)}
         />
+      ) : null}
+      {buyWarningOpen ? (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setBuyWarningOpen(false) }}>
+          <section role="alertdialog" aria-modal="true" aria-labelledby={`favorite-buy-warning-${product.id}`} className="w-full max-w-sm rounded-3xl bg-brand-white p-5 text-brand-carmelita shadow-2xl">
+            <h2 id={`favorite-buy-warning-${product.id}`} className="font-display text-lg font-bold text-brand-green">Aviso sobre tu municipio</h2>
+            <p className="mt-2 text-sm leading-relaxed">{buyWarning}</p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button type="button" onClick={() => setBuyWarningOpen(false)} className="min-h-10 rounded-xl border border-brand-green/20 px-4 text-sm font-semibold">Entendido</button>
+              {allowBuyAfterWarning ? <button type="button" onClick={() => { setBuyWarningOpen(false); if (warningAction === 'add') handleAddToJaba(undefined, true); else void handleBuy(undefined, true) }} className="min-h-10 rounded-xl bg-brand-green px-4 text-sm font-bold text-white">Continuar</button> : <button type="button" onClick={() => { setBuyWarningOpen(false); navigate('/comprar/municipio') }} className="min-h-10 rounded-xl bg-brand-green px-4 text-sm font-bold text-white">Cambiar municipio</button>}
+            </div>
+          </section>
+        </div>
       ) : null}
     </>
   )
