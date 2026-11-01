@@ -27,7 +27,7 @@ const CUSTOMER_NAV = [
 
 function formatDate(value) {
   if (!value) return '—'
-  let dateValue = value
+  let dateValue
   if (typeof value === 'string') {
     const normalized = value.trim().replace(/(\.\d{3})\d+/, '$1')
     const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
@@ -432,6 +432,8 @@ export default function CustomerAccount() {
     navigate('/comprar/provincia', { replace: true })
   }
 
+  const unreadNotificationCount = paymentNotifications.filter((notification) => !notification.read_at).length
+
   return (
     <div className="min-h-dvh bg-brand-green/[0.035] text-brand-carmelita lg:flex">
       <aside className="hidden w-60 shrink-0 border-r border-brand-green/10 bg-brand-white/70 px-3 py-6 lg:block">
@@ -445,7 +447,7 @@ export default function CustomerAccount() {
       </aside>
       <main className="min-w-0 flex-1 px-4 pb-[calc(5.5rem+var(--safe-bottom))] pt-6 sm:px-6 lg:px-8 lg:pb-8">
         <div className="mx-auto max-w-5xl">
-          <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+          <header className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand-green/10 bg-brand-white/75 px-4 py-3 shadow-sm sm:px-5">
             <div>
               <Link
                 to="/comprar"
@@ -458,6 +460,42 @@ export default function CustomerAccount() {
                   "Mi cuenta"}
               </h1>
             </div>
+            {profile ? (
+              <div className="ml-auto flex max-w-full items-center gap-2 sm:gap-3">
+                <NavLink
+                  to="/cliente/avisos"
+                  aria-label={unreadNotificationCount ? `Avisos, ${unreadNotificationCount} sin leer` : 'Avisos'}
+                  title="Avisos"
+                  className={({ isActive }) => `relative grid h-10 w-10 shrink-0 place-items-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35 ${isActive ? 'border-brand-green/25 bg-brand-green/10 text-brand-green' : 'border-brand-green/15 text-brand-green hover:bg-brand-green/5'}`}
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+                    <path d="M10 21h4" />
+                  </svg>
+                  {unreadNotificationCount ? (
+                    <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand-carmelita px-1 text-[10px] font-bold leading-none text-white">
+                      {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+                    </span>
+                  ) : null}
+                </NavLink>
+                <p className="max-w-[9rem] text-right text-xs font-semibold leading-snug text-brand-carmelita sm:max-w-[15rem] sm:text-sm">
+                  Bienvenido, <span className="text-brand-green">{profile.full_name}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setLogoutOpen(true)}
+                  aria-label="Cerrar sesión"
+                  title="Cerrar sesión"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-brand-green/15 text-brand-green transition hover:bg-brand-green/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35"
+                >
+                  <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M10 17l5-5-5-5" />
+                    <path d="M15 12H3" />
+                    <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
+                  </svg>
+                </button>
+              </div>
+            ) : null}
           </header>
           {error ? (
             <p
@@ -485,31 +523,7 @@ export default function CustomerAccount() {
                       aria-hidden="true"
                     />
                     <div className="relative z-10">
-                      <div className="mb-4 flex items-center justify-between gap-3">
-                        <h2 className="text-lg font-bold">Mi perfil</h2>
-                        <button
-                          type="button"
-                          onClick={() => setLogoutOpen(true)}
-                          aria-label="Cerrar sesión"
-                          title="Cerrar sesión"
-                          className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-brand-green/20 text-brand-green transition hover:bg-brand-green/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35"
-                        >
-                          <svg
-                            viewBox="0 0 24 24"
-                            className="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                          >
-                            <path d="M10 17l5-5-5-5" />
-                            <path d="M15 12H3" />
-                            <path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6" />
-                          </svg>
-                        </button>
-                      </div>
+                      <h2 className="mb-4 text-lg font-bold">Mi perfil</h2>
                       <div className="flex items-center gap-4">
                         <label
                           className="group relative block h-20 w-20 shrink-0 cursor-pointer rounded-full"

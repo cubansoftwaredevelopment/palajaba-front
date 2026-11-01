@@ -5,6 +5,7 @@ import { setCustomerSession } from '../../lib/customerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import PasswordField from '../../auth/components/PasswordField'
 import { alertErrorClass, inputClass, labelClass } from '../../auth/components/formStyles'
+import { authLoginContainer } from '../../auth/components/authStyles'
 
 export default function BuyerCustomerLoginModal({ onClose, onLogin }) {
   const [phone, setPhone] = useState('')
@@ -29,7 +30,7 @@ export default function BuyerCustomerLoginModal({ onClose, onLogin }) {
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-brand-carmelita/55 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="buyer-login-title" className="w-full max-w-md rounded-3xl bg-brand-white p-5 shadow-2xl sm:p-7">
+      <section role="dialog" aria-modal="true" aria-labelledby="buyer-login-title" className={`${authLoginContainer} rounded-3xl bg-brand-white p-5 shadow-2xl sm:p-7`}>
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-brand-green">Cuenta de cliente</p>

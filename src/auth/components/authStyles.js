@@ -14,3 +14,6 @@ export const authFormWrap = 'lg:max-w-xl'
 export const authStickyAside = 'lg:sticky lg:top-0'
 
 export const authCenteredBlock = 'mx-auto w-full max-w-md lg:max-w-lg lg:py-8'
+
+// Keep customer and store login containers on the same width at every breakpoint.
+export const authLoginContainer = 'w-full max-w-md'

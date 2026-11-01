@@ -472,7 +472,7 @@ export default function BuyerMarketplaceNav({
           >
             {signedInProfile ? (
               <>
-                <span className="flex h-full w-full items-center justify-center bg-brand-yellow font-display text-xl font-bold text-brand-green" aria-hidden="true">{profileInitial}</span>
+                <span className="grid h-full w-full place-items-center bg-brand-yellow font-display text-xl font-bold leading-none text-center text-brand-green" aria-hidden="true">{profileInitial}</span>
                 {profileImageUrl ? <img src={profileImageUrl} alt="" className="absolute inset-0 h-full w-full rounded-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} /> : null}
               </>
             ) : (

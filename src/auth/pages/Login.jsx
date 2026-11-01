@@ -7,6 +7,7 @@ import MethodTabs from '../components/MethodTabs'
 import PasswordField from '../components/PasswordField'
 import Button from '../../components/Button'
 import { alertErrorClass, inputClass, labelClass } from '../components/formStyles'
+import { authLoginContainer } from '../components/authStyles'
 import { ApiError } from '../../lib/api'
 import { adminLogin, sellerLogin } from '../api.js'
 import { addCustomerFavorite, customerLogin } from '../../buyer/api.js'
@@ -103,7 +104,7 @@ export default function Login() {
 
   return (
     <AuthShell backTo={backTo} backLabel={backLabel} contentWidth="narrow">
-      <section className="animate-fade-in lg:mx-auto lg:max-w-md" aria-labelledby="login-title">
+      <section className={`animate-fade-in lg:mx-auto ${authLoginContainer}`} aria-labelledby="login-title">
         <AuthHeader
           eyebrow={accountType === 'customer' ? 'Clientes' : 'Pa’ La Jaba · cuentas'}
           title="Inicia sesión"
