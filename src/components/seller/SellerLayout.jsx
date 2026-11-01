@@ -59,8 +59,8 @@ export default function SellerLayout() {
     const token = getSellerToken()
     if (!token) return
     try {
-      const orders = await fetchSellerOrders(token)
-      setPendingOrderCount(orders.filter((order) => order.status === 'pending_confirmation').length)
+      const orders = await fetchSellerOrders(token, { limit: 1 })
+      setPendingOrderCount(orders.pending_count ?? 0)
     } catch {
       // Mantén el último conteo durante fallos temporales de red.
     }

@@ -7,7 +7,7 @@ import { formatPrice, parseCupInput } from '../../lib/money'
 import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
-import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../buyer/useOrderModalPresence'
+import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
 import {
   sellerAlertError,

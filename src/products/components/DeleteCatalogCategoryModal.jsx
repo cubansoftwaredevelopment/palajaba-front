@@ -13,7 +13,7 @@ import { deleteCatalogCategory } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../components/buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 
 export default function DeleteCatalogCategoryModal({ category, onClose: requestClose, onDeleted }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)

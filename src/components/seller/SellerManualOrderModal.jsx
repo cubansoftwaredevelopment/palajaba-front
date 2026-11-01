@@ -15,7 +15,7 @@ import {
   validateManualOrderDraft,
 } from '../../lib/sellerManualOrder'
 import SellerModalPortal from './SellerModalPortal'
-import { useDismissibleModal } from '../buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
 import Checkbox from '../ui/Checkbox'
 import {

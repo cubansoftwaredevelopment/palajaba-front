@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { useDismissibleModal } from '../../components/buyer/useOrderModalPresence'
-import ProductPhotoGallery from '../../components/buyer/ProductPhotoGallery'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import ProductPhotoGallery from '../../buyer/components/ProductPhotoGallery'
 import { productDiscountPercent, productSaleAmount } from '../context.js'
 import { formatPrice } from '../../lib/money'
 import {

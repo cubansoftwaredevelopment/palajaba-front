@@ -9,7 +9,7 @@ import Button from '../../components/Button'
 import { alertErrorClass, inputClass, labelClass } from '../components/formStyles'
 import { ApiError } from '../../lib/api'
 import { adminLogin, sellerLogin } from '../api.js'
-import { addCustomerFavorite, customerLogin } from '../api.js'
+import { addCustomerFavorite, customerLogin } from '../../buyer/api.js'
 import { setAdminToken } from '../../lib/adminAuth'
 import { isSellerAuthenticated, setSellerSession } from '../../lib/sellerAuth'
 import { isCustomerAuthenticated, setCustomerSession, updateCustomerProfile } from '../../lib/customerAuth'
@@ -48,7 +48,7 @@ export default function Login() {
     if (isSellerAuthenticated()) {
       navigate(redirectTo, { replace: true })
     } else if (isCustomerAuthenticated()) {
-      navigate('/cliente', { replace: true })
+      navigate('/comprar/provincia', { replace: true })
     }
   }, [navigate, redirectTo])
 
@@ -68,7 +68,7 @@ export default function Login() {
             sessionStorage.removeItem('pala_jaba_pending_favorite')
           }
         } catch { /* account sign-in succeeds even if saving a favorite temporarily fails */ }
-        navigate(redirectTo !== '/tienda' ? redirectTo : '/cliente', { replace: true })
+        navigate('/comprar/provincia', { replace: true })
       } else {
         const normalizedIdentifier = identifier.trim()
         const phoneDigits = normalizedIdentifier.replace(/\D/g, '')

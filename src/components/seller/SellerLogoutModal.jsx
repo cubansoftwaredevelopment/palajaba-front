@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useDismissibleModal } from '../buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import { sellerBtnPrimary, sellerBtnSecondary, sellerFocusRing, sellerModalTitle } from './sellerStyles'
 
 export default function SellerLogoutModal({ onClose: requestClose, onConfirm }) {

@@ -14,7 +14,7 @@ import CategoryAutocomplete from '../../components/seller/CategoryAutocomplete'
 import SellerSelect from '../../components/seller/SellerSelect'
 import Checkbox from '../../components/ui/Checkbox'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../components/buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 
 import {
 

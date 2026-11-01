@@ -6,8 +6,8 @@ import { resolveMediaUrl } from '../../lib/media'
 import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { sellerHasStoreBanners } from '../../constants/plan'
-import BuyerStoreBannerCover, { storeBannerAspectClass } from '../buyer/BuyerStoreBannerCover'
-import { buyerStorePageHeader, buyerStorePageName } from '../buyer/buyerStyles'
+import BuyerStoreBannerCover, { storeBannerAspectClass } from '../../buyer/components/BuyerStoreBannerCover'
+import { buyerStorePageHeader, buyerStorePageName } from '../../buyer/components/buyerStyles'
 
 const PREVIEW_MIN_WIDTH = 320
 

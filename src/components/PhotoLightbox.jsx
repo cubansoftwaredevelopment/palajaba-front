@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { resolveMediaUrl } from '../lib/media'
-import { useDismissibleModal } from './buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../buyer/components/useOrderModalPresence'
 
 const MIN_SCALE = 1
 const MAX_SCALE = 4

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { formatRelativeTime } from '../../lib/dates'
 import RenewPlanButton from './RenewPlanButton'
 import SellerModalPortal from './SellerModalPortal'
-import { useDismissibleModal } from '../buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import LoadingState from '../ui/LoadingState'
 import {
   sellerBtnPrimary,

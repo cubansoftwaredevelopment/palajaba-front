@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import BuyerMarketplaceNav from '../components/buyer/BuyerMarketplaceNav'
+import BuyerMarketplaceNav from '../buyer/components/BuyerMarketplaceNav'
 
 export default function BuyerMarketplaceLayout() {
   return (

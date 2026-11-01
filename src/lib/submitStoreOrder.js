@@ -1,4 +1,5 @@
-import { createMarketplaceOrder, ApiError } from './api'
+import { ApiError } from './api'
+import { createMarketplaceOrder } from '../buyer/api.js'
 import { getCustomerToken } from './customerAuth'
 import { getBuyerLocation } from './buyerLocation'
 import { CHECKOUT_SAVE_FAILED_MESSAGE } from './checkoutMessages.js'

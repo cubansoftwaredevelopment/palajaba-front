@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import Button from './Button'
-import { useDismissibleModal } from './buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../buyer/components/useOrderModalPresence'
 
 export default function ConfirmModal({
   title,

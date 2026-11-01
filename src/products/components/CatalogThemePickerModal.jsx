@@ -8,7 +8,7 @@ import {
   paletteFromTheme,
 } from '../constants.js'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../components/buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import {
   sellerAlertError,
   sellerBtnSecondary,

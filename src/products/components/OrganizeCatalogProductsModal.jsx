@@ -10,7 +10,7 @@ import { formatPrice } from '../../lib/money'
 import { productDiscountPercent, productSaleAmount } from '../context.js'
 import { resolveMediaUrl } from '../../lib/media'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../components/buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import {
   sellerAlertError,
   sellerBtnPrimary,

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import SellerEmptyState from '../../components/seller/SellerEmptyState'
 import SellerManualOrderModal from '../../components/seller/SellerManualOrderModal'
 import SellerOrderDetailModal from '../../components/seller/SellerOrderDetailModal'
@@ -6,6 +7,7 @@ import SellerOrderItem from '../../components/seller/SellerOrderItem'
 import SellerOrdersGroup from '../../components/seller/SellerOrdersGroup'
 import SellerOrdersTabs from '../../components/seller/SellerOrdersTabs'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
+import SellerFilterDropdown from '../../components/seller/SellerFilterDropdown'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import { sellerBtnPrimaryCompact, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
@@ -22,8 +24,10 @@ import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import AdminDateRangeControls, { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { orderModalMotionClass, useOrderModalPresence } from '../../components/buyer/useOrderModalPresence'
+import { orderModalMotionClass, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
 import { sellerModalOverlay, sellerModalSheet } from '../../components/seller/sellerStyles'
+
+const SELLER_ORDERS_PAGE_SIZE = 15
 
 function orderFilterDate(order, tab) {
   const value = tab === 'completed'
@@ -48,6 +52,10 @@ function normalizeClientLabel(value) {
   return String(value || '').trim().replace(/\s+/g, ' ').toLocaleLowerCase('es')
 }
 
+function orderIdentifier(order) {
+  return String(order?.id ?? '').slice(-6).toUpperCase()
+}
+
 function getOrderClientLabels(order) {
   return [...new Set([
     order.buyer_name,
@@ -55,78 +63,6 @@ function getOrderClientLabels(order) {
     order.buyer_phone,
     order.delivery?.phone_primary,
   ].map((value) => String(value || '').trim().replace(/\s+/g, ' ')).filter(Boolean))]
-}
-
-function FilterDropdown({ label, placeholder, options, value, onChange, multiple = false }) {
-  const [open, setOpen] = useState(false)
-  const rootRef = useRef(null)
-  const selected = multiple ? value : value ? [value] : []
-  const labelText = selected.length === 0
-    ? placeholder
-    : multiple
-      ? `${selected.length} seleccionado${selected.length === 1 ? '' : 's'}`
-      : selected[0]
-
-  useEffect(() => {
-    if (!open) return undefined
-    rootRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    function closeOnOutside(event) {
-      if (!rootRef.current?.contains(event.target)) setOpen(false)
-    }
-    document.addEventListener('pointerdown', closeOnOutside)
-    return () => document.removeEventListener('pointerdown', closeOnOutside)
-  }, [open])
-
-  return (
-    <div ref={rootRef} className="relative flex flex-col gap-1.5 text-xs font-semibold text-brand-green">
-      <span>{label}</span>
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-white bg-white px-3.5 text-left text-sm font-normal text-brand-carmelita shadow-sm transition hover:border-brand-green/25 focus:outline-none focus:ring-2 focus:ring-brand-green/15"
-      >
-        <span className={selected.length ? 'truncate text-brand-green' : 'truncate text-brand-carmelita/55'}>{labelText}</span>
-        <svg className={`h-4 w-4 shrink-0 text-brand-green/65 transition-transform ${open ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
-      </button>
-      <div
-        role="listbox"
-        aria-label={label}
-        aria-multiselectable={multiple}
-        aria-hidden={!open}
-        className={`rounded-xl border border-white bg-white shadow-[0_14px_36px_rgba(41,55,29,0.18)] transition-[max-height,opacity,margin,padding] duration-300 ease-out motion-reduce:transition-none ${open ? 'mt-1 max-h-48 overflow-y-auto p-1.5 opacity-100' : 'pointer-events-none mt-0 max-h-0 overflow-hidden border-transparent p-0 opacity-0 shadow-none'}`}
-      >
-          {!multiple ? (
-            <button type="button" role="option" aria-selected={!value} onClick={() => { onChange(''); setOpen(false) }} className="w-full rounded-lg px-3 py-2.5 text-left text-sm font-normal text-brand-carmelita/75 hover:bg-brand-green/5">{placeholder}</button>
-          ) : null}
-          {options.map((option) => {
-            const checked = selected.includes(option)
-            return (
-              <button
-                key={option}
-                type="button"
-                role="option"
-                aria-selected={checked}
-                onClick={() => {
-                  if (multiple) onChange(checked ? value.filter((item) => item !== option) : [...value, option])
-                  else { onChange(option); setOpen(false) }
-                }}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-normal transition ${checked ? 'bg-brand-green/8 text-brand-green' : 'text-brand-carmelita hover:bg-brand-green/5'}`}
-              >
-                {multiple ? (
-                  <span className={`grid h-4 w-4 shrink-0 place-items-center rounded-[4px] border transition-colors ${checked ? 'border-brand-green bg-brand-green' : 'border-brand-green/30 bg-white'}`} aria-hidden="true">
-                    {checked ? <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none"><path d="m3.25 8.25 3 3L12.75 4.75" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" /></svg> : null}
-                  </span>
-                ) : null}
-                <span className="truncate">{option}</span>
-              </button>
-            )
-          })}
-          {options.length === 0 ? <p className="px-3 py-2 text-sm font-normal text-brand-carmelita/60">No hay opciones disponibles</p> : null}
-      </div>
-    </div>
-  )
 }
 
 const PendingIcon = (
@@ -150,7 +86,13 @@ const EmptyOrdersIcon = (
 )
 
 export default function SellerOrders() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const orderSearchTarget = searchParams.get('search')?.trim() ?? ''
   const [orders, setOrders] = useState([])
+  const [ordersHasMore, setOrdersHasMore] = useState(false)
+  const [orderStatusCounts, setOrderStatusCounts] = useState({ pending: 0, completed: 0 })
+  const [loadingMoreOrders, setLoadingMoreOrders] = useState(false)
+  const loadedOrdersCount = useRef(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('pending')
@@ -161,7 +103,7 @@ export default function SellerOrders() {
   const [downloading, setDownloading] = useState(null)
   const [saveError, setSaveError] = useState('')
   const [manualOrderOpen, setManualOrderOpen] = useState(false)
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(() => orderSearchTarget)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const { present: filtersPresent, closing: filtersClosing } = useOrderModalPresence(filtersOpen)
   const [clientFilter, setClientFilter] = useState('')
@@ -170,6 +112,7 @@ export default function SellerOrders() {
   const [deliveryFilter, setDeliveryFilter] = useState('')
   const [datePeriod, setDatePeriod] = useState('daily')
   const [dateRange, setDateRange] = useState(() => rangeForPeriod('daily'))
+  const [dateFilterEnabled, setDateFilterEnabled] = useState(false)
 
   const loadOrders = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -179,14 +122,22 @@ export default function SellerOrders() {
 
     try {
       const token = getSellerToken()
-      const data = await fetchSellerOrders(token)
-      setOrders(data)
+      const data = await fetchSellerOrders(token, {
+        offset: 0,
+        limit: silent ? Math.max(SELLER_ORDERS_PAGE_SIZE, Math.min(loadedOrdersCount.current, 100)) : SELLER_ORDERS_PAGE_SIZE,
+      })
+      loadedOrdersCount.current = data.items.length
+      setOrders(data.items)
+      setOrdersHasMore(data.has_more)
+      setOrderStatusCounts({ pending: data.pending_count ?? 0, completed: data.completed_count ?? 0 })
       setSelectedOrder((current) =>
-        current ? data.find((order) => order.id === current.id) ?? null : null,
+        current ? data.items.find((order) => order.id === current.id) ?? null : null,
       )
     } catch (err) {
       if (!silent) {
+        loadedOrdersCount.current = 0
         setOrders([])
+        setOrdersHasMore(false)
         setError(getUserFacingMessage(err, 'No pudimos cargar los pedidos. Inténtalo de nuevo.'))
       }
     } finally {
@@ -195,6 +146,21 @@ export default function SellerOrders() {
       }
     }
   }, [])
+
+  const loadMoreOrders = useCallback(async () => {
+    if (loadingMoreOrders || !ordersHasMore) return
+    setLoadingMoreOrders(true)
+    try {
+      const data = await fetchSellerOrders(getSellerToken(), { offset: loadedOrdersCount.current, limit: SELLER_ORDERS_PAGE_SIZE })
+      loadedOrdersCount.current += data.items.length
+      setOrders((current) => [...current, ...data.items])
+      setOrdersHasMore(data.has_more)
+    } catch (err) {
+      setError(getUserFacingMessage(err, 'No pudimos cargar más pedidos. Inténtalo de nuevo.'))
+    } finally {
+      setLoadingMoreOrders(false)
+    }
+  }, [loadingMoreOrders, ordersHasMore])
 
   useEffect(() => {
     loadOrders()
@@ -238,17 +204,26 @@ export default function SellerOrders() {
   }, [orders])
 
   useEffect(() => {
-    if (loading || tabInitialized) return
-    setActiveTab(pendingOrders.length > 0 ? 'pending' : 'completed')
+    if (loading || tabInitialized || error) return
+    if (orderSearchTarget && ordersHasMore && !orders.some((order) => orderIdentifier(order).toLocaleLowerCase('es') === orderSearchTarget.toLocaleLowerCase('es'))) {
+      loadMoreOrders()
+      return
+    }
+    const targetOrder = orderSearchTarget
+      ? orders.find((order) => orderIdentifier(order).toLocaleLowerCase('es') === orderSearchTarget.toLocaleLowerCase('es'))
+      : null
+    setActiveTab(targetOrder
+      ? targetOrder.status === 'completed' ? 'completed' : 'pending'
+      : pendingOrders.length > 0 ? 'pending' : 'completed')
     setTabInitialized(true)
-  }, [loading, tabInitialized, pendingOrders.length])
+  }, [loading, tabInitialized, pendingOrders.length, orders, orderSearchTarget, ordersHasMore, loadMoreOrders, error])
 
   const visibleOrders = useMemo(() => {
     const tabOrders = activeTab === 'pending' ? pendingOrders : completedOrders
     const query = search.trim().toLocaleLowerCase('es')
     return tabOrders.filter((order) => {
       const clientLabels = getOrderClientLabels(order)
-      const searchable = [...clientLabels, order.buyer_email, order.id]
+      const searchable = [...clientLabels, order.buyer_email, orderIdentifier(order)]
         .filter(Boolean).join(' ').toLocaleLowerCase('es')
       if (query && !searchable.includes(query)) return false
       if (clientFilter && !clientLabels.some((label) => normalizeClientLabel(label) === normalizeClientLabel(clientFilter))) return false
@@ -256,9 +231,10 @@ export default function SellerOrders() {
       if (currencyFilter && order.payment_currency !== currencyFilter) return false
       if (deliveryFilter === 'yes' && !order.delivery_requested) return false
       if (deliveryFilter === 'no' && order.delivery_requested) return false
-      return isInRange(order, activeTab, dateRange)
+      const exactOrderMatch = orderIdentifier(order).toLocaleLowerCase('es') === query
+      return exactOrderMatch || !dateFilterEnabled || isInRange(order, activeTab, dateRange)
     })
-  }, [activeTab, pendingOrders, completedOrders, search, clientFilter, productFilters, currencyFilter, deliveryFilter, dateRange])
+  }, [activeTab, pendingOrders, completedOrders, search, clientFilter, productFilters, currencyFilter, deliveryFilter, dateRange, dateFilterEnabled])
 
   const filterOptions = useMemo(() => {
     const allOrders = [...pendingOrders, ...completedOrders]
@@ -295,6 +271,11 @@ export default function SellerOrders() {
       const token = getSellerToken()
       await deleteSellerOrder(token, selectedOrder.id)
       setOrders((current) => current.filter((item) => item.id !== selectedOrder.id))
+      loadedOrdersCount.current = Math.max(0, loadedOrdersCount.current - 1)
+      setOrderStatusCounts((current) => ({
+        ...current,
+        [selectedOrder.status === 'completed' ? 'completed' : 'pending']: Math.max(0, current[selectedOrder.status === 'completed' ? 'completed' : 'pending'] - 1),
+      }))
       setSelectedOrder(null)
     } catch (err) {
       setSaveError(getUserFacingMessage(err, 'No pudimos cancelar el pedido. Inténtalo de nuevo.'))
@@ -315,6 +296,13 @@ export default function SellerOrders() {
       setOrders((current) => current.map((item) => (item.id === updated.id ? updated : item)))
       setSelectedOrder(updated)
 
+      if (selectedOrder.status !== updated.status) {
+        setOrderStatusCounts((current) => ({
+          pending: Math.max(0, current.pending + (updated.status === 'pending_confirmation' ? 1 : 0) - (selectedOrder.status === 'pending_confirmation' ? 1 : 0)),
+          completed: Math.max(0, current.completed + (updated.status === 'completed' ? 1 : 0) - (selectedOrder.status === 'completed' ? 1 : 0)),
+        }))
+      }
+
       if (updated.status === 'completed') {
         setActiveTab('completed')
       }
@@ -330,6 +318,8 @@ export default function SellerOrders() {
       const token = getSellerToken()
       const created = await createSellerManualOrder(token, payload)
       setOrders((current) => [created, ...current])
+      loadedOrdersCount.current += 1
+      setOrderStatusCounts((current) => ({ ...current, pending: current.pending + 1 }))
       setActiveTab('pending')
       setSelectedOrder(created)
     } catch (err) {
@@ -383,8 +373,8 @@ export default function SellerOrders() {
           <SellerOrdersTabs
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            pendingCount={pendingOrders.length}
-            completedCount={completedOrders.length}
+            pendingCount={orderStatusCounts.pending}
+            completedCount={orderStatusCounts.completed}
           />
 
           <div className="mb-3 flex">
@@ -395,16 +385,39 @@ export default function SellerOrders() {
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
                   placeholder="Buscar por cliente, teléfono, correo o pedido"
-                  className="min-h-11 w-full rounded-xl border border-brand-green/15 bg-brand-white py-2 pl-4 pr-24 text-sm text-brand-carmelita placeholder:text-brand-carmelita/45 focus:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-green/15"
+                  className="min-h-11 w-full rounded-xl border border-brand-green/15 bg-brand-white py-2 pl-11 pr-24 text-sm text-brand-carmelita placeholder:text-brand-carmelita/45 focus:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-green/15"
                 />
               </label>
+              {search ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch('')
+                    if (searchParams.has('search')) {
+                      const nextParams = new URLSearchParams(searchParams)
+                      nextParams.delete('search')
+                      setSearchParams(nextParams, { replace: true })
+                    }
+                  }}
+                  aria-label="Limpiar búsqueda"
+                  title="Limpiar búsqueda"
+                  className="absolute left-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-brand-carmelita/60 transition hover:bg-brand-green/8 hover:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
+                >
+                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="m6 6 12 12M18 6 6 18" />
+                  </svg>
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setFiltersOpen((value) => !value)}
                 aria-expanded={filtersOpen}
-                className="absolute right-1.5 top-1/2 min-h-9 -translate-y-1/2 rounded-lg border border-brand-green/15 bg-brand-white px-3 text-sm font-semibold text-brand-green shadow-sm"
+                aria-label="Filtrar pedidos"
+                title="Filtrar pedidos"
+                className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg border border-brand-green/15 bg-brand-white text-brand-green shadow-sm"
               >
-                Filtros{[clientFilter, ...productFilters, currencyFilter, deliveryFilter].filter(Boolean).length ? ` (${[clientFilter, ...productFilters, currencyFilter, deliveryFilter].filter(Boolean).length})` : ''}
+                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16l-6.2 7v5l-3.6 2v-7L4 5Z" /></svg>
+                {[clientFilter, ...productFilters, currencyFilter, deliveryFilter].filter(Boolean).length + (dateFilterEnabled ? 1 : 0) ? <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-green px-1 text-[9px] font-bold leading-none text-white">{[clientFilter, ...productFilters, currencyFilter, deliveryFilter].filter(Boolean).length + (dateFilterEnabled ? 1 : 0)}</span> : null}
               </button>
             </div>
           </div>
@@ -432,13 +445,34 @@ export default function SellerOrders() {
                     <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Cerrar filtros" className="grid h-10 w-10 place-items-center rounded-full text-xl text-brand-carmelita/60 hover:bg-brand-green/5">×</button>
                   </header>
                   <div className="grid flex-1 gap-4 overflow-y-auto p-5 sm:grid-cols-2">
-                    <FilterDropdown label="Cliente" placeholder="Todos los clientes" options={filterOptions.clients} value={clientFilter} onChange={setClientFilter} />
-                    <FilterDropdown label="Productos · selección múltiple" placeholder="Todos los productos" options={filterOptions.products} value={productFilters} onChange={setProductFilters} multiple />
-                    <FilterDropdown label="Moneda" placeholder="Todas las monedas" options={filterOptions.currencies} value={currencyFilter} onChange={setCurrencyFilter} />
-                    <FilterDropdown label="Domicilio" placeholder="Todos" options={['Sí', 'No']} value={deliveryFilter === 'yes' ? 'Sí' : deliveryFilter === 'no' ? 'No' : ''} onChange={(value) => setDeliveryFilter(value === 'Sí' ? 'yes' : value === 'No' ? 'no' : '')} />
+                    <SellerFilterDropdown label="Cliente" placeholder="Todos los clientes" options={filterOptions.clients} value={clientFilter} onChange={setClientFilter} />
+                    <SellerFilterDropdown label="Productos · selección múltiple" placeholder="Todos los productos" options={filterOptions.products} value={productFilters} onChange={setProductFilters} multiple />
+                    <SellerFilterDropdown label="Moneda" placeholder="Todas las monedas" options={filterOptions.currencies} value={currencyFilter} onChange={setCurrencyFilter} />
+                    <SellerFilterDropdown label="Domicilio" placeholder="Todos" options={['Sí', 'No']} value={deliveryFilter === 'yes' ? 'Sí' : deliveryFilter === 'no' ? 'No' : ''} onChange={(value) => setDeliveryFilter(value === 'Sí' ? 'yes' : value === 'No' ? 'no' : '')} />
+                    <div className="sm:col-span-2">
+                      <p className="mb-2 text-xs font-semibold text-brand-green">Fecha del pedido</p>
+                      <AdminDateRangeControls
+                        inline
+                        period={datePeriod}
+                        onPeriodChange={(period) => { setDatePeriod(period); setDateFilterEnabled(true) }}
+                        range={dateRange}
+                        onRangeChange={(nextRange, nextPeriod) => {
+                          if (nextRange) {
+                            setDateRange(nextRange)
+                            setDatePeriod(nextPeriod || 'custom')
+                            setDateFilterEnabled(true)
+                          } else {
+                            setDatePeriod('daily')
+                            setDateRange(rangeForPeriod('daily'))
+                            setDateFilterEnabled(false)
+                          }
+                        }}
+                        applyPeriodToRange
+                      />
+                    </div>
                   </div>
                   <footer className="flex justify-between gap-3 border-t border-brand-green/10 p-4">
-                    <button type="button" onClick={() => { setClientFilter(''); setProductFilters([]); setCurrencyFilter(''); setDeliveryFilter('') }} className="min-h-10 rounded-xl border border-brand-green/15 px-4 text-sm font-semibold text-brand-green">Limpiar filtros</button>
+                    <button type="button" onClick={() => { setClientFilter(''); setProductFilters([]); setCurrencyFilter(''); setDeliveryFilter(''); setDatePeriod('daily'); setDateRange(rangeForPeriod('daily')); setDateFilterEnabled(false) }} className="min-h-10 rounded-xl border border-brand-green/15 px-4 text-sm font-semibold text-brand-green">Limpiar filtros</button>
                     <button type="button" onClick={() => setFiltersOpen(false)} className="min-h-10 rounded-xl bg-brand-green px-5 text-sm font-semibold text-white">Ver pedidos</button>
                   </footer>
                 </section>
@@ -466,6 +500,13 @@ export default function SellerOrders() {
               />
             ))}
           </SellerOrdersGroup>
+          {ordersHasMore ? (
+            <div className="mt-4 flex justify-center">
+              <button type="button" onClick={loadMoreOrders} disabled={loadingMoreOrders} className="min-h-11 rounded-xl border border-brand-green/20 bg-brand-white px-5 text-sm font-semibold text-brand-green disabled:opacity-60">
+                {loadingMoreOrders ? 'Cargando…' : 'Cargar 15 pedidos más'}
+              </button>
+            </div>
+          ) : null}
         </>
       ) : null}
 
@@ -494,21 +535,6 @@ export default function SellerOrders() {
         />
       ) : null}
 
-      <AdminDateRangeControls
-        period={datePeriod}
-        onPeriodChange={setDatePeriod}
-        range={dateRange}
-        onRangeChange={(nextRange, nextPeriod) => {
-          if (nextRange) {
-            setDateRange(nextRange)
-            setDatePeriod(nextPeriod || 'custom')
-          } else {
-            setDatePeriod('daily')
-            setDateRange(rangeForPeriod('daily'))
-          }
-        }}
-        applyPeriodToRange
-      />
     </section>
   )
 }

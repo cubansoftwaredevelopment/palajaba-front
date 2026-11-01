@@ -1,6 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { BuyerDisplayCurrencyProvider } from '../context/BuyerDisplayCurrencyContext'
-import { BuyerJabaProvider } from '../context/BuyerJabaContext'
+import { BuyerDisplayCurrencyProvider, BuyerJabaProvider } from '../buyer/context.js'
 
 export default function BuyerJabaLayout() {
   return (

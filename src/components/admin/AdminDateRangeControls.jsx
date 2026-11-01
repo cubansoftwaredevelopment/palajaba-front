@@ -91,11 +91,14 @@ export default function AdminDateRangeControls({
   applyPeriodToRange = false,
   allowUntilTomorrow = false,
   className = '',
+  inline = false,
 }) {
   const [open, setOpen] = useState(false)
   const [periodOpen, setPeriodOpen] = useState(false)
   const [draft, setDraft] = useState(range)
   const rootRef = useRef(null)
+  const calendarRef = useRef(null)
+  const periodMenuRef = useRef(null)
   const maxDay = allowUntilTomorrow ? startOfTomorrow() : startOfToday()
   const customActive = period === 'custom' && Boolean(range?.from && range?.to)
   const periodLabel = period === 'custom'
@@ -124,6 +127,22 @@ export default function AdminDateRangeControls({
     }
   }, [menuOpen])
 
+  useEffect(() => {
+    if (!inline || !open) return undefined
+    const frame = window.requestAnimationFrame(() => {
+      calendarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [inline, open])
+
+  useEffect(() => {
+    if (!inline || !periodOpen) return undefined
+    const frame = window.requestAnimationFrame(() => {
+      periodMenuRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [inline, periodOpen])
+
   function applyRange() {
     if (!draft?.from || !draft?.to) return
     onRangeChange({ from: draft.from, to: draft.to }, 'custom')
@@ -141,17 +160,47 @@ export default function AdminDateRangeControls({
     : 'Fechas'
 
   const floatButton = 'inline-flex min-h-11 items-center rounded-full border border-white bg-brand-green px-4 text-xs font-semibold text-white shadow-[0_8px_24px_rgba(41,55,29,0.24)] transition hover:bg-brand-green/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35'
+  const buttonClass = inline
+    ? 'inline-flex min-h-10 items-center rounded-xl border border-brand-green/15 bg-brand-white px-3.5 text-xs font-semibold text-brand-green shadow-sm transition hover:border-brand-green/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/20'
+    : floatButton
+  const popupPosition = inline ? 'left-0 top-full mt-2' : 'right-0 bottom-full mb-2'
+  const calendarContent = open ? (
+    <div ref={inline ? calendarRef : null} className={`${inline ? 'mt-2 mb-5 w-[19rem] max-w-[calc(100vw-3.5rem)] scroll-mb-5' : `absolute ${popupPosition} w-[19rem] max-w-[calc(100vw-2rem)]`} z-40 rounded-2xl border border-white bg-brand-white p-3 shadow-[0_16px_40px_rgba(41,55,29,0.2)] motion-safe:animate-order-modal-in`}>
+      <DayPicker
+        mode="range"
+        selected={draft ?? undefined}
+        onSelect={setDraft}
+        locale={es}
+        disabled={{ after: maxDay }}
+        defaultMonth={draft?.from ?? range?.from ?? startOfToday()}
+        classNames={pickerClassNames}
+      />
+      <p className="mt-2 text-[0.68rem] leading-relaxed text-brand-carmelita/70">
+        {allowUntilTomorrow
+          ? 'Incluye ambos días, hasta mañana (hora de Cuba).'
+          : 'Incluye ambos días, hasta hoy.'}
+      </p>
+      <button
+        type="button"
+        onClick={applyRange}
+        disabled={!draft?.from || !draft?.to}
+        className={`${periodClass(true)} mt-2 w-full justify-center disabled:opacity-50`}
+      >
+        Aplicar
+      </button>
+    </div>
+  ) : null
 
   if (typeof document === 'undefined') return null
 
-  return createPortal((
+  const controls = (
     <div
       ref={rootRef}
-      className={`fixed right-4 bottom-[calc(5.5rem+var(--safe-bottom))] z-40 flex items-end gap-2 lg:bottom-5 ${className}`}
+      className={`${inline ? `relative z-30 flex flex-wrap items-center gap-2 ${periodOpen ? 'pb-36' : ''}` : 'fixed right-4 bottom-[calc(5.5rem+var(--safe-bottom))] z-40 flex items-end gap-2 lg:bottom-5'} ${className}`}
     >
       <div className="relative">
         {periodOpen ? (
-          <div className="absolute right-0 bottom-full mb-2 flex w-40 flex-col gap-1 rounded-2xl border border-white bg-brand-white p-2 shadow-[0_16px_40px_rgba(41,55,29,0.2)] motion-safe:animate-order-modal-in">
+          <div ref={periodMenuRef} className={`absolute ${popupPosition} z-40 flex w-40 scroll-mb-5 flex-col gap-1 rounded-2xl border border-white bg-brand-white p-2 shadow-[0_16px_40px_rgba(41,55,29,0.2)] motion-safe:animate-order-modal-in`}>
             {DATE_RANGE_PERIODS.map((option) => (
               <button
                 key={option.id}
@@ -174,45 +223,21 @@ export default function AdminDateRangeControls({
             setOpen(false)
             setPeriodOpen((value) => !value)
           }}
-          className={`${floatButton} ${periodOpen ? 'ring-2 ring-brand-green/20' : ''}`}
+          className={`${buttonClass} ${periodOpen ? 'ring-2 ring-brand-green/20' : ''}`}
           aria-expanded={periodOpen}
           aria-label="Cambiar temporalidad"
         >
           {periodLabel}
         </button>
       </div>
-      <div className="relative flex items-end gap-1">
-        {open ? (
-          <div className="absolute right-0 bottom-full mb-2 w-[19rem] max-w-[calc(100vw-2rem)] rounded-2xl border border-white bg-brand-white p-3 shadow-[0_16px_40px_rgba(41,55,29,0.2)] motion-safe:animate-order-modal-in">
-            <DayPicker
-              mode="range"
-              selected={draft ?? undefined}
-              onSelect={setDraft}
-              locale={es}
-              disabled={{ after: maxDay }}
-              defaultMonth={draft?.from ?? range?.from ?? startOfToday()}
-              classNames={pickerClassNames}
-            />
-            <p className="mt-2 text-[0.68rem] leading-relaxed text-brand-carmelita/70">
-              {allowUntilTomorrow
-                ? 'Incluye ambos días, hasta mañana (hora de Cuba).'
-                : 'Incluye ambos días, hasta hoy.'}
-            </p>
-            <button
-              type="button"
-              onClick={applyRange}
-              disabled={!draft?.from || !draft?.to}
-              className={`${periodClass(true)} mt-2 w-full justify-center disabled:opacity-50`}
-            >
-              Aplicar
-            </button>
-          </div>
-        ) : null}
+      <div className={`${inline ? 'flex flex-col items-start' : 'relative flex items-end'} gap-1`}>
         {customActive ? (
           <button
             type="button"
             onClick={clearRange}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white bg-brand-green text-lg text-white shadow-[0_8px_24px_rgba(41,55,29,0.24)] hover:bg-brand-green/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35"
+            className={inline
+              ? 'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-brand-green/15 bg-brand-white text-lg text-brand-green shadow-sm hover:border-brand-green/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/20'
+              : 'inline-flex h-11 w-11 items-center justify-center rounded-full border border-white bg-brand-green text-lg text-white shadow-[0_8px_24px_rgba(41,55,29,0.24)] hover:bg-brand-green/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35'}
             aria-label="Quitar rango"
           >
             ×
@@ -225,12 +250,15 @@ export default function AdminDateRangeControls({
             setDraft(range)
             setOpen((value) => !value)
           }}
-          className={`${floatButton} ${customActive || open ? 'ring-2 ring-brand-green/20' : ''}`}
+          className={`${buttonClass} ${customActive || open ? 'ring-2 ring-brand-green/20' : ''}`}
           aria-expanded={open}
         >
           {rangeLabel}
         </button>
+        {calendarContent}
       </div>
     </div>
-  ), document.body)
+  )
+
+  return inline ? controls : createPortal(controls, document.body)
 }

@@ -10,7 +10,7 @@ import {
   sellerMapMarkerIcon,
 } from '../../lib/sellerMap'
 import { sellerModalTitle } from './sellerStyles'
-import { useDismissibleModal } from '../buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 
 export default function LocationMapModal({ initialLocation, onConfirm, onClose: requestClose }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)

@@ -6,7 +6,8 @@ import PasswordField from '../../components/auth/PasswordField'
 import Button from '../../components/Button'
 import GestorShell from '../../components/gestor/GestorShell'
 import { alertErrorClass, hintClass, inputClass, labelClass } from '../../components/auth/formStyles'
-import { fetchMarketplaceStore, gestorLogin } from '../../lib/api'
+import { gestorLogin } from '../../lib/api'
+import { fetchMarketplaceStore } from '../../buyer/api.js'
 import {
   gestorPanelPath,
   gestorSetupPath,

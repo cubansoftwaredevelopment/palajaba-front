@@ -1,6 +1,6 @@
 import { getJabaItems, replaceJabaItems } from './buyerJaba'
 import { getAdditionalMunicipalities } from './buyerLocation'
-import { syncBuyerJaba } from './api'
+import { syncBuyerJaba } from '../buyer/api.js'
 
 function jabaItemFromApiProduct(product, quantity, previousItem = null) {
   const next = {

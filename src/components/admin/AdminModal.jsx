@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { useDismissibleModal } from '../buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import { adminFocusRing } from './adminStyles'
 import { readAdminTheme } from './adminTheme'
 

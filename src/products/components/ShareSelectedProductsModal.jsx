@@ -13,7 +13,7 @@ import { getBusinessAreaFromSelection } from '../../components/seller/SellerBusi
 import SellerBusinessAreaFields from '../../components/seller/SellerBusinessAreaFields'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import { TelegramIcon, WhatsAppIcon } from '../../components/seller/ShareBrandIcons'
-import { useDismissibleModal } from '../../components/buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { buildTelegramShareUrl, buildWhatsAppShareUrl } from '../../lib/storeShare'
 import {

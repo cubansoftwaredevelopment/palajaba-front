@@ -7,7 +7,7 @@ import { isNativeAppShell } from '../../lib/nativeApp'
 import { getStoreCatalogUrl, getStoreShareMessage } from '../../lib/storeShare'
 import { canUseSystemShare, shareWithSystem } from '../../lib/buyerShare'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../components/buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import {
   sellerAlertSuccess,
   sellerBtnSecondary,

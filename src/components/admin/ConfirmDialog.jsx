@@ -1,6 +1,6 @@
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
-import { useDismissibleModal } from '../buyer/useOrderModalPresence'
+import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 
 export default function ConfirmDialog({
   title,
