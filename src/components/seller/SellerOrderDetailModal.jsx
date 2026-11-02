@@ -546,7 +546,12 @@ export default function SellerOrderDetailModal({
           ) : null}
 
           {qvaAwaitingEvidence && canSendQvaPayEvidence(qvapay) ? (
-            <SellerOrderEvidenceEditor orderId={order.id} submitting={saving} onSubmit={onSubmitEvidence} />
+            <SellerOrderEvidenceEditor
+              orderId={order.id}
+              submitting={saving}
+              onSubmit={onSubmitEvidence}
+              reusableContent={evidence?.status === 'rejected' ? evidence.content : null}
+            />
           ) : null}
 
           <div className="mt-4 flex gap-2">
