@@ -55,11 +55,11 @@ export default function SellerQvaPaySettings({ onUpdated }) {
         <p className={sellerHint}>Verificaremos que el usuario exista antes de habilitarlo. El mismo método estará disponible para todos los planes.</p>
         {error ? <p role="alert" className={sellerAlertError}>{error}</p> : null}
         {message ? <p role="status" className={sellerAlertSuccess}>{message}</p> : null}
-        <div className="flex flex-wrap gap-2">
-          <button type="submit" disabled={loading || saving || !username.trim() || username.trim().toLowerCase() === savedUsername.toLowerCase()} className={sellerBtnPrimary}>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="submit" disabled={loading || saving || !username.trim() || username.trim().toLowerCase() === savedUsername.toLowerCase()} className={`${sellerBtnPrimary} min-h-12 min-w-0 px-2 text-xs leading-tight sm:text-sm ${savedUsername ? '!w-auto' : 'col-span-2'}`}>
             {saving ? 'Verificando…' : savedUsername ? 'Actualizar usuario' : 'Verificar y guardar'}
           </button>
-          {savedUsername ? <button type="button" onClick={remove} disabled={saving} className={sellerBtnDanger}>Eliminar cuenta</button> : null}
+          {savedUsername ? <button type="button" onClick={remove} disabled={saving} className={`${sellerBtnDanger} min-h-12 min-w-0 !w-auto px-2 text-xs leading-tight sm:text-sm`}>Eliminar cuenta</button> : null}
         </div>
       </form>
     </SellerSection>
