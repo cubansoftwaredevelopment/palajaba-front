@@ -14,6 +14,7 @@ import { MARKETPLACE_LABEL } from '../../constants/branding'
 import { getProvinceById } from '../../constants/cubaLocations'
 import { getAdditionalMunicipalities, getBuyerLocation, setAdditionalMunicipalities, setBuyerMunicipality } from '../../lib/buyerLocation'
 import Button from '../../components/Button'
+import Checkbox from '../../components/ui/Checkbox'
 import { municipalityMatchesQuery } from '../../lib/municipalityDisplay'
 
 export default function BuyerSelectMunicipality() {
@@ -53,6 +54,16 @@ export default function BuyerSelectMunicipality() {
     )
   }
 
+  const allMunicipalitiesSelected = province.municipalities.every((municipality) =>
+    selectedIds.includes(municipality.id),
+  )
+
+  function toggleAllMunicipalities(checked) {
+    setSelectedIds(
+      checked ? province.municipalities.map((municipality) => municipality.id) : [],
+    )
+  }
+
   function confirmSelection() {
     if (!province || selectedIds.length === 0) return
     const [firstId, ...rest] = selectedIds
@@ -87,15 +98,26 @@ export default function BuyerSelectMunicipality() {
       <label htmlFor="buyer-municipality-search" className="sr-only">
         Buscar municipio
       </label>
-      <input
-        id="buyer-municipality-search"
-        type="search"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        placeholder="Buscar municipio…"
-        className={`mb-4 lg:max-w-xl ${buyerSearchInput}`}
-        autoComplete="off"
-      />
+      <div className="mb-7 flex items-center gap-3">
+        <input
+          id="buyer-municipality-search"
+          type="search"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Buscar municipio…"
+          className={`mb-0 min-w-0 flex-1 lg:max-w-xl ${buyerSearchInput}`}
+          autoComplete="off"
+        />
+
+        <label className="flex min-h-10 max-w-44 shrink-0 cursor-pointer items-center gap-2 text-xs font-semibold leading-snug text-brand-green sm:text-sm">
+          <Checkbox
+            checked={allMunicipalitiesSelected}
+            onChange={(event) => toggleAllMunicipalities(event.target.checked)}
+            aria-label={`Seleccionar todos los municipios de ${province.name}`}
+          />
+          <span>Todos</span>
+        </label>
+      </div>
 
       <div className={`animate-fade-in ${buyerList}`}>
         {municipalities.length === 0 ? (
