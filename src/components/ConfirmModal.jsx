@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import Button from './Button'
 import { useDismissibleModal } from '../buyer/components/useOrderModalPresence'
 
@@ -25,9 +26,9 @@ export default function ConfirmModal({
     }
   }, [onClose])
 
-  return (
+  return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex items-end justify-center bg-brand-green/25 p-4 backdrop-blur-sm sm:items-center ${motionClass}`}
+      className={`fixed inset-0 z-[100] flex items-end justify-center bg-brand-green/25 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:pb-4 ${motionClass}`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="confirm-modal-title"
@@ -74,12 +75,15 @@ export default function ConfirmModal({
             <Button type="button" variant={confirmVariant} onClick={onConfirm}>
               {confirmLabel}
             </Button>
-            <Button type="button" variant="ghost" onClick={onClose}>
-              {cancelLabel}
-            </Button>
+            {cancelLabel ? (
+              <Button type="button" variant="ghost" onClick={onClose}>
+                {cancelLabel}
+              </Button>
+            ) : null}
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

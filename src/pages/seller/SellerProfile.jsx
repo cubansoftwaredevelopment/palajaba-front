@@ -458,7 +458,7 @@ export default function SellerProfile() {
           title="Agrega un correo electrónico"
           description="Tu cuenta no tiene un correo electrónico configurado. Ve a Perfil avanzado y agrega tu correo para poder recuperar el acceso a tu cuenta si lo necesitas."
           confirmLabel="Ir a Perfil avanzado"
-          cancelLabel="Ahora no"
+          cancelLabel={null}
           icon={<span className="text-3xl" aria-hidden="true">⚠️</span>}
           onClose={() => setShowMissingEmailWarning(false)}
           onConfirm={() => {
