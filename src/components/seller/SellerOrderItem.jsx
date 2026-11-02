@@ -1,5 +1,6 @@
 import { formatOrderDateTime } from '../../lib/dates'
 import { formatPrice } from '../../lib/money'
+import SellerEvidenceCountdown from './SellerEvidenceCountdown'
 import { sellerFocusRing } from './sellerStyles'
 
 function formatSubtotals(subtotals = [], paymentCurrency = null) {
@@ -22,7 +23,8 @@ function ChevronIcon() {
 export default function SellerOrderItem({ order, variant = 'pending', onOpen }) {
   const itemCount = order.items.reduce((total, item) => total + item.quantity, 0)
   const isPending = variant === 'pending'
-  const evidenceStatus = order.payment_method === 'qvapay' ? order.qvapay?.evidence?.status : null
+  const evidence = order.payment_method === 'qvapay' ? order.qvapay?.evidence : null
+  const evidenceStatus = evidence?.status
   const evidenceLabel = evidenceStatus === 'pending'
     ? 'Evidencia enviada'
     : evidenceStatus === 'rejected' ? 'Evidencia rechazada' : null
@@ -89,6 +91,9 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
                 ? `Recibido ${formatOrderDateTime(order.created_at)}`
                 : `Completada ${formatOrderDateTime(order.completed_at ?? order.updated_at)}`}
             </span>
+            {evidenceStatus === 'pending' ? (
+              <SellerEvidenceCountdown deadline={evidence?.deadline} label="Restan:" className="mt-1 block text-xs font-semibold text-amber-800" />
+            ) : null}
             <span className="mt-1.5 block truncate text-xs font-semibold text-brand-carmelita">
               {buyerName}
             </span>

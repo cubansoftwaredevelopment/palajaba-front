@@ -13,6 +13,7 @@ import SellerModalPortal from './SellerModalPortal'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
 import SellerOrderEvidenceEditor from './SellerOrderEvidenceEditor'
+import SellerEvidenceCountdown from './SellerEvidenceCountdown'
 import { canSendQvaPayEvidence } from '../../lib/qvapayEvidence.js'
 import {
   sellerAlertError,
@@ -558,7 +559,12 @@ export default function SellerOrderDetailModal({
               {qvaAwaitingStore ? <p className="mt-1 text-sm text-brand-carmelita">Acepta el pedido para crear y enviar la factura, o recházalo para cancelar la solicitud.</p> : null}
               {qvapay?.payment_status === 'awaiting_payment' ? <p className="mt-1 text-sm text-brand-carmelita">Factura enviada al cliente. Esperando confirmación del pago QvaPay.</p> : null}
               {qvapay?.payment_status === 'paid' ? <p className="mt-1 text-sm text-brand-carmelita">Pago confirmado. Los fondos siguen retenidos hasta que el cliente acepte la evidencia o venza su plazo de 48 horas.</p> : null}
-              {evidence?.status === 'pending' ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950">Evidencia enviada; espera la respuesta del cliente hasta {evidence.deadline ? formatOrderDateTime(evidence.deadline) : '48 horas'}.</p> : null}
+              {evidence?.status === 'pending' ? (
+                <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950">
+                  <p>Evidencia enviada; espera la respuesta del cliente hasta {evidence.deadline ? formatOrderDateTime(evidence.deadline) : '48 horas'}.</p>
+                  <SellerEvidenceCountdown deadline={evidence.deadline} className="mt-1 block" />
+                </div>
+              ) : null}
               {evidence?.status === 'rejected' ? (
                 <div className="mt-3 space-y-3 rounded-xl border border-red-200 bg-red-50 p-3">
                   <p className="text-sm font-semibold text-red-900">Evidencia rechazada. El pago continúa retenido; puedes preparar una nueva evidencia o consultar a soporte.</p>
