@@ -77,6 +77,20 @@ export function isTechnicalMessage(message) {
   return false
 }
 
+const TECHNICAL_EXCEPTION_NAMES = new Set([
+  'TypeError',
+  'ReferenceError',
+  'SyntaxError',
+  'RangeError',
+  'AggregateError',
+  'URIError',
+  'EvalError',
+])
+
+function isTechnicalException(err) {
+  return Boolean(err?.name && TECHNICAL_EXCEPTION_NAMES.has(err.name))
+}
+
 export function isSessionError(err) {
   const msg = (err?.message || '').toLowerCase()
   return (
@@ -164,7 +178,7 @@ export function resolveUserFacingError(err, options = {}) {
     }
   }
 
-  if (!rawMessage || isTechnicalMessage(rawMessage)) {
+  if (!rawMessage || isTechnicalException(err) || isTechnicalMessage(rawMessage)) {
     return {
       title: contextTitle || fallbackTitle,
       message: fallbackMessage,

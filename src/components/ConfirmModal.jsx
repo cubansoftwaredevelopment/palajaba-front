@@ -4,6 +4,7 @@ import { useDismissibleModal } from '../buyer/components/useOrderModalPresence'
 
 export default function ConfirmModal({
   title,
+  description,
   confirmLabel = 'Confirmar',
   cancelLabel = 'Cancelar',
   confirmVariant = 'primary',
@@ -66,6 +67,8 @@ export default function ConfirmModal({
           <h2 id="confirm-modal-title" className="font-display text-2xl font-bold text-brand-green">
             {title}
           </h2>
+
+          {description ? <p className="mt-3 text-sm leading-relaxed text-brand-carmelita/80">{description}</p> : null}
 
           <div className="mt-6 flex w-full flex-col gap-2.5">
             <Button type="button" variant={confirmVariant} onClick={onConfirm}>

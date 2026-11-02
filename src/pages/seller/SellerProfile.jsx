@@ -12,6 +12,7 @@ import SellerStoreBanners from '../../components/seller/SellerStoreBanners'
 import SellerUpgradePlan from '../../components/seller/SellerUpgradePlan'
 import SellerQvaPaySettings from '../../components/seller/SellerQvaPaySettings'
 import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection'
+import ConfirmModal from '../../components/ConfirmModal'
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
 import SellerProfileMenuList from '../../components/seller/SellerProfileMenuList'
 import SellerSection from '../../components/seller/SellerSection'
@@ -124,6 +125,15 @@ export default function SellerProfile() {
   const [error, setError] = useState('')
   const [errorToast, setErrorToast] = useState(null)
   const [saved, setSaved] = useState(false)
+  const [showMissingEmailWarning, setShowMissingEmailWarning] = useState(false)
+  const missingEmailWarningShownRef = useRef(false)
+
+  useEffect(() => {
+    if (profile && !String(profile.email || '').trim() && !missingEmailWarningShownRef.current) {
+      missingEmailWarningShownRef.current = true
+      setShowMissingEmailWarning(true)
+    }
+  }, [profile])
 
   function showCaughtError(err) {
     const resolved = resolveUserFacingError(err)
@@ -443,6 +453,20 @@ export default function SellerProfile() {
 
   return (
     <>
+      {showMissingEmailWarning ? (
+        <ConfirmModal
+          title="Agrega un correo electrónico"
+          description="Tu cuenta no tiene un correo electrónico configurado. Ve a Perfil avanzado y agrega tu correo para poder recuperar el acceso a tu cuenta si lo necesitas."
+          confirmLabel="Ir a Perfil avanzado"
+          cancelLabel="Ahora no"
+          icon={<span className="text-3xl" aria-hidden="true">⚠️</span>}
+          onClose={() => setShowMissingEmailWarning(false)}
+          onConfirm={() => {
+            setShowMissingEmailWarning(false)
+            setActivePanel(openProfilePanel(null, PROFILE_PANEL_IDS.advanced))
+          }}
+        />
+      ) : null}
       <section
         className={`animate-fade-in ${
           activePanel === PROFILE_PANEL_IDS.banners ? 'w-full' : sellerPageWrap
