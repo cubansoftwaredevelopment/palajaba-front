@@ -10,6 +10,8 @@ import { buyerProductDetailModal, buyerProductDetailOverlay } from '../../buyer/
 import { ORDER_MODAL_EXIT_MS, orderModalMotionClass } from '../../buyer/components/useOrderModalPresence'
 import SellerModalPortal from './SellerModalPortal'
 
+const sellerEvidenceModalOverlay = buyerProductDetailOverlay.replace('z-[85]', 'z-[220]')
+
 function readEvidenceDraft(orderId) {
   if (typeof window === 'undefined') return null
   try {
@@ -147,7 +149,7 @@ export default function SellerOrderEvidenceEditor({ orderId, submitting, onSubmi
       {open ? (
         <SellerModalPortal>
           <div
-            className={`${buyerProductDetailOverlay} ${motionClass}`}
+            className={`${sellerEvidenceModalOverlay} ${motionClass}`}
             role="presentation"
             onMouseDown={(event) => { if (event.target === event.currentTarget) closeEditor() }}
           >
