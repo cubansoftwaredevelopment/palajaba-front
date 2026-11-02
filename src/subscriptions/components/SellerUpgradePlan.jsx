@@ -7,16 +7,19 @@ import {
   formatPlanPriceLabel,
   getSellerPlan,
   normalizeBillingPeriod,
-  upgradeablePlanTiers,
+  PLAN_TIERS,
+  PLAN_TIER_ORDER,
 } from '../constants.js'
 import { usePlanPricing } from '../../lib/usePlanPricing'
 import UpgradeToPremiumButton from './UpgradeToPremiumButton'
-import { sellerHint } from '../../components/seller/sellerStyles.js'
+import { sellerBtnPrimary, sellerFocusRing, sellerHint } from '../../components/seller/sellerStyles.js'
 import { getSellerToken } from '../../lib/sellerAuth.js'
 import { createSubscriptionQvaPayCheckout, fetchSubscriptionQvaPayCheckout } from '../api.js'
 import { isSubscriptionCheckoutClosed, isSubscriptionCheckoutPaid, subscriptionCheckoutStatusMessage } from '../qvapay.js'
 
-function QvaPayCheckout({ tier, billing, onActivated, secondaryAction }) {
+const planActionButtonClass = `${sellerBtnPrimary} h-12 min-h-12 w-full min-w-0 justify-center px-2 text-center text-sm leading-tight ${sellerFocusRing}`
+
+function QvaPayCheckout({ tier, billing, onActivated, secondaryAction, canPay = true }) {
   const [checkout, setCheckout] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -70,7 +73,7 @@ function QvaPayCheckout({ tier, billing, onActivated, secondaryAction }) {
 
   return (
     <div className="mt-4 grid grid-cols-2 gap-2">
-      <button type="button" className="inline-flex min-h-11 min-w-0 w-full items-center justify-center rounded-xl bg-brand-green px-2 py-2.5 text-center text-sm font-bold text-brand-white shadow-sm transition hover:bg-brand-green/90 disabled:opacity-60" onClick={beginCheckout} disabled={busy || paid}>
+      <button type="button" className={planActionButtonClass} onClick={beginCheckout} disabled={busy || paid || !canPay}>
         {busy ? 'Creando factura…' : paid ? 'Plan activado' : 'Pagar con QvaPay'}
       </button>
       {secondaryAction}
@@ -102,16 +105,15 @@ function CheckIcon() {
 export default function SellerUpgradePlan({ profile, onUpdated }) {
   const currentPlan = getSellerPlan(profile)
   const isTrial = currentPlan.id === 'trial'
-  const upgrades = upgradeablePlanTiers(profile)
   const canUpgrade = canUpgradePlan(profile)
   const currentBilling = normalizeBillingPeriod(profile?.billing_period)
   const subscriptionInactive = profile?.subscription_active === false
+  const paidPlanActive = !isTrial && !subscriptionInactive
   const [billing, setBilling] = useState(currentBilling)
-  const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount } = usePlanPricing()
+  const [selectedPlanId, setSelectedPlanId] = useState(null)
+  const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount, cupPerUnit } = usePlanPricing()
   const currentPlanName = currentPlan.name
-  const planOptions = subscriptionInactive || isTrial
-    ? upgrades
-    : [...upgrades, currentPlan].filter((tier, index, all) => all.findIndex((item) => item.id === tier.id) === index)
+  const planOptions = PLAN_TIER_ORDER.map((tierId) => PLAN_TIERS[tierId])
 
   return (
     <div className="flex flex-col gap-3">
@@ -121,9 +123,11 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
           : isTrial
           ? 'Estás en el plan Prueba. Puedes mejorarlo a Básico, Pro o Premium con QvaPay o por WhatsApp.'
           : `Estás en el plan ${currentPlan.name} · ${BILLING_LABELS[currentBilling] ?? BILLING_LABELS.monthly}. ${
-              canUpgrade
-                ? 'Elige un plan superior y págalo con QvaPay o solicita el cambio por WhatsApp.'
-                : 'Ya tienes el plan más completo; puedes renovarlo con QvaPay.'
+              paidPlanActive
+                ? 'Tu suscripción sigue activa. Podrás pagar o cambiar de plan cuando venza; puedes contactar al equipo para consultar opciones.'
+                : canUpgrade
+                  ? 'Elige un plan superior y págalo con QvaPay o solicita el cambio por WhatsApp.'
+                  : 'Ya tienes el plan más completo; puedes renovarlo con QvaPay.'
             }`}
       </p>
 
@@ -157,16 +161,32 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
       ) : (
         <ul className="flex flex-col gap-3">
           {planOptions.map((tier) => {
+            const isCurrentTier = tier.id === currentPlan.id && !isTrial
+            const isSelected = selectedPlanId === tier.id
             const price = getPlanPrice(tier.id, billing)
+            const usdEquivalent = price.amount != null && Number(cupPerUnit?.USD) > 0
+              ? Number(price.amount) / Number(cupPerUnit.USD)
+              : null
             const savings = getPlanPeriodSavings(tier.id, billing)
             const recommended = Boolean(tier.recommended)
             return (
               <li
                 key={tier.id}
-                className={`rounded-2xl border p-4 shadow-sm ${
-                  recommended
-                    ? 'border-brand-yellow bg-brand-yellow/[0.08] ring-2 ring-brand-yellow/35'
-                    : 'border-brand-green/12 bg-brand-white'
+                onClick={() => setSelectedPlanId(tier.id)}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget) return
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    setSelectedPlanId(tier.id)
+                  }
+                }}
+                tabIndex={0}
+                className={`cursor-pointer rounded-2xl border p-4 shadow-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40 ${
+                  isSelected
+                    ? 'border-brand-green bg-brand-green/[0.08] ring-2 ring-brand-green/55 shadow-[0_8px_24px_rgba(45,80,22,0.24)]'
+                    : recommended
+                      ? 'border-brand-yellow bg-brand-yellow/[0.08] ring-2 ring-brand-yellow/35'
+                      : 'border-brand-green/12 bg-brand-white hover:border-brand-green/30'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -186,6 +206,11 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
                     /{price.label}
                   </span>
                 </p>
+                {usdEquivalent != null ? (
+                  <p className="mt-1 text-sm font-semibold text-brand-green/80">
+                    ≈ {usdEquivalent.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD/{price.label}
+                  </p>
+                ) : null}
                 <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
                   {tier.description}
                 </p>
@@ -213,14 +238,16 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
                   tier={tier}
                   billing={billing}
                   onActivated={onUpdated}
+                  canPay={!paidPlanActive}
                   secondaryAction={(
                     <UpgradeToPremiumButton
-                      className="min-w-0 w-full px-2 text-sm"
+                      className={planActionButtonClass}
                       storeName={profile?.store_name}
                       currentPlanName={currentPlanName}
                       targetPlanName={tier.name}
                       billingLabel={BILLING_LABELS[billing]}
                       label={`Pasar a ${tier.name}`}
+                      disabled={isCurrentTier}
                     />
                   )}
                 />

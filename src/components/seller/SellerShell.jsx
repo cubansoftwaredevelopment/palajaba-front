@@ -73,6 +73,7 @@ function LogoutButton({ onClick }) {
 
 export default function SellerShell({
   storeName,
+  planName,
   subscriptionActive = true,
   onLogout,
   onNotifications,
@@ -132,9 +133,14 @@ export default function SellerShell({
                 Bienvenido{' '}
                 <span className="text-brand-carmelita">{storeName}</span>
               </p>
-              <span className={`mr-1 shrink-0 rounded-full px-2 py-1 text-[0.55rem] font-extrabold uppercase tracking-wide sm:mr-2 sm:px-2.5 sm:text-[0.65rem] ${subscriptionActive ? 'bg-brand-green/10 text-brand-green' : 'bg-amber-100 text-amber-800'}`} role="status">
-                {subscriptionActive ? 'Activa' : 'Inactiva'}
-              </span>
+              <div className="mr-1 flex shrink-0 flex-col items-center gap-0.5 sm:mr-2">
+                <span className={`rounded-full px-2 py-1 text-[0.55rem] font-extrabold uppercase tracking-wide sm:px-2.5 sm:text-[0.65rem] ${subscriptionActive ? 'bg-brand-green/10 text-brand-green' : 'bg-amber-100 text-amber-800'}`} role="status">
+                  {subscriptionActive ? 'Activa' : 'Inactiva'}
+                </span>
+                <span className="whitespace-nowrap text-[0.55rem] font-semibold leading-tight text-brand-carmelita/85 sm:text-[0.62rem]">
+                  Plan {planName}
+                </span>
+              </div>
               <div className="flex shrink-0 items-center">
                 <NotificationsButton onClick={onNotifications} unreadCount={notificationCount} />
                 {onLogout && <LogoutButton onClick={onLogout} />}

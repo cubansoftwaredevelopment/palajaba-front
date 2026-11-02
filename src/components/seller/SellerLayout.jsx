@@ -16,6 +16,7 @@ import {
 } from '../../lib/sellerAuth'
 import { clearSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
 import { getSellerDefaultPath, getSellerNavItems, sellerHasGestores } from '../../lib/planAccess'
+import { getSellerPlan } from '../../subscriptions/constants.js'
 import { requestSellerOrdersRefresh, SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { requestSellerProductsRefresh } from '../../lib/sellerProductsRefresh'
 import { SELLER_LIVE_POLL_MS } from '../../live/constants'
@@ -321,6 +322,7 @@ export default function SellerLayout() {
     <>
       <SellerShell
         storeName={profile.store_name}
+        planName={getSellerPlan(profile).name}
         subscriptionActive={profile.subscription_active}
         onLogout={() => setShowLogoutConfirm(true)}
         onNotifications={openNotifications}

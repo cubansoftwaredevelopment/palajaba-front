@@ -12,6 +12,7 @@ export default function UpgradeToPremiumButton({
   targetPlanName = '',
   billingLabel = '',
   label = 'Mejorar plan',
+  disabled = false,
 }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -54,7 +55,7 @@ export default function UpgradeToPremiumButton({
       <button
         type="button"
         onClick={handleUpgrade}
-        disabled={loading}
+        disabled={loading || disabled}
         className={`${sellerBtnPrimary} min-h-11 px-5 text-sm ${sellerFocusRing} ${className}`}
       >
         {loading ? 'Abriendo WhatsApp…' : label}
