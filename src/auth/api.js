@@ -120,9 +120,10 @@ export function fetchSellerQvaPayAccount(token) {
   return request('/api/auth/me/payment-methods/qvapay', { headers: authHeaders(token) })
 }
 
-export function saveSellerQvaPayAccount(token, username) {
+export function saveSellerQvaPayAccount(token, username, { skipVerification = false } = {}) {
   return request('/api/auth/me/payment-methods/qvapay', {
-    method: 'PUT', headers: authHeaders(token), body: JSON.stringify({ username }),
+    method: 'PUT', headers: authHeaders(token),
+    body: JSON.stringify({ username, skip_verification: skipVerification }),
   })
 }
 
