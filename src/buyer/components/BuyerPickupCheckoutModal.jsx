@@ -179,14 +179,6 @@ export default function BuyerPickupCheckoutModal({
               <WhatsAppIcon />
               {checkoutSubmitting ? 'Registrando pedido…' : 'Contactar directamente a la tienda'}
             </button>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={checkoutSubmitting}
-              className="min-h-11 text-sm font-semibold text-brand-green underline-offset-2 active:opacity-80 lg:hover:underline disabled:opacity-50"
-            >
-              Cancelar
-            </button>
           </div>
         </form>
       </div>
