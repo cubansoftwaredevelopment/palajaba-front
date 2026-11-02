@@ -38,8 +38,16 @@ export function unregisterSellerDevice(token) {
 }
 
 export function sellerEventsUrl(accessToken) {
+  return eventsUrl('/api/live/events', accessToken)
+}
+
+export function customerEventsUrl(accessToken) {
+  return eventsUrl('/api/live/customer-events', accessToken)
+}
+
+function eventsUrl(endpoint, accessToken) {
   const params = new URLSearchParams({ token: accessToken })
-  const path = `/api/live/events?${params}`
+  const path = `${endpoint}?${params}`
   if (isNativeApp() || !import.meta.env.DEV) {
     const base = (import.meta.env.VITE_API_URL ?? 'https://palajaba-api.onrender.com').replace(/\/$/, '')
     const wsBase = base.replace(/^http/i, 'ws')

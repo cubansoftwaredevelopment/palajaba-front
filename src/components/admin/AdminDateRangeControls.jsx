@@ -196,7 +196,7 @@ export default function AdminDateRangeControls({
   const controls = (
     <div
       ref={rootRef}
-      className={`${inline ? `relative z-30 flex flex-wrap items-center gap-2 ${periodOpen ? 'pb-36' : ''}` : 'fixed right-4 bottom-[calc(5.5rem+var(--safe-bottom))] z-40 flex items-end gap-2 lg:bottom-5'} ${className}`}
+      className={`${inline ? `relative z-30 flex flex-wrap items-start gap-2 ${periodOpen ? 'pb-36' : ''}` : 'fixed right-4 bottom-[calc(5.5rem+var(--safe-bottom))] z-40 flex items-end gap-2 lg:bottom-5'} ${className}`}
     >
       <div className="relative">
         {periodOpen ? (

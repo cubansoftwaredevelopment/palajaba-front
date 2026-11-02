@@ -5,6 +5,9 @@ import { convertBetweenCurrencies } from '../../lib/displayPrice'
 import { loadExchangeRates, getCupPerUnit } from '../../lib/exchangeRates'
 import { formatPrice, parseCupInput } from '../../lib/money'
 import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
+import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
+import { openExternalUrl } from '../../lib/nativeApp'
+import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
@@ -94,6 +97,7 @@ export default function SellerOrderDetailModal({
   const [localError, setLocalError] = useState('')
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
+  const [supportPhone, setSupportPhone] = useState('')
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
   const mapMotionClass = orderModalMotionClass(mapClosing)
   const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
@@ -102,6 +106,14 @@ export default function SellerOrderDetailModal({
     loadExchangeRates()
       .then(() => setCupPerUnit(getCupPerUnit()))
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+    fetchRenewalContactPhone()
+      .then((data) => { if (!cancelled) setSupportPhone(data?.renewal_contact_phone || '') })
+      .catch(() => { if (!cancelled) setSupportPhone('') })
+    return () => { cancelled = true }
   }, [])
 
   useEffect(() => {
@@ -139,6 +151,9 @@ export default function SellerOrderDetailModal({
   const orderWorkflowLabel = evidence?.status === 'pending'
     ? 'Evidencia enviada'
     : evidence?.status === 'rejected' ? 'Evidencia rechazada' : ORDER_STATUS_LABELS[order.status]
+  const supportMessage = `Hola, necesito ayuda con la evidencia rechazada del pedido #${String(order.id || '').slice(-6).toUpperCase()} en Pa' La Jaba.`
+  const supportWhatsAppUrl = buildWhatsAppUrl(supportPhone, supportMessage)
+    || `https://wa.me/?text=${encodeURIComponent(supportMessage)}`
   const qvaAwaitingStore = isQvaOrder && qvapay?.request_status === 'pending_seller'
   const qvaAwaitingEvidence = isQvaOrder && qvapay?.payment_status === 'paid'
   const canEditItems = isPending && !isQvaOrder
@@ -547,7 +562,7 @@ export default function SellerOrderDetailModal({
               {evidence?.status === 'rejected' ? (
                 <div className="mt-3 space-y-3 rounded-xl border border-red-200 bg-red-50 p-3">
                   <p className="text-sm font-semibold text-red-900">Evidencia rechazada. El pago continúa retenido; puedes preparar una nueva evidencia o consultar a soporte.</p>
-                  <a href="https://palajaba.com/soporte" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
+                  <a href={supportWhatsAppUrl} onClick={(event) => { event.preventDefault(); openExternalUrl(supportWhatsAppUrl) }} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
                     Consultar a soporte
                   </a>
                 </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, decideCustomerOrderEvidence } from '../api.js'
 import { clearCustomerSession, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
@@ -12,9 +12,17 @@ import BuyerProductCard from '../components/BuyerProductCard'
 import BuyerModalPortal from '../components/BuyerModalPortal'
 import Logo from '../../components/Logo'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
+import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../components/useOrderModalPresence'
 import { getUserFacingMessage } from '../../lib/userFacingError'
-import { startCustomerPush, stopCustomerPush } from '../../live/utils'
+import { connectCustomerEvents, startCustomerPush, stopCustomerPush } from '../../live/utils'
+import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
+import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
+import { openExternalUrl } from '../../lib/nativeApp'
+import SellerFilterDropdown from '../../components/seller/SellerFilterDropdown'
+import SellerModalPortal from '../../components/seller/SellerModalPortal'
+import { sellerModalOverlay, sellerModalSheet } from '../../components/seller/sellerStyles'
+import AdminDateRangeControls, { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 
 const sectionClass = 'rounded-2xl border border-brand-green/10 bg-brand-white p-4 shadow-sm sm:p-6'
 const statusLabel = { pending_confirmation: 'Por procesar', completed: 'Completado', cancelled: 'Cancelado' }
@@ -23,6 +31,22 @@ function getBuyerOrderStatusLabel(order) {
   if (evidenceStatus === 'pending') return 'Evidencia enviada'
   if (evidenceStatus === 'rejected') return 'Evidencia rechazada'
   return statusLabel[order.status] || order.status
+}
+
+function needsBuyerOrderAttention(order) {
+  return order.payment_method === 'qvapay'
+    && ['pending', 'rejected'].includes(order.qvapay?.evidence?.status)
+}
+
+function orderIsInRange(order, range) {
+  if (!range?.from || !range?.to) return true
+  const date = new Date(order.created_at)
+  const from = new Date(range.from)
+  const to = new Date(range.to)
+  if ([date, from, to].some((value) => Number.isNaN(value.getTime()))) return false
+  from.setHours(0, 0, 0, 0)
+  to.setHours(23, 59, 59, 999)
+  return date >= from && date <= to
 }
 
 const CUSTOMER_NAV = [
@@ -76,6 +100,11 @@ function EvidenceContent({ content }) {
   return <div className="prose prose-sm max-w-none break-words text-brand-carmelita">{(content?.content || []).map((node, index) => <EvidenceNode key={`${node.type}-${index}`} node={node} />)}</div>
 }
 
+function getEvidenceSupportWhatsAppUrl(phone, order) {
+  const message = `Hola, necesito ayuda con la evidencia rechazada del pedido #${String(order?.id || '').slice(-6).toUpperCase()} en Pa' La Jaba.`
+  return buildWhatsAppUrl(phone, message) || `https://wa.me/?text=${encodeURIComponent(message)}`
+}
+
 function normalizedPhoneDigits(value) {
   const digits = String(value || '').replace(/\D/g, '')
   return digits.startsWith('53') && digits.length === 10 ? digits.slice(2) : digits
@@ -85,15 +114,29 @@ function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
   const { dismiss, motionClass } = useDismissibleModal(onClose)
   const [decisionLoading, setDecisionLoading] = useState(false)
   const [decisionError, setDecisionError] = useState('')
-  const [supportUrl, setSupportUrl] = useState('')
+  const [supportAvailable, setSupportAvailable] = useState(false)
+  const [supportPhone, setSupportPhone] = useState('')
   const qvapay = order.qvapay
   const evidence = qvapay?.evidence
+  const supportUrl = getEvidenceSupportWhatsAppUrl(supportPhone, order)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchRenewalContactPhone()
+      .then((data) => { if (!cancelled) setSupportPhone(data?.renewal_contact_phone || '') })
+      .catch(() => { if (!cancelled) setSupportPhone('') })
+    return () => { cancelled = true }
+  }, [order.id])
+
+  useEffect(() => {
+    setSupportAvailable(evidence?.status === 'rejected')
+  }, [evidence?.status, order.id])
 
   async function decideEvidence(accept) {
     setDecisionLoading(true); setDecisionError('')
     try {
-      const result = await decideCustomerOrderEvidence(order.id, accept, getCustomerToken())
-      if (!accept) setSupportUrl(result.support_url || 'https://palajaba.com/soporte')
+      await decideCustomerOrderEvidence(order.id, accept, getCustomerToken())
+      if (!accept) setSupportAvailable(true)
       await onUpdated?.()
     } catch (cause) { setDecisionError(getUserFacingMessage(cause, 'No pudimos guardar tu respuesta.')) }
     finally { setDecisionLoading(false) }
@@ -165,7 +208,7 @@ function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
               </>
             ) : null}
             {evidence?.status === 'rejected' ? <p className="mt-2 text-sm text-brand-carmelita">Rechazaste la evidencia. El pago sigue retenido mientras contactas a soporte o la tienda envía otra evidencia.</p> : null}
-            {supportUrl || evidence?.status === 'rejected' ? <a className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green" href={supportUrl || 'https://palajaba.com/soporte'} target="_blank" rel="noreferrer">Contactar soporte de Pa’ La Jaba</a> : null}
+            {supportAvailable || evidence?.status === 'rejected' ? <a className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green" href={supportUrl} onClick={(event) => { event.preventDefault(); openExternalUrl(supportUrl) }} target="_blank" rel="noreferrer">Contactar soporte de Pa’ La Jaba</a> : null}
             {decisionError ? <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{decisionError}</p> : null}
           </section>
         ) : null}
@@ -212,7 +255,7 @@ function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
   )
 }
 
-function CustomerNavigation({ mobile = false }) {
+function CustomerNavigation({ mobile = false, hasOrderWarning = false }) {
   return (
     <nav className={mobile ? 'fixed bottom-0 left-0 right-0 z-30 border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md lg:hidden' : 'hidden lg:flex lg:flex-col lg:gap-1'} style={mobile ? { paddingBottom: 'max(0.375rem, var(--safe-bottom))' } : undefined} aria-label="Secciones de tu cuenta">
       <div className={mobile ? 'mx-auto flex w-full max-w-md items-stretch px-1' : 'flex flex-col gap-1'}>
@@ -220,8 +263,9 @@ function CustomerNavigation({ mobile = false }) {
           {({ isActive }) => <span className={mobile
             ? `flex flex-col items-center justify-center gap-0.5 py-1.5 text-[0.625rem] font-semibold text-center touch-manipulation ${isActive ? 'text-brand-green' : 'text-brand-carmelita/65'}`
             : `flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold ${isActive ? 'bg-brand-green text-white' : 'text-brand-carmelita/80 hover:bg-brand-green/8 hover:text-brand-green'}`}>
-            <span className={mobile ? `flex h-9 w-9 items-center justify-center rounded-xl ${isActive ? 'bg-brand-green text-white' : ''}` : 'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-current/10'}>
+            <span className={mobile ? `relative flex h-9 w-9 items-center justify-center rounded-xl ${isActive ? 'bg-brand-green text-white' : ''}` : 'relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-current/10'}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{item.icon}</svg>
+              {item.id === 'pedidos' && hasOrderWarning ? <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[0.65rem] font-extrabold leading-none text-white ring-2 ring-brand-white" aria-label="Pedidos que requieren atención">!</span> : null}
             </span>
             <span className={mobile ? 'w-full truncate px-0.5' : ''}>{item.label}</span>
           </span>}
@@ -241,10 +285,22 @@ export default function CustomerAccount() {
   const [profile, setProfile] = useState(null)
   const [orders, setOrders] = useState([])
   const [paymentNotifications, setPaymentNotifications] = useState([])
+  const [liveNotificationToast, setLiveNotificationToast] = useState(null)
   const [notificationsLoading, setNotificationsLoading] = useState(true)
   const [notificationsError, setNotificationsError] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [favoriteProducts, setFavoriteProducts] = useState([])
+  const [orderSearch, setOrderSearch] = useState('')
+  const [orderFiltersOpen, setOrderFiltersOpen] = useState(false)
+  const { present: orderFiltersPresent, closing: orderFiltersClosing } = useOrderModalPresence(orderFiltersOpen)
+  const [storeFilter, setStoreFilter] = useState('')
+  const [productFilters, setProductFilters] = useState([])
+  const [statusFilter, setStatusFilter] = useState('')
+  const [currencyFilter, setCurrencyFilter] = useState('')
+  const [deliveryFilter, setDeliveryFilter] = useState('')
+  const [datePeriod, setDatePeriod] = useState('daily')
+  const [dateRange, setDateRange] = useState(() => rangeForPeriod('daily'))
+  const [dateFilterEnabled, setDateFilterEnabled] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [logoutOpen, setLogoutOpen] = useState(false)
@@ -273,6 +329,18 @@ export default function CustomerAccount() {
       setPaymentNotifications([])
     } finally {
       setNotificationsLoading(false)
+    }
+  }, [token])
+
+  const refreshCustomerOrders = useCallback(async () => {
+    try {
+      const customerOrders = await fetchCustomerOrders(token)
+      setOrders(customerOrders)
+      setSelectedOrder((current) => current
+        ? customerOrders.find((order) => order.id === current.id) ?? current
+        : current)
+    } catch {
+      /* El siguiente evento o la actualización manual volverá a sincronizar los pedidos. */
     }
   }, [token])
 
@@ -319,6 +387,24 @@ export default function CustomerAccount() {
     void startCustomerPush(token)
     return () => { void stopCustomerPush(token) }
   }, [token])
+
+  useEffect(() => {
+    if (!token) return undefined
+    return connectCustomerEvents(token, (notification) => {
+      setPaymentNotifications((current) => current.some((item) => item.id === notification.id)
+        ? current
+        : [notification, ...current])
+      setLiveNotificationToast({
+        id: notification.id,
+        title: notification.title,
+        content: notification.content,
+      })
+      void refreshCustomerOrders()
+    }, () => {
+      void refreshCustomerOrders()
+      void loadPaymentNotifications()
+    })
+  }, [loadPaymentNotifications, refreshCustomerOrders, token])
 
   async function openPaymentNotification(notification) {
     try {
@@ -458,6 +544,34 @@ export default function CustomerAccount() {
   }
 
   const unreadNotificationCount = paymentNotifications.filter((notification) => !notification.read_at).length
+  const hasOrderWarning = orders.some(needsBuyerOrderAttention)
+  const orderFilterOptions = useMemo(() => ({
+    stores: [...new Set(orders.map((order) => order.store_name).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')),
+    products: [...new Set(orders.flatMap((order) => (order.items || []).map((item) => item.name).filter(Boolean)))].sort((a, b) => a.localeCompare(b, 'es')),
+    statuses: [...new Set(orders.map(getBuyerOrderStatusLabel).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')),
+    currencies: [...new Set(orders.flatMap((order) => [order.payment_currency, ...(order.subtotals || []).map((entry) => entry.currency)].filter(Boolean)))].sort(),
+  }), [orders])
+  const visibleCustomerOrders = useMemo(() => {
+    const query = orderSearch.trim().toLocaleLowerCase('es')
+    return orders.filter((order) => {
+      const searchable = [
+        order.store_name,
+        order.id?.slice(-6),
+        getBuyerOrderStatusLabel(order),
+        ...(order.items || []).map((item) => item.name),
+      ].filter(Boolean).join(' ').toLocaleLowerCase('es')
+      if (query && !searchable.includes(query)) return false
+      if (storeFilter && order.store_name !== storeFilter) return false
+      if (productFilters.length && !order.items?.some((item) => productFilters.includes(item.name))) return false
+      if (statusFilter && getBuyerOrderStatusLabel(order) !== statusFilter) return false
+      if (currencyFilter && order.payment_currency !== currencyFilter && !order.subtotals?.some((entry) => entry.currency === currencyFilter)) return false
+      if (deliveryFilter === 'yes' && !order.delivery_requested) return false
+      if (deliveryFilter === 'no' && order.delivery_requested) return false
+      if (dateFilterEnabled && !orderIsInRange(order, dateRange)) return false
+      return true
+    })
+  }, [orders, orderSearch, storeFilter, productFilters, statusFilter, currencyFilter, deliveryFilter, dateFilterEnabled, dateRange])
+  const activeOrderFilterCount = [storeFilter, ...productFilters, statusFilter, currencyFilter, deliveryFilter].filter(Boolean).length + (dateFilterEnabled ? 1 : 0)
 
   return (
     <div className="min-h-dvh bg-brand-green/[0.035] text-brand-carmelita lg:flex">
@@ -468,7 +582,7 @@ export default function CustomerAccount() {
         >
           ← Seguir comprando
         </Link>
-        <CustomerNavigation />
+        <CustomerNavigation hasOrderWarning={hasOrderWarning} />
       </aside>
       <main className="min-w-0 flex-1 pb-[calc(5.5rem+var(--safe-bottom))] lg:pb-8">
         <header className="z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 pt-[max(0.75rem,var(--safe-top))] pb-3 backdrop-blur-md sm:px-5 lg:px-8 lg:pt-[max(1rem,var(--safe-top))] lg:pb-4">
@@ -873,32 +987,72 @@ export default function CustomerAccount() {
               ) : null}
 
               {section === "pedidos" ? (
-                <section>
+                <section className="space-y-3">
                   {orders.length ? (
-                    <ul className="grid gap-3 md:grid-cols-2">
-                      {orders.map((order) => (
+                    <>
+                      <div className="relative">
+                        <label>
+                          <span className="sr-only">Buscar pedidos</span>
+                          <input
+                            value={orderSearch}
+                            onChange={(event) => setOrderSearch(event.target.value)}
+                            placeholder="Buscar por tienda, producto o pedido"
+                            className="min-h-11 w-full rounded-xl border border-brand-green/15 bg-brand-white py-2 pl-11 pr-14 text-sm text-brand-carmelita placeholder:text-brand-carmelita/45 focus:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-green/15"
+                          />
+                        </label>
+                        {orderSearch ? (
+                          <button
+                            type="button"
+                            onClick={() => setOrderSearch('')}
+                            aria-label="Limpiar búsqueda"
+                            title="Limpiar búsqueda"
+                            className="absolute left-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-brand-carmelita/60 transition hover:bg-brand-green/8 hover:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
+                          >
+                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => setOrderFiltersOpen(true)}
+                          aria-expanded={orderFiltersOpen}
+                          aria-label="Filtrar pedidos"
+                          title="Filtrar pedidos"
+                          className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg border border-brand-green/15 bg-brand-white text-brand-green shadow-sm"
+                        >
+                          <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16l-6.2 7v5l-3.6 2v-7L4 5Z" /></svg>
+                          {activeOrderFilterCount ? <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-green px-1 text-[9px] font-bold leading-none text-white">{activeOrderFilterCount}</span> : null}
+                        </button>
+                      </div>
+                      {visibleCustomerOrders.length ? (
+                        <ul className="grid gap-3 md:grid-cols-2">
+                      {visibleCustomerOrders.map((order) => {
+                        const evidenceStatus = order.payment_method === 'qvapay' ? order.qvapay?.evidence?.status : null
+                        const highlighted = needsBuyerOrderAttention(order)
+                        return (
                         <li key={order.id}>
                           <button
                             type="button"
                             onClick={() => setSelectedOrder(order)}
                             aria-label={`Ver detalle del pedido de ${order.store_name}`}
-                            className="w-full rounded-xl border border-brand-green/10 p-4 text-left transition hover:border-brand-green/40 hover:bg-brand-green/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40"
+                            className={`relative w-full overflow-hidden rounded-xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40 ${highlighted ? evidenceStatus === 'rejected' ? 'border-red-300 bg-red-50/75 shadow-[0_4px_18px_rgba(185,28,28,0.09)] hover:border-red-400' : 'border-amber-300 bg-amber-50/75 shadow-[0_4px_18px_rgba(180,83,9,0.09)] hover:border-amber-400' : 'border-brand-green/10 bg-brand-white hover:border-brand-green/40 hover:bg-brand-green/5'}`}
                           >
-                          <div className="flex justify-between gap-3">
+                          {highlighted ? <span className={`absolute inset-y-0 left-0 w-1 ${evidenceStatus === 'rejected' ? 'bg-red-600' : 'bg-amber-500'}`} aria-hidden="true" /> : null}
+                          <div className="flex justify-between gap-3 pl-1">
                             <strong>{order.store_name}</strong>
-                            <span className="text-xs font-bold text-brand-green">
+                            <span className={`inline-flex shrink-0 items-center gap-1 text-right text-xs font-bold ${evidenceStatus === 'rejected' ? 'text-red-800' : evidenceStatus === 'pending' ? 'text-amber-900' : 'text-brand-green'}`}>
+                              {highlighted ? <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.65rem] font-extrabold leading-none text-white ${evidenceStatus === 'rejected' ? 'bg-red-700' : 'bg-amber-700'}`} aria-hidden="true">!</span> : null}
                               {getBuyerOrderStatusLabel(order)}
                             </span>
                           </div>
-                          <p className="mt-1 text-xs text-brand-carmelita/60">
+                          <p className="mt-1 pl-1 text-xs text-brand-carmelita/60">
                             {formatDate(order.created_at)}
                           </p>
-                          <p className="mt-2 text-sm">
+                          <p className="mt-2 pl-1 text-sm">
                             {order.items
                               ?.map((item) => `${item.quantity} × ${item.name}`)
                               .join(", ")}
                           </p>
-                          <p className="mt-2 text-xs text-brand-carmelita/70">
+                          <p className="mt-2 pl-1 text-xs text-brand-carmelita/70">
                             {order.subtotals
                               ?.map((entry) =>
                                 formatPrice(entry.amount, entry.currency),
@@ -907,8 +1061,12 @@ export default function CustomerAccount() {
                           </p>
                           </button>
                         </li>
-                      ))}
-                    </ul>
+                      )})}
+                        </ul>
+                      ) : (
+                        <p className="rounded-2xl border border-brand-green/10 bg-brand-white p-4 text-sm text-brand-carmelita/70">No hay pedidos que coincidan con la búsqueda o los filtros.</p>
+                      )}
+                    </>
                   ) : (
                     <p className="text-sm text-brand-carmelita/70">
                       Aún no tienes pedidos.
@@ -982,10 +1140,73 @@ export default function CustomerAccount() {
           ) : null}
         </div>
       </main>
-      <CustomerNavigation mobile />
+      <CustomerNavigation mobile hasOrderWarning={hasOrderWarning} />
+
+      {orderFiltersPresent ? (
+        <SellerModalPortal>
+          <div
+            className={`${sellerModalOverlay} ${orderModalMotionClass(orderFiltersClosing)}`}
+            role="presentation"
+            onMouseDown={(event) => { if (event.target === event.currentTarget) setOrderFiltersOpen(false) }}
+          >
+            <section
+              className={`${sellerModalSheet} h-auto max-h-[80dvh] max-w-2xl overflow-visible`}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="customer-order-filters-title"
+            >
+              <header className="flex items-center justify-between border-b border-brand-green/10 px-5 py-4">
+                <div>
+                  <h2 id="customer-order-filters-title" className="font-display text-lg font-bold text-brand-green">Filtrar pedidos</h2>
+                  <p className="mt-1 text-xs text-brand-carmelita/75">Combina los criterios que quieras aplicar.</p>
+                </div>
+                <button type="button" onClick={() => setOrderFiltersOpen(false)} aria-label="Cerrar filtros" className="grid h-10 w-10 place-items-center rounded-full text-xl text-brand-carmelita/60 hover:bg-brand-green/5">×</button>
+              </header>
+              <div className="grid flex-1 gap-4 overflow-y-auto p-5 sm:grid-cols-2">
+                <SellerFilterDropdown label="Tienda" placeholder="Todas las tiendas" options={orderFilterOptions.stores} value={storeFilter} onChange={setStoreFilter} />
+                <SellerFilterDropdown label="Productos · selección múltiple" placeholder="Todos los productos" options={orderFilterOptions.products} value={productFilters} onChange={setProductFilters} multiple />
+                <SellerFilterDropdown label="Estado" placeholder="Todos los estados" options={orderFilterOptions.statuses} value={statusFilter} onChange={setStatusFilter} />
+                <SellerFilterDropdown label="Moneda" placeholder="Todas las monedas" options={orderFilterOptions.currencies} value={currencyFilter} onChange={setCurrencyFilter} />
+                <SellerFilterDropdown label="Domicilio" placeholder="Todos" options={['Sí', 'No']} value={deliveryFilter === 'yes' ? 'Sí' : deliveryFilter === 'no' ? 'No' : ''} onChange={(value) => setDeliveryFilter(value === 'Sí' ? 'yes' : value === 'No' ? 'no' : '')} />
+                <div className="sm:col-span-2">
+                  <p className="mb-2 text-xs font-semibold text-brand-green">Fecha del pedido</p>
+                  <AdminDateRangeControls
+                    inline
+                    period={datePeriod}
+                    onPeriodChange={(period) => { setDatePeriod(period); setDateFilterEnabled(true) }}
+                    range={dateRange}
+                    onRangeChange={(nextRange, nextPeriod) => {
+                      if (nextRange) {
+                        setDateRange(nextRange)
+                        setDatePeriod(nextPeriod || 'custom')
+                        setDateFilterEnabled(true)
+                      } else {
+                        setDatePeriod('daily')
+                        setDateRange(rangeForPeriod('daily'))
+                        setDateFilterEnabled(false)
+                      }
+                    }}
+                    applyPeriodToRange
+                  />
+                </div>
+              </div>
+              <footer className="flex justify-between gap-3 border-t border-brand-green/10 p-4">
+                <button type="button" onClick={() => { setStoreFilter(''); setProductFilters([]); setStatusFilter(''); setCurrencyFilter(''); setDeliveryFilter(''); setDatePeriod('daily'); setDateRange(rangeForPeriod('daily')); setDateFilterEnabled(false) }} className="min-h-10 rounded-xl border border-brand-green/15 px-4 text-sm font-semibold text-brand-green">Limpiar filtros</button>
+                <button type="button" onClick={() => setOrderFiltersOpen(false)} className="min-h-10 rounded-xl bg-brand-green px-5 text-sm font-semibold text-white">Ver pedidos</button>
+              </footer>
+            </section>
+          </div>
+        </SellerModalPortal>
+      ) : null}
 
       {selectedOrder ? <CustomerOrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onUpdated={load} /> : null}
       {logoutOpen ? <SellerLogoutModal onClose={() => setLogoutOpen(false)} onConfirm={logout} /> : null}
+      <SellerNotificationToast
+        toast={liveNotificationToast}
+        aboveNav
+        onDone={(id) => setLiveNotificationToast((current) => current?.id === id ? null : current)}
+        onOpen={() => { setLiveNotificationToast(null); navigate('/cliente/avisos') }}
+      />
 
       {addressPresent ? (
         <div

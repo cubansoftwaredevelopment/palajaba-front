@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core'
 import { LIVE_EVENT_NOTIFICATION } from './constants'
-import { registerSellerDevice, sellerEventsUrl, unregisterSellerDevice } from './api'
+import { customerEventsUrl, registerSellerDevice, sellerEventsUrl, unregisterSellerDevice } from './api'
 import { registerCustomerDevice, unregisterCustomerDevice } from '../buyer/api.js'
 
 export function isNativeApp() {
@@ -33,6 +33,40 @@ export function connectSellerEvents(accessToken, onNotification, onDataUpdate) {
 
   open()
 
+  return () => {
+    stopped = true
+    window.clearTimeout(retryId)
+    socket?.close()
+  }
+}
+
+export function connectCustomerEvents(accessToken, onNotification, onDataUpdate) {
+  let socket
+  let retryId
+  let stopped = false
+
+  function open() {
+    if (stopped) return
+    socket = new WebSocket(customerEventsUrl(accessToken))
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data?.type === 'customer_notification' && data.notification) {
+          onNotification?.(data.notification)
+        } else if (data?.type === 'customer_data_update') {
+          onDataUpdate?.(data)
+        }
+      } catch {
+        /* mensaje ignorado */
+      }
+    }
+    socket.onclose = () => {
+      if (!stopped) retryId = window.setTimeout(open, 3000)
+    }
+    socket.onerror = () => socket?.close()
+  }
+
+  open()
   return () => {
     stopped = true
     window.clearTimeout(retryId)
