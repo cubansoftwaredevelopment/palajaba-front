@@ -214,7 +214,9 @@ export default function SellerLayout() {
               return next
             })
           }
-          if (notification.kind === 'new_order') requestSellerOrdersRefresh()
+          if (notification.kind === 'new_order' || notification.kind === 'qvapay_evidence_rejected') {
+            requestSellerOrdersRefresh()
+          }
           setLiveToast({
             id: notification.id,
             title: notification.title,

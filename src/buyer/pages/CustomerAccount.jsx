@@ -18,6 +18,13 @@ import { startCustomerPush, stopCustomerPush } from '../../live/utils'
 
 const sectionClass = 'rounded-2xl border border-brand-green/10 bg-brand-white p-4 shadow-sm sm:p-6'
 const statusLabel = { pending_confirmation: 'Por procesar', completed: 'Completado', cancelled: 'Cancelado' }
+function getBuyerOrderStatusLabel(order) {
+  const evidenceStatus = order.payment_method === 'qvapay' ? order.qvapay?.evidence?.status : null
+  if (evidenceStatus === 'pending') return 'Evidencia enviada'
+  if (evidenceStatus === 'rejected') return 'Evidencia rechazada'
+  return statusLabel[order.status] || order.status
+}
+
 const CUSTOMER_NAV = [
   { id: 'pedidos', path: '/cliente/pedidos', label: 'Mis pedidos', icon: <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0" /> },
   { id: 'favoritos', path: '/cliente/favoritos', label: 'Guardados', icon: <path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z" /> },
@@ -132,7 +139,7 @@ function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
 
         <div className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-brand-green/5 p-3">
           <span className="text-sm font-semibold">Estado</span>
-          <span className="rounded-full bg-brand-green/10 px-3 py-1 text-xs font-bold text-brand-green">{statusLabel[order.status] || order.status}</span>
+          <span className="rounded-full bg-brand-green/10 px-3 py-1 text-xs font-bold text-brand-green">{getBuyerOrderStatusLabel(order)}</span>
         </div>
 
         {order.payment_method === 'qvapay' ? (
@@ -151,9 +158,9 @@ function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
                   {QVAPAY_EVIDENCE_WARNING}
                 </div>
                 <div className="mt-3 rounded-xl border border-brand-green/10 bg-white p-3"><EvidenceContent content={evidence.content} /></div>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  <button type="button" disabled={decisionLoading} onClick={() => decideEvidence(false)} className="min-h-11 rounded-xl border border-brand-green/20 px-3 text-sm font-bold text-brand-green disabled:opacity-50">{decisionLoading ? 'Guardando…' : 'No recibí el pedido · Rechazar'}</button>
-                  <button type="button" disabled={decisionLoading} onClick={() => decideEvidence(true)} className="min-h-11 rounded-xl bg-brand-green px-3 text-sm font-bold text-white disabled:opacity-50">{decisionLoading ? 'Guardando…' : 'Recibí el pedido · Aceptar'}</button>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button type="button" disabled={decisionLoading} onClick={() => decideEvidence(false)} className="min-h-11 min-w-0 rounded-xl border border-brand-green/20 px-2 py-2 text-center text-xs font-bold leading-tight text-brand-green disabled:opacity-50 sm:text-sm">{decisionLoading ? 'Guardando…' : 'No recibí el pedido · Rechazar'}</button>
+                  <button type="button" disabled={decisionLoading} onClick={() => decideEvidence(true)} className="min-h-11 min-w-0 rounded-xl bg-brand-green px-2 py-2 text-center text-xs font-bold leading-tight text-white disabled:opacity-50 sm:text-sm">{decisionLoading ? 'Guardando…' : 'Recibí el pedido · Aceptar'}</button>
                 </div>
               </>
             ) : null}
@@ -227,11 +234,15 @@ function CustomerNavigation({ mobile = false }) {
 export default function CustomerAccount() {
   const navigate = useNavigate()
   const location = useLocation()
-  const section = CUSTOMER_NAV.find((item) => item.path === location.pathname)?.id || 'perfil'
+  const section = location.pathname === '/cliente/avisos'
+    ? 'avisos'
+    : CUSTOMER_NAV.find((item) => item.path === location.pathname)?.id || 'perfil'
   const token = getCustomerToken()
   const [profile, setProfile] = useState(null)
   const [orders, setOrders] = useState([])
   const [paymentNotifications, setPaymentNotifications] = useState([])
+  const [notificationsLoading, setNotificationsLoading] = useState(true)
+  const [notificationsError, setNotificationsError] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [favoriteProducts, setFavoriteProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -251,19 +262,33 @@ export default function CustomerAccount() {
   const [profileMessage, setProfileMessage] = useState('')
   const [profileError, setProfileError] = useState('')
 
+  const loadPaymentNotifications = useCallback(async () => {
+    setNotificationsLoading(true)
+    setNotificationsError('')
+    try {
+      const notifications = await fetchCustomerPaymentNotifications(token)
+      setPaymentNotifications(Array.isArray(notifications) ? notifications : [])
+    } catch (cause) {
+      setNotificationsError(getUserFacingMessage(cause, 'No pudimos cargar tus avisos.'))
+      setPaymentNotifications([])
+    } finally {
+      setNotificationsLoading(false)
+    }
+  }, [token])
+
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
-      const [customer, customerOrders, notifications] = await Promise.all([
-        fetchCustomerProfile(token), fetchCustomerOrders(token), fetchCustomerPaymentNotifications(token),
+      const [customer, customerOrders] = await Promise.all([
+        fetchCustomerProfile(token), fetchCustomerOrders(token),
       ])
       setProfile(customer)
       setContactDraft({ email: customer.email || '', phone: customer.phone || '', identity_card: customer.identity_card || '' })
       updateCustomerProfile(customer)
       setOrders(customerOrders)
       setSelectedOrder((current) => current ? customerOrders.find((order) => order.id === current.id) ?? current : current)
-      setPaymentNotifications(notifications)
+      void loadPaymentNotifications()
       const location = getBuyerLocation()
       const ids = customer.favorite_product_ids ?? []
       const savedById = new Map((customer.favorites ?? []).map((product) => [product.id, product]))
@@ -283,7 +308,7 @@ export default function CustomerAccount() {
     } catch (cause) {
       setError(getUserFacingMessage(cause, 'No pudimos cargar tu cuenta.'))
     } finally { setLoading(false) }
-  }, [token])
+  }, [loadPaymentNotifications, token])
 
   useEffect(() => {
     queueMicrotask(() => { void load() })
@@ -494,8 +519,9 @@ export default function CustomerAccount() {
                 ← Seguir comprando
               </Link>
               <h1 className="mt-2 font-display text-3xl font-bold">
-                {CUSTOMER_NAV.find((item) => item.id === section)?.label ||
-                  "Mi cuenta"}
+                {section === 'avisos'
+                  ? 'Avisos'
+                  : CUSTOMER_NAV.find((item) => item.id === section)?.label || 'Mi cuenta'}
               </h1>
             </div>
           </header>
@@ -861,7 +887,7 @@ export default function CustomerAccount() {
                           <div className="flex justify-between gap-3">
                             <strong>{order.store_name}</strong>
                             <span className="text-xs font-bold text-brand-green">
-                              {statusLabel[order.status] || order.status}
+                              {getBuyerOrderStatusLabel(order)}
                             </span>
                           </div>
                           <p className="mt-1 text-xs text-brand-carmelita/60">
@@ -893,7 +919,14 @@ export default function CustomerAccount() {
 
               {section === "avisos" ? (
                 <section className="space-y-3">
-                  {paymentNotifications.length ? paymentNotifications.map((notification) => (
+                  {notificationsLoading ? <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">Cargando avisos…</p></div> : null}
+                  {!notificationsLoading && notificationsError ? (
+                    <div className={`${sectionClass} space-y-3`}>
+                      <p role="alert" className="text-sm text-brand-carmelita">{notificationsError}</p>
+                      <button type="button" onClick={loadPaymentNotifications} className="min-h-10 rounded-xl bg-brand-green px-4 text-sm font-bold text-brand-white">Reintentar</button>
+                    </div>
+                  ) : null}
+                  {!notificationsLoading && !notificationsError && paymentNotifications.length ? paymentNotifications.map((notification) => (
                     <button key={notification.id} type="button" onClick={() => openPaymentNotification(notification)} className={`w-full rounded-2xl border p-4 text-left transition ${notification.read_at ? 'border-brand-green/10 bg-brand-white' : 'border-brand-green/25 bg-brand-green/[0.04]'}`}>
                       <div className="flex items-start justify-between gap-3">
                         <strong className="text-brand-green">{notification.title}</strong>
@@ -902,7 +935,8 @@ export default function CustomerAccount() {
                       <p className="mt-1 whitespace-pre-line text-sm text-brand-carmelita">{notification.content}</p>
                       <p className="mt-2 text-xs text-brand-carmelita/60">{formatDate(notification.created_at)} · Toca para abrir el pedido</p>
                     </button>
-                  )) : <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">No tienes avisos de pagos.</p></div>}
+                  )) : null}
+                  {!notificationsLoading && !notificationsError && !paymentNotifications.length ? <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">No tienes avisos de pagos.</p></div> : null}
                 </section>
               ) : null}
 

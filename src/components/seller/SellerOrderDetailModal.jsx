@@ -136,6 +136,9 @@ export default function SellerOrderDetailModal({
   const isQvaOrder = order.payment_method === 'qvapay'
   const qvapay = order.qvapay
   const evidence = qvapay?.evidence
+  const orderWorkflowLabel = evidence?.status === 'pending'
+    ? 'Evidencia enviada'
+    : evidence?.status === 'rejected' ? 'Evidencia rechazada' : ORDER_STATUS_LABELS[order.status]
   const qvaAwaitingStore = isQvaOrder && qvapay?.request_status === 'pending_seller'
   const qvaAwaitingEvidence = isQvaOrder && qvapay?.payment_status === 'paid'
   const canEditItems = isPending && !isQvaOrder
@@ -312,7 +315,7 @@ export default function SellerOrderDetailModal({
 
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.08em] text-brand-carmelita/75">
-            {ORDER_STATUS_LABELS[order.status]}
+            {orderWorkflowLabel}
           </p>
 
           <section className="mb-4 rounded-2xl border border-brand-green/10 bg-brand-green/[0.035] px-4 py-3" aria-label="Información del comprador">
@@ -541,7 +544,14 @@ export default function SellerOrderDetailModal({
               {qvapay?.payment_status === 'awaiting_payment' ? <p className="mt-1 text-sm text-brand-carmelita">Factura enviada al cliente. Esperando confirmación del pago QvaPay.</p> : null}
               {qvapay?.payment_status === 'paid' ? <p className="mt-1 text-sm text-brand-carmelita">Pago confirmado. Los fondos siguen retenidos hasta que el cliente acepte la evidencia o venza su plazo de 48 horas.</p> : null}
               {evidence?.status === 'pending' ? <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950">Evidencia enviada; espera la respuesta del cliente hasta {evidence.deadline ? formatOrderDateTime(evidence.deadline) : '48 horas'}.</p> : null}
-              {evidence?.status === 'rejected' ? <p className="mt-3 rounded-xl bg-brand-yellow/15 p-3 text-sm text-brand-carmelita">El cliente rechazó la evidencia. Puedes preparar una nueva; el pago continúa retenido.</p> : null}
+              {evidence?.status === 'rejected' ? (
+                <div className="mt-3 space-y-3 rounded-xl border border-red-200 bg-red-50 p-3">
+                  <p className="text-sm font-semibold text-red-900">Evidencia rechazada. El pago continúa retenido; puedes preparar una nueva evidencia o consultar a soporte.</p>
+                  <a href="https://palajaba.com/soporte" target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
+                    Consultar a soporte
+                  </a>
+                </div>
+              ) : null}
             </section>
           ) : null}
 

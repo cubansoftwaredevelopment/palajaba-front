@@ -62,7 +62,7 @@ function sideLinkClass(isActive) {
 }
 
 function PendingOrderMark() {
-  return <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[0.65rem] font-extrabold leading-none text-white ring-2 ring-brand-white" aria-label="Pedidos sin confirmar">!</span>
+  return <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[0.65rem] font-extrabold leading-none text-white ring-2 ring-brand-white" aria-label="Pedidos que requieren atención" title="Pedidos que requieren atención">!</span>
 }
 
 export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0 }) {

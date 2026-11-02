@@ -22,6 +22,10 @@ function ChevronIcon() {
 export default function SellerOrderItem({ order, variant = 'pending', onOpen }) {
   const itemCount = order.items.reduce((total, item) => total + item.quantity, 0)
   const isPending = variant === 'pending'
+  const evidenceStatus = order.payment_method === 'qvapay' ? order.qvapay?.evidence?.status : null
+  const evidenceLabel = evidenceStatus === 'pending'
+    ? 'Evidencia enviada'
+    : evidenceStatus === 'rejected' ? 'Evidencia rechazada' : null
   const orderCode = order.id.slice(-6).toUpperCase()
   const totalLabel = formatSubtotals(order.subtotals, order.payment_currency)
   const buyerName = order.buyer_name || order.delivery?.recipient_name || 'Comprador'
@@ -62,7 +66,12 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
               <span className="font-display text-sm font-bold text-brand-green">
                 #{orderCode}
               </span>
-              {isPending ? (
+              {evidenceLabel ? (
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.035em] ${evidenceStatus === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900'}`}>
+                  <span aria-hidden="true" className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[0.6rem] font-extrabold leading-none text-white ${evidenceStatus === 'rejected' ? 'bg-red-700' : 'bg-amber-700'}`}>!</span>
+                  {evidenceLabel}
+                </span>
+              ) : isPending ? (
                 <span className="rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.05em] text-brand-carmelita">
                   Requiere acción
                 </span>
