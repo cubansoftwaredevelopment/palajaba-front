@@ -1,5 +1,6 @@
 import { resolveMediaUrl } from '../../lib/media'
 import { clampImageWidth, normalizeStoreLink } from '../../lib/storePages'
+import { imageAlign, imageSharesRow } from '../../components/seller/imageLayout.js'
 
 const HEADING_CLASS = {
   1: 'my-3 font-display text-2xl font-bold leading-tight text-brand-green',
@@ -64,14 +65,8 @@ function RichDocNode({ node }) {
     const src = resolveMediaUrl(node.attrs?.src)
     if (!src) return null
     const width = clampImageWidth(node.attrs?.width)
-    const align = node.attrs?.textAlign === 'center' || node.attrs?.textAlign === 'right' ? node.attrs.textAlign : 'left'
-    const besideText = align !== 'center' && width < 100
-    const frameStyle = {
-      width: `${width}%`,
-      float: besideText ? (align === 'right' ? 'right' : 'left') : undefined,
-      marginLeft: besideText ? (align === 'right' ? '1rem' : 0) : align === 'center' ? 'auto' : 0,
-      marginRight: besideText ? (align === 'left' ? '1rem' : 0) : align === 'center' ? 'auto' : 0,
-    }
+    const align = imageAlign(node.attrs)
+    const sharesRow = imageSharesRow(node.attrs)
     const image = (
       <img
         src={src}
@@ -81,9 +76,28 @@ function RichDocNode({ node }) {
       />
     )
     const href = normalizeStoreLink(node.attrs?.href)
-    const frameClass = besideText ? 'my-1' : 'my-3 block'
-    if (!href) return <span className={frameClass} style={frameStyle}>{image}</span>
-    return <SafeLink href={href} className={frameClass} style={frameStyle}>{image}</SafeLink>
+    const picture = href ? <SafeLink href={href} className="block w-full">{image}</SafeLink> : image
+    if (sharesRow) {
+      const onRight = align === 'right'
+      return (
+        <span
+          className="block"
+          style={{
+            width: `${width}%`,
+            float: onRight ? 'right' : 'left',
+            margin: onRight ? '0 0 0.25rem 0.5rem' : '0 0.5rem 0.25rem 0',
+          }}
+        >
+          {picture}
+        </span>
+      )
+    }
+    const justify = align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start'
+    return (
+      <span className="my-3 flex w-full" style={{ justifyContent: justify, clear: 'both' }}>
+        <span className="block max-w-full" style={{ width: `${width}%` }}>{picture}</span>
+      </span>
+    )
   }
 
   const children = (node.content || []).map((child, index) => (

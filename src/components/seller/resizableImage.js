@@ -1,6 +1,7 @@
 import Image from '@tiptap/extension-image'
 import { ReactNodeViewRenderer } from '@tiptap/react'
 import { clampImageWidth, normalizeStoreLink } from '../../lib/storePages.js'
+import { imageNodeStyle } from './imageLayout.js'
 import ResizableImageView from './ResizableImageView.jsx'
 
 const ResizableImage = Image.extend({
@@ -37,7 +38,9 @@ const ResizableImage = Image.extend({
     }
   },
   addNodeView() {
-    return ReactNodeViewRenderer(ResizableImageView)
+    return ReactNodeViewRenderer(ResizableImageView, {
+      attrs: ({ node }) => ({ style: imageNodeStyle(node.attrs) }),
+    })
   },
 })
 

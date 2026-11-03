@@ -1,5 +1,7 @@
+import { useLayoutEffect, useRef } from 'react'
 import { NodeViewWrapper } from '@tiptap/react'
 import { clampImageWidth, MAX_IMAGE_WIDTH, MIN_IMAGE_WIDTH } from '../../lib/storePages'
+import { imageAlign, imageNodeStyle, imageSharesRow } from './imageLayout.js'
 
 function clampDragWidth(value) {
   const number = Number(value)
@@ -8,39 +10,52 @@ function clampDragWidth(value) {
 }
 
 const scaledImageStyle = {
+  display: 'block',
   width: '100%',
   height: 'auto',
   maxWidth: '100%',
-  minWidth: 0,
-}
-
-function wrapsBesideText(align, width) {
-  return align !== 'center' && width < 100
 }
 
 export default function ResizableImageView({ node, updateAttributes, selected, deleteNode }) {
   const width = clampImageWidth(node.attrs.width)
-  const align = node.attrs.textAlign === 'center' || node.attrs.textAlign === 'right' ? node.attrs.textAlign : 'left'
+  const align = imageAlign(node.attrs)
+  const sharesRow = imageSharesRow(node.attrs)
+  const wrapperRef = useRef(null)
+
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current
+    const nodeRoot = wrapper?.closest('.node-image')
+    if (!nodeRoot || !wrapper) return
+    nodeRoot.style.cssText = imageNodeStyle(node.attrs)
+    wrapper.style.margin = '0'
+  }, [node.attrs])
 
   function onResizePointerDown(event) {
     event.preventDefault()
     event.stopPropagation()
     const handle = event.currentTarget
-    const frame = handle.parentElement
-    const sized = besideText ? frame?.parentElement : frame
-    const prose = frame?.closest('.ProseMirror')
+    const wrapper = wrapperRef.current
+    const nodeRoot = wrapper?.closest('.node-image')
+    const prose = wrapper?.closest('.ProseMirror')
     const proseStyle = prose ? getComputedStyle(prose) : null
     const columnWidth = prose
       ? prose.clientWidth - parseFloat(proseStyle.paddingLeft) - parseFloat(proseStyle.paddingRight)
-      : frame?.parentElement?.getBoundingClientRect().width || 1
+      : wrapper?.parentElement?.getBoundingClientRect().width || 1
     const startX = event.clientX
     const startWidth = width
     let nextWidth = startWidth
     handle.setPointerCapture(event.pointerId)
 
     function onMove(moveEvent) {
-      nextWidth = clampDragWidth(startWidth + ((moveEvent.clientX - startX) / columnWidth) * 100)
-      if (sized) sized.style.width = `${nextWidth}%`
+      const direction = align === 'right' ? startX - moveEvent.clientX : moveEvent.clientX - startX
+      nextWidth = clampDragWidth(startWidth + (direction / columnWidth) * 100)
+      if (sharesRow) {
+        if (nodeRoot) nodeRoot.style.width = `${nextWidth}%`
+        return
+      }
+      if (!wrapper) return
+      wrapper.style.width = `${nextWidth}%`
+      wrapper.style.flex = `0 0 ${nextWidth}%`
     }
 
     function onUp() {
@@ -55,17 +70,19 @@ export default function ResizableImageView({ node, updateAttributes, selected, d
     handle.addEventListener('pointercancel', onUp)
   }
 
-  const besideText = wrapsBesideText(align, width)
+  const frameStyle = sharesRow
+    ? { width: '100%', maxWidth: '100%', margin: 0 }
+    : { width: `${width}%`, flex: `0 0 ${width}%`, maxWidth: '100%', margin: 0 }
 
   return (
     <NodeViewWrapper
+      ref={wrapperRef}
       data-drag-handle
-      className={besideText ? `my-1 min-w-0 max-w-full ${align === 'right' ? 'ml-4' : 'mr-4'}` : 'my-3 block w-full min-w-0'}
-      style={besideText ? { width: `${width}%`, float: align === 'right' ? 'right' : 'left' } : undefined}
+      className="block min-w-0 max-w-full"
+      style={frameStyle}
     >
       <div
-        className={`relative min-w-0 max-w-full ${besideText ? '' : align === 'center' ? 'mx-auto' : align === 'right' ? 'ml-auto' : ''} ${selected ? 'ring-2 ring-brand-green/50 ring-offset-2' : ''}`}
-        style={{ width: besideText ? '100%' : `${width}%` }}
+        className={`relative w-full min-w-0 max-w-full ${selected ? 'ring-2 ring-brand-green/50 ring-offset-2' : ''}`}
       >
         <img
           src={node.attrs.src}
