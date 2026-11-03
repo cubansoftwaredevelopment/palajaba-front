@@ -1,5 +1,21 @@
 import { request } from '../lib/api.js'
 
+export {
+  addCustomerAddress,
+  confirmCustomerContactOtp,
+  decideCustomerOrderEvidence,
+  deleteCustomerAddress,
+  fetchCustomerOrders,
+  fetchCustomerPaymentNotifications,
+  fetchCustomerProfile,
+  markCustomerPaymentNotificationRead,
+  startCustomerEmailOtp,
+  startCustomerPhoneOtp,
+  updateCustomerAddress,
+  updateCustomerIdentityCard,
+  uploadCustomerPhoto,
+} from '../customer/api.js'
+
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` }
 }
@@ -131,23 +147,6 @@ export function createMarketplaceOrder(payload, token = null) {
   })
 }
 
-export function decideCustomerOrderEvidence(orderId, accept, token) {
-  const action = accept ? 'accept' : 'reject'
-  return request(`/api/customers/me/orders/${encodeURIComponent(orderId)}/qvapay/evidence/${action}`, {
-    method: 'POST', headers: authHeaders(token),
-  })
-}
-
-export function fetchCustomerPaymentNotifications(token) {
-  return request('/api/customers/me/notifications', { headers: authHeaders(token) })
-}
-
-export function markCustomerPaymentNotificationRead(token, id) {
-  return request(`/api/customers/me/notifications/${encodeURIComponent(id)}/read`, {
-    method: 'PATCH', headers: authHeaders(token),
-  })
-}
-
 export function registerCustomerDevice(device, token) {
   return request('/api/live/customer-devices', {
     method: 'POST', headers: authHeaders(token), body: JSON.stringify(device),
@@ -223,52 +222,10 @@ export function confirmCustomerRegistration(payload) {
   return request('/api/customers/register/otp/confirm', { method: 'POST', body: JSON.stringify(payload) })
 }
 
-export function fetchCustomerProfile(token) {
-  return request('/api/customers/me', { headers: authHeaders(token) })
-}
-
-export function startCustomerEmailOtp(token, email) {
-  return request('/api/customers/me/email/otp/start', { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ email }) })
-}
-
-export function startCustomerPhoneOtp(token, phone) {
-  return request('/api/customers/me/phone/otp/start', { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ phone }) })
-}
-
-export function confirmCustomerContactOtp(token, challengeId, code) {
-  return request('/api/customers/me/contact-otp/confirm', { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ challenge_id: challengeId, code }) })
-}
-
-export function updateCustomerIdentityCard(token, identityCard) {
-  return request('/api/customers/me/identity-card', { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ identity_card: identityCard }) })
-}
-
-export function fetchCustomerOrders(token) {
-  return request('/api/customers/me/orders', { headers: authHeaders(token) })
-}
-
-export function addCustomerAddress(token, address) {
-  return request('/api/customers/me/addresses', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(address) })
-}
-
-export function updateCustomerAddress(token, addressId, address) {
-  return request(`/api/customers/me/addresses/${encodeURIComponent(addressId)}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(address) })
-}
-
-export function deleteCustomerAddress(token, addressId) {
-  return request(`/api/customers/me/addresses/${encodeURIComponent(addressId)}`, { method: 'DELETE', headers: authHeaders(token) })
-}
-
 export function addCustomerFavorite(token, productId) {
   return request(`/api/customers/me/favorites/${encodeURIComponent(productId)}`, { method: 'PUT', headers: authHeaders(token) })
 }
 
 export function removeCustomerFavorite(token, productId) {
   return request(`/api/customers/me/favorites/${encodeURIComponent(productId)}`, { method: 'DELETE', headers: authHeaders(token) })
-}
-
-export function uploadCustomerPhoto(token, file) {
-  const formData = new FormData()
-  formData.append('photo', file)
-  return request('/api/customers/me/profile-photo', { method: 'POST', headers: authHeaders(token), body: formData })
 }

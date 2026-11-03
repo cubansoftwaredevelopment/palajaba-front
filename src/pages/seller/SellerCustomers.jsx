@@ -5,13 +5,13 @@ import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import SellerFilterDropdown from '../../components/seller/SellerFilterDropdown'
-import AdminDateRangeControls, { isoDate, rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
+import { isoDate, rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
+import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
+import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import {
   sellerModalBody,
   sellerModalOverlay,
   sellerModalSheet,
-  sellerModalFooter,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
@@ -27,125 +27,6 @@ function dateLabel(value) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '—'
   return new Intl.DateTimeFormat('es', { dateStyle: 'medium' }).format(date)
-}
-
-function CustomerFiltersModal({ locationOptions, productOptions, currencyOptions, locationFilter, productFilters, currencyFilter, datePeriod, dateRange, dateFilterEnabled, onClose, onApply }) {
-  const { dismiss, motionClass } = useDismissibleModal(onClose)
-  const [draftLocation, setDraftLocation] = useState(locationFilter)
-  const [draftProducts, setDraftProducts] = useState(productFilters)
-  const [draftCurrency, setDraftCurrency] = useState(currencyFilter)
-  const [draftDatePeriod, setDraftDatePeriod] = useState(datePeriod)
-  const [draftDateRange, setDraftDateRange] = useState(dateRange)
-  const [draftDateFilterEnabled, setDraftDateFilterEnabled] = useState(dateFilterEnabled)
-
-  useEffect(() => {
-    function onKeyDown(event) {
-      if (event.key === 'Escape') dismiss()
-    }
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.body.style.overflow = previousOverflow
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [dismiss])
-
-  function apply() {
-    onApply(draftLocation, draftProducts, draftCurrency, draftDatePeriod, draftDateRange, draftDateFilterEnabled)
-    dismiss()
-  }
-
-  function clear() {
-    setDraftLocation('')
-    setDraftProducts([])
-    setDraftCurrency('')
-    setDraftDatePeriod('daily')
-    setDraftDateRange(rangeForPeriod('daily'))
-    setDraftDateFilterEnabled(false)
-    onApply('', [], '', 'daily', rangeForPeriod('daily'), false)
-    dismiss()
-  }
-
-  return (
-    <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) dismiss()
-        }}
-      >
-        <section
-          className={`${sellerModalSheet} max-h-[min(88dvh,42rem)] max-w-xl`}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="seller-customer-filters-title"
-        >
-          <header className="shrink-0 border-b border-brand-green/10 px-5 py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 id="seller-customer-filters-title" className={sellerModalTitle}>Filtrar clientes</h2>
-                <p className="mt-1 text-sm text-brand-carmelita/70">Combina ubicación, productos, moneda y fecha.</p>
-              </div>
-              <button type="button" onClick={dismiss} aria-label="Cerrar filtros" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-2xl leading-none text-brand-carmelita/65 hover:bg-brand-green/8">×</button>
-            </div>
-          </header>
-
-          <div className={`${sellerModalBody} space-y-5`}>
-            <SellerFilterDropdown
-              label="Ubicación"
-              placeholder="Todas las ubicaciones"
-              options={locationOptions}
-              value={draftLocation}
-              onChange={setDraftLocation}
-            />
-            <SellerFilterDropdown
-              label="Moneda"
-              placeholder="Todas las monedas"
-              options={currencyOptions}
-              value={draftCurrency}
-              onChange={setDraftCurrency}
-            />
-            <SellerFilterDropdown
-              label="Productos · selección múltiple"
-              placeholder="Todos los productos"
-              options={productOptions}
-              value={draftProducts}
-              onChange={setDraftProducts}
-              multiple
-            />
-            <div className="border-t border-brand-green/10 pt-4">
-              <p className="mb-2 text-xs font-semibold text-brand-green">Fecha de los pedidos</p>
-              <AdminDateRangeControls
-                inline
-                period={draftDatePeriod}
-                onPeriodChange={(period) => { setDraftDatePeriod(period); setDraftDateFilterEnabled(true) }}
-                range={draftDateRange}
-                onRangeChange={(nextRange, nextPeriod) => {
-                  if (nextRange) {
-                    setDraftDateRange(nextRange)
-                    setDraftDatePeriod(nextPeriod || 'custom')
-                    setDraftDateFilterEnabled(true)
-                  } else {
-                    setDraftDatePeriod('daily')
-                    setDraftDateRange(rangeForPeriod('daily'))
-                    setDraftDateFilterEnabled(false)
-                  }
-                }}
-                applyPeriodToRange
-              />
-            </div>
-          </div>
-
-          <footer className={`${sellerModalFooter} flex flex-row gap-2`}>
-            <button type="button" onClick={clear} className="min-h-11 flex-1 rounded-full border border-brand-green/20 bg-brand-white px-4 text-sm font-semibold text-brand-green">Limpiar filtros</button>
-            <button type="button" onClick={apply} className="min-h-11 flex-1 rounded-full bg-brand-green px-4 text-sm font-semibold text-brand-white shadow-sm">Ver clientes</button>
-          </footer>
-        </section>
-      </div>
-    </SellerModalPortal>
-  )
 }
 
 function CustomerOrdersModal({ customer, onClose, onSelectOrder, onLoadMore, loadingMore }) {
@@ -386,17 +267,17 @@ export default function SellerCustomers() {
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
               </button>
             ) : null}
-            <button
-              type="button"
+            <FilterButton
+              count={countActiveFilters({
+                location: locationFilter,
+                products: productFilters,
+                currency: currencyFilter,
+                dateEnabled: dateFilterEnabled,
+              }, ['location', 'products', 'currency'])}
+              label="Filtrar clientes"
+              expanded={filtersOpen}
               onClick={() => setFiltersOpen(true)}
-              aria-expanded={filtersOpen}
-              aria-label="Filtrar clientes"
-              title="Filtrar clientes"
-              className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg border border-brand-green/15 bg-brand-white text-brand-green shadow-sm"
-            >
-              <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16l-6.2 7v5l-3.6 2v-7L4 5Z" /></svg>
-              {locationFilter || productFilters.length || currencyFilter || dateFilterEnabled ? <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-green px-1 text-[9px] font-bold leading-none text-white">{(locationFilter ? 1 : 0) + productFilters.length + (currencyFilter ? 1 : 0) + (dateFilterEnabled ? 1 : 0)}</span> : null}
-            </button>
+            />
           </div>
         </div>
         {customers.length ? (
@@ -432,28 +313,43 @@ export default function SellerCustomers() {
         ) : null}
         </>
       )}
-      {filtersOpen ? (
-        <CustomerFiltersModal
-          locationOptions={locationOptions}
-          productOptions={productOptions}
-          currencyOptions={currencyOptions}
-          locationFilter={locationFilter}
-          productFilters={productFilters}
-          currencyFilter={currencyFilter}
-          datePeriod={datePeriod}
-          dateRange={dateRange}
-          dateFilterEnabled={dateFilterEnabled}
-          onClose={() => setFiltersOpen(false)}
-          onApply={(location, products, currency, period, range, dateEnabled) => {
-            setLocationFilter(location)
-            setProductFilters(products)
-            setCurrencyFilter(currency)
-            setDatePeriod(period)
-            setDateRange(range)
-            setDateFilterEnabled(dateEnabled)
-          }}
-        />
-      ) : null}
+      <FilterModal
+        open={filtersOpen}
+        onClose={() => setFiltersOpen(false)}
+        title="Filtrar clientes"
+        description="Combina ubicación, productos, moneda y fecha."
+        titleId="seller-customer-filters-title"
+        applyLabel="Ver clientes"
+        columns={1}
+        fields={[
+          { key: 'location', label: 'Ubicación', placeholder: 'Todas las ubicaciones', options: locationOptions },
+          { key: 'currency', label: 'Moneda', placeholder: 'Todas las monedas', options: currencyOptions },
+          { key: 'products', label: 'Productos · selección múltiple', placeholder: 'Todos los productos', options: productOptions, multiple: true },
+        ]}
+        dateLabel="Fecha de los pedidos"
+        values={{
+          location: locationFilter,
+          products: productFilters,
+          currency: currencyFilter,
+          datePeriod,
+          dateRange,
+          dateEnabled: dateFilterEnabled,
+        }}
+        emptyValues={{
+          location: '',
+          products: [],
+          currency: '',
+          ...clearedDateFilter(),
+        }}
+        onApply={(next) => {
+          setLocationFilter(next.location)
+          setProductFilters(next.products)
+          setCurrencyFilter(next.currency)
+          setDatePeriod(next.datePeriod)
+          setDateRange(next.dateRange)
+          setDateFilterEnabled(next.dateEnabled)
+        }}
+      />
       {selectedCustomer ? (
         <CustomerOrdersModal
           customer={selectedCustomer}

@@ -7,7 +7,6 @@ import SellerOrderItem from '../../components/seller/SellerOrderItem'
 import SellerOrdersGroup from '../../components/seller/SellerOrdersGroup'
 import SellerOrdersTabs from '../../components/seller/SellerOrdersTabs'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
-import SellerFilterDropdown from '../../components/seller/SellerFilterDropdown'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import { sellerBtnPrimaryCompact, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
@@ -22,11 +21,10 @@ import { getSellerToken } from '../../lib/sellerAuth'
 import { SELLER_LIVE_POLL_MS } from '../../live/constants'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { getUserFacingMessage } from '../../lib/userFacingError'
-import AdminDateRangeControls, { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
-import SellerModalPortal from '../../components/seller/SellerModalPortal'
+import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 import { acceptSellerQvaPayOrder, rejectSellerQvaPayOrder, submitSellerOrderEvidence } from '../../auth/api.js'
-import { orderModalMotionClass, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
-import { sellerModalOverlay, sellerModalSheet } from '../../components/seller/sellerStyles'
+import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
+import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 
 const SELLER_ORDERS_PAGE_SIZE = 15
 
@@ -106,7 +104,6 @@ export default function SellerOrders() {
   const [manualOrderOpen, setManualOrderOpen] = useState(false)
   const [search, setSearch] = useState(() => orderSearchTarget)
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const { present: filtersPresent, closing: filtersClosing } = useOrderModalPresence(filtersOpen)
   const [clientFilter, setClientFilter] = useState('')
   const [productFilters, setProductFilters] = useState([])
   const [currencyFilter, setCurrencyFilter] = useState('')
@@ -245,6 +242,33 @@ export default function SellerOrders() {
       currencies: [...new Set(allOrders.map((order) => order.payment_currency).filter(Boolean))].sort(),
     }
   }, [pendingOrders, completedOrders])
+
+  const orderFilterValues = {
+    client: clientFilter,
+    products: productFilters,
+    currency: currencyFilter,
+    delivery: deliveryFilter,
+    datePeriod,
+    dateRange,
+    dateEnabled: dateFilterEnabled,
+  }
+  const emptyOrderFilters = {
+    client: '',
+    products: [],
+    currency: '',
+    delivery: '',
+    ...clearedDateFilter(),
+  }
+
+  function updateOrderFilters(next) {
+    setClientFilter(next.client)
+    setProductFilters(next.products)
+    setCurrencyFilter(next.currency)
+    setDeliveryFilter(next.delivery)
+    setDatePeriod(next.datePeriod)
+    setDateRange(next.dateRange)
+    setDateFilterEnabled(next.dateEnabled)
+  }
 
   async function handleDownloadInvoice(type) {
     if (!selectedOrder) return
@@ -446,77 +470,33 @@ export default function SellerOrders() {
                   </svg>
                 </button>
               ) : null}
-              <button
-                type="button"
-                onClick={() => setFiltersOpen((value) => !value)}
-                aria-expanded={filtersOpen}
-                aria-label="Filtrar pedidos"
-                title="Filtrar pedidos"
-                className="absolute right-1.5 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-lg border border-brand-green/15 bg-brand-white text-brand-green shadow-sm"
-              >
-                <svg viewBox="0 0 24 24" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 5h16l-6.2 7v5l-3.6 2v-7L4 5Z" /></svg>
-                {[clientFilter, ...productFilters, currencyFilter, deliveryFilter].filter(Boolean).length + (dateFilterEnabled ? 1 : 0) ? <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-green px-1 text-[9px] font-bold leading-none text-white">{[clientFilter, ...productFilters, currencyFilter, deliveryFilter].filter(Boolean).length + (dateFilterEnabled ? 1 : 0)}</span> : null}
-              </button>
+              <FilterButton
+                count={countActiveFilters(orderFilterValues, ['client', 'products', 'currency', 'delivery'])}
+                label="Filtrar pedidos"
+                expanded={filtersOpen}
+                onClick={() => setFiltersOpen(true)}
+              />
             </div>
           </div>
 
-          {filtersPresent ? (
-            <SellerModalPortal>
-              <div
-                className={`${sellerModalOverlay} ${orderModalMotionClass(filtersClosing)}`}
-                role="presentation"
-                onMouseDown={(event) => {
-                  if (event.target === event.currentTarget) setFiltersOpen(false)
-                }}
-              >
-                <section
-                  className={`${sellerModalSheet} h-auto max-h-[80dvh] max-w-2xl overflow-visible`}
-                  role="dialog"
-                  aria-modal="true"
-                  aria-labelledby="seller-order-filters-title"
-                >
-                  <header className="flex items-center justify-between border-b border-brand-green/10 px-5 py-4">
-                    <div>
-                      <h2 id="seller-order-filters-title" className="font-display text-lg font-bold text-brand-green">Filtrar pedidos</h2>
-                      <p className="mt-1 text-xs text-brand-carmelita/75">Combina los criterios que quieras aplicar.</p>
-                    </div>
-                    <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Cerrar filtros" className="grid h-10 w-10 place-items-center rounded-full text-xl text-brand-carmelita/60 hover:bg-brand-green/5">×</button>
-                  </header>
-                  <div className="grid flex-1 gap-4 overflow-y-auto p-5 sm:grid-cols-2">
-                    <SellerFilterDropdown label="Cliente" placeholder="Todos los clientes" options={filterOptions.clients} value={clientFilter} onChange={setClientFilter} />
-                    <SellerFilterDropdown label="Productos · selección múltiple" placeholder="Todos los productos" options={filterOptions.products} value={productFilters} onChange={setProductFilters} multiple />
-                    <SellerFilterDropdown label="Moneda" placeholder="Todas las monedas" options={filterOptions.currencies} value={currencyFilter} onChange={setCurrencyFilter} />
-                    <SellerFilterDropdown label="Domicilio" placeholder="Todos" options={['Sí', 'No']} value={deliveryFilter === 'yes' ? 'Sí' : deliveryFilter === 'no' ? 'No' : ''} onChange={(value) => setDeliveryFilter(value === 'Sí' ? 'yes' : value === 'No' ? 'no' : '')} />
-                    <div className="sm:col-span-2">
-                      <p className="mb-2 text-xs font-semibold text-brand-green">Fecha del pedido</p>
-                      <AdminDateRangeControls
-                        inline
-                        period={datePeriod}
-                        onPeriodChange={(period) => { setDatePeriod(period); setDateFilterEnabled(true) }}
-                        range={dateRange}
-                        onRangeChange={(nextRange, nextPeriod) => {
-                          if (nextRange) {
-                            setDateRange(nextRange)
-                            setDatePeriod(nextPeriod || 'custom')
-                            setDateFilterEnabled(true)
-                          } else {
-                            setDatePeriod('daily')
-                            setDateRange(rangeForPeriod('daily'))
-                            setDateFilterEnabled(false)
-                          }
-                        }}
-                        applyPeriodToRange
-                      />
-                    </div>
-                  </div>
-                  <footer className="flex justify-between gap-3 border-t border-brand-green/10 p-4">
-                    <button type="button" onClick={() => { setClientFilter(''); setProductFilters([]); setCurrencyFilter(''); setDeliveryFilter(''); setDatePeriod('daily'); setDateRange(rangeForPeriod('daily')); setDateFilterEnabled(false) }} className="min-h-10 rounded-xl border border-brand-green/15 px-4 text-sm font-semibold text-brand-green">Limpiar filtros</button>
-                    <button type="button" onClick={() => setFiltersOpen(false)} className="min-h-10 rounded-xl bg-brand-green px-5 text-sm font-semibold text-white">Ver pedidos</button>
-                  </footer>
-                </section>
-              </div>
-            </SellerModalPortal>
-          ) : null}
+          <FilterModal
+            open={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            title="Filtrar pedidos"
+            description="Combina los criterios que quieras aplicar."
+            titleId="seller-order-filters-title"
+            applyLabel="Ver pedidos"
+            fields={[
+              { key: 'client', label: 'Cliente', placeholder: 'Todos los clientes', options: filterOptions.clients },
+              { key: 'products', label: 'Productos · selección múltiple', placeholder: 'Todos los productos', options: filterOptions.products, multiple: true },
+              { key: 'currency', label: 'Moneda', placeholder: 'Todas las monedas', options: filterOptions.currencies },
+              { key: 'delivery', label: 'Domicilio', placeholder: 'Todos', options: [{ value: 'yes', label: 'Sí' }, { value: 'no', label: 'No' }] },
+            ]}
+            values={orderFilterValues}
+            onValuesChange={updateOrderFilters}
+            dateLabel="Fecha del pedido"
+            emptyValues={emptyOrderFilters}
+          />
 
           <SellerOrdersGroup
             tone={activeTab === 'pending' ? 'pending' : 'completed'}
