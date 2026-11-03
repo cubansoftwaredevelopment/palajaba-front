@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
-import BuyerCatalogPoweredFooter from '../components/BuyerCatalogPoweredFooter'
+import BuyerStoreServiceFooter from '../components/BuyerStoreServiceFooter'
 import BuyerHeaderSearch from '../components/BuyerHeaderSearch'
 import BuyerMarketplaceNav from '../components/BuyerMarketplaceNav'
 import BuyerProductCard from '../components/BuyerProductCard'
@@ -361,7 +361,11 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
                 </>
               ) : null}
             </div>
-            <BuyerCatalogPoweredFooter pinned />
+            <BuyerStoreServiceFooter
+              storeName={catalog?.store?.store_name}
+              storeSlug={catalog?.store?.store_slug || storeSlug}
+              pages={catalog?.store_pages}
+            />
           </div>
         </BuyerShell>
       </BuyerDisplayedLocationProvider>

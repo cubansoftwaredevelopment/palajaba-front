@@ -583,7 +583,7 @@ export default function CustomerAccount() {
 
   function logout() {
     clearCustomerSession()
-    navigate('/comprar/provincia', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const unreadNotificationCount = paymentNotifications.filter((notification) => !notification.read_at).length

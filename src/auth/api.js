@@ -197,6 +197,24 @@ export function updateSellerStoreName(token, storeName) {
   })
 }
 
+export function updateSellerStorePage(token, page, content) {
+  return request('/api/auth/me/store-pages', {
+    method: 'PATCH',
+    headers: authHeaders(token),
+    body: JSON.stringify({ page, content }),
+  })
+}
+
+export function uploadSellerStorePageImage(token, file) {
+  const body = new FormData()
+  body.append('photo', file)
+  return request('/api/auth/me/store-pages/images', {
+    method: 'POST',
+    headers: authHeaders(token),
+    body,
+  })
+}
+
 export function uploadSellerProfilePhoto(token, file) {
   const formData = new FormData()
   formData.append('photo', file)

@@ -116,7 +116,7 @@ export default function AdminLayout() {
   function confirmLogout() {
     clearAdminToken()
     setShowLogoutConfirm(false)
-    navigate('/admin', { replace: true })
+    navigate('/', { replace: true })
   }
 
   return (

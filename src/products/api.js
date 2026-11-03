@@ -126,6 +126,12 @@ export function deleteCatalogProduct(token, productId) {
   })
 }
 
+export function fetchMarketplaceStorePage(storeSlug, pageSlug) {
+  return request(
+    `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/pages/${encodeURIComponent(pageSlug)}`,
+  )
+}
+
 export function fetchMarketplaceStoreCatalog({
   storeSlug,
   provinceId,

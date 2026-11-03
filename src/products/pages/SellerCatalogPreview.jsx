@@ -7,7 +7,7 @@ import BuyerCategoryProductRow from '../../buyer/components/BuyerCategoryProduct
 import BuyerLoginButton from '../../buyer/components/BuyerLoginButton'
 import BuyerShell from '../../buyer/components/BuyerShell'
 import BuyerStoreProfileHeader from '../../buyer/components/BuyerStoreProfileHeader'
-import BuyerCatalogPoweredFooter from '../../buyer/components/BuyerCatalogPoweredFooter'
+import BuyerStoreServiceFooter from '../../buyer/components/BuyerStoreServiceFooter'
 import { buyerHomeSections } from '../../buyer/components/buyerStyles'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
@@ -331,7 +331,11 @@ function SellerCatalogPreviewContent() {
               )}
 
             </div>
-              <BuyerCatalogPoweredFooter pinned />
+              <BuyerStoreServiceFooter
+                storeName={catalog.store?.store_name}
+                storeSlug={catalog.store?.store_slug}
+                pages={catalog.store_pages}
+              />
             </div>
           ) : null}
         </>,

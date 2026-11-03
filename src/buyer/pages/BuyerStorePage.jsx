@@ -6,7 +6,7 @@ import BuyerHeaderSearch from "../components/BuyerHeaderSearch";
 import BuyerMarketplaceNav from "../components/BuyerMarketplaceNav";
 import BuyerShell from "../components/BuyerShell";
 import BuyerStoreProfileHeader from "../components/BuyerStoreProfileHeader";
-import BuyerCatalogPoweredFooter from "../components/BuyerCatalogPoweredFooter";
+import BuyerStoreServiceFooter from "../components/BuyerStoreServiceFooter";
 import StatePanel from "../../components/ui/StatePanel";
 import LoadingState from "../../components/ui/LoadingState";
 import DeadState from "../../components/ui/DeadState";
@@ -305,7 +305,11 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
                   ))
                 )}
               </div>
-              <BuyerCatalogPoweredFooter pinned />
+              <BuyerStoreServiceFooter
+                storeName={catalog.store?.store_name}
+                storeSlug={catalog.store?.store_slug || storeSlug}
+                pages={catalog.store_pages}
+              />
             </div>
           ) : null}
         </BuyerShell>

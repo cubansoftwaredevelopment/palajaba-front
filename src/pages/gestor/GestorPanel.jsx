@@ -15,7 +15,6 @@ import {
   getGestorContext,
   getGestorProfile,
   getGestorToken,
-  gestorLoginPath,
   updateGestorProfileCache,
 } from '../../lib/gestorAuth'
 import { storeGestorPublicPath } from '../../lib/storeSlug'
@@ -105,7 +104,7 @@ export default function GestorPanel() {
 
   function handleLogout() {
     clearGestorSession()
-    navigate(gestorLoginPath(slug), { replace: true })
+    navigate('/', { replace: true })
   }
 
   function handleToggleSelectAll() {

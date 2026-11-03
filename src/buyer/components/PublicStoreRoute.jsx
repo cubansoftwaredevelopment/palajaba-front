@@ -9,7 +9,9 @@ import { useBuyerDisplayCurrency } from '../context.js'
 import { resolveMarketplaceCategory } from '../../lib/marketplaceCategory'
 import { isReservedStoreSlug } from '../../lib/storeSlug'
 import BuyerStoreCategoryPage from '../pages/BuyerStoreCategoryPage'
+import BuyerStoreContentPage from '../pages/BuyerStoreContentPage'
 import BuyerStorePage from '../pages/BuyerStorePage'
+import { isStorePageSlug } from '../../lib/storePages'
 import { usePublicStoreLocation } from '../pages/usePublicStoreLocation'
 
 export default function PublicStoreRoute() {
@@ -21,6 +23,10 @@ export default function PublicStoreRoute() {
 
   if (categorySlug) {
     return <BuyerStoreCategoryPage categorySlug={categorySlug} gestorUsername={gestorUsername} />
+  }
+
+  if (gestorUsername && isStorePageSlug(gestorUsername)) {
+    return <BuyerStoreContentPage pageSlug={gestorUsername} />
   }
 
   if (gestorUsername) {

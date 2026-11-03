@@ -53,7 +53,7 @@ export default function SellerLayout() {
     clearSellerMarketplaceVisit()
     clearSellerSession()
     setShowLogoutConfirm(false)
-    navigate('/login', { replace: true })
+    navigate('/', { replace: true })
   }
 
   const refreshPendingOrderCount = useCallback(async () => {

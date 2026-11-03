@@ -1,57 +1,14 @@
-import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Button from '../components/Button'
 import Logo from '../components/Logo'
-import SellerLoadingScreen from '../components/seller/SellerLoadingScreen'
 import { BUY_ENTRY_LABEL, LOGO_HERO_CLASS } from '../constants/branding'
-import { ApiError } from '../lib/api'
-import { fetchSellerProfile } from '../auth/api.js'
 import { resolveBuyerEntryPath } from '../lib/buyerLocation'
-import { clearSellerSession, getSellerToken, setSellerSession } from '../lib/sellerAuth'
-import { isSessionError } from '../lib/userFacingError'
 
 export default function Welcome() {
   const navigate = useNavigate()
-  const [checkingSession, setCheckingSession] = useState(() => Boolean(getSellerToken()))
-
-  useEffect(() => {
-    const token = getSellerToken()
-    if (!token) return undefined
-
-    let cancelled = false
-
-    async function restoreSession() {
-      try {
-        const seller = await fetchSellerProfile(token)
-        if (cancelled) return
-        setSellerSession(token, seller)
-        navigate('/tienda', { replace: true })
-      } catch (err) {
-        if (cancelled) return
-        if (err instanceof ApiError && err.code === 'subscription_expired') {
-          clearSellerSession()
-          navigate('/login', { replace: true })
-          return
-        }
-        if (isSessionError(err)) {
-          clearSellerSession()
-        }
-        setCheckingSession(false)
-      }
-    }
-
-    restoreSession()
-    return () => {
-      cancelled = true
-    }
-  }, [navigate])
 
   function goToBuy() {
     navigate(resolveBuyerEntryPath())
-  }
-
-  if (checkingSession) {
-    return <SellerLoadingScreen message="Entrando…" />
   }
 
   return (

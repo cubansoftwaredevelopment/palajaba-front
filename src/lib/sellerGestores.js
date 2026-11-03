@@ -1,5 +1,7 @@
 /** Helpers del panel de Gestores de Venta (vendedor). */
 
+import { isStorePageSlug } from './storePages.js'
+
 const USERNAME_PATTERN = /^[a-z0-9]+(?:[_-][a-z0-9]+)*$/
 
 export function normalizeGestorUsername(value) {
@@ -22,6 +24,9 @@ export function validateGestorUsername(value) {
       message:
         'Solo letras minúsculas, números, guiones y guiones bajos (sin empezar ni terminar con guion).',
     }
+  }
+  if (isStorePageSlug(username)) {
+    return { ok: false, message: 'Ese usuario está reservado para las páginas de la tienda.' }
   }
   return { ok: true, username }
 }

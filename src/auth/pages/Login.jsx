@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthCard from '../components/AuthCard'
 import AuthHeader from '../components/AuthHeader'
@@ -12,8 +12,8 @@ import { ApiError } from '../../lib/api'
 import { adminLogin, sellerLogin } from '../api.js'
 import { addCustomerFavorite, customerLogin } from '../../buyer/api.js'
 import { setAdminToken } from '../../lib/adminAuth'
-import { isSellerAuthenticated, setSellerSession } from '../../lib/sellerAuth'
-import { isCustomerAuthenticated, setCustomerSession, updateCustomerProfile } from '../../lib/customerAuth'
+import { setSellerSession } from '../../lib/sellerAuth'
+import { setCustomerSession, updateCustomerProfile } from '../../lib/customerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 const ACCOUNT_TYPES = [
   { id: 'store', label: 'Tienda' },
@@ -43,14 +43,6 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const notice = typeof location.state?.notice === 'string' ? location.state.notice : ''
-
-  useEffect(() => {
-    if (isSellerAuthenticated()) {
-      navigate('/tienda', { replace: true })
-    } else if (isCustomerAuthenticated()) {
-      navigate('/comprar/provincia', { replace: true })
-    }
-  }, [navigate])
 
   async function handleSubmit(e) {
     e.preventDefault()
