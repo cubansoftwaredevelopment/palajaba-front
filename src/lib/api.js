@@ -253,6 +253,26 @@ export function fetchAdminFeedback(token, filter = "all") {
   });
 }
 
+export function fetchAdminDisputes(token) {
+  return request('/api/admin/disputes', { headers: { Authorization: `Bearer ${token}` } })
+}
+
+export function fetchAdminDispute(token, disputeId) {
+  return request(`/api/admin/disputes/${encodeURIComponent(disputeId)}`, { headers: { Authorization: `Bearer ${token}` } })
+}
+
+export function fetchAdminDisputesOpenCount(token) {
+  return request('/api/admin/disputes/open-count', { headers: { Authorization: `Bearer ${token}` } })
+}
+
+export function ruleAdminDispute(token, disputeId, payload) {
+  return request(`/api/admin/disputes/${encodeURIComponent(disputeId)}/ruling`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  })
+}
+
 export function fetchAdminFeedbackUnreadCount(token) {
   return request("/api/admin/feedback/unread-count", {
     headers: {

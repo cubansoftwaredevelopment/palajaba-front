@@ -48,6 +48,13 @@ const NAV_ICONS = {
       <path d="M6 12h.01M18 12h.01" />
     </svg>
   ),
+  disputas: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+      <path d="M12 3 4 7v5c0 5 3.4 7.6 8 9 4.6-1.4 8-4 8-9V7l-8-4Z" />
+      <path d="M12 8v4" />
+      <path d="M12 16h.01" />
+    </svg>
+  ),
   configuracion: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
       <circle cx="12" cy="12" r="3" />
@@ -62,7 +69,7 @@ function navLinkClass(isActive) {
   }`
 }
 
-export default function AdminNav({ open, onClose }) {
+export default function AdminNav({ open, onClose, openDisputeCount = 0 }) {
   useEffect(() => {
     if (!open) return undefined
     function handleKeyDown(event) {
@@ -118,7 +125,8 @@ export default function AdminNav({ open, onClose }) {
           {ADMIN_NAV.map((item) => (
             <NavLink key={item.id} to={item.path} className={({ isActive }) => navLinkClass(isActive)} onClick={onClose}>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center">{NAV_ICONS[item.id]}</span>
-              <span className="min-w-0 truncate">{item.label}</span>
+              <span className="min-w-0 flex-1 truncate">{item.label}</span>
+              {item.id === 'disputas' && openDisputeCount > 0 ? <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-red-500" aria-label="Hay disputas por resolver" /> : null}
             </NavLink>
           ))}
         </div>

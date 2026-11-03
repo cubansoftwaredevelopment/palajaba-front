@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import BuyerModalPortal from '../../buyer/components/BuyerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
-import { decideCustomerOrderEvidence } from '../api.js'
+import { decideCustomerOrderEvidence, openCustomerOrderDispute } from '../api.js'
 import { formatDate, getBuyerOrderStatusLabel, getEvidenceSupportWhatsAppUrl } from '../constants.js'
 import { getCustomerToken } from '../../lib/customerAuth'
 import { resolveMediaUrl } from '../../lib/media'
@@ -20,6 +20,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
   const [trackedOrderId, setTrackedOrderId] = useState(order.id)
   const [rejectedLocally, setRejectedLocally] = useState(false)
   const [supportPhone, setSupportPhone] = useState('')
+  const [supportLoading, setSupportLoading] = useState(false)
   const qvapay = order.qvapay
   const evidence = qvapay?.evidence
   if (trackedOrderId !== order.id) {
@@ -36,6 +37,20 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
       .catch(() => { if (!cancelled) setSupportPhone('') })
     return () => { cancelled = true }
   }, [order.id])
+
+  async function contactSupport(event) {
+    event.preventDefault()
+    setSupportLoading(true)
+    setDecisionError('')
+    try {
+      await openCustomerOrderDispute(getCustomerToken(), order.id)
+      openExternalUrl(supportUrl)
+    } catch (cause) {
+      setDecisionError(getUserFacingMessage(cause, 'No pudimos abrir la disputa.'))
+    } finally {
+      setSupportLoading(false)
+    }
+  }
 
   async function decideEvidence(accept) {
     setDecisionLoading(true); setDecisionError('')
@@ -114,7 +129,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
               </>
             ) : null}
             {evidence?.status === 'rejected' ? <p className="mt-2 text-sm text-brand-carmelita">Rechazaste la evidencia. El pago sigue retenido mientras contactas a soporte o la tienda envía otra evidencia.</p> : null}
-            {supportAvailable || evidence?.status === 'rejected' ? <a className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green" href={supportUrl} onClick={(event) => { event.preventDefault(); openExternalUrl(supportUrl) }} target="_blank" rel="noreferrer">Contactar soporte de Pa’ La Jaba</a> : null}
+            {supportAvailable || evidence?.status === 'rejected' ? <a className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green" href={supportUrl} onClick={contactSupport} target="_blank" rel="noreferrer">{supportLoading ? 'Abriendo disputa…' : 'Contactar soporte de Pa’ La Jaba'}</a> : null}
             {decisionError ? <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{decisionError}</p> : null}
           </section>
         ) : null}

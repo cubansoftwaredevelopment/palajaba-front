@@ -33,6 +33,7 @@ import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
 import AdminStats from './AdminStatistics/pages/AdminStats'
 import AdminInbox from './pages/AdminInbox'
+import AdminDisputes from './pages/AdminDisputes'
 import AdminProducts from './products/pages/AdminProducts'
 import AdminBanners from './pages/AdminBanners'
 import AdminDiscountCodes from './pages/AdminDiscountCodes'
@@ -154,6 +155,7 @@ const router = createBrowserRouter([
               { path: 'solicitudes', element: <AdminDashboard /> },
               { path: 'descuentos', element: <AdminDiscountCodes /> },
               { path: 'mensajes', element: <AdminInbox /> },
+              { path: 'disputas', element: <AdminDisputes /> },
               { path: 'notificaciones', element: <Navigate to="/admin/mensajes" replace /> },
               { path: 'productos', element: <AdminProducts /> },
               { path: 'banners', element: <AdminBanners /> },

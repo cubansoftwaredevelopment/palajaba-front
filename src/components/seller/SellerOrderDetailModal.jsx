@@ -15,6 +15,9 @@ import SellerSelect from './SellerSelect'
 import SellerOrderEvidenceEditor from './SellerOrderEvidenceEditor'
 import SellerEvidenceCountdown from './SellerEvidenceCountdown'
 import { canSendQvaPayEvidence } from '../../lib/qvapayEvidence.js'
+import { openSellerOrderDispute } from '../../auth/api.js'
+import { getSellerToken } from '../../lib/sellerAuth'
+import { getUserFacingMessage } from '../../lib/userFacingError'
 import {
   sellerAlertError,
   sellerAlertSuccess,
@@ -99,6 +102,7 @@ export default function SellerOrderDetailModal({
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
   const [supportPhone, setSupportPhone] = useState('')
+  const [supportLoading, setSupportLoading] = useState(false)
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
   const mapMotionClass = orderModalMotionClass(mapClosing)
   const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
@@ -568,8 +572,20 @@ export default function SellerOrderDetailModal({
               {evidence?.status === 'rejected' ? (
                 <div className="mt-3 space-y-3 rounded-xl border border-red-200 bg-red-50 p-3">
                   <p className="text-sm font-semibold text-red-900">Evidencia rechazada. El pago continúa retenido; puedes preparar una nueva evidencia o consultar a soporte.</p>
-                  <a href={supportWhatsAppUrl} onClick={(event) => { event.preventDefault(); openExternalUrl(supportWhatsAppUrl) }} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
-                    Consultar a soporte
+                  <a href={supportWhatsAppUrl} onClick={async (event) => {
+                    event.preventDefault()
+                    setSupportLoading(true)
+                    setLocalError('')
+                    try {
+                      await openSellerOrderDispute(getSellerToken(), order.id)
+                      openExternalUrl(supportWhatsAppUrl)
+                    } catch (cause) {
+                      setLocalError(getUserFacingMessage(cause, 'No pudimos abrir la disputa.'))
+                    } finally {
+                      setSupportLoading(false)
+                    }
+                  }} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
+                    {supportLoading ? 'Abriendo disputa…' : 'Consultar a soporte'}
                   </a>
                 </div>
               ) : null}

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Logo from '../Logo'
 import { ADMIN_PAGE_TITLES } from '../../constants/adminNav'
-import { clearAdminToken } from '../../lib/adminAuth'
+import { clearAdminToken, getAdminToken } from '../../lib/adminAuth'
+import { fetchAdminDisputesOpenCount } from '../../lib/api'
 import { readAdminTheme, writeAdminTheme } from './adminTheme'
 import { adminHeader, adminMuted, adminPage, adminIconButton, adminIconButtonActive } from './adminStyles'
 import AdminNav from './AdminNav'
@@ -99,6 +100,20 @@ export default function AdminLayout() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [navOpen, setNavOpen] = useState(false)
   const [theme, setTheme] = useState(readAdminTheme)
+  const [openDisputeCount, setOpenDisputeCount] = useState(0)
+  const loadDisputeCount = useCallback(() => {
+    const token = getAdminToken()
+    if (!token) return
+    fetchAdminDisputesOpenCount(token)
+      .then((data) => setOpenDisputeCount(Number(data?.count) || 0))
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    loadDisputeCount()
+    window.addEventListener('admin-disputes-changed', loadDisputeCount)
+    return () => window.removeEventListener('admin-disputes-changed', loadDisputeCount)
+  }, [loadDisputeCount, location.pathname])
 
   function toggleTheme() {
     const next = theme === 'light' ? 'dark' : 'light'
@@ -154,7 +169,7 @@ export default function AdminLayout() {
         <Outlet />
       </div>
 
-      <AdminNav open={navOpen} onClose={() => setNavOpen(false)} />
+      <AdminNav open={navOpen} onClose={() => setNavOpen(false)} openDisputeCount={openDisputeCount} />
 
       {showLogoutConfirm && (
         <LogoutConfirmModal

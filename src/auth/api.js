@@ -151,6 +151,12 @@ export function uploadSellerOrderEvidenceImage(token, orderId, file) {
   })
 }
 
+export function openSellerOrderDispute(token, orderId) {
+  return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/disputes`, {
+    method: 'POST', headers: authHeaders(token),
+  })
+}
+
 export function submitSellerOrderEvidence(token, orderId, content) {
   return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/evidence`, {
     method: 'POST', headers: authHeaders(token), body: JSON.stringify({ content }),

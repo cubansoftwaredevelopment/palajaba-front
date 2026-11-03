@@ -15,6 +15,7 @@ import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import BuyerOrderLocationMap from './BuyerOrderLocationMap'
 import SellerSelect from '../../components/seller/SellerSelect'
 import { getCustomerProfile } from '../../lib/customerAuth'
+import { customerHasQvaPayUsername } from '../../customer/api.js'
 import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 import {
   buyerDeliveryFieldLabel,
@@ -56,6 +57,7 @@ export default function BuyerDeliveryCheckoutModal({
   checkoutSubmitting = false,
   onClose,
   onConfirm,
+  onQvaPayRequired,
 }) {
   const titleId = useId()
   const location = getBuyerLocation()
@@ -170,6 +172,10 @@ export default function BuyerDeliveryCheckoutModal({
         return
       }
 
+      if (paymentMethod === 'qvapay' && !(await customerHasQvaPayUsername())) {
+        onQvaPayRequired?.()
+        return
+      }
       saveBuyerDeliveryDefaults(form)
       await onConfirm({
         mode: 'pickup',
@@ -177,6 +183,7 @@ export default function BuyerDeliveryCheckoutModal({
         phone_primary: form.phone_primary,
         phone_secondary: form.phone_secondary,
         notes: form.notes.trim(),
+        payment_method: paymentMethod,
       })
       return
     }
@@ -199,6 +206,10 @@ export default function BuyerDeliveryCheckoutModal({
       delivery.longitude = point.lng
     }
 
+    if (paymentMethod === 'qvapay' && !(await customerHasQvaPayUsername())) {
+      onQvaPayRequired?.()
+      return
+    }
     saveBuyerDeliveryDefaults(form)
     await onConfirm({ ...delivery, payment_method: paymentMethod })
   }

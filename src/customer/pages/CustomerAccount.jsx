@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead } from '../api.js'
+import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, dismissCustomerQvaPayPrompt } from '../api.js'
 import { clearCustomerSession, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
 import { fetchMarketplaceProduct } from '../../buyer/api.js'
 import CustomerNavigation from '../components/CustomerNavigation.jsx'
+import CustomerQvaPayPrompt from '../components/CustomerQvaPayPrompt.jsx'
+import CustomerQvaPaySettings from '../components/CustomerQvaPaySettings.jsx'
 import CustomerOrderDetailModal from '../components/CustomerOrderDetailModal.jsx'
 import QvaPayReleaseCountdown from '../components/QvaPayReleaseCountdown.jsx'
 import { CUSTOMER_NAV } from '../components/customerNav.jsx'
@@ -32,6 +34,12 @@ export default function CustomerAccount() {
     : CUSTOMER_NAV.find((item) => item.path === location.pathname)?.id || 'perfil'
   const token = getCustomerToken()
   const [profile, setProfile] = useState(null)
+  const [qvaPayPromptHeld, setQvaPayPromptHeld] = useState(() => Boolean(location.state?.focusQvaPay))
+  const [qvaPayPromptSection, setQvaPayPromptSection] = useState(section)
+  if (qvaPayPromptSection !== section) {
+    setQvaPayPromptSection(section)
+    setQvaPayPromptHeld(section === 'perfil' && Boolean(location.state?.focusQvaPay))
+  }
   const [orders, setOrders] = useState([])
   const [paymentNotifications, setPaymentNotifications] = useState([])
   const [liveNotificationToast, setLiveNotificationToast] = useState(null)
@@ -339,6 +347,27 @@ export default function CustomerAccount() {
   }
   const activeOrderFilterCount = countActiveFilters(orderFilterValues, ['store', 'products', 'status', 'currency', 'delivery'])
 
+  useEffect(() => {
+    if (section !== 'perfil' || !location.state?.focusQvaPay) return undefined
+    document.getElementById('cuenta-qvapay')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    return undefined
+  }, [section, location.state])
+
+  const showQvaPayPrompt = section === 'perfil' && Boolean(profile) && !profile.qvapay_username && !profile.qvapay_prompt_dismissed && !qvaPayPromptHeld
+
+  async function finishQvaPayPrompt(dismissForever) {
+    setQvaPayPromptHeld(true)
+    if (!dismissForever) return
+    try {
+      await dismissCustomerQvaPayPrompt(token)
+      const next = { ...profile, qvapay_prompt_dismissed: true }
+      setProfile(next)
+      updateCustomerProfile(next)
+    } catch (cause) {
+      setProfileError(getUserFacingMessage(cause, 'No pudimos guardar tu preferencia.'))
+    }
+  }
+
   function updateOrderFilters(next) {
     setStoreFilter(next.store)
     setProductFilters(next.products)
@@ -352,6 +381,14 @@ export default function CustomerAccount() {
 
   return (
     <div className="min-h-dvh bg-brand-green/[0.035] text-brand-carmelita lg:flex">
+      <CustomerQvaPayPrompt
+        open={showQvaPayPrompt}
+        onAddUser={() => {
+          setQvaPayPromptHeld(true)
+          document.getElementById('cuenta-qvapay')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        }}
+        onDone={(dismissForever) => { void finishQvaPayPrompt(dismissForever) }}
+      />
       <aside className="hidden w-60 shrink-0 border-r border-brand-green/10 bg-brand-white/70 px-3 py-6 lg:block">
         <Link
           to="/comprar"
@@ -490,6 +527,8 @@ export default function CustomerAccount() {
                       </p>
                     </div>
                   </section>
+
+                  <CustomerQvaPaySettings onUpdated={setProfile} />
 
                   {profileError ? (
                     <p

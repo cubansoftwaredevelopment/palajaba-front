@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import PhoneField from '../../components/auth/PhoneField'
 import { getCustomerProfile } from '../../lib/customerAuth'
+import { customerHasQvaPayUsername } from '../../customer/api.js'
 import { alertErrorClass } from '../../components/auth/formStyles'
 import {
   getBuyerDeliveryDefaults,
@@ -33,6 +34,7 @@ export default function BuyerPickupCheckoutModal({
   checkoutSubmitting = false,
   onClose,
   onConfirm,
+  onQvaPayRequired,
 }) {
   const titleId = useId()
   const open = Boolean(checkout)
@@ -104,6 +106,10 @@ export default function BuyerPickupCheckoutModal({
       phone_secondary: form.phone_secondary,
     })
 
+    if (paymentMethod === 'qvapay' && !(await customerHasQvaPayUsername())) {
+      onQvaPayRequired?.()
+      return
+    }
     await onConfirm({ ...pickup, payment_method: paymentMethod })
   }
 

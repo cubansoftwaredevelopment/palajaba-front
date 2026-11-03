@@ -1,4 +1,5 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   BUYER_DISPLAY_CURRENCY_EVENT,
   getBuyerDisplayCurrencies,
@@ -51,7 +52,9 @@ import BuyerPhoneCheckoutModal from './components/BuyerPhoneCheckoutModal'
 import BuyerJabaSyncAlert from './components/BuyerJabaSyncAlert'
 import BuyerJabaToast from './components/BuyerJabaToast'
 import BuyerCustomerLoginModal from './components/BuyerCustomerLoginModal'
-import { clearCustomerSession, getCustomerToken } from '../lib/customerAuth'
+import { clearCustomerSession, getCustomerProfile, getCustomerToken, updateCustomerProfile } from '../lib/customerAuth'
+import CustomerQvaPayPrompt from '../customer/components/CustomerQvaPayPrompt.jsx'
+import { dismissCustomerQvaPayPrompt } from '../customer/api.js'
 
 export const BuyerDisplayCurrencyContext = createContext(null)
 const BuyerDisplayedLocationContext = createContext(null)
@@ -179,6 +182,8 @@ export function BuyerJabaProvider({ children }) {
   const [jabaToast, setJabaToast] = useState(null)
   const [badgePulseId, setBadgePulseId] = useState(0)
   const [customerLoginOpen, setCustomerLoginOpen] = useState(false)
+  const [qvaPayPromptOpen, setQvaPayPromptOpen] = useState(false)
+  const navigate = useNavigate()
   const [pendingCustomerCheckout, setPendingCustomerCheckout] = useState(null)
 
   const continueCheckout = useCallback(async (type, payload) => {
@@ -623,12 +628,14 @@ export function BuyerJabaProvider({ children }) {
       checkoutSubmitting: Boolean(checkoutSubmittingStoreId),
       onClose: closeDeliveryCheckout,
       onConfirm: confirmDeliveryCheckout,
+      onQvaPayRequired: () => setQvaPayPromptOpen(true),
     }),
     createElement(BuyerPickupCheckoutModal, {
       checkout: activeCheckoutModal === 'pickup' ? pickupCheckout : null,
       checkoutSubmitting: Boolean(checkoutSubmittingStoreId),
       onClose: closePickupCheckout,
       onConfirm: confirmPickupCheckout,
+      onQvaPayRequired: () => setQvaPayPromptOpen(true),
     }),
     createElement(BuyerPhoneCheckoutModal, {
       picker: phonePicker,
@@ -639,6 +646,23 @@ export function BuyerJabaProvider({ children }) {
     customerLoginOpen
       ? createElement(BuyerCustomerLoginModal, { onClose: closeCustomerLogin, onLogin: finishCustomerLogin })
       : null,
+    createElement(CustomerQvaPayPrompt, {
+      open: qvaPayPromptOpen,
+      onAddUser: () => {
+        setQvaPayPromptOpen(false)
+        navigate('/cliente/perfil', { state: { focusQvaPay: true } })
+      },
+      onDone: (dismissForever) => {
+        setQvaPayPromptOpen(false)
+        if (!dismissForever) return
+        const token = getCustomerToken()
+        if (!token) return
+        void dismissCustomerQvaPayPrompt(token).then(() => {
+          const profile = getCustomerProfile()
+          if (profile) updateCustomerProfile({ ...profile, qvapay_prompt_dismissed: true })
+        }).catch(() => {})
+      },
+    }),
     syncRemoved?.length
       ? createElement(BuyerJabaSyncAlert, { removed: syncRemoved, onClose: dismissSyncAlert })
       : null,
