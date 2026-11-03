@@ -6,7 +6,6 @@ const RESERVED_STORE_SLUGS = new Set([
   'tienda',
   'configuracion',
   'aplicacion',
-  'remesas',
   'g',
 ])
 
