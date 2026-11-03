@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Checkbox from '../../components/ui/Checkbox'
 import BuyerModalPortal from '../../buyer/components/BuyerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import { buyerDeliveryModal, buyerDeliveryModalFooter, buyerDeliveryModalHeader, buyerDeliveryOverlay } from '../../buyer/components/buyerStyles'
@@ -17,8 +18,12 @@ export default function CustomerQvaPayPrompt({ open, onAddUser, onDone }) {
         </div>
         <div className="px-4 py-3 text-sm leading-relaxed text-brand-carmelita">
           <p>Agrega y verifica tu usuario de QvaPay en el perfil para poder pagar y recibir devoluciones.</p>
-          <label className="mt-4 flex items-start gap-2 font-semibold">
-            <input type="checkbox" className="mt-1" checked={hideNextTime} onChange={(event) => setHideNextTime(event.target.checked)} />
+          <label className="mt-4 flex cursor-pointer items-center gap-2.5 font-semibold">
+            <Checkbox
+              id="qvapay-hide-prompt"
+              checked={hideNextTime}
+              onChange={(event) => setHideNextTime(event.target.checked)}
+            />
             No volver a mostrar este aviso
           </label>
         </div>
