@@ -57,20 +57,62 @@ const CUSTOMER_NAV = [
 ]
 
 function formatDate(value) {
-  if (!value) return '—'
-  let dateValue
+  const dateValue = parseDateValue(value)
+  if (!dateValue) return '—'
+  return new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(dateValue)
+}
+
+function parseDateValue(value) {
+  if (!value) return null
+  let parsed
   if (typeof value === 'string') {
     const normalized = value.trim().replace(/(\.\d{3})\d+/, '$1')
     const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(normalized)
     const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized)
-    dateValue = new Date(isDateOnly
+    parsed = new Date(isDateOnly
       ? `${normalized}T00:00:00`
       : hasTimezone ? normalized : `${normalized}Z`)
   } else {
-    dateValue = new Date(value)
+    parsed = new Date(value)
   }
-  if (Number.isNaN(dateValue.getTime())) return '—'
-  return new Intl.DateTimeFormat('es', { dateStyle: 'medium', timeStyle: 'short' }).format(dateValue)
+  return Number.isNaN(parsed.getTime()) ? null : parsed
+}
+
+function QvaPayReleaseCountdown({ deadline, compact = false }) {
+  const [now, setNow] = useState(Date.now)
+  const deadlineMs = parseDateValue(deadline)?.getTime()
+
+  useEffect(() => {
+    if (!deadlineMs) return undefined
+    setNow(Date.now())
+    const interval = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(interval)
+  }, [deadlineMs])
+
+  if (!deadlineMs) return null
+  const remainingMs = deadlineMs - now
+  if (remainingMs <= 0) {
+    return (
+      <p className={compact ? 'mt-2 pl-1 text-xs font-semibold text-amber-900' : 'mt-2 text-sm font-semibold text-amber-900'}>
+        El plazo venció. La liberación del pago está en proceso.
+      </p>
+    )
+  }
+
+  const totalSeconds = Math.floor(remainingMs / 1000)
+  const days = Math.floor(totalSeconds / 86400)
+  const hours = Math.floor((totalSeconds % 86400) / 3600)
+  const minutes = Math.floor((totalSeconds % 3600) / 60)
+  const seconds = totalSeconds % 60
+  const countdown = days > 0
+    ? `${days} d ${String(hours).padStart(2, '0')} h ${String(minutes).padStart(2, '0')} min ${String(seconds).padStart(2, '0')} s`
+    : `${String(hours).padStart(2, '0')} h ${String(minutes).padStart(2, '0')} min ${String(seconds).padStart(2, '0')} s`
+
+  return (
+    <p className={compact ? 'mt-2 pl-1 text-xs font-semibold text-amber-900' : 'mt-2 text-sm font-semibold text-amber-900'} aria-live="off">
+      Liberación automática del pago en: <span className="tabular-nums">{countdown}</span>
+    </p>
+  )
 }
 
 function EvidenceNode({ node }) {
@@ -197,6 +239,7 @@ function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
             {canRespondToQvaPayEvidence(qvapay) ? (
               <>
                 <p className="mt-2 text-sm font-semibold text-brand-carmelita">La evidencia vence: {formatDate(evidence.deadline)}.</p>
+                {evidence.status === 'pending' ? <QvaPayReleaseCountdown deadline={evidence.deadline} /> : null}
                 <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold leading-relaxed text-amber-950">
                   {QVAPAY_EVIDENCE_WARNING}
                 </div>
@@ -1047,6 +1090,9 @@ export default function CustomerAccount() {
                           <p className="mt-1 pl-1 text-xs text-brand-carmelita/60">
                             {formatDate(order.created_at)}
                           </p>
+                          {evidenceStatus === 'pending' ? (
+                            <QvaPayReleaseCountdown deadline={order.qvapay?.evidence?.deadline} compact />
+                          ) : null}
                           <p className="mt-2 pl-1 text-sm">
                             {order.items
                               ?.map((item) => `${item.quantity} × ${item.name}`)
