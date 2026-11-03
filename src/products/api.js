@@ -11,6 +11,13 @@ function appendDisplayCurrency(params, currency) {
   }
 }
 
+function appendAdditionalMunicipalities(params, additionalMunicipalityIds) {
+  if (!additionalMunicipalityIds?.length) return
+  for (const municipalityId of additionalMunicipalityIds) {
+    if (municipalityId) params.append('municipios_adicionales', municipalityId)
+  }
+}
+
 export function fetchCategories() {
   return request('/api/categories/')
 }
@@ -136,6 +143,7 @@ export function fetchMarketplaceStoreCatalog({
   storeSlug,
   provinceId,
   municipalityId,
+  additionalMunicipalityIds,
   currency,
   limitPerCategory = 20,
 }) {
@@ -144,6 +152,7 @@ export function fetchMarketplaceStoreCatalog({
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
   })
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   appendDisplayCurrency(params, currency)
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/catalog?${params}`,
@@ -155,6 +164,7 @@ export function fetchMarketplaceGestorStoreCatalog({
   gestorUsername,
   provinceId,
   municipalityId,
+  additionalMunicipalityIds,
   currency,
   limitPerCategory = 20,
 }) {
@@ -163,6 +173,7 @@ export function fetchMarketplaceGestorStoreCatalog({
     municipality_id: municipalityId,
     limit_per_category: String(limitPerCategory),
   })
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   appendDisplayCurrency(params, currency)
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/catalog?${params}`,
@@ -174,6 +185,7 @@ export function fetchMarketplaceStoreCategoryProducts({
   localCategoryId,
   provinceId,
   municipalityId,
+  additionalMunicipalityIds,
   currency,
   limit = 20,
   offset = 0,
@@ -184,6 +196,7 @@ export function fetchMarketplaceStoreCategoryProducts({
     limit: String(limit),
     offset: String(offset),
   })
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   appendDisplayCurrency(params, currency)
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,
@@ -196,6 +209,7 @@ export function fetchMarketplaceGestorStoreCategoryProducts({
   localCategoryId,
   provinceId,
   municipalityId,
+  additionalMunicipalityIds,
   currency,
   limit = 20,
   offset = 0,
@@ -206,6 +220,7 @@ export function fetchMarketplaceGestorStoreCategoryProducts({
     limit: String(limit),
     offset: String(offset),
   })
+  appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   appendDisplayCurrency(params, currency)
   return request(
     `/api/marketplace/stores/${encodeURIComponent(storeSlug)}/gestores/${encodeURIComponent(gestorUsername)}/categories/${encodeURIComponent(localCategoryId)}/products?${params}`,

@@ -26,6 +26,7 @@ import { storeCategoryPath } from "../../lib/marketplaceCategory";
 import { validateGestorUsername } from "../../lib/sellerGestores";
 import { recordStoreProfileView } from "../../lib/storeProfileView";
 import { setStoreCheckoutPhones } from "../../lib/storeCheckoutPhones";
+import { getAdditionalMunicipalities } from "../../lib/buyerLocation";
 import { storePublicPath } from "../../lib/storeSlug";
 import { resolveUserFacingError } from "../../lib/userFacingError";
 import { usePublicStoreLocation } from "./usePublicStoreLocation";
@@ -79,6 +80,9 @@ export default function BuyerStorePage() {
 function BuyerStorePageContent({ location, gestorUsername = null }) {
   const { storeSlug } = useParams();
   const { currencies } = useBuyerDisplayCurrency();
+  const [additionalMunicipalityIds] = useState(() =>
+    getAdditionalMunicipalities(location.province.id),
+  );
   const [catalog, setCatalog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -95,6 +99,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             gestorUsername,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
+            additionalMunicipalityIds,
             currency: currencies,
             limitPerCategory: PAGE_SIZE,
           })
@@ -102,6 +107,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             storeSlug,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
+            additionalMunicipalityIds,
             currency: currencies,
             limitPerCategory: PAGE_SIZE,
           });
@@ -136,6 +142,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       setLoading(false);
     }
   }, [
+    additionalMunicipalityIds,
     currencies,
     isGestorCatalog,
     gestorUsername,
@@ -168,6 +175,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             localCategoryId: section.category_id,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
+            additionalMunicipalityIds,
             currency: currencies,
             limit: PAGE_SIZE,
             offset,
@@ -177,6 +185,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             localCategoryId: section.category_id,
             provinceId: location.province.id,
             municipalityId: location.municipality.id,
+            additionalMunicipalityIds,
             currency: currencies,
             limit: PAGE_SIZE,
             offset,
@@ -187,6 +196,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       };
     },
     [
+      additionalMunicipalityIds,
       currencies,
       isGestorCatalog,
       gestorUsername,
@@ -217,6 +227,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             <BuyerHeaderSearch
               provinceId={location.province.id}
               municipalityId={location.municipality.id}
+              additionalMunicipalityIds={additionalMunicipalityIds}
               storeSlug={storeSlug}
               gestorUsername={gestorUsername}
             />

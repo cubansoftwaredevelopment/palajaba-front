@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { getAdditionalMunicipalities } from '../../lib/buyerLocation'
 import { Navigate, useLocation, useParams } from 'react-router-dom'
 import BuyerMarketplaceNav from './BuyerMarketplaceNav'
 import BuyerShell from './BuyerShell'
@@ -41,6 +42,10 @@ function StoreSecondSegment({ storeSlug, segment }) {
   const hinted = navigation.state
   const { currencies } = useBuyerDisplayCurrency()
   const { location, resolvingLocation, locationError } = usePublicStoreLocation(storeSlug)
+  const additionalMunicipalityIds = location?.province?.id
+    ? getAdditionalMunicipalities(location.province.id)
+    : []
+  const additionalMunicipalityKey = additionalMunicipalityIds.join(',')
   const [kind, setKind] = useState(() => {
     if (hinted?.categoryId || hinted?.kind === 'category') return 'category'
     if (hinted?.kind === 'gestor') return 'gestor'
@@ -67,6 +72,7 @@ function StoreSecondSegment({ storeSlug, segment }) {
       storeSlug,
       provinceId: location.province.id,
       municipalityId: location.municipality.id,
+      additionalMunicipalityIds,
       currency: currencies,
       limitPerCategory: 1,
     })
@@ -85,7 +91,7 @@ function StoreSecondSegment({ storeSlug, segment }) {
     return () => {
       cancelled = true
     }
-  }, [currencies, kind, location, segment, storeSlug])
+  }, [additionalMunicipalityKey, currencies, kind, location, segment, storeSlug])
 
   if (kind === 'category') {
     return <BuyerStoreCategoryPage categorySlug={segment} />

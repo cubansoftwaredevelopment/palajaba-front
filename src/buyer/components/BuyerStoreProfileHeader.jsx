@@ -8,7 +8,7 @@ import PhotoLightbox from '../../components/PhotoLightbox'
 import BuyerModalPortal from './BuyerModalPortal'
 import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 import BuyerStoreBio from './BuyerStoreBio'
-import BuyerStoreBannerCover from './BuyerStoreBannerCover'
+import BuyerStoreBannerCover, { storeBannerAspectClass } from './BuyerStoreBannerCover'
 import { socialLinkLabel, socialLinkUrl, socialLinksFromProfile } from '../../lib/socialLinks'
 import {
   buyerStoreMapModal,
@@ -86,6 +86,8 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
     .filter((link) => link.href)
   const whatsapp = buildWhatsAppContactUrl(store.phone)
   const hasMap = Boolean(catalog.business_location)
+  const banners = Array.isArray(catalog.banners) ? catalog.banners : []
+  const showMapBanner = banners.length === 0 && hasMap
   const [photoOpen, setPhotoOpen] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
@@ -122,7 +124,21 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
   return (
     <>
       <section className={buyerStorePageHeader}>
-        <BuyerStoreBannerCover banners={catalog.banners} />
+        {showMapBanner ? (
+          <button
+            type="button"
+            onClick={() => setMapOpen(true)}
+            className={`relative z-0 block w-full cursor-pointer overflow-hidden bg-brand-green/10 text-left touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80 ${storeBannerAspectClass}`}
+            aria-label="Ver ubicación en el mapa"
+          >
+            <SellerLocationPreview location={catalog.business_location} banner />
+            <span className="pointer-events-none absolute bottom-14 right-3 rounded-full bg-white/90 px-2.5 py-1 text-[0.65rem] font-bold text-brand-green shadow-sm">
+              Ver mapa
+            </span>
+          </button>
+        ) : (
+          <BuyerStoreBannerCover banners={banners} />
+        )}
 
         <div className="relative z-10 px-4 pb-5 sm:px-5">
           <div className="-mt-10 flex items-center justify-between gap-3 sm:-mt-12">

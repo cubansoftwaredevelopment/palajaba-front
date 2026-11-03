@@ -24,6 +24,7 @@ import {
 } from '../../products/api.js'
 import { normalizeCatalogTheme } from '../../lib/catalogThemes'
 import { resolveMarketplaceCategory } from '../../lib/marketplaceCategory'
+import { getAdditionalMunicipalities } from '../../lib/buyerLocation'
 import { storeGestorPublicPath, storePublicPath } from '../../lib/storeSlug'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 import { usePublicStoreLocation } from './usePublicStoreLocation'
@@ -72,6 +73,9 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
   const navigate = useNavigate()
   const hintedCategory = route.state
   const { currencies } = useBuyerDisplayCurrency()
+  const [additionalMunicipalityIds] = useState(() =>
+    getAdditionalMunicipalities(location.province.id),
+  )
   const sentinelRef = useRef(null)
   const loadingMoreRef = useRef(false)
   const isGestorCatalog = Boolean(gestorUsername)
@@ -114,6 +118,7 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
       gestorUsername,
       provinceId: location.province.id,
       municipalityId: location.municipality.id,
+      additionalMunicipalityIds,
       currency: currencies,
       limitPerCategory: 1,
     })
@@ -148,6 +153,7 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
       cancelled = true
     }
   }, [
+    additionalMunicipalityIds,
     categorySlug,
     currencies,
     gestorUsername,
@@ -179,6 +185,7 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
               localCategoryId: category.id,
               provinceId: location.province.id,
               municipalityId: location.municipality.id,
+              additionalMunicipalityIds,
               currency: currencies,
               limit: PAGE_SIZE,
               offset,
@@ -188,6 +195,7 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
               localCategoryId: category.id,
               provinceId: location.province.id,
               municipalityId: location.municipality.id,
+              additionalMunicipalityIds,
               currency: currencies,
               limit: PAGE_SIZE,
               offset,
@@ -217,6 +225,7 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
       }
     },
     [
+      additionalMunicipalityIds,
       category?.id,
       currencies,
       gestorUsername,
@@ -284,6 +293,7 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
             <BuyerHeaderSearch
               provinceId={location.province.id}
               municipalityId={location.municipality.id}
+              additionalMunicipalityIds={additionalMunicipalityIds}
               storeSlug={storeSlug}
               gestorUsername={gestorUsername}
             />

@@ -148,6 +148,7 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
   const [menu, setMenu] = useState('')
   const extensions = useMemo(() => createEditorExtensions(), [])
   const closeMenu = useCallback(() => setMenu(''), [])
+  const linkBarRef = useCloseOnOutside(menu === 'link', closeMenu)
 
   useEffect(() => {
     onChangeRef.current = onChange
@@ -319,7 +320,8 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
         className="sr-only"
         onChange={(event) => insertImage(event.target.files?.[0])}
       />
-      <div className="relative z-20 flex shrink-0 flex-wrap items-center gap-1 rounded-t-xl border border-brand-green/12 bg-brand-green/[0.04] px-2 py-1.5 text-brand-green">
+      <div ref={linkBarRef} className="relative z-20 flex shrink-0 flex-col rounded-t-xl border border-brand-green/12 bg-brand-green/[0.04] text-brand-green">
+      <div className="flex flex-wrap items-center gap-1 px-2 py-1.5">
         <ToolbarMenu
           open={menu === 'heading'}
           onClose={closeMenu}
@@ -430,46 +432,20 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
         <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => editor.chain().focus().toggleItalic().run()} aria-label="Cursiva" aria-pressed={editor.isActive('italic')} className={`${toolButton} text-sm italic ${editor.isActive('italic') ? toolButtonOn : ''}`}>I</button>
         <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => editor.chain().focus().toggleBulletList().run()} aria-label="Lista" aria-pressed={editor.isActive('bulletList')} className={`${toolButton} text-sm ${editor.isActive('bulletList') ? toolButtonOn : ''}`}>•≡</button>
         <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => editor.chain().focus().toggleOrderedList().run()} aria-label="Lista numerada" aria-pressed={editor.isActive('orderedList')} className={`${toolButton} text-xs ${editor.isActive('orderedList') ? toolButtonOn : ''}`}>1.≡</button>
-        <ToolbarMenu
-          open={menu === 'link'}
-          onClose={closeMenu}
-          label="Insertar enlace"
-          pressed={Boolean(link)}
-          onToggle={() => toggleMenu('link')}
-          buttonClass={`${toolButton} ${link ? toolButtonOn : ''}`}
-          buttonContent={(
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-              <path d="M10 13a5 5 0 0 0 7.07.07l2.12-2.12a5 5 0 0 0-7.07-7.07L10.5 5.5" />
-              <path d="M14 11a5 5 0 0 0-7.07-.07L4.8 13.05a5 5 0 0 0 7.07 7.07L13.5 18.5" />
-            </svg>
-          )}
-          menuClass="absolute left-0 top-full z-30 mt-1 w-64 rounded-xl border border-brand-green/12 bg-white p-2 shadow-lg"
+        <button
+          type="button"
+          aria-label="Insertar enlace"
+          aria-expanded={menu === 'link'}
+          aria-pressed={Boolean(link)}
+          onMouseDown={(event) => event.preventDefault()}
+          onClick={() => toggleMenu('link')}
+          className={`${toolButton} ${link || menu === 'link' ? toolButtonOn : ''}`}
         >
-          <form
-            onSubmit={(event) => {
-              event.preventDefault()
-              applyLink(linkDraft)
-            }}
-          >
-            <label className="block text-[0.65rem] font-bold uppercase tracking-[0.08em] text-brand-carmelita/70" htmlFor="store-page-link">
-              Enlace
-            </label>
-            <input
-              id="store-page-link"
-              ref={linkInputRef}
-              type="text"
-              inputMode="url"
-              value={linkDraft}
-              onChange={(event) => setLinkDraft(event.target.value)}
-              placeholder="https:// o /ruta"
-              className="mt-1 w-full rounded-lg border border-brand-green/15 px-2 py-1.5 text-xs text-brand-green outline-none focus:border-brand-green/40"
-            />
-            <div className="mt-2 flex gap-1">
-              <button type="submit" className="rounded-lg bg-brand-green px-2 py-1.5 text-xs font-semibold text-white">Aplicar</button>
-              <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={clearLink} className="rounded-lg px-2 py-1.5 text-xs font-semibold hover:bg-brand-green/8">Quitar</button>
-            </div>
-          </form>
-        </ToolbarMenu>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="M10 13a5 5 0 0 0 7.07.07l2.12-2.12a5 5 0 0 0-7.07-7.07L10.5 5.5" />
+            <path d="M14 11a5 5 0 0 0-7.07-.07L4.8 13.05a5 5 0 0 0 7.07 7.07L13.5 18.5" />
+          </svg>
+        </button>
         <span className="mx-1 h-5 border-l border-brand-green/15" aria-hidden="true" />
         <button type="button" onClick={() => inputRef.current?.click()} disabled={Boolean(uploading)} aria-label="Insertar imagen" title="Insertar imagen" className={`${toolButton} disabled:opacity-50`}>
           {uploading ? (
@@ -482,6 +458,30 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
             </svg>
           )}
         </button>
+      </div>
+      {menu === 'link' ? (
+        <form
+          className="flex flex-wrap items-center gap-2 border-t border-brand-green/10 px-2 py-2"
+          onSubmit={(event) => {
+            event.preventDefault()
+            applyLink(linkDraft)
+          }}
+        >
+          <label className="sr-only" htmlFor="store-page-link">Enlace</label>
+          <input
+            id="store-page-link"
+            ref={linkInputRef}
+            type="text"
+            inputMode="url"
+            value={linkDraft}
+            onChange={(event) => setLinkDraft(event.target.value)}
+            placeholder="https:// o /ruta"
+            className="h-8 min-w-0 flex-1 basis-36 rounded-lg border border-brand-green/15 bg-white px-2 text-xs text-brand-green outline-none focus:border-brand-green/40"
+          />
+          <button type="submit" className="h-8 shrink-0 rounded-lg bg-brand-green px-3 text-xs font-semibold text-white">Aplicar</button>
+          <button type="button" onMouseDown={(event) => event.preventDefault()} onClick={clearLink} className="h-8 shrink-0 rounded-lg px-2 text-xs font-semibold hover:bg-brand-white">Quitar</button>
+        </form>
+      ) : null}
       </div>
       <div className="relative min-h-48 overflow-y-auto rounded-b-xl border border-t-0 border-brand-green/12 bg-white">
         <div className="min-h-full [&_.ProseMirror]:flow-root [&_.ProseMirror_a]:font-semibold [&_.ProseMirror_a]:underline [&_.ProseMirror_a]:underline-offset-2 [&_.ProseMirror_h1]:my-2 [&_.ProseMirror_h1]:font-display [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:leading-tight [&_.ProseMirror_h2]:my-2 [&_.ProseMirror_h2]:font-display [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:leading-tight [&_.ProseMirror_h3]:my-2 [&_.ProseMirror_h3]:font-display [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h4]:my-2 [&_.ProseMirror_h4]:text-base [&_.ProseMirror_h4]:font-semibold [&_.ProseMirror_ol]:my-2 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_ul]:my-2 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5">

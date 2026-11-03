@@ -7,6 +7,7 @@ export default function SellerLocationPreview({
   location,
   interactive = false,
   viewOnly = false,
+  banner = false,
   mapClassName = '',
 }) {
   const mapRef = useRef(null)
@@ -52,9 +53,17 @@ export default function SellerLocationPreview({
       map.remove()
       mapInstanceRef.current = null
     }
-  }, [interactive, viewOnly, location?.lat, location?.lng])
+  }, [banner, interactive, viewOnly, location?.lat, location?.lng])
 
   if (!location) return null
+
+  if (banner) {
+    return (
+      <div className="seller-location-preview pointer-events-none absolute inset-0 overflow-hidden bg-brand-green/10">
+        <div ref={mapRef} className="absolute inset-0 h-full w-full" role="presentation" />
+      </div>
+    )
+  }
 
   const fills = interactive || viewOnly
   const mapHeightClass = fills
