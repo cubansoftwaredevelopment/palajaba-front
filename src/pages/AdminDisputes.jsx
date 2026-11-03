@@ -15,6 +15,7 @@ import {
   adminMuted,
   adminSection,
 } from '../components/admin/adminStyles'
+import { getAdminToken } from '../lib/adminAuth'
 import { fetchAdminDispute, fetchAdminDisputes, ruleAdminDispute } from '../lib/api'
 
 const STATUS_LABEL = { open: 'Por resolver', ruled: 'Resuelta' }
@@ -187,8 +188,14 @@ export default function AdminDisputes() {
   const [openedOrder, setOpenedOrder] = useState(null)
 
   useEffect(() => {
+    const token = getAdminToken()
+    if (!token) {
+      setError('La sesión del administrador no está activa.')
+      setLoading(false)
+      return undefined
+    }
     let active = true
-    fetchAdminDisputes()
+    fetchAdminDisputes(token)
       .then((data) => {
         if (!active) return
         const rows = Array.isArray(data) ? data : []
@@ -210,9 +217,10 @@ export default function AdminDisputes() {
   }, [listVersion])
 
   useEffect(() => {
-    if (!selectedId) return undefined
+    const token = getAdminToken()
+    if (!selectedId || !token) return undefined
     let active = true
-    fetchAdminDispute(selectedId)
+    fetchAdminDispute(token, selectedId)
       .then((data) => {
         if (!active) return
         setDetail(data)
@@ -245,7 +253,7 @@ export default function AdminDisputes() {
     setError('')
     setSuccess('')
     try {
-      await ruleAdminDispute(selectedId, {
+      await ruleAdminDispute(getAdminToken(), selectedId, {
         winner,
         reason: reason.trim(),
         refund_username: winner === 'buyer' ? refundUsername.trim() : undefined,
