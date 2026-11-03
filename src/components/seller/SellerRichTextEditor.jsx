@@ -136,7 +136,7 @@ function ToolbarMenu({ open, onClose, label, pressed, onToggle, buttonClass, but
   )
 }
 
-export default function SellerRichTextEditor({ content, onChange, uploadImage, placeholder }) {
+export default function SellerRichTextEditor({ content, onChange, uploadImage, placeholder, imageAlt = 'Imagen de la página' }) {
   const inputRef = useRef(null)
   const onChangeRef = useRef(onChange)
   const colorSelection = useRef(null)
@@ -202,14 +202,14 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
     setError('')
     try {
       const result = await uploadImage(file)
-      editor.chain().focus().setImage({ src: result.url, alt: 'Imagen de la página', width: 100 }).run()
+      editor.chain().focus().setImage({ src: result.url, alt: imageAlt, width: 100 }).run()
     } catch (cause) {
       setError(cause?.message || 'No pudimos subir la imagen.')
     } finally {
       setUploading('')
       if (inputRef.current) inputRef.current.value = ''
     }
-  }, [editor, uploadImage])
+  }, [editor, imageAlt, uploadImage])
 
   function toggleMenu(name) {
     if (name === 'color' && menu !== 'color' && editor) {
