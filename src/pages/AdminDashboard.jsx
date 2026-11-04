@@ -298,11 +298,11 @@ export default function AdminDashboard() {
           </div>
         ) : null}
 
-        {error && section === 'businesses' ? (
+        {error ? (
           <p className={`mb-4 ${adminAlertError}`} role="alert">
             {error}
           </p>
-        )}
+        ) : null}
 
         {loading ? <LoadingState variant="admin" message="Cargando solicitudes…" /> : null}
 
