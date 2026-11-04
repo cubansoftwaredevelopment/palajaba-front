@@ -16,7 +16,7 @@ import {
   adminSection,
 } from '../components/admin/adminStyles'
 import { getAdminToken } from '../lib/adminAuth'
-import { fetchAdminDispute, fetchAdminDisputes, ruleAdminDispute } from '../lib/api'
+import { downloadAdminDisputeReport, fetchAdminDispute, fetchAdminDisputes, ruleAdminDispute } from '../lib/api'
 
 const STATUS_LABEL = { open: 'Por resolver', ruled: 'Resuelta' }
 const WINNER_LABEL = { seller: 'A favor de la tienda', buyer: 'A favor del comprador' }
@@ -186,6 +186,7 @@ export default function AdminDisputes() {
   const [ruling, setRuling] = useState(false)
   const [listVersion, setListVersion] = useState(0)
   const [openedOrder, setOpenedOrder] = useState(null)
+  const [reportKind, setReportKind] = useState('')
 
   useEffect(() => {
     const token = getAdminToken()
@@ -245,6 +246,18 @@ export default function AdminDisputes() {
     setError('')
     setSuccess('')
     setOpenedOrder(null)
+  }
+
+  async function downloadReport(kind) {
+    setReportKind(kind)
+    setError('')
+    try {
+      await downloadAdminDisputeReport(getAdminToken(), selectedId, kind)
+    } catch (err) {
+      setError(err.message || 'No se pudo descargar el documento.')
+    } finally {
+      setReportKind('')
+    }
   }
 
   async function submitRuling(event) {
@@ -336,10 +349,16 @@ export default function AdminDisputes() {
                   <h2 className="text-xl font-semibold text-zinc-50">Pedido #{detail.order_code}</h2>
                   <p className="mt-1 text-sm text-brand-yellow">{detail.parties_label}</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className={detail.status === 'open' ? adminBadgePending : adminBadgeApproved}>
                     {STATUS_LABEL[detail.status] || detail.status}
                   </span>
+                  <AdminButton size="sm" variant="secondary" onClick={() => downloadReport('terms')} disabled={Boolean(reportKind)}>
+                    {reportKind === 'terms' ? 'Generando…' : 'Términos y condiciones'}
+                  </AdminButton>
+                  <AdminButton size="sm" variant="secondary" onClick={() => downloadReport('delivery_policy')} disabled={Boolean(reportKind)}>
+                    {reportKind === 'delivery_policy' ? 'Generando…' : 'Política de entrega'}
+                  </AdminButton>
                   {detail.status === 'open' ? (
                     <AdminButton size="sm" onClick={() => setRulingOpen(true)}>Resolver</AdminButton>
                   ) : null}

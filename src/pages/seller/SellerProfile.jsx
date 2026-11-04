@@ -35,9 +35,12 @@ import {
   sellerTextarea,
 } from '../../components/seller/sellerStyles'
 import {
+  dismissSellerQvaPayPrompt,
+  fetchSellerQvaPayAccount,
   updateSellerProfile,
   uploadSellerProfilePhoto,
 } from '../../auth/api.js'
+import CustomerQvaPayPrompt from '../../customer/components/CustomerQvaPayPrompt.jsx'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
 import { validateImageFile } from '../../lib/imageUpload'
@@ -64,6 +67,8 @@ import {
   resolveProfileMenuAction,
 } from '../../lib/sellerProfileHub'
 import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
+import { storePageHasContent } from '../../lib/storePages'
+import Button from '../../components/Button'
 
 const BIO_MAX = 500
 
@@ -126,15 +131,78 @@ export default function SellerProfile() {
   const [error, setError] = useState('')
   const [errorToast, setErrorToast] = useState(null)
   const [saved, setSaved] = useState(false)
-  const [showMissingEmailWarning, setShowMissingEmailWarning] = useState(false)
-  const missingEmailWarningShownRef = useRef(false)
+  const [setupNotices, setSetupNotices] = useState([])
+  const [qvapayConfigured, setQvapayConfigured] = useState(false)
+  const [qvapayPromptDismissed, setQvapayPromptDismissed] = useState(false)
+  const [qvapayAccountLoaded, setQvapayAccountLoaded] = useState(false)
+  const [qvapayPromptHeld, setQvapayPromptHeld] = useState(false)
+  const [policyWarningDismissed, setPolicyWarningDismissed] = useState(false)
+  const setupWarningShownRef = useRef(false)
+  const missingStorePolicies = Boolean(profile)
+    && !storePageHasContent(profile.store_pages?.delivery_policy)
+    && !storePageHasContent(profile.store_pages?.terms)
+  if ((!qvapayConfigured || !missingStorePolicies) && policyWarningDismissed) {
+    setPolicyWarningDismissed(false)
+  }
+  const showPolicyWarning = qvapayConfigured && missingStorePolicies && !policyWarningDismissed && setupNotices.length === 0
+  const showQvaPayPrompt = qvapayAccountLoaded && !qvapayConfigured && !qvapayPromptDismissed && !qvapayPromptHeld && setupNotices.length === 0 && !showPolicyWarning
 
   useEffect(() => {
-    if (profile && !String(profile.email || '').trim() && !missingEmailWarningShownRef.current) {
-      missingEmailWarningShownRef.current = true
-      setShowMissingEmailWarning(true)
+    if (!profile) return undefined
+    let active = true
+    fetchSellerQvaPayAccount(getSellerToken())
+      .then((account) => {
+        if (!active) return
+        setQvapayConfigured(Boolean(String(account?.username || '').trim()))
+        setQvapayPromptDismissed(Boolean(account?.prompt_dismissed))
+        setQvapayAccountLoaded(true)
+      })
+      .catch(() => {
+        if (!active) return
+        setQvapayConfigured(false)
+        setQvapayAccountLoaded(false)
+      })
+    return () => {
+      active = false
     }
   }, [profile])
+
+  useEffect(() => {
+    if (!profile || setupWarningShownRef.current) return undefined
+    let active = true
+
+    async function collectNotices() {
+      const notices = []
+      if (!String(profile.email || '').trim()) {
+        notices.push({
+          id: 'email',
+          title: 'Agrega un correo electrónico',
+          description: 'Tu cuenta no tiene un correo electrónico configurado. Ve a Perfil avanzado y agrega tu correo para poder recuperar el acceso a tu cuenta si lo necesitas.',
+          action: 'Ir a Perfil avanzado',
+          panel: PROFILE_PANEL_IDS.advanced,
+        })
+      }
+      if (!active || setupWarningShownRef.current || !notices.length) return
+      setupWarningShownRef.current = true
+      setSetupNotices(notices)
+    }
+
+    collectNotices()
+    return () => {
+      active = false
+    }
+  }, [profile])
+
+  async function finishQvaPayPrompt(dismissForever) {
+    setQvapayPromptHeld(true)
+    if (!dismissForever) return
+    try {
+      await dismissSellerQvaPayPrompt(getSellerToken())
+      setQvapayPromptDismissed(true)
+    } catch (err) {
+      showCaughtError(err)
+    }
+  }
 
   function showCaughtError(err) {
     const resolved = resolveUserFacingError(err)
@@ -456,19 +524,72 @@ export default function SellerProfile() {
 
   return (
     <>
-      {showMissingEmailWarning ? (
+      {setupNotices.length === 1 ? (
         <ConfirmModal
-          title="Agrega un correo electrónico"
-          description="Tu cuenta no tiene un correo electrónico configurado. Ve a Perfil avanzado y agrega tu correo para poder recuperar el acceso a tu cuenta si lo necesitas."
-          confirmLabel="Ir a Perfil avanzado"
+          title={setupNotices[0].title}
+          description={setupNotices[0].description}
+          confirmLabel={setupNotices[0].action}
           cancelLabel={null}
           icon={<span className="text-3xl" aria-hidden="true">⚠️</span>}
-          onClose={() => setShowMissingEmailWarning(false)}
+          onClose={() => setSetupNotices([])}
           onConfirm={() => {
-            setShowMissingEmailWarning(false)
-            setActivePanel(openProfilePanel(null, PROFILE_PANEL_IDS.advanced))
+            const panel = setupNotices[0].panel
+            setSetupNotices([])
+            setActivePanel(openProfilePanel(null, panel))
           }}
         />
+      ) : null}
+      <CustomerQvaPayPrompt
+        open={showQvaPayPrompt}
+        description="Agrega y verifica tu usuario de QvaPay en tu perfil para poder recibir pagos."
+        addLabel="Ir al perfil"
+        onAddUser={() => {
+          setQvapayPromptHeld(true)
+          setActivePanel(openProfilePanel(null, PROFILE_PANEL_IDS.payments))
+        }}
+        onDone={(dismissForever) => { void finishQvaPayPrompt(dismissForever) }}
+      />
+      {showPolicyWarning ? (
+        <ConfirmModal
+          title="Publica las condiciones de tu tienda"
+          description="Tu tienda ya tiene usuario QvaPay y todavía no tiene la política de entrega ni los términos y condiciones. Publícalos en Servicio al cliente para que el comprador pueda aceptarlos al comprar."
+          confirmLabel="Ir a Servicio al cliente"
+          cancelLabel={null}
+          icon={<span className="text-3xl" aria-hidden="true">⚠️</span>}
+          onClose={() => setPolicyWarningDismissed(true)}
+          onConfirm={() => {
+            setPolicyWarningDismissed(true)
+            setActivePanel(openProfilePanel(null, PROFILE_PANEL_IDS.storeContent))
+          }}
+        />
+      ) : null}
+      {setupNotices.length > 1 ? (
+        <ConfirmModal
+          title="Completa tu tienda"
+          description="Hay datos pendientes para que tu cuenta y tus ventas queden listas."
+          confirmLabel={null}
+          cancelLabel="Ahora no"
+          icon={<span className="text-3xl" aria-hidden="true">⚠️</span>}
+          onClose={() => setSetupNotices([])}
+        >
+          {setupNotices.map((notice) => (
+            <div key={notice.id} className="rounded-2xl border border-brand-green/10 bg-brand-green/[0.04] px-3 py-3 text-left">
+              <p className="text-sm font-semibold text-brand-green">{notice.title}</p>
+              <p className="mt-1 text-sm leading-relaxed text-brand-carmelita/80">{notice.description}</p>
+              <Button
+                type="button"
+                variant="secondary"
+                className="mt-3"
+                onClick={() => {
+                  setSetupNotices([])
+                  setActivePanel(openProfilePanel(null, notice.panel))
+                }}
+              >
+                {notice.action}
+              </Button>
+            </div>
+          ))}
+        </ConfirmModal>
       ) : null}
       <section
         className={`animate-fade-in ${

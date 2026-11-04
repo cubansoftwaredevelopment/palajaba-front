@@ -10,6 +10,7 @@ export default function ConfirmModal({
   cancelLabel = 'Cancelar',
   confirmVariant = 'primary',
   icon,
+  children,
   onConfirm,
   onClose: requestClose,
 }) {
@@ -72,9 +73,12 @@ export default function ConfirmModal({
           {description ? <p className="mt-3 text-sm leading-relaxed text-brand-carmelita/80">{description}</p> : null}
 
           <div className="mt-6 flex w-full flex-col gap-2.5">
-            <Button type="button" variant={confirmVariant} onClick={onConfirm}>
-              {confirmLabel}
-            </Button>
+            {children}
+            {confirmLabel ? (
+              <Button type="button" variant={confirmVariant} onClick={onConfirm}>
+                {confirmLabel}
+              </Button>
+            ) : null}
             {cancelLabel ? (
               <Button type="button" variant="ghost" onClick={onClose}>
                 {cancelLabel}

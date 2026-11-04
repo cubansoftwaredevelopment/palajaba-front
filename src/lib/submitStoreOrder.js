@@ -46,6 +46,8 @@ export async function submitStoreOrder({
   gestorId = null,
   gestorUsername = null,
   paymentMethod = 'contact',
+  acceptedDeliveryPolicy = false,
+  acceptedTerms = false,
 }) {
   if (!storeId || !items?.length) return null
 
@@ -59,6 +61,8 @@ export async function submitStoreOrder({
     delivery: buildDeliveryPayload(delivery),
     buyer_zone: buildBuyerZone(),
     payment_method: paymentMethod,
+    accepted_delivery_policy: Boolean(acceptedDeliveryPolicy),
+    accepted_terms: Boolean(acceptedTerms),
   }
   if (gestorId) body.gestor_id = gestorId
   if (gestorUsername) body.gestor_username = gestorUsername

@@ -16,6 +16,7 @@ import BuyerOrderLocationMap from './BuyerOrderLocationMap'
 import SellerSelect from '../../components/seller/SellerSelect'
 import { getCustomerProfile } from '../../lib/customerAuth'
 import { customerHasQvaPayUsername } from '../../customer/api.js'
+import CheckoutStoreAgreements from './CheckoutStoreAgreements'
 import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 import {
   buyerDeliveryFieldLabel,
@@ -90,6 +91,7 @@ export default function BuyerDeliveryCheckoutModal({
   const [selectedAddressId, setSelectedAddressId] = useState('')
   const savedAddresses = getCustomerProfile()?.addresses ?? []
   const [error, setError] = useState('')
+  const [agreements, setAgreements] = useState({ delivery_policy: false, terms: false, ready: false })
 
   useEffect(() => {
     if (!checkout) return undefined
@@ -97,6 +99,7 @@ export default function BuyerDeliveryCheckoutModal({
     setForm(buyerDeliveryDefaults())
     setSelectedAddressId('')
     setError('')
+    setAgreements({ delivery_policy: false, terms: false, ready: false })
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') onClose()
@@ -165,6 +168,11 @@ export default function BuyerDeliveryCheckoutModal({
       return
     }
 
+    if (paymentMethod === 'qvapay' && !agreements.ready) {
+      setError('Acepta las condiciones de la tienda para pagar por QvaPay.')
+      return
+    }
+
     if (pickup) {
       const validationError = validateDeliveryContact(form)
       if (validationError) {
@@ -184,6 +192,8 @@ export default function BuyerDeliveryCheckoutModal({
         phone_secondary: form.phone_secondary,
         notes: form.notes.trim(),
         payment_method: paymentMethod,
+        accepted_delivery_policy: agreements.delivery_policy,
+        accepted_terms: agreements.terms,
       })
       return
     }
@@ -211,7 +221,12 @@ export default function BuyerDeliveryCheckoutModal({
       return
     }
     saveBuyerDeliveryDefaults(form)
-    await onConfirm({ ...delivery, payment_method: paymentMethod })
+    await onConfirm({
+      ...delivery,
+      payment_method: paymentMethod,
+      accepted_delivery_policy: agreements.delivery_policy,
+      accepted_terms: agreements.terms,
+    })
   }
 
   const zoneHint =
@@ -396,6 +411,15 @@ export default function BuyerDeliveryCheckoutModal({
               </div>
             ) : null}
 
+            <div className={step === 3 ? 'mt-4' : 'hidden'}>
+              <CheckoutStoreAgreements
+                storeId={shownCheckout.storeId}
+                storeSlug={shownCheckout.storeSlug}
+                pages={shownCheckout.storePages}
+                onChange={setAgreements}
+              />
+            </div>
+
             {error ? <p className={`${alertErrorClass} mt-4`}>{error}</p> : null}
           </div>
 
@@ -427,7 +451,7 @@ export default function BuyerDeliveryCheckoutModal({
                   <>
                     <button
                       type="button"
-                      disabled={checkoutSubmitting}
+                      disabled={checkoutSubmitting || !agreements.ready}
                       onClick={(event) => handleSubmit(event, 'qvapay')}
                       className={`${buyerJabaPrimaryBtn} w-full px-3 text-center leading-tight`}
                     >

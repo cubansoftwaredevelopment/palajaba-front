@@ -131,6 +131,10 @@ export function deleteSellerQvaPayAccount(token) {
   return request('/api/auth/me/payment-methods/qvapay', { method: 'DELETE', headers: authHeaders(token) })
 }
 
+export function dismissSellerQvaPayPrompt(token) {
+  return request('/api/auth/me/payment-methods/qvapay/dismiss', { method: 'POST', headers: authHeaders(token) })
+}
+
 export function acceptSellerQvaPayOrder(token, orderId, payload = {}) {
   return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/qvapay/accept`, {
     method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload),

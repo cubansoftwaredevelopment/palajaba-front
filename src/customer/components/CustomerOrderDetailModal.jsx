@@ -10,6 +10,7 @@ import { canRespondToQvaPayEvidence, QVAPAY_EVIDENCE_WARNING } from '../../lib/q
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 import { openExternalUrl } from '../../lib/nativeApp'
+import OrderAgreements from '../../buyer/components/OrderAgreements'
 import EvidenceContent from './EvidenceContent.jsx'
 import QvaPayReleaseCountdown from './QvaPayReleaseCountdown.jsx'
 
@@ -169,6 +170,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
           </div>
         </dl>
 
+        <OrderAgreements agreements={order.store_agreements} />
         {order.completed_at ? <p className="mt-4 text-xs text-brand-carmelita/65">Completado: {formatDate(order.completed_at)}</p> : null}
       </section>
       </div>

@@ -63,6 +63,8 @@ export async function runStoreCheckout({
       gestorId: payload.gestorId ?? null,
       gestorUsername: payload.gestorUsername ?? null,
       paymentMethod,
+      acceptedDeliveryPolicy: Boolean(delivery?.accepted_delivery_policy),
+      acceptedTerms: Boolean(delivery?.accepted_terms),
     })
   } catch (error) {
     return {

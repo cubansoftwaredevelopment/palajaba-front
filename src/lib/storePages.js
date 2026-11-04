@@ -63,3 +63,21 @@ export function storeCopyrightLine(storeName, year = new Date().getFullYear()) {
 export function isStorePagePublished(pages, key) {
   return pages?.[key] === true
 }
+
+export function storePageHasContent(content) {
+  let found = false
+  function walk(node) {
+    if (found || !node || typeof node !== 'object') return
+    if (node.type === 'text' && String(node.text || '').trim()) {
+      found = true
+      return
+    }
+    if (node.type === 'image' && String(node.attrs?.src || '').trim()) {
+      found = true
+      return
+    }
+    for (const child of node.content || []) walk(child)
+  }
+  walk(content)
+  return found
+}

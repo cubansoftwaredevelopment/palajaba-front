@@ -8,6 +8,7 @@ import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
+import OrderAgreements from '../../buyer/components/OrderAgreements'
 import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
@@ -463,6 +464,8 @@ export default function SellerOrderDetailModal({
               </p>
             ) : null}
           </div> : null}
+
+          <OrderAgreements agreements={order.store_agreements} />
 
           {order.buyer_zone ? (
             <p className="mt-3 text-xs text-brand-carmelita/85">

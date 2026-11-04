@@ -190,7 +190,12 @@ export function BuyerJabaProvider({ children }) {
     let enrichedPayload = payload
     try {
       const store = await fetchMarketplaceStore(payload.storeId)
-      enrichedPayload = { ...payload, qvapayEnabled: Boolean(store?.qvapay_enabled) }
+      enrichedPayload = {
+        ...payload,
+        qvapayEnabled: Boolean(store?.qvapay_enabled),
+        storeSlug: store?.store_slug || '',
+        storePages: store?.store_pages || {},
+      }
     } catch {
       enrichedPayload = { ...payload, qvapayEnabled: false }
     }

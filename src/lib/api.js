@@ -265,6 +265,22 @@ export function fetchAdminDisputesOpenCount(token) {
   return request('/api/admin/disputes/open-count', { headers: { Authorization: `Bearer ${token}` } })
 }
 
+export async function downloadAdminDisputeReport(token, disputeId, kind) {
+  const response = await fetch(
+    `${getApiBase()}/api/admin/disputes/${encodeURIComponent(disputeId)}/agreements/${encodeURIComponent(kind)}.pdf`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  )
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    const parsed = parseApiErrorDetail(data.detail)
+    throw new ApiError(parsed.message, { code: parsed.code, data: parsed.data, status: response.status })
+  }
+  const blob = await response.blob()
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const match = disposition.match(/filename="([^"]+)"/)
+  await downloadBlob(blob, match?.[1] || `${kind}-${String(disputeId).slice(-6)}.pdf`, 'application/pdf')
+}
+
 export function ruleAdminDispute(token, disputeId, payload) {
   return request(`/api/admin/disputes/${encodeURIComponent(disputeId)}/ruling`, {
     method: 'POST',

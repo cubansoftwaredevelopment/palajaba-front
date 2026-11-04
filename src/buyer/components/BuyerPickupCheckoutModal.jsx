@@ -19,6 +19,7 @@ import {
   buyerJabaPrimaryBtn,
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
+import CheckoutStoreAgreements from './CheckoutStoreAgreements'
 import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
 
 function WhatsAppIcon() {
@@ -55,6 +56,7 @@ export default function BuyerPickupCheckoutModal({
     }
   })
   const [error, setError] = useState('')
+  const [agreements, setAgreements] = useState({ delivery_policy: false, terms: false, ready: false })
 
   useEffect(() => {
     if (!checkout) return undefined
@@ -66,6 +68,7 @@ export default function BuyerPickupCheckoutModal({
       phone_secondary: defaults.phone_secondary,
     })
     setError('')
+    setAgreements({ delivery_policy: false, terms: false, ready: false })
 
     function handleKeyDown(event) {
       if (event.key === 'Escape') onClose()
@@ -106,11 +109,21 @@ export default function BuyerPickupCheckoutModal({
       phone_secondary: form.phone_secondary,
     })
 
+    if (paymentMethod === 'qvapay' && !agreements.ready) {
+      setError('Acepta las condiciones de la tienda para pagar por QvaPay.')
+      return
+    }
+
     if (paymentMethod === 'qvapay' && !(await customerHasQvaPayUsername())) {
       onQvaPayRequired?.()
       return
     }
-    await onConfirm({ ...pickup, payment_method: paymentMethod })
+    await onConfirm({
+      ...pickup,
+      payment_method: paymentMethod,
+      accepted_delivery_policy: agreements.delivery_policy,
+      accepted_terms: agreements.terms,
+    })
   }
 
   return (
@@ -168,6 +181,13 @@ export default function BuyerPickupCheckoutModal({
                 required={false}
               />
 
+              <CheckoutStoreAgreements
+                storeId={shownCheckout.storeId}
+                storeSlug={shownCheckout.storeSlug}
+                pages={shownCheckout.storePages}
+                onChange={setAgreements}
+              />
+
               {error ? <p className={alertErrorClass}>{error}</p> : null}
             </div>
           </div>
@@ -175,7 +195,7 @@ export default function BuyerPickupCheckoutModal({
           <div className={`${buyerDeliveryModalFooter} flex-col`}>
             {shownCheckout.qvapayEnabled ? (
               <>
-                <button type="button" disabled={checkoutSubmitting} onClick={(event) => handleSubmit(event, 'qvapay')} className={buyerJabaPrimaryBtn}>
+                <button type="button" disabled={checkoutSubmitting || !agreements.ready} onClick={(event) => handleSubmit(event, 'qvapay')} className={buyerJabaPrimaryBtn}>
                   {checkoutSubmitting ? 'Enviando solicitud…' : 'Pagar por QvaPay'}
                 </button>
                 <p className="text-center text-xs text-brand-carmelita/75">El dinero se libera después de que aceptes la evidencia o venza el plazo de 48 horas.</p>
