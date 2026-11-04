@@ -9,7 +9,7 @@ import SellerOrdersTabs from '../../components/seller/SellerOrdersTabs'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
-import { sellerBtnPrimaryCompact, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
+import { sellerBtnPrimaryCompact, sellerChip, sellerFocusRing, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
 import {
   createSellerManualOrder,
   deleteSellerOrder,
@@ -111,6 +111,7 @@ export default function SellerOrders() {
   const [datePeriod, setDatePeriod] = useState('daily')
   const [dateRange, setDateRange] = useState(() => rangeForPeriod('daily'))
   const [dateFilterEnabled, setDateFilterEnabled] = useState(false)
+  const [resultFilter, setResultFilter] = useState('')
 
   const loadOrders = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -229,10 +230,11 @@ export default function SellerOrders() {
       if (currencyFilter && order.payment_currency !== currencyFilter) return false
       if (deliveryFilter === 'yes' && !order.delivery_requested) return false
       if (deliveryFilter === 'no' && order.delivery_requested) return false
+      if (activeTab === 'completed' && resultFilter && order.status !== resultFilter) return false
       const exactOrderMatch = orderIdentifier(order).toLocaleLowerCase('es') === query
       return exactOrderMatch || !dateFilterEnabled || isInRange(order, activeTab, dateRange)
     })
-  }, [activeTab, pendingOrders, completedOrders, search, clientFilter, productFilters, currencyFilter, deliveryFilter, dateRange, dateFilterEnabled])
+  }, [activeTab, pendingOrders, completedOrders, search, clientFilter, productFilters, currencyFilter, deliveryFilter, dateRange, dateFilterEnabled, resultFilter])
 
   const filterOptions = useMemo(() => {
     const allOrders = [...pendingOrders, ...completedOrders]
@@ -479,6 +481,26 @@ export default function SellerOrders() {
             </div>
           </div>
 
+          {activeTab === 'completed' ? (
+            <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Filtrar pedidos realizados">
+              {[
+                { id: '', label: 'Todos' },
+                { id: 'completed', label: 'Realizados' },
+                { id: 'cancelled', label: 'Cancelados' },
+              ].map((option) => (
+                <button
+                  key={option.id || 'all'}
+                  type="button"
+                  aria-pressed={resultFilter === option.id}
+                  onClick={() => setResultFilter(option.id)}
+                  className={`${sellerChip(resultFilter === option.id)} min-h-9 px-3.5 ${sellerFocusRing}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
           <FilterModal
             open={filtersOpen}
             onClose={() => setFiltersOpen(false)}
@@ -502,11 +524,23 @@ export default function SellerOrders() {
             tone={activeTab === 'pending' ? 'pending' : 'completed'}
             count={visibleOrders.length}
             emptyIcon={activeTab === 'pending' ? PendingIcon : CompletedIcon}
-            emptyTitle={activeTab === 'pending' ? 'Nada pendiente' : 'Aún sin ventas cerradas'}
+            emptyTitle={
+              activeTab === 'pending'
+                ? 'Nada pendiente'
+                : resultFilter === 'cancelled'
+                  ? 'Sin pedidos cancelados'
+                  : resultFilter === 'completed'
+                    ? 'Sin pedidos realizados'
+                    : 'Aún sin ventas cerradas'
+            }
             emptyDescription={
               activeTab === 'pending'
                 ? 'Cuando llegue un pedido nuevo desde la jaba, lo verás en esta pestaña.'
-                : 'Al marcar un pedido como realizado, aparecerá aquí.'
+                : resultFilter === 'cancelled'
+                  ? 'Los pedidos cancelados de esta pestaña aparecerán aquí.'
+                  : resultFilter === 'completed'
+                    ? 'Los pedidos marcados como realizados aparecerán aquí.'
+                    : 'Al marcar un pedido como realizado, aparecerá aquí.'
             }
           >
             {visibleOrders.map((order) => (
