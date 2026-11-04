@@ -191,7 +191,7 @@ export default function SellerOrders() {
     const completed = []
 
     for (const order of orders) {
-      if (order.status === 'completed') {
+      if (order.status === 'completed' || order.status === 'cancelled') {
         completed.push(order)
       } else {
         pending.push(order)
@@ -211,7 +211,7 @@ export default function SellerOrders() {
       ? orders.find((order) => orderIdentifier(order).toLocaleLowerCase('es') === orderSearchTarget.toLocaleLowerCase('es'))
       : null
     setActiveTab(targetOrder
-      ? targetOrder.status === 'completed' ? 'completed' : 'pending'
+      ? targetOrder.status === 'pending_confirmation' ? 'pending' : 'completed'
       : pendingOrders.length > 0 ? 'pending' : 'completed')
     setTabInitialized(true)
   }, [loading, tabInitialized, pendingOrders.length, orders, orderSearchTarget, ordersHasMore, loadMoreOrders, error])

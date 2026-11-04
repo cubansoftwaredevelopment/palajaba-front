@@ -1,6 +1,7 @@
 export const ORDER_STATUS_LABELS = {
   pending_confirmation: 'Por procesar',
   completed: 'Compra realizada',
+  cancelled: 'Cancelado',
 }
 
 export const ORDER_STATUS_STYLES = {

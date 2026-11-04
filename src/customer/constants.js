@@ -5,6 +5,7 @@ export const sectionClass = 'rounded-2xl border border-brand-green/10 bg-brand-w
 const statusLabel = { pending_confirmation: 'Por procesar', completed: 'Completado', cancelled: 'Cancelado' }
 
 export function getBuyerOrderStatusLabel(order) {
+  if (order.status === 'completed' || order.status === 'cancelled') return statusLabel[order.status]
   const evidenceStatus = order.payment_method === 'qvapay' ? order.qvapay?.evidence?.status : null
   if (evidenceStatus === 'pending') return 'Evidencia enviada'
   if (evidenceStatus === 'rejected') return 'Evidencia rechazada'

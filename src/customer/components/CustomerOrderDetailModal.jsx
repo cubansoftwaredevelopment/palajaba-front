@@ -134,7 +134,9 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
             {qvapay?.payment_status === 'awaiting_payment' && qvapay.invoice_url ? (
               <a href={qvapay.invoice_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl bg-brand-green px-4 font-bold text-white">Abrir factura QvaPay</a>
             ) : null}
-            {qvapay?.payment_status === 'paid' && evidence?.status !== 'pending' && evidence?.status !== 'accepted' && evidence?.status !== 'expired' ? (
+            {qvapay?.dispute_winner === 'seller' ? <p className="mt-2 text-sm text-brand-carmelita">La disputa se resolvió a favor de la tienda. El pedido quedó realizado.</p> : null}
+            {qvapay?.dispute_winner === 'buyer' ? <p className="mt-2 text-sm text-brand-carmelita">La disputa se resolvió a tu favor. El pedido quedó cancelado.</p> : null}
+            {order.status === 'pending_confirmation' && qvapay?.payment_status === 'paid' && evidence?.status !== 'pending' && evidence?.status !== 'accepted' && evidence?.status !== 'expired' ? (
               <p className="mt-2 text-sm text-brand-carmelita">El pago está retenido. La tienda aún debe enviar la evidencia de entrega.</p>
             ) : null}
             {canRespondToQvaPayEvidence(qvapay) ? (
@@ -157,8 +159,8 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
                 </div>
               </>
             ) : null}
-            {evidence?.status === 'rejected' ? <p className="mt-2 text-sm text-brand-carmelita">Rechazaste la evidencia. El pago sigue retenido mientras contactas a soporte o la tienda envía otra evidencia.</p> : null}
-            {supportAvailable || evidence?.status === 'rejected' ? <button type="button" onClick={askSupport} className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green">Contactar soporte de Pa’ La Jaba</button> : null}
+            {order.status === 'pending_confirmation' && evidence?.status === 'rejected' ? <p className="mt-2 text-sm text-brand-carmelita">Rechazaste la evidencia. El pago sigue retenido mientras contactas a soporte o la tienda envía otra evidencia.</p> : null}
+            {order.status === 'pending_confirmation' && (supportAvailable || evidence?.status === 'rejected') ? <button type="button" onClick={askSupport} className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green">Contactar soporte de Pa’ La Jaba</button> : null}
             {decisionError ? <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{decisionError}</p> : null}
           </section>
         ) : null}

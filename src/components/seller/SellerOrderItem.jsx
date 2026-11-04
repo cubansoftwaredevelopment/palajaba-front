@@ -25,7 +25,8 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
   const isPending = variant === 'pending'
   const evidence = order.payment_method === 'qvapay' ? order.qvapay?.evidence : null
   const evidenceStatus = evidence?.status
-  const evidenceLabel = evidenceStatus === 'pending'
+  const isCancelled = order.status === 'cancelled'
+  const evidenceLabel = isCancelled ? null : evidenceStatus === 'pending'
     ? 'Evidencia enviada'
     : evidenceStatus === 'rejected' ? 'Evidencia rechazada' : null
   const orderCode = order.id.slice(-6).toUpperCase()
@@ -73,6 +74,10 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
                   <span aria-hidden="true" className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[0.6rem] font-extrabold leading-none text-white ${evidenceStatus === 'rejected' ? 'bg-red-700' : 'bg-amber-700'}`}>!</span>
                   {evidenceLabel}
                 </span>
+              ) : isCancelled ? (
+                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.05em] text-red-800">
+                  Cancelado
+                </span>
               ) : isPending ? (
                 <span className="rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.05em] text-brand-carmelita">
                   Requiere acción
@@ -87,9 +92,11 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
               )}
             </span>
             <span className="mt-1 block text-xs text-brand-carmelita/80">
-              {isPending
-                ? `Recibido ${formatOrderDateTime(order.created_at)}`
-                : `Completada ${formatOrderDateTime(order.completed_at ?? order.updated_at)}`}
+              {isCancelled
+                ? `Cancelado ${formatOrderDateTime(order.updated_at)}`
+                : isPending
+                  ? `Recibido ${formatOrderDateTime(order.created_at)}`
+                  : `Completada ${formatOrderDateTime(order.completed_at ?? order.updated_at)}`}
             </span>
             {evidenceStatus === 'pending' ? (
               <SellerEvidenceCountdown deadline={evidence?.deadline} label="Restan:" className="mt-1 block text-xs font-semibold text-amber-800" />

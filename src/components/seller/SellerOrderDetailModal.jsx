@@ -158,9 +158,14 @@ export default function SellerOrderDetailModal({
   const isQvaOrder = order.payment_method === 'qvapay'
   const qvapay = order.qvapay
   const evidence = qvapay?.evidence
-  const orderWorkflowLabel = evidence?.status === 'pending'
-    ? 'Evidencia enviada'
-    : evidence?.status === 'rejected' ? 'Evidencia rechazada' : ORDER_STATUS_LABELS[order.status]
+  const orderSettled = order.status === 'completed' || order.status === 'cancelled'
+  const orderWorkflowLabel = order.status === 'completed'
+    ? 'Compra realizada'
+    : order.status === 'cancelled'
+      ? 'Cancelado'
+      : evidence?.status === 'pending'
+        ? 'Evidencia enviada'
+        : evidence?.status === 'rejected' ? 'Evidencia rechazada' : ORDER_STATUS_LABELS[order.status]
   const supportMessage = `Hola, necesito ayuda con la evidencia rechazada del pedido #${String(order.id || '').slice(-6).toUpperCase()} en Pa' La Jaba.`
   const supportWhatsAppUrl = buildWhatsAppUrl(supportPhone, supportMessage)
     || `https://wa.me/?text=${encodeURIComponent(supportMessage)}`
@@ -606,14 +611,16 @@ export default function SellerOrderDetailModal({
               <h3 className="font-bold text-brand-green">Pago QvaPay retenido</h3>
               {qvaAwaitingStore ? <p className="mt-1 text-sm text-brand-carmelita">Acepta el pedido para crear y enviar la factura, o recházalo para cancelar la solicitud.</p> : null}
               {qvapay?.payment_status === 'awaiting_payment' ? <p className="mt-1 text-sm text-brand-carmelita">Factura enviada al cliente. Esperando confirmación del pago QvaPay.</p> : null}
-              {qvapay?.payment_status === 'paid' ? <p className="mt-1 text-sm text-brand-carmelita">Pago confirmado. Los fondos siguen retenidos hasta que el cliente acepte la evidencia o venza su plazo de 48 horas.</p> : null}
+              {qvapay?.dispute_winner === 'seller' ? <p className="mt-1 text-sm text-brand-carmelita">La disputa se resolvió a favor de la tienda. El pedido quedó realizado.</p> : null}
+              {qvapay?.dispute_winner === 'buyer' ? <p className="mt-1 text-sm text-brand-carmelita">La disputa se resolvió a favor del cliente. El pedido quedó cancelado.</p> : null}
+              {qvapay?.payment_status === 'paid' && !orderSettled ? <p className="mt-1 text-sm text-brand-carmelita">Pago confirmado. Los fondos siguen retenidos hasta que el cliente acepte la evidencia o venza su plazo de 48 horas.</p> : null}
               {evidence?.status === 'pending' ? (
                 <div className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-950">
                   <p>Evidencia enviada; espera la respuesta del cliente hasta {evidence.deadline ? formatOrderDateTime(evidence.deadline) : '48 horas'}.</p>
                   <SellerEvidenceCountdown deadline={evidence.deadline} className="mt-1 block" />
                 </div>
               ) : null}
-              {evidence?.status === 'rejected' ? (
+              {evidence?.status === 'rejected' && !orderSettled ? (
                 <div className="mt-3 space-y-3 rounded-xl border border-red-200 bg-red-50 p-3">
                   <p className="text-sm font-semibold text-red-900">Evidencia rechazada. El pago continúa retenido; puedes preparar una nueva evidencia o consultar a soporte.</p>
                   <button type="button" onClick={askSupport} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
@@ -730,7 +737,9 @@ export default function SellerOrderDetailModal({
               {saving ? 'Guardando…' : 'Marcar realizada'}
             </button>
           ) : isQvaOrder && order.status === 'completed' ? (
-            <span className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-center text-xs font-semibold leading-tight ${sellerAlertSuccess}`}>Pago liberado</span>
+            <span className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-center text-xs font-semibold leading-tight ${sellerAlertSuccess}`}>Pedido realizado</span>
+          ) : isQvaOrder && order.status === 'cancelled' ? (
+            <span className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-red-50 px-3 py-2.5 text-center text-xs font-semibold leading-tight text-red-800">Pedido cancelado</span>
           ) : isQvaOrder ? (
             <span className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-brand-green/10 px-3 py-2.5 text-center text-xs font-semibold text-brand-carmelita">Esperando al cliente</span>
           ) : (
