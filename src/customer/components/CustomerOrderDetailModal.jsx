@@ -10,8 +10,8 @@ import { canRespondToQvaPayEvidence, QVAPAY_EVIDENCE_WARNING } from '../../lib/q
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 import { openExternalUrl } from '../../lib/nativeApp'
-import OrderAgreements from '../../buyer/components/OrderAgreements'
-import EvidenceContent from './EvidenceContent.jsx'
+import { downloadCustomerOrderDocument } from '../../lib/api.js'
+import OrderDocumentDownloads from '../../buyer/components/OrderDocumentDownloads'
 import QvaPayReleaseCountdown from './QvaPayReleaseCountdown.jsx'
 
 export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
@@ -22,6 +22,8 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
   const [rejectedLocally, setRejectedLocally] = useState(false)
   const [supportPhone, setSupportPhone] = useState('')
   const [supportLoading, setSupportLoading] = useState(false)
+  const [documentDownload, setDocumentDownload] = useState(null)
+  const [documentError, setDocumentError] = useState('')
   const qvapay = order.qvapay
   const evidence = qvapay?.evidence
   if (trackedOrderId !== order.id) {
@@ -50,6 +52,18 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
       setDecisionError(getUserFacingMessage(cause, 'No pudimos abrir la disputa.'))
     } finally {
       setSupportLoading(false)
+    }
+  }
+
+  async function downloadDocument(kind) {
+    setDocumentDownload(kind)
+    setDocumentError('')
+    try {
+      await downloadCustomerOrderDocument(getCustomerToken(), order.id, kind)
+    } catch (cause) {
+      setDocumentError(getUserFacingMessage(cause, 'No pudimos descargar el PDF.'))
+    } finally {
+      setDocumentDownload(null)
     }
   }
 
@@ -122,7 +136,13 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
                 <div className="mt-3 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm font-semibold leading-relaxed text-amber-950">
                   {QVAPAY_EVIDENCE_WARNING}
                 </div>
-                <div className="mt-3 rounded-xl border border-brand-green/10 bg-white p-3"><EvidenceContent content={evidence.content} /></div>
+                <OrderDocumentDownloads
+                  evidence={evidence}
+                  include={['evidence']}
+                  downloading={documentDownload}
+                  onDownload={downloadDocument}
+                  className="mt-3 space-y-2"
+                />
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <button type="button" disabled={decisionLoading} onClick={() => decideEvidence(false)} className="min-h-11 min-w-0 rounded-xl border border-brand-green/20 px-2 py-2 text-center text-xs font-bold leading-tight text-brand-green disabled:opacity-50 sm:text-sm">{decisionLoading ? 'Guardando…' : 'No recibí el pedido · Rechazar'}</button>
                   <button type="button" disabled={decisionLoading} onClick={() => decideEvidence(true)} className="min-h-11 min-w-0 rounded-xl bg-brand-green px-2 py-2 text-center text-xs font-bold leading-tight text-white disabled:opacity-50 sm:text-sm">{decisionLoading ? 'Guardando…' : 'Recibí el pedido · Aceptar'}</button>
@@ -170,7 +190,13 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
           </div>
         </dl>
 
-        <OrderAgreements agreements={order.store_agreements} />
+        <OrderDocumentDownloads
+          agreements={order.store_agreements}
+          evidence={canRespondToQvaPayEvidence(qvapay) ? null : evidence}
+          downloading={documentDownload}
+          onDownload={downloadDocument}
+        />
+        {documentError ? <p role="alert" className="mt-2 text-sm font-semibold text-red-700">{documentError}</p> : null}
         {order.completed_at ? <p className="mt-4 text-xs text-brand-carmelita/65">Completado: {formatDate(order.completed_at)}</p> : null}
       </section>
       </div>

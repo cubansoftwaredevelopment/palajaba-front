@@ -8,7 +8,7 @@ import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
-import OrderAgreements from '../../buyer/components/OrderAgreements'
+import OrderDocumentDownloads from '../../buyer/components/OrderDocumentDownloads'
 import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
@@ -17,6 +17,7 @@ import SellerOrderEvidenceEditor from './SellerOrderEvidenceEditor'
 import SellerEvidenceCountdown from './SellerEvidenceCountdown'
 import { canSendQvaPayEvidence } from '../../lib/qvapayEvidence.js'
 import { openSellerOrderDispute } from '../../auth/api.js'
+import { downloadSellerOrderDocument } from '../../lib/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import {
@@ -104,6 +105,7 @@ export default function SellerOrderDetailModal({
   const [mapOpen, setMapOpen] = useState(false)
   const [supportPhone, setSupportPhone] = useState('')
   const [supportLoading, setSupportLoading] = useState(false)
+  const [documentDownload, setDocumentDownload] = useState(null)
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
   const mapMotionClass = orderModalMotionClass(mapClosing)
   const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
@@ -282,6 +284,18 @@ export default function SellerOrderDetailModal({
 
   function handleRejectQvaPay() {
     if (window.confirm('¿Rechazar esta solicitud de pago y cancelar el pedido?')) onQvaReject?.()
+  }
+
+  async function downloadDocument(kind) {
+    setDocumentDownload(kind)
+    setLocalError('')
+    try {
+      await downloadSellerOrderDocument(getSellerToken(), order.id, kind)
+    } catch (cause) {
+      setLocalError(getUserFacingMessage(cause, 'No pudimos descargar el PDF.'))
+    } finally {
+      setDocumentDownload(null)
+    }
   }
 
   function handleDownload(type) {
@@ -465,7 +479,12 @@ export default function SellerOrderDetailModal({
             ) : null}
           </div> : null}
 
-          <OrderAgreements agreements={order.store_agreements} />
+          <OrderDocumentDownloads
+            agreements={order.store_agreements}
+            evidence={evidence}
+            downloading={documentDownload}
+            onDownload={downloadDocument}
+          />
 
           {order.buyer_zone ? (
             <p className="mt-3 text-xs text-brand-carmelita/85">
