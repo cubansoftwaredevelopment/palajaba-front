@@ -16,7 +16,8 @@ import SellerSelect from './SellerSelect'
 import SellerOrderEvidenceEditor from './SellerOrderEvidenceEditor'
 import SellerEvidenceCountdown from './SellerEvidenceCountdown'
 import { canSendQvaPayEvidence } from '../../lib/qvapayEvidence.js'
-import { openSellerOrderDispute } from '../../auth/api.js'
+import { openSellerOrderDispute, uploadSellerDisputeImage } from '../../auth/api.js'
+import DisputeSupportModal from '../../buyer/components/DisputeSupportModal'
 import { downloadSellerOrderDocument } from '../../lib/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
@@ -104,7 +105,8 @@ export default function SellerOrderDetailModal({
   const [confirmCancel, setConfirmCancel] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
   const [supportPhone, setSupportPhone] = useState('')
-  const [supportLoading, setSupportLoading] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
+  const [supportReportedOrderId, setSupportReportedOrderId] = useState('')
   const [documentDownload, setDocumentDownload] = useState(null)
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
   const mapMotionClass = orderModalMotionClass(mapClosing)
@@ -162,6 +164,7 @@ export default function SellerOrderDetailModal({
   const supportMessage = `Hola, necesito ayuda con la evidencia rechazada del pedido #${String(order.id || '').slice(-6).toUpperCase()} en Pa' La Jaba.`
   const supportWhatsAppUrl = buildWhatsAppUrl(supportPhone, supportMessage)
     || `https://wa.me/?text=${encodeURIComponent(supportMessage)}`
+  const supportReported = Boolean(qvapay?.seller_support_reported) || supportReportedOrderId === order.id
   const qvaAwaitingStore = isQvaOrder && qvapay?.request_status === 'pending_seller'
   const qvaAwaitingEvidence = isQvaOrder && qvapay?.payment_status === 'paid'
   const canEditItems = isPending && !isQvaOrder
@@ -284,6 +287,25 @@ export default function SellerOrderDetailModal({
 
   function handleRejectQvaPay() {
     if (window.confirm('¿Rechazar esta solicitud de pago y cancelar el pedido?')) onQvaReject?.()
+  }
+
+  function askSupport() {
+    if (supportReported) {
+      openExternalUrl(supportWhatsAppUrl)
+      return
+    }
+    setSupportOpen(true)
+  }
+
+  async function submitSupportReport({ text, files }) {
+    const token = getSellerToken()
+    const images = []
+    for (const file of files) {
+      const uploaded = await uploadSellerDisputeImage(token, order.id, file)
+      if (uploaded?.url) images.push(uploaded.url)
+    }
+    await openSellerOrderDispute(token, order.id, { text, images })
+    setSupportReportedOrderId(order.id)
   }
 
   async function downloadDocument(kind) {
@@ -594,21 +616,9 @@ export default function SellerOrderDetailModal({
               {evidence?.status === 'rejected' ? (
                 <div className="mt-3 space-y-3 rounded-xl border border-red-200 bg-red-50 p-3">
                   <p className="text-sm font-semibold text-red-900">Evidencia rechazada. El pago continúa retenido; puedes preparar una nueva evidencia o consultar a soporte.</p>
-                  <a href={supportWhatsAppUrl} onClick={async (event) => {
-                    event.preventDefault()
-                    setSupportLoading(true)
-                    setLocalError('')
-                    try {
-                      await openSellerOrderDispute(getSellerToken(), order.id)
-                      openExternalUrl(supportWhatsAppUrl)
-                    } catch (cause) {
-                      setLocalError(getUserFacingMessage(cause, 'No pudimos abrir la disputa.'))
-                    } finally {
-                      setSupportLoading(false)
-                    }
-                  }} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
-                    {supportLoading ? 'Abriendo disputa…' : 'Consultar a soporte'}
-                  </a>
+                  <button type="button" onClick={askSupport} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
+                    Consultar a soporte
+                  </button>
                 </div>
               ) : null}
             </section>
@@ -819,6 +829,12 @@ export default function SellerOrderDetailModal({
           </div>
         </div>
       ) : null}
+      <DisputeSupportModal
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        onSubmit={submitSupportReport}
+        whatsappUrl={supportWhatsAppUrl}
+      />
     </SellerModalPortal>
   )
 }

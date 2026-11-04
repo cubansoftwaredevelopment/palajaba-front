@@ -17,6 +17,7 @@ import {
 } from '../components/admin/adminStyles'
 import { getAdminToken } from '../lib/adminAuth'
 import { downloadAdminDisputeReport, fetchAdminDispute, fetchAdminDisputes, ruleAdminDispute } from '../lib/api'
+import { resolveMediaUrl } from '../lib/media'
 
 const STATUS_LABEL = { open: 'Por resolver', ruled: 'Resuelta' }
 const WINNER_LABEL = { seller: 'A favor de la tienda', buyer: 'A favor del comprador' }
@@ -41,6 +42,7 @@ const RELEASE_STATUS = {
 }
 const PRODUCT_STATUS = { publico: 'Público', agotado: 'Agotado', borrado: 'Borrado' }
 const PAYMENT_METHOD = { contact: 'Contacto', qvapay: 'QvaPay' }
+const REPORT_PARTY = { buyer: 'Comprador', seller: 'Tienda' }
 
 function formatWhen(value) {
   if (!value) return ''
@@ -393,6 +395,28 @@ export default function AdminDisputes() {
                   </span>
                   <span className="text-xs font-medium text-brand-green">Ver detalle del pedido</span>
                 </button>
+              ) : null}
+
+              {detail.reports?.length ? (
+                <section className="space-y-3">
+                  <h3 className="text-sm font-semibold text-zinc-100">Motivos</h3>
+                  {detail.reports.map((report) => (
+                    <article key={report.party} className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-4">
+                      <p className="text-sm font-semibold text-zinc-50">{REPORT_PARTY[report.party] || report.party}</p>
+                      {report.created_at ? <p className={`mt-1 text-xs ${adminMuted}`}>{formatWhen(report.created_at)}</p> : null}
+                      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">{report.text}</p>
+                      {report.images?.length ? (
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          {report.images.map((src) => (
+                            <a key={src} href={resolveMediaUrl(src)} target="_blank" rel="noreferrer">
+                              <img src={resolveMediaUrl(src, { width: 240 })} alt="Imagen del motivo" className="h-20 w-20 rounded-lg object-cover" />
+                            </a>
+                          ))}
+                        </div>
+                      ) : null}
+                    </article>
+                  ))}
+                </section>
               ) : null}
 
               <div className="grid gap-4 lg:grid-cols-2">

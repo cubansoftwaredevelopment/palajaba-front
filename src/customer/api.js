@@ -89,9 +89,17 @@ export async function customerHasQvaPayUsername() {
   }
 }
 
-export function openCustomerOrderDispute(token, orderId) {
+export function uploadCustomerDisputeImage(token, orderId, file) {
+  const body = new FormData()
+  body.append('photo', file)
+  return request(`/api/customers/me/orders/${encodeURIComponent(orderId)}/disputes/images`, {
+    method: 'POST', headers: authHeaders(token), body,
+  })
+}
+
+export function openCustomerOrderDispute(token, orderId, payload) {
   return request(`/api/customers/me/orders/${encodeURIComponent(orderId)}/disputes`, {
-    method: 'POST', headers: authHeaders(token),
+    method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload),
   })
 }
 

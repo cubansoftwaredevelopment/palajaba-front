@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import BuyerModalPortal from '../../buyer/components/BuyerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
-import { decideCustomerOrderEvidence, openCustomerOrderDispute } from '../api.js'
+import { decideCustomerOrderEvidence, openCustomerOrderDispute, uploadCustomerDisputeImage } from '../api.js'
+import DisputeSupportModal from '../../buyer/components/DisputeSupportModal'
 import { formatDate, getBuyerOrderStatusLabel, getEvidenceSupportWhatsAppUrl } from '../constants.js'
 import { getCustomerToken } from '../../lib/customerAuth'
 import { resolveMediaUrl } from '../../lib/media'
@@ -21,7 +22,8 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
   const [trackedOrderId, setTrackedOrderId] = useState(order.id)
   const [rejectedLocally, setRejectedLocally] = useState(false)
   const [supportPhone, setSupportPhone] = useState('')
-  const [supportLoading, setSupportLoading] = useState(false)
+  const [supportOpen, setSupportOpen] = useState(false)
+  const [supportReportedOrderId, setSupportReportedOrderId] = useState('')
   const [documentDownload, setDocumentDownload] = useState(null)
   const [documentError, setDocumentError] = useState('')
   const qvapay = order.qvapay
@@ -31,6 +33,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
     setRejectedLocally(false)
   }
   const supportAvailable = rejectedLocally || evidence?.status === 'rejected'
+  const supportReported = Boolean(qvapay?.buyer_support_reported) || supportReportedOrderId === order.id
   const supportUrl = getEvidenceSupportWhatsAppUrl(supportPhone, order)
 
   useEffect(() => {
@@ -41,18 +44,23 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
     return () => { cancelled = true }
   }, [order.id])
 
-  async function contactSupport(event) {
-    event.preventDefault()
-    setSupportLoading(true)
-    setDecisionError('')
-    try {
-      await openCustomerOrderDispute(getCustomerToken(), order.id)
+  function askSupport() {
+    if (supportReported) {
       openExternalUrl(supportUrl)
-    } catch (cause) {
-      setDecisionError(getUserFacingMessage(cause, 'No pudimos abrir la disputa.'))
-    } finally {
-      setSupportLoading(false)
+      return
     }
+    setSupportOpen(true)
+  }
+
+  async function submitSupportReport({ text, files }) {
+    const token = getCustomerToken()
+    const images = []
+    for (const file of files) {
+      const uploaded = await uploadCustomerDisputeImage(token, order.id, file)
+      if (uploaded?.url) images.push(uploaded.url)
+    }
+    await openCustomerOrderDispute(token, order.id, { text, images })
+    setSupportReportedOrderId(order.id)
   }
 
   async function downloadDocument(kind) {
@@ -150,7 +158,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
               </>
             ) : null}
             {evidence?.status === 'rejected' ? <p className="mt-2 text-sm text-brand-carmelita">Rechazaste la evidencia. El pago sigue retenido mientras contactas a soporte o la tienda envía otra evidencia.</p> : null}
-            {supportAvailable || evidence?.status === 'rejected' ? <a className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green" href={supportUrl} onClick={contactSupport} target="_blank" rel="noreferrer">{supportLoading ? 'Abriendo disputa…' : 'Contactar soporte de Pa’ La Jaba'}</a> : null}
+            {supportAvailable || evidence?.status === 'rejected' ? <button type="button" onClick={askSupport} className="mt-3 inline-flex min-h-11 items-center justify-center rounded-xl border border-brand-green/20 px-4 font-bold text-brand-green">Contactar soporte de Pa’ La Jaba</button> : null}
             {decisionError ? <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{decisionError}</p> : null}
           </section>
         ) : null}
@@ -199,6 +207,12 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
         {documentError ? <p role="alert" className="mt-2 text-sm font-semibold text-red-700">{documentError}</p> : null}
         {order.completed_at ? <p className="mt-4 text-xs text-brand-carmelita/65">Completado: {formatDate(order.completed_at)}</p> : null}
       </section>
+      <DisputeSupportModal
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        onSubmit={submitSupportReport}
+        whatsappUrl={supportUrl}
+      />
       </div>
     </BuyerModalPortal>
   )

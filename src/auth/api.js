@@ -155,9 +155,17 @@ export function uploadSellerOrderEvidenceImage(token, orderId, file) {
   })
 }
 
-export function openSellerOrderDispute(token, orderId) {
+export function uploadSellerDisputeImage(token, orderId, file) {
+  const body = new FormData()
+  body.append('photo', file)
+  return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/disputes/images`, {
+    method: 'POST', headers: authHeaders(token), body,
+  })
+}
+
+export function openSellerOrderDispute(token, orderId, payload) {
   return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/disputes`, {
-    method: 'POST', headers: authHeaders(token),
+    method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload),
   })
 }
 
