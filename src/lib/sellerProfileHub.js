@@ -83,7 +83,7 @@ const PANELS = Object.freeze({
   [PROFILE_PANEL_IDS.marketplace]: {
     id: PROFILE_PANEL_IDS.marketplace,
     label: 'Explorar el marketplace',
-    description: 'Compra en otras tiendas',
+    description: 'Entra desde tu cuenta. Para comprar usa una cuenta de cliente',
     kind: 'action',
     icon: 'marketplace',
   },

@@ -326,6 +326,8 @@ function SellerCatalogPreviewContent() {
                     key={section.category_id}
                     section={section}
                     loadMore={createLoadMore(section)}
+                    storePhotoUrl={catalog.store?.profile_photo_url}
+                    storeName={catalog.store?.store_name}
                   />
                 ))
               )}
@@ -334,7 +336,12 @@ function SellerCatalogPreviewContent() {
               <BuyerStoreServiceFooter
                 storeName={catalog.store?.store_name}
                 storeSlug={catalog.store?.store_slug}
+                photoUrl={catalog.store?.profile_photo_url}
+                provinceName={catalog.business_area?.province_name}
+                offersDelivery={catalog.offers_delivery}
                 pages={catalog.store_pages}
+                homeTo="/tienda/catalogo/vista-previa"
+                linkState={{ fromSellerCatalog: true }}
               />
             </div>
           ) : null}

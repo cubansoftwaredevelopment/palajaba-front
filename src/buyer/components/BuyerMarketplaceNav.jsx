@@ -11,6 +11,7 @@ import { storeGestorPublicPath, storePublicPath } from '../../lib/storeSlug'
 import { getSellerProfile, isSellerAuthenticated, SELLER_AUTH_CHANGE_EVENT } from '../../lib/sellerAuth'
 import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerProfile, isCustomerAuthenticated } from '../../lib/customerAuth'
 import { resolveMediaUrl } from '../../lib/media'
+import StoreMark from './StoreMark'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { useDismissibleModal } from './useOrderModalPresence'
@@ -110,7 +111,7 @@ function OptionIcon({ open, life, className, children }) {
   )
 }
 
-function CategoryModal({ categories, loading, selectedId, onClose: requestClose, onSelect, emptyMessage }) {
+function CategoryModal({ categories, loading, selectedId, onClose: requestClose, onSelect, emptyMessage, storePhotoUrl = '', storeName = '' }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   return (
     <div
@@ -150,11 +151,14 @@ function CategoryModal({ categories, loading, selectedId, onClose: requestClose,
                   <button
                     type="button"
                     onClick={() => onSelect(category.id)}
-                    className={`flex w-full items-center justify-between px-5 py-3 text-left text-sm touch-manipulation ${
+                    className={`flex w-full items-center gap-3 px-5 py-3 text-left text-sm touch-manipulation ${
                       active ? 'bg-brand-green/10 font-semibold text-brand-green' : 'text-brand-green'
                     }`}
                   >
-                    <span>{category.name}</span>
+                    {storePhotoUrl || storeName ? (
+                      <StoreMark photoUrl={storePhotoUrl} storeName={storeName} />
+                    ) : null}
+                    <span className="min-w-0 flex-1">{category.name}</span>
                     {active ? <span aria-hidden="true">✓</span> : null}
                   </button>
                 </li>
@@ -173,6 +177,8 @@ export default function BuyerMarketplaceNav({
   selectedCatalogCategoryId = '',
   storeSlug = '',
   gestorUsername = null,
+  storePhotoUrl = '',
+  storeName = '',
 }) {
   const route = useLocation()
   const navigate = useNavigate()
@@ -441,6 +447,17 @@ export default function BuyerMarketplaceNav({
               <OptionLabel open={menuOpen} life={lifeFor(2)}>Mi cuenta</OptionLabel>
               <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
             </NavLink>
+          ) : sellerSignedIn ? (
+            <NavLink
+              to="/login"
+              state={{ backTo: `${route.pathname}${route.search}${route.hash}`, accountType: 'customer' }}
+              className={optionClass}
+              aria-label="Entrar con cuenta de cliente"
+              onClick={() => setMenuOpen(false)}
+            >
+              <OptionLabel open={menuOpen} life={lifeFor(2)}>Cuenta de cliente</OptionLabel>
+              <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
+            </NavLink>
           ) : accountSignedIn ? (
             <button type="button" className={optionClass} aria-label="Cuenta" disabled>
               <OptionLabel open={menuOpen} life={lifeFor(2)}>Cuenta</OptionLabel>
@@ -493,6 +510,8 @@ export default function BuyerMarketplaceNav({
           }
           onClose={() => setCategoryOpen(false)}
           onSelect={chooseCategory}
+          storePhotoUrl={isCatalog ? storePhotoUrl : ''}
+          storeName={isCatalog ? storeName : ''}
         />
       ) : null}
     </>

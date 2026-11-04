@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { customerLogin } from '../api.js'
 import { setCustomerSession } from '../../lib/customerAuth'
+import { isSellerAuthenticated } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import PasswordField from '../../auth/components/PasswordField'
 import { alertErrorClass, inputClass, labelClass } from '../../auth/components/formStyles'
@@ -35,7 +36,11 @@ export default function BuyerCustomerLoginModal({ onClose, onLogin }) {
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-brand-green">Cuenta de cliente</p>
             <h2 id="buyer-login-title" className="mt-1 font-display text-2xl font-bold text-brand-carmelita">Inicia sesión para comprar</h2>
-            <p className="mt-2 text-sm text-brand-carmelita/75">Tu pedido quedará guardado en tu historial.</p>
+            <p className="mt-2 text-sm text-brand-carmelita/75">
+              {isSellerAuthenticated()
+                ? 'La cuenta de la tienda no puede comprar. Entra con una cuenta de cliente.'
+                : 'Tu pedido quedará guardado en tu historial.'}
+            </p>
           </div>
           <button type="button" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-xl text-brand-carmelita/70 hover:bg-brand-green/8" aria-label="Cerrar">×</button>
         </div>

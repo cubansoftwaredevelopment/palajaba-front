@@ -6,6 +6,7 @@ import BuyerHeaderSearch from '../components/BuyerHeaderSearch'
 import BuyerMarketplaceNav from '../components/BuyerMarketplaceNav'
 import BuyerProductCard from '../components/BuyerProductCard'
 import BuyerShell from '../components/BuyerShell'
+import StoreMark from '../components/StoreMark'
 import {
   buyerCategorySectionTitle,
   buyerHomeSections,
@@ -312,7 +313,12 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
                     <path d="M15 18l-6-6 6-6" />
                   </svg>
                 </button>
-                <h1 className={buyerCategorySectionTitle}>{categoryName}</h1>
+                <h1 className={`${buyerCategorySectionTitle} inline-flex min-w-0 items-center gap-2`}>
+                  {catalog?.store?.profile_photo_url || catalog?.store?.store_name ? (
+                    <StoreMark photoUrl={catalog.store.profile_photo_url} storeName={catalog.store.store_name} />
+                  ) : null}
+                  <span className="truncate">{categoryName}</span>
+                </h1>
               </div>
 
               {resolving || loading ? (
@@ -374,7 +380,16 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
             <BuyerStoreServiceFooter
               storeName={catalog?.store?.store_name}
               storeSlug={catalog?.store?.store_slug || storeSlug}
+              photoUrl={catalog?.store?.profile_photo_url}
+              provinceName={catalog?.business_area?.province_name}
+              offersDelivery={catalog?.offers_delivery}
               pages={catalog?.store_pages}
+              homeTo={
+                gestorUsername
+                  ? storeGestorPublicPath(storeSlug, gestorUsername)
+                  : storePublicPath(storeSlug)
+              }
+              clearFab
             />
           </div>
         </BuyerShell>
@@ -385,6 +400,8 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
         selectedCatalogCategoryId={category?.id || ''}
         storeSlug={storeSlug}
         gestorUsername={gestorUsername}
+        storePhotoUrl={catalog?.store?.profile_photo_url}
+        storeName={catalog?.store?.store_name}
       />
     </CatalogThemeScope>
   )

@@ -447,7 +447,7 @@
   }
 
   .store-service-footer {
-    background: color-mix(in srgb, var(--color-brand-carmelita) 16%, var(--color-brand-white));
+    background: color-mix(in srgb, var(--color-brand-green) 12%, var(--color-brand-white));
   }
 
   .store-service-footer a {

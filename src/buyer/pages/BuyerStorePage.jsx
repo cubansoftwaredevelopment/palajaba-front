@@ -312,6 +312,8 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
                       section={section}
                       href={storeCategoryPath(storeSlug, section, gestorUsername)}
                       loadMore={createLoadMore(section)}
+                      storePhotoUrl={catalog.store?.profile_photo_url}
+                      storeName={catalog.store?.store_name}
                     />
                   ))
                 )}
@@ -319,7 +321,16 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
               <BuyerStoreServiceFooter
                 storeName={catalog.store?.store_name}
                 storeSlug={catalog.store?.store_slug || storeSlug}
+                photoUrl={catalog.store?.profile_photo_url}
+                provinceName={catalog.business_area?.province_name}
+                offersDelivery={catalog.offers_delivery}
                 pages={catalog.store_pages}
+                homeTo={
+                  gestorUsername
+                    ? storeGestorPublicPath(storeSlug, gestorUsername)
+                    : storePublicPath(storeSlug)
+                }
+                clearFab
               />
             </div>
           ) : null}
@@ -330,6 +341,8 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
         catalogCategoriesLoading={loading}
         storeSlug={storeSlug}
         gestorUsername={gestorUsername}
+        storePhotoUrl={catalog?.store?.profile_photo_url}
+        storeName={catalog?.store?.store_name}
       />
     </CatalogThemeScope>
   );
