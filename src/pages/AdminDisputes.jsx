@@ -224,7 +224,6 @@ export default function AdminDisputes() {
       .then((data) => {
         if (!active) return
         setDetail(data)
-        setRefundUsername(data?.buyer_username || '')
         setDetailLoading(false)
       })
       .catch((err) => {
