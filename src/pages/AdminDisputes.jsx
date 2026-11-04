@@ -182,7 +182,6 @@ export default function AdminDisputes() {
   const [rulingOpen, setRulingOpen] = useState(false)
   const [winner, setWinner] = useState('seller')
   const [reason, setReason] = useState('')
-  const [refundUsername, setRefundUsername] = useState('')
   const [ruling, setRuling] = useState(false)
   const [listVersion, setListVersion] = useState(0)
   const [openedOrder, setOpenedOrder] = useState(null)
@@ -269,7 +268,6 @@ export default function AdminDisputes() {
       await ruleAdminDispute(getAdminToken(), selectedId, {
         winner,
         reason: reason.trim(),
-        refund_username: winner === 'buyer' ? refundUsername.trim() : undefined,
       })
       setSuccess(winner === 'seller' ? 'Pago liberado a la tienda.' : 'Pago devuelto al comprador.')
       setRulingOpen(false)
@@ -506,12 +504,6 @@ export default function AdminDisputes() {
                 </button>
               </div>
             </fieldset>
-            {winner === 'buyer' ? (
-              <label className="block">
-                <span className={adminLabel}>Usuario QvaPay del comprador</span>
-                <input className={adminInput} value={refundUsername} onChange={(event) => setRefundUsername(event.target.value)} required />
-              </label>
-            ) : null}
             <label className="block">
               <span className={adminLabel}>Motivo</span>
               <textarea className={`${adminInput} min-h-24`} value={reason} onChange={(event) => setReason(event.target.value)} required />
