@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, dismissCustomerQvaPayPrompt } from '../api.js'
-import { clearCustomerSession, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
+import { clearCustomerSession, CUSTOMER_PURCHASE_REVOKED_MESSAGE, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
 import { fetchMarketplaceProduct } from '../../buyer/api.js'
 import CustomerNavigation from '../components/CustomerNavigation.jsx'
 import CustomerQvaPayPrompt from '../components/CustomerQvaPayPrompt.jsx'
@@ -453,6 +453,11 @@ export default function CustomerAccount() {
               </h1>
             </div>
           </header>
+          {profile?.purchase_revoked ? (
+            <p role="status" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
+              {CUSTOMER_PURCHASE_REVOKED_MESSAGE}
+            </p>
+          ) : null}
           {error ? (
             <p
               role="alert"

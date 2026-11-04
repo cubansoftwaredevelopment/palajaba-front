@@ -6,12 +6,14 @@ import ConfirmDialog from '../components/admin/ConfirmDialog'
 import PaymentModal from '../components/admin/PaymentModal'
 import RegistrationActionsMenu from '../components/admin/RegistrationActionsMenu'
 import SubscriptionModal from '../components/admin/SubscriptionModal'
+import AdminCustomers from '../components/admin/AdminCustomers'
 import {
   adminAlertError,
   adminBadgeApproved,
   adminBadgeExpired,
   adminBadgePending,
   adminBadgeRejected,
+  adminChoice,
   adminInput,
   adminSection,
   adminSubtle,
@@ -116,6 +118,7 @@ export default function AdminDashboard() {
   const [paymentModal, setPaymentModal] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [section, setSection] = useState('businesses')
 
   const loadRegistrations = useCallback(
     async (showFullLoader = true) => {
@@ -251,6 +254,31 @@ export default function AdminDashboard() {
   return (
     <>
       <main className={adminSection}>
+        <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Usuarios">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={section === 'businesses'}
+            className={adminChoice(section === 'businesses')}
+            onClick={() => setSection('businesses')}
+          >
+            Negocios
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={section === 'customers'}
+            className={adminChoice(section === 'customers')}
+            onClick={() => setSection('customers')}
+          >
+            Clientes
+          </button>
+        </div>
+
+        {section === 'customers' ? <AdminCustomers /> : null}
+
+        {section === 'businesses' ? (
+        <>
         <p className={`mb-4 text-sm leading-relaxed ${adminSubtle}`}>
           {loading
             ? 'Cargando solicitudes…'
@@ -270,7 +298,7 @@ export default function AdminDashboard() {
           </div>
         ) : null}
 
-        {error && (
+        {error && section === 'businesses' ? (
           <p className={`mb-4 ${adminAlertError}`} role="alert">
             {error}
           </p>
@@ -491,6 +519,8 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
+        ) : null}
+        </>
         ) : null}
       </main>
 

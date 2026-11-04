@@ -52,7 +52,7 @@ import BuyerPhoneCheckoutModal from './components/BuyerPhoneCheckoutModal'
 import BuyerJabaSyncAlert from './components/BuyerJabaSyncAlert'
 import BuyerJabaToast from './components/BuyerJabaToast'
 import BuyerCustomerLoginModal from './components/BuyerCustomerLoginModal'
-import { clearCustomerSession, getCustomerProfile, getCustomerToken, updateCustomerProfile } from '../lib/customerAuth'
+import { clearCustomerSession, CUSTOMER_PURCHASE_REVOKED_MESSAGE, getCustomerProfile, getCustomerToken, isCustomerPurchaseRevoked, updateCustomerProfile } from '../lib/customerAuth'
 import CustomerQvaPayPrompt from '../customer/components/CustomerQvaPayPrompt.jsx'
 import { dismissCustomerQvaPayPrompt } from '../customer/api.js'
 
@@ -209,6 +209,10 @@ export function BuyerJabaProvider({ children }) {
   }, [])
 
   const requestCustomerCheckout = useCallback((type, payload) => {
+    if (getCustomerToken() && isCustomerPurchaseRevoked()) {
+      setJabaToast({ id: Date.now(), message: CUSTOMER_PURCHASE_REVOKED_MESSAGE })
+      return false
+    }
     if (!getCustomerToken()) {
       setPendingCustomerCheckout({ type, payload })
       try { sessionStorage.setItem('pala_jaba_pending_customer_checkout', JSON.stringify({ type, payload })) } catch { /* ignore */ }
@@ -299,6 +303,10 @@ export function BuyerJabaProvider({ children }) {
   const groups = useMemo(() => groupJabaByStore(items), [items])
 
   const runWhatsAppCheckout = useCallback(async (payload, delivery = null, paymentMethod = 'contact') => {
+    if (isCustomerPurchaseRevoked()) {
+      setJabaToast({ id: Date.now(), message: CUSTOMER_PURCHASE_REVOKED_MESSAGE })
+      return false
+    }
     if (!payload?.items?.length || !payload.storePhone) return false
 
     setCheckoutSubmittingStoreId(payload.storeId ?? '__checkout__')
@@ -484,6 +492,11 @@ export function BuyerJabaProvider({ children }) {
   const finishCustomerLogin = useCallback(() => {
     setCustomerLoginOpen(false)
     setPendingCustomerCheckout(null)
+    if (isCustomerPurchaseRevoked()) {
+      setJabaToast({ id: Date.now(), message: CUSTOMER_PURCHASE_REVOKED_MESSAGE })
+      try { sessionStorage.removeItem('pala_jaba_pending_customer_checkout') } catch { /* ignore */ }
+      return
+    }
     if (pendingCustomerCheckout) continueCheckout(pendingCustomerCheckout.type, pendingCustomerCheckout.payload)
     try { sessionStorage.removeItem('pala_jaba_pending_customer_checkout') } catch { /* ignore */ }
   }, [continueCheckout, pendingCustomerCheckout])

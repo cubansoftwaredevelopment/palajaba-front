@@ -1,6 +1,6 @@
 export const ADMIN_NAV = [
   { id: 'estadisticas', path: '/admin/estadisticas', label: 'Estadísticas' },
-  { id: 'solicitudes', path: '/admin/solicitudes', label: 'Negocios' },
+  { id: 'solicitudes', path: '/admin/solicitudes', label: 'Usuarios' },
   { id: 'descuentos', path: '/admin/descuentos', label: 'Descuentos' },
   { id: 'mensajes', path: '/admin/mensajes', label: 'Mensajes/Avisos' },
   { id: 'disputas', path: '/admin/disputas', label: 'Disputas' },
@@ -12,7 +12,7 @@ export const ADMIN_NAV = [
 
 export const ADMIN_PAGE_TITLES = {
   '/admin/estadisticas': 'Estadísticas',
-  '/admin/solicitudes': 'Negocios',
+  '/admin/solicitudes': 'Usuarios',
   '/admin/descuentos': 'Códigos de descuento',
   '/admin/mensajes': 'Mensajes/Avisos',
   '/admin/disputas': 'Disputas',

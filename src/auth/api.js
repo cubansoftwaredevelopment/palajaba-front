@@ -258,6 +258,20 @@ export function validateDiscountCode({ code, planTier, billingPeriod }) {
   })
 }
 
+export function fetchAdminCustomers(token) {
+  return request('/api/admin/customers', {
+    headers: authHeaders(token),
+  })
+}
+
+export function updateAdminCustomerAccess(token, id, purchaseRevoked) {
+  return request(`/api/admin/customers/${encodeURIComponent(id)}/access`, {
+    method: 'PATCH',
+    headers: authHeaders(token),
+    body: JSON.stringify({ purchase_revoked: purchaseRevoked }),
+  })
+}
+
 export function fetchRegistrations(token, status = 'pending') {
   return request(`/api/admin/registrations?status=${status}`, {
     headers: authHeaders(token),

@@ -37,3 +37,10 @@ export function clearCustomerSession() {
 }
 
 export function isCustomerAuthenticated() { return Boolean(getCustomerToken()) }
+
+export const CUSTOMER_PURCHASE_REVOKED_MESSAGE =
+  'Tu acceso para comprar está revocado. Puedes entrar a tu cuenta, pero no puedes hacer pedidos.'
+
+export function isCustomerPurchaseRevoked() {
+  return Boolean(getCustomerProfile()?.purchase_revoked)
+}
