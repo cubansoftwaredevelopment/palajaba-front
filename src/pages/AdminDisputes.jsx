@@ -106,7 +106,37 @@ function OrderList({ orders, onOpen, empty }) {
   )
 }
 
-function OrderDetailModal({ order, onClose }) {
+function PartyMotives({ reports }) {
+  const byParty = Object.fromEntries((reports || []).filter((report) => report?.party).map((report) => [report.party, report]))
+  return (
+    <section className="space-y-3">
+      <h3 className="text-sm font-semibold text-zinc-100">Motivos</h3>
+      {['buyer', 'seller'].map((party) => {
+        const report = byParty[party]
+        return (
+          <article key={party} className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-4">
+            <p className="text-sm font-semibold text-zinc-50">{REPORT_PARTY[party]}</p>
+            {report?.created_at ? <p className={`mt-1 text-xs ${adminMuted}`}>{formatWhen(report.created_at)}</p> : null}
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">
+              {report?.text || 'Aún no envió su motivo.'}
+            </p>
+            {report?.images?.length ? (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {report.images.map((src) => (
+                  <a key={src} href={resolveMediaUrl(src)} target="_blank" rel="noreferrer">
+                    <img src={resolveMediaUrl(src, { width: 240 })} alt={`Imagen del motivo de ${REPORT_PARTY[party]}`} className="h-20 w-20 rounded-lg object-cover" />
+                  </a>
+                ))}
+              </div>
+            ) : null}
+          </article>
+        )
+      })}
+    </section>
+  )
+}
+
+function OrderDetailModal({ order, reports, onClose }) {
   const delivery = order.delivery && typeof order.delivery === 'object' ? order.delivery : null
   return (
     <AdminModal
@@ -169,6 +199,7 @@ function OrderDetailModal({ order, onClose }) {
       ) : (
         <p className={`mt-2 text-sm ${adminMuted}`}>Este pedido no tiene productos registrados.</p>
       )}
+      {order.disputed ? <div className="mt-5"><PartyMotives reports={reports} /></div> : null}
     </AdminModal>
   )
 }
@@ -397,27 +428,7 @@ export default function AdminDisputes() {
                 </button>
               ) : null}
 
-              {detail.reports?.length ? (
-                <section className="space-y-3">
-                  <h3 className="text-sm font-semibold text-zinc-100">Motivos</h3>
-                  {detail.reports.map((report) => (
-                    <article key={report.party} className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-4">
-                      <p className="text-sm font-semibold text-zinc-50">{REPORT_PARTY[report.party] || report.party}</p>
-                      {report.created_at ? <p className={`mt-1 text-xs ${adminMuted}`}>{formatWhen(report.created_at)}</p> : null}
-                      <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">{report.text}</p>
-                      {report.images?.length ? (
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {report.images.map((src) => (
-                            <a key={src} href={resolveMediaUrl(src)} target="_blank" rel="noreferrer">
-                              <img src={resolveMediaUrl(src, { width: 240 })} alt="Imagen del motivo" className="h-20 w-20 rounded-lg object-cover" />
-                            </a>
-                          ))}
-                        </div>
-                      ) : null}
-                    </article>
-                  ))}
-                </section>
-              ) : null}
+              <PartyMotives reports={detail.reports} />
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <section className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-4">
@@ -504,7 +515,13 @@ export default function AdminDisputes() {
         </div>
       </div>
 
-      {openedOrder ? <OrderDetailModal order={openedOrder} onClose={() => setOpenedOrder(null)} /> : null}
+      {openedOrder ? (
+        <OrderDetailModal
+          order={openedOrder}
+          reports={openedOrder.disputed ? detail?.reports : null}
+          onClose={() => setOpenedOrder(null)}
+        />
+      ) : null}
 
       {rulingOpen ? (
         <AdminModal
