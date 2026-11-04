@@ -12,7 +12,7 @@ export default function BuyerStoreServiceFooter({ storeName, storeSlug, pages })
 
   return (
     <footer
-      className="-mx-5 mt-auto bg-[#f4f1ec] px-5 pb-[max(2rem,var(--safe-bottom))] pt-8 text-brand-carmelita sm:-mx-6 sm:px-8 lg:-mx-10 lg:px-10"
+      className="store-service-footer -mx-5 mt-auto px-5 pb-[max(2rem,var(--safe-bottom))] pt-8 text-brand-carmelita sm:-mx-6 sm:px-8 lg:-mx-10 lg:px-10"
       aria-label="Servicio al cliente"
     >
       <h2 className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-green">

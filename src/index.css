@@ -446,6 +446,18 @@
     --color-cafe-bright: #c08552;
   }
 
+  .store-service-footer {
+    background: color-mix(in srgb, var(--color-brand-carmelita) 16%, var(--color-brand-white));
+  }
+
+  .store-service-footer a {
+    color: var(--color-brand-carmelita);
+  }
+
+  .store-service-footer a:hover {
+    color: var(--color-brand-green);
+  }
+
   button {
     @apply cursor-pointer font-[inherit] [-webkit-tap-highlight-color:transparent];
   }

@@ -3,9 +3,13 @@ services:
     name: palajaba-web
     runtime: static
     buildCommand: npm install && npm run build
-    # Tras el build, dist/404.html permite /admin, /login, etc. al recargar o abrir URL directa.
+    # dist/404.html sigue siendo el respaldo, pero responde HTTP 404.
+    # Estas reglas sirven index.html con 200 al abrir o recargar una ruta de la app.
     staticPublishPath: ./dist
     routes:
+      - type: rewrite
+        source: /tienda/*
+        destination: /index.html
       # AUTO-GENERATED STORE ROUTES START
       - type: rewrite
         source: /alex
