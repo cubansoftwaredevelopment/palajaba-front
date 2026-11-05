@@ -783,14 +783,21 @@ export default function SellerOrderDetailModal({
                       <img key={image.id} src={image.preview} alt="" className="h-16 w-16 rounded-xl object-cover" />
                     ))}
                     {refundImages.length < 6 ? (
-                      <label className={`${sellerIconBtn} cursor-pointer`}>
+                      <label className={`${sellerIconBtn} relative cursor-pointer overflow-hidden`}>
                         <span className="sr-only">Subir foto</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
                           <rect x="3" y="4" width="18" height="16" rx="2" />
                           <circle cx="8.5" cy="9" r="1.5" />
                           <path d="m21 15-5-5L5 20" />
                         </svg>
-                        <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addRefundImages} className="sr-only" aria-label="Subir foto" />
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          multiple
+                          onChange={addRefundImages}
+                          aria-label="Subir foto"
+                          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                        />
                       </label>
                     ) : null}
                   </div>
