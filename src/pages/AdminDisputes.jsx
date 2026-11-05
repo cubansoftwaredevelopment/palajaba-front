@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AdminButton from '../components/admin/AdminButton'
 import AdminModal from '../components/admin/AdminModal'
+import Checkbox from '../components/ui/Checkbox'
 import LoadingState from '../components/ui/LoadingState'
 import {
   adminAlertError,
@@ -234,8 +235,8 @@ function BuyerRefundFields({ order, quantities, refundDelivery, onQuantity, onDe
         })}
       </ul>
       {Number(order.delivery_amount_usd) > 0 ? (
-        <label className="flex items-center gap-2 text-sm text-zinc-200">
-          <input type="checkbox" checked={refundDelivery} onChange={(event) => onDelivery(event.target.checked)} />
+        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-zinc-200">
+          <Checkbox tone="admin" checked={refundDelivery} onChange={(event) => onDelivery(event.target.checked)} />
           Devolver el domicilio
         </label>
       ) : null}

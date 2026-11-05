@@ -19,6 +19,7 @@ import { canSendQvaPayEvidence } from '../../lib/qvapayEvidence.js'
 import { openSellerOrderDispute, uploadSellerDisputeImage, uploadSellerRefundImage } from '../../auth/api.js'
 import { quoteRefund } from '../../lib/refundQuote'
 import DisputeSupportModal from '../../buyer/components/DisputeSupportModal'
+import Checkbox from '../ui/Checkbox'
 import { downloadSellerOrderDocument } from '../../lib/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
@@ -29,6 +30,7 @@ import {
   sellerBtnPrimary,
   sellerBtnSecondary,
   sellerHint,
+  sellerCheckboxRow,
   sellerIconBtn,
   sellerIconBtnDanger,
   sellerInput,
@@ -759,13 +761,12 @@ export default function SellerOrderDetailModal({
                     })}
                   </ul>
                   {Number(qvapay?.delivery_amount_usd) > 0 ? (
-                    <label className="flex items-center gap-2 text-sm text-brand-carmelita">
-                      <input
-                        type="checkbox"
+                    <label className={sellerCheckboxRow}>
+                      <Checkbox
                         checked={refundDelivery}
                         onChange={(event) => setRefundDelivery(event.target.checked)}
                       />
-                      Devolver el domicilio
+                      <span className="text-sm font-semibold text-brand-carmelita">Devolver el domicilio</span>
                     </label>
                   ) : null}
                   <label className="block">
@@ -777,19 +778,22 @@ export default function SellerOrderDetailModal({
                       required
                     />
                   </label>
-                  <label className="block text-sm font-semibold text-brand-green">
-                    Imágenes del motivo
-                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addRefundImages} className="mt-1 block w-full text-sm" />
-                  </label>
-                  {refundImages.length ? (
-                    <ul className="flex flex-wrap gap-2">
-                      {refundImages.map((image) => (
-                        <li key={image.id}>
-                          <img src={image.preview} alt="" className="h-16 w-16 rounded-xl object-cover" />
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {refundImages.map((image) => (
+                      <img key={image.id} src={image.preview} alt="" className="h-16 w-16 rounded-xl object-cover" />
+                    ))}
+                    {refundImages.length < 6 ? (
+                      <label className={`${sellerIconBtn} cursor-pointer`}>
+                        <span className="sr-only">Subir foto</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+                          <rect x="3" y="4" width="18" height="16" rx="2" />
+                          <circle cx="8.5" cy="9" r="1.5" />
+                          <path d="m21 15-5-5L5 20" />
+                        </svg>
+                        <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addRefundImages} className="sr-only" aria-label="Subir foto" />
+                      </label>
+                    ) : null}
+                  </div>
                   <p className={sellerHint}>
                     {refundPreview.changed
                       ? `Se devolverán ${refundPreview.buyerUsd.toFixed(2)} USD, comisión incluida.`
