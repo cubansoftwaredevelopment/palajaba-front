@@ -98,9 +98,6 @@ export default function SellerAdvertisingPlans({ profile }) {
   return (
     <div className="flex flex-col gap-3">
       <p className={sellerHint}>{ADVERTISING_TAGLINE}</p>
-      <p className={sellerHint}>
-        Al pagar se suma 0.5% de exchange de QvaPay sobre el precio del plan.
-      </p>
       {profile?.subscription_active === false ? <p className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-800">Activa o renueva tu suscripción para comprar planes de marketing.</p> : null}
       <SellerNotificationToast
         toast={errorToast}
@@ -138,9 +135,6 @@ export default function SellerAdvertisingPlans({ profile }) {
                 </span>
               </div>
               <p className="mt-1.5 text-sm font-semibold text-brand-carmelita/85">{plan.name}</p>
-              <p className="mt-1 text-xs text-brand-carmelita/70">
-                Cobro: {formatUsd(plan.invoiceAmountUsd)} USD (incluye 0.5% de exchange)
-              </p>
 
               <ul className="mt-3 flex flex-col gap-1">
                 {plan.features.map((feature) => (

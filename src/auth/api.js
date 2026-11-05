@@ -141,6 +141,20 @@ export function acceptSellerQvaPayOrder(token, orderId, payload = {}) {
   })
 }
 
+export function uploadSellerRefundImage(token, orderId, file) {
+  const body = new FormData()
+  body.append('photo', file)
+  return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/qvapay/refund/images`, {
+    method: 'POST', headers: authHeaders(token), body,
+  })
+}
+
+export function refundSellerQvaPayOrder(token, orderId, payload) {
+  return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/qvapay/refund`, {
+    method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload),
+  })
+}
+
 export function rejectSellerQvaPayOrder(token, orderId) {
   return request(`/api/auth/me/orders/${encodeURIComponent(orderId)}/qvapay/reject`, {
     method: 'POST', headers: authHeaders(token),

@@ -1,3 +1,4 @@
+import { isCustomerPaidOrder } from '../../constants/orderStatus'
 import { formatOrderDateTime } from '../../lib/dates'
 import { formatPrice } from '../../lib/money'
 import SellerEvidenceCountdown from './SellerEvidenceCountdown'
@@ -26,6 +27,7 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
   const evidence = order.payment_method === 'qvapay' ? order.qvapay?.evidence : null
   const evidenceStatus = evidence?.status
   const isCancelled = order.status === 'cancelled'
+  const customerPaid = isCustomerPaidOrder(order)
   const evidenceLabel = isCancelled ? null : evidenceStatus === 'pending'
     ? 'Evidencia enviada'
     : evidenceStatus === 'rejected' ? 'Evidencia rechazada' : null
@@ -69,6 +71,11 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
               <span className="font-display text-sm font-bold text-brand-green">
                 #{orderCode}
               </span>
+              {customerPaid ? (
+                <span className="rounded-full bg-brand-green/10 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.05em] text-brand-green">
+                  Pagado
+                </span>
+              ) : null}
               {evidenceLabel ? (
                 <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.035em] ${evidenceStatus === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900'}`}>
                   <span aria-hidden="true" className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[0.6rem] font-extrabold leading-none text-white ${evidenceStatus === 'rejected' ? 'bg-red-700' : 'bg-amber-700'}`}>!</span>
@@ -79,9 +86,11 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
                   Cancelado
                 </span>
               ) : isPending ? (
+                customerPaid ? null : (
                 <span className="rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.05em] text-brand-carmelita">
                   Requiere acción
                 </span>
+                )
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full bg-brand-green/10 px-2 py-0.5 text-[0.58rem] font-bold text-brand-green">
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden>

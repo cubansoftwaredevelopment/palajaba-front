@@ -17,6 +17,7 @@ import {
 } from '../components/admin/adminStyles'
 import { getAdminToken } from '../lib/adminAuth'
 import { downloadAdminDisputeReport, fetchAdminDispute, fetchAdminDisputes, ruleAdminDispute } from '../lib/api'
+import { quoteRefund } from '../lib/refundQuote'
 import { resolveMediaUrl } from '../lib/media'
 
 const STATUS_LABEL = { open: 'Por resolver', ruled: 'Resuelta' }
@@ -204,6 +205,49 @@ function OrderDetailModal({ order, reports, onClose }) {
   )
 }
 
+function BuyerRefundFields({ order, quantities, refundDelivery, onQuantity, onDelivery }) {
+  const preview = quoteRefund({
+    items: order.items,
+    quantities,
+    refundDelivery,
+    productsUsd: order.products_amount_usd,
+    deliveryUsd: order.delivery_amount_usd,
+    feeUsd: order.fee_usd,
+    invoiceUsd: order.invoice_amount_usd,
+  })
+  return (
+    <div className="space-y-3">
+      <p className={adminLabel}>Qué se devuelve</p>
+      <ul className="space-y-2">
+        {(order.items || []).map((item) => {
+          const quantity = quantities[item.product_id] ?? item.quantity
+          return (
+            <li key={item.product_id || item.name} className="flex items-center justify-between gap-3 text-sm text-zinc-100">
+              <span className="min-w-0 truncate">{item.name}</span>
+              <span className="flex items-center gap-2">
+                <button type="button" className={adminChoice(false)} disabled={quantity <= 0} onClick={() => onQuantity(item.product_id, quantity - 1)}>−</button>
+                <span className="min-w-6 text-center">{quantity}</span>
+                <button type="button" className={adminChoice(false)} disabled={quantity >= item.quantity} onClick={() => onQuantity(item.product_id, quantity + 1)}>+</button>
+              </span>
+            </li>
+          )
+        })}
+      </ul>
+      {Number(order.delivery_amount_usd) > 0 ? (
+        <label className="flex items-center gap-2 text-sm text-zinc-200">
+          <input type="checkbox" checked={refundDelivery} onChange={(event) => onDelivery(event.target.checked)} />
+          Devolver el domicilio
+        </label>
+      ) : null}
+      <p className={`text-sm ${adminMuted}`}>
+        {preview.changed
+          ? `El comprador recibe ${preview.buyerUsd.toFixed(2)} USD, comisión incluida. Lo que quede de productos y domicilio se libera a la tienda.`
+          : 'Baja cantidades o devuelve el domicilio. Si no queda nada, se devuelve la factura completa.'}
+      </p>
+    </div>
+  )
+}
+
 export default function AdminDisputes() {
   const [items, setItems] = useState([])
   const [selectedId, setSelectedId] = useState('')
@@ -215,6 +259,8 @@ export default function AdminDisputes() {
   const [rulingOpen, setRulingOpen] = useState(false)
   const [winner, setWinner] = useState('seller')
   const [reason, setReason] = useState('')
+  const [refundQty, setRefundQty] = useState({})
+  const [refundDelivery, setRefundDelivery] = useState(false)
   const [ruling, setRuling] = useState(false)
   const [listVersion, setListVersion] = useState(0)
   const [openedOrder, setOpenedOrder] = useState(null)
@@ -297,10 +343,16 @@ export default function AdminDisputes() {
     setError('')
     setSuccess('')
     try {
-      await ruleAdminDispute(getAdminToken(), selectedId, {
-        winner,
-        reason: reason.trim(),
-      })
+      const payload = { winner, reason: reason.trim() }
+      if (winner === 'buyer') {
+        const lines = detail?.order?.items || []
+        payload.items = lines.map((item) => ({
+          product_id: item.product_id,
+          quantity: refundQty[item.product_id] ?? item.quantity,
+        }))
+        payload.refund_delivery = refundDelivery
+      }
+      await ruleAdminDispute(getAdminToken(), selectedId, payload)
       setSuccess(winner === 'seller' ? 'Pago liberado a la tienda.' : 'Pago devuelto al comprador.')
       setRulingOpen(false)
       setReason('')
@@ -390,7 +442,12 @@ export default function AdminDisputes() {
                     {reportKind === 'delivery_policy' ? 'Generando…' : 'Política de entrega'}
                   </AdminButton>
                   {detail.status === 'open' ? (
-                    <AdminButton size="sm" onClick={() => setRulingOpen(true)}>Resolver</AdminButton>
+                    <AdminButton size="sm" onClick={() => {
+                      const lines = detail?.order?.items || []
+                      setRefundQty(Object.fromEntries(lines.map((item) => [item.product_id, item.quantity])))
+                      setRefundDelivery(false)
+                      setRulingOpen(true)
+                    }}>Resolver</AdminButton>
                   ) : null}
                 </div>
               </header>
@@ -544,6 +601,15 @@ export default function AdminDisputes() {
                 </button>
               </div>
             </fieldset>
+            {winner === 'buyer' && detail?.order ? (
+              <BuyerRefundFields
+                order={detail.order}
+                quantities={refundQty}
+                refundDelivery={refundDelivery}
+                onQuantity={(productId, quantity) => setRefundQty((current) => ({ ...current, [productId]: quantity }))}
+                onDelivery={setRefundDelivery}
+              />
+            ) : null}
             <label className="block">
               <span className={adminLabel}>Motivo</span>
               <textarea className={`${adminInput} min-h-24`} value={reason} onChange={(event) => setReason(event.target.value)} required />

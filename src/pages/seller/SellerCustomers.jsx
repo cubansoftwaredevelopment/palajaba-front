@@ -16,6 +16,8 @@ import {
 } from '../../components/seller/sellerStyles'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 
+import { isCustomerPaidOrder } from '../../constants/orderStatus'
+
 const statusLabel = { pending_confirmation: 'Pendiente', completed: 'Confirmado', cancelled: 'Cancelado' }
 
 function orderIdentifier(order) {
@@ -100,8 +102,8 @@ function CustomerOrdersModal({ customer, onClose, onSelectOrder, onLoadMore, loa
                     >
                       <span className="flex flex-wrap items-center justify-between gap-2">
                         <span className="text-xs font-bold text-brand-green">Pedido #{orderIdentifier(order)} · {dateLabel(order.created_at)}</span>
-                        <span className={`rounded-full px-2.5 py-1 text-[0.7rem] font-bold ${order.status === 'completed' ? 'bg-brand-green/10 text-brand-green' : order.status === 'cancelled' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}>
-                          {statusLabel[order.status] || order.status}
+                        <span className={`rounded-full px-2.5 py-1 text-[0.7rem] font-bold ${order.status === 'completed' || isCustomerPaidOrder(order) ? 'bg-brand-green/10 text-brand-green' : order.status === 'cancelled' ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'}`}>
+                          {isCustomerPaidOrder(order) ? 'Pagado' : statusLabel[order.status] || order.status}
                         </span>
                       </span>
                     </button>

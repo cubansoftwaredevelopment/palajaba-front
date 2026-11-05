@@ -51,7 +51,7 @@ export default function ConfirmModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full text-brand-carmelita/50 transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-carmelita focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8 sm:hover:text-brand-carmelita"
+          className="absolute right-4 top-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full text-brand-carmelita/50 transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-carmelita focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8 sm:hover:text-brand-carmelita"
           aria-label="Cerrar"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

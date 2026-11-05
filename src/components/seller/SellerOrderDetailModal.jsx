@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ORDER_STATUS_LABELS } from '../../constants/orderStatus'
+import { isCustomerPaidOrder, ORDER_STATUS_LABELS } from '../../constants/orderStatus'
 import { formatOrderDateTime } from '../../lib/dates'
 import { convertBetweenCurrencies } from '../../lib/displayPrice'
 import { loadExchangeRates, getCupPerUnit } from '../../lib/exchangeRates'
@@ -16,7 +16,8 @@ import SellerSelect from './SellerSelect'
 import SellerOrderEvidenceEditor from './SellerOrderEvidenceEditor'
 import SellerEvidenceCountdown from './SellerEvidenceCountdown'
 import { canSendQvaPayEvidence } from '../../lib/qvapayEvidence.js'
-import { openSellerOrderDispute, uploadSellerDisputeImage } from '../../auth/api.js'
+import { openSellerOrderDispute, uploadSellerDisputeImage, uploadSellerRefundImage } from '../../auth/api.js'
+import { quoteRefund } from '../../lib/refundQuote'
 import DisputeSupportModal from '../../buyer/components/DisputeSupportModal'
 import { downloadSellerOrderDocument } from '../../lib/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
@@ -92,6 +93,7 @@ export default function SellerOrderDetailModal({
   onDownloadInvoice,
   onQvaAccept,
   onQvaReject,
+  onQvaRefund,
   onSubmitEvidence,
 }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
@@ -106,6 +108,11 @@ export default function SellerOrderDetailModal({
   const [mapOpen, setMapOpen] = useState(false)
   const [supportPhone, setSupportPhone] = useState('')
   const [supportOpen, setSupportOpen] = useState(false)
+  const [refundOpen, setRefundOpen] = useState(false)
+  const [refundQty, setRefundQty] = useState({})
+  const [refundDelivery, setRefundDelivery] = useState(false)
+  const [refundText, setRefundText] = useState('')
+  const [refundImages, setRefundImages] = useState([])
   const [supportReportedOrderId, setSupportReportedOrderId] = useState('')
   const [documentDownload, setDocumentDownload] = useState(null)
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
@@ -134,6 +141,14 @@ export default function SellerOrderDetailModal({
     setLocalError('')
     setConfirmCancel(false)
     setMapOpen(false)
+    setRefundOpen(false)
+    setRefundQty(Object.fromEntries((order.items || []).map((item) => [item.product_id, item.quantity])))
+    setRefundDelivery(false)
+    setRefundText('')
+    setRefundImages((current) => {
+      current.forEach((item) => URL.revokeObjectURL(item.preview))
+      return []
+    })
   }, [order])
 
   useEffect(() => {
@@ -163,6 +178,8 @@ export default function SellerOrderDetailModal({
     ? 'Compra realizada'
     : order.status === 'cancelled'
       ? 'Cancelado'
+      : isCustomerPaidOrder(order)
+        ? 'Pagado'
       : evidence?.status === 'pending'
         ? 'Evidencia enviada'
         : evidence?.status === 'rejected' ? 'Evidencia rechazada' : ORDER_STATUS_LABELS[order.status]
@@ -173,6 +190,22 @@ export default function SellerOrderDetailModal({
   const qvaAwaitingStore = isQvaOrder && qvapay?.request_status === 'pending_seller'
   const qvaAwaitingEvidence = isQvaOrder && qvapay?.payment_status === 'paid'
   const canEditItems = isPending && !isQvaOrder
+  const canRefund = isQvaOrder
+    && qvapay?.payment_status === 'paid'
+    && (qvapay?.release_status === 'held' || qvapay?.release_status === 'retry')
+    && !orderSettled
+    && !qvapay?.buyer_support_reported
+    && !qvapay?.seller_support_reported
+    && !(Number(qvapay?.pending_store_payout_usd) > 0)
+  const refundPreview = useMemo(() => quoteRefund({
+    items: order.items,
+    quantities: refundQty,
+    refundDelivery,
+    productsUsd: qvapay?.products_amount_usd,
+    deliveryUsd: qvapay?.delivery_amount_usd,
+    feeUsd: qvapay?.fee_usd,
+    invoiceUsd: qvapay?.invoice_amount_usd,
+  }), [order.items, refundQty, refundDelivery, qvapay])
   const resolvedPaymentCurrency = paymentCurrency || order.payment_currency || null
 
   const itemsDirty = useMemo(() => {
@@ -292,6 +325,58 @@ export default function SellerOrderDetailModal({
 
   function handleRejectQvaPay() {
     if (window.confirm('¿Rechazar esta solicitud de pago y cancelar el pedido?')) onQvaReject?.()
+  }
+
+  function addRefundImages(event) {
+    const selected = Array.from(event.target.files || [])
+    event.target.value = ''
+    setRefundImages((current) => {
+      const room = 6 - current.length
+      const next = selected.slice(0, Math.max(0, room)).map((file) => ({
+        id: `${file.name}-${file.lastModified}-${Math.random()}`,
+        file,
+        preview: URL.createObjectURL(file),
+      }))
+      return [...current, ...next]
+    })
+  }
+
+  async function submitRefund(event) {
+    event.preventDefault()
+    const cleaned = refundText.trim()
+    if (cleaned.length < 3) {
+      setLocalError('Escribe el motivo del reembolso.')
+      return
+    }
+    if (!refundImages.length) {
+      setLocalError('Adjunta al menos una imagen del motivo.')
+      return
+    }
+    if (!refundPreview.changed) {
+      setLocalError('Baja una cantidad, quita un producto o devuelve el domicilio.')
+      return
+    }
+    setLocalError('')
+    try {
+      const token = getSellerToken()
+      const images = []
+      for (const image of refundImages) {
+        const uploaded = await uploadSellerRefundImage(token, order.id, image.file)
+        images.push(uploaded.url)
+      }
+      await onQvaRefund?.({
+        items: (order.items || []).map((item) => ({
+          product_id: item.product_id,
+          quantity: refundQty[item.product_id] ?? item.quantity,
+        })),
+        refund_delivery: refundDelivery,
+        text: cleaned,
+        images,
+      })
+      setRefundOpen(false)
+    } catch (err) {
+      setLocalError(getUserFacingMessage(err, 'No pudimos reembolsar al comprador.'))
+    }
   }
 
   function askSupport() {
@@ -627,6 +712,93 @@ export default function SellerOrderDetailModal({
                     Consultar a soporte
                   </button>
                 </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          {canRefund ? (
+            <section className="mt-4 rounded-2xl border border-brand-green/12 bg-brand-white p-4">
+              <button
+                type="button"
+                onClick={() => setRefundOpen((current) => !current)}
+                className={`${sellerBtnSecondary} w-full`}
+              >
+                Reembolsar al comprador
+              </button>
+              {refundOpen ? (
+                <form onSubmit={submitRefund} className="mt-4 space-y-3">
+                  <ul className="space-y-2">
+                    {(order.items || []).map((item) => {
+                      const quantity = refundQty[item.product_id] ?? item.quantity
+                      return (
+                        <li key={item.product_id} className="flex items-center justify-between gap-3">
+                          <span className="min-w-0 text-sm font-semibold text-brand-green">{item.name}</span>
+                          <span className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              className={sellerIconBtn}
+                              aria-label={`Menos ${item.name}`}
+                              disabled={quantity <= 0 || saving}
+                              onClick={() => setRefundQty((current) => ({ ...current, [item.product_id]: quantity - 1 }))}
+                            >
+                              −
+                            </button>
+                            <span className="min-w-[1.5rem] text-center text-sm font-bold text-brand-green">{quantity}</span>
+                            <button
+                              type="button"
+                              className={sellerIconBtn}
+                              aria-label={`Más ${item.name}`}
+                              disabled={quantity >= item.quantity || saving}
+                              onClick={() => setRefundQty((current) => ({ ...current, [item.product_id]: quantity + 1 }))}
+                            >
+                              +
+                            </button>
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  {Number(qvapay?.delivery_amount_usd) > 0 ? (
+                    <label className="flex items-center gap-2 text-sm text-brand-carmelita">
+                      <input
+                        type="checkbox"
+                        checked={refundDelivery}
+                        onChange={(event) => setRefundDelivery(event.target.checked)}
+                      />
+                      Devolver el domicilio
+                    </label>
+                  ) : null}
+                  <label className="block">
+                    <span className={sellerLabel}>Motivo</span>
+                    <textarea
+                      value={refundText}
+                      onChange={(event) => setRefundText(event.target.value)}
+                      className={`${sellerInput} min-h-24`}
+                      required
+                    />
+                  </label>
+                  <label className="block text-sm font-semibold text-brand-green">
+                    Imágenes del motivo
+                    <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addRefundImages} className="mt-1 block w-full text-sm" />
+                  </label>
+                  {refundImages.length ? (
+                    <ul className="flex flex-wrap gap-2">
+                      {refundImages.map((image) => (
+                        <li key={image.id}>
+                          <img src={image.preview} alt="" className="h-16 w-16 rounded-xl object-cover" />
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                  <p className={sellerHint}>
+                    {refundPreview.changed
+                      ? `Se devolverán ${refundPreview.buyerUsd.toFixed(2)} USD, comisión incluida.`
+                      : 'Baja cantidades o devuelve el domicilio para ver el monto.'}
+                  </p>
+                  <button type="submit" disabled={saving} className={`${sellerBtnPrimary} w-full`}>
+                    {saving ? 'Enviando…' : 'Confirmar reembolso'}
+                  </button>
+                </form>
               ) : null}
             </section>
           ) : null}

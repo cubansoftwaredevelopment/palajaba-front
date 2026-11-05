@@ -905,6 +905,13 @@ export default function CustomerAccount() {
                         {!notification.read_at ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green" aria-label="Sin leer" /> : null}
                       </div>
                       <p className="mt-1 whitespace-pre-line text-sm text-brand-carmelita">{notification.content}</p>
+                      {Array.isArray(notification.images) && notification.images.length ? (
+                        <span className="mt-3 flex flex-wrap gap-2">
+                          {notification.images.map((image) => (
+                            <img key={image} src={resolveMediaUrl(image)} alt="" className="h-20 w-20 rounded-xl object-cover" />
+                          ))}
+                        </span>
+                      ) : null}
                       <p className="mt-2 text-xs text-brand-carmelita/60">{formatDate(notification.created_at)} · Toca para abrir el pedido</p>
                     </button>
                   )) : null}

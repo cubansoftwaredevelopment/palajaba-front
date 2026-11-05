@@ -22,7 +22,7 @@ import { SELLER_LIVE_POLL_MS } from '../../live/constants'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
-import { acceptSellerQvaPayOrder, rejectSellerQvaPayOrder, submitSellerOrderEvidence } from '../../auth/api.js'
+import { acceptSellerQvaPayOrder, refundSellerQvaPayOrder, rejectSellerQvaPayOrder, submitSellerOrderEvidence } from '../../auth/api.js'
 import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 
@@ -366,6 +366,18 @@ export default function SellerOrders() {
     } finally { setSaving(false) }
   }
 
+  async function handleQvaRefund(payload) {
+    if (!selectedOrder) return
+    setSaving(true); setSaveError('')
+    try {
+      await refundSellerQvaPayOrder(getSellerToken(), selectedOrder.id, payload)
+      await loadOrders({ silent: true })
+    } catch (err) {
+      setSaveError(getUserFacingMessage(err, 'No pudimos reembolsar al comprador.'))
+      throw err
+    } finally { setSaving(false) }
+  }
+
   async function handleQvaReject() {
     if (!selectedOrder) return
     setCancelling(true); setSaveError('')
@@ -586,6 +598,7 @@ export default function SellerOrders() {
           onDownloadInvoice={handleDownloadInvoice}
           onQvaAccept={handleQvaAccept}
           onQvaReject={handleQvaReject}
+          onQvaRefund={handleQvaRefund}
           onSubmitEvidence={handleSubmitEvidence}
         />
       ) : null}

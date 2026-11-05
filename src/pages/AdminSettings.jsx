@@ -149,6 +149,7 @@ export default function AdminSettings() {
     'ads-30': String(DEFAULT_ADVERTISING_PRICES['ads-30']),
   }))
   const [planPrices, setPlanPrices] = useState(() => pricesToForm(DEFAULT_PLAN_PRICES))
+  const [transactionFeePercent, setTransactionFeePercent] = useState('0')
   const [cupPerUnit, setCupPerUnit] = useState(() => getCupPerUnit())
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -184,6 +185,7 @@ export default function AdminSettings() {
         ),
       })
       setPlanPrices(pricesToForm(data.plan_prices ?? DEFAULT_PLAN_PRICES))
+      setTransactionFeePercent(String(data.transaction_fee_percent ?? 0))
       setCupPerUnit(getCupPerUnit())
     } catch (err) {
       if (isSessionError(err)) {
@@ -250,6 +252,12 @@ export default function AdminSettings() {
       parsedAds[planId] = { amount }
     }
 
+    const parsedFee = parseAmount(transactionFeePercent)
+    if (parsedFee == null || parsedFee > 100) {
+      setError('La tarifa por transacción debe estar entre 0 y 100.')
+      return
+    }
+
     const parsedPrices = {}
     for (const tier of PLAN_TIER_ORDER) {
       parsedPrices[tier] = {}
@@ -271,6 +279,7 @@ export default function AdminSettings() {
       const token = getAdminToken()
       const updated = await updateAdminSettings(token, {
         renewal_contact_phone: phoneDigits,
+        transaction_fee_percent: parsedFee,
         plan_prices: parsedPrices,
         advertising_prices: parsedAds,
         admins: parsedAdmins,
@@ -283,6 +292,7 @@ export default function AdminSettings() {
         'ads-30': String(updated.advertising_prices?.['ads-30']?.amount ?? parsedAds['ads-30'].amount),
       })
       setPlanPrices(pricesToForm(updated.plan_prices ?? parsedPrices))
+      setTransactionFeePercent(String(updated.transaction_fee_percent ?? parsedFee))
       setSuccess('Configuración guardada.')
     } catch (err) {
       setError(getUserFacingMessage(err, 'No pudimos guardar la configuración.'))
@@ -310,11 +320,12 @@ export default function AdminSettings() {
       ) : (
         <form onSubmit={handleSubmit} className="mx-auto flex max-w-6xl flex-col gap-4 pb-20">
           <div className="grid gap-4 md:grid-cols-2 md:items-start">
+            <div className="flex flex-col gap-4">
             <section className={adminCard}>
               <div className="mb-4">
                 <h2 className="text-sm font-semibold text-zinc-100">Precios de marketing</h2>
                 <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
-                  Montos en USD. Al cobrar se suma 0.5% de exchange de QvaPay.
+                  Montos en USD. La factura es el precio del plan.
                 </p>
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
@@ -382,6 +393,32 @@ export default function AdminSettings() {
                 </p>
               </div>
             </section>
+
+            <section className={adminCard}>
+              <h2 className="text-sm font-semibold text-zinc-100">Tarifa por transacción</h2>
+              <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                Porcentaje sobre productos y domicilio en cada factura QvaPay nueva.
+              </p>
+              <label htmlFor="transaction-fee-percent" className={`${adminLabel} mt-4`}>
+                Porcentaje
+              </label>
+              <div className={`${fieldShell} max-w-[11rem]`}>
+                <input
+                  id="transaction-fee-percent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={transactionFeePercent}
+                  onChange={(event) => setTransactionFeePercent(event.target.value)}
+                  className={amountInputClass}
+                  required
+                />
+                <span className="flex shrink-0 items-center px-3 text-sm font-semibold text-zinc-400">%</span>
+              </div>
+            </section>
+            </div>
 
             <section className={adminCard}>
               <h2 className="text-sm font-semibold text-zinc-100">Administradores</h2>
