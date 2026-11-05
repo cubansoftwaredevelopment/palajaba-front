@@ -212,65 +212,81 @@ function usd(value) {
   return `${number.toFixed(2)} USD`
 }
 
-const RULING_OUTCOME = {
-  completed: 'Aplicado',
-  failed: 'No se pudo transferir',
-  buyer_paid_store_pending: 'El comprador ya cobró; la tienda sigue pendiente',
+function appliedRuling(rulings) {
+  const applied = (rulings || []).filter((item) => (
+    item.kind === 'ruling' && (item.outcome === 'completed' || item.outcome === 'buyer_paid_store_pending')
+  ))
+  return applied.at(-1) || null
 }
 
-const RULING_KIND = {
-  ruling: 'Fallo',
-  store_payout_retry: 'Reintento a la tienda',
+function returnedToBuyer(ruling) {
+  const lines = []
+  for (const item of ruling?.items || []) {
+    const quantity = Number(item.quantity_before) - Number(item.quantity_after)
+    if (quantity > 0) lines.push({ key: item.product_id || item.name, label: `${item.name || 'Producto'} × ${quantity}` })
+  }
+  if (ruling?.refund_delivery) lines.push({ key: 'envio', label: 'Envío' })
+  return lines
 }
 
-function RulingHistory({ rulings }) {
-  if (!rulings?.length) return null
+function validatedToStore(ruling, order) {
+  const lines = []
+  if (ruling?.winner === 'seller') {
+    for (const item of order?.items || []) {
+      if (Number(item.quantity) > 0) lines.push({ key: item.product_id || item.name, label: `${item.name || 'Producto'} × ${item.quantity}` })
+    }
+    if (Number(order?.delivery_amount_usd) > 0 || Number(order?.delivery_price) > 0) lines.push({ key: 'envio', label: 'Envío' })
+    return lines
+  }
+  for (const item of ruling?.items || []) {
+    if (Number(item.quantity_after) > 0) lines.push({ key: item.product_id || item.name, label: `${item.name || 'Producto'} × ${item.quantity_after}` })
+  }
+  if (ruling && !ruling.refund_delivery && Number(ruling.delivery_amount_usd) > 0) lines.push({ key: 'envio', label: 'Envío' })
+  return lines
+}
+
+function ResolutionLines({ lines }) {
+  if (!lines.length) return null
   return (
-    <section className="space-y-3">
-      <h3 className="text-sm font-semibold text-zinc-100">Fallos</h3>
-      {rulings.map((ruling, index) => (
-        <article key={`${ruling.at || 'fallo'}-${index}`} className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-4">
-          <p className="text-sm font-semibold text-zinc-50">
-            {RULING_KIND[ruling.kind] || 'Fallo'}
-            {ruling.winner ? ` · ${WINNER_LABEL[ruling.winner] || ruling.winner}` : ''}
-          </p>
-          {ruling.at ? <p className={`mt-1 text-xs ${adminMuted}`}>{formatWhen(ruling.at)}</p> : null}
-          {ruling.reason ? <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-zinc-200">{ruling.reason}</p> : null}
-          {ruling.items?.length ? (
-            <ul className="mt-3 space-y-1 text-sm text-zinc-200">
-              {ruling.items.map((item) => (
-                <li key={item.product_id || item.name}>
-                  {item.name || 'Producto'}: {item.quantity_before} → {item.quantity_after}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          <dl className="mt-3 space-y-1.5 text-sm">
-            {ruling.refund_delivery ? (
-              <div className="flex justify-between gap-3"><dt className={adminMuted}>Domicilio</dt><dd className="text-zinc-100">Devuelto</dd></div>
-            ) : null}
-            {ruling.buyer_amount_usd != null ? (
-              <div className="flex justify-between gap-3"><dt className={adminMuted}>Comprador</dt><dd className="text-zinc-100">{usd(ruling.buyer_amount_usd)}</dd></div>
-            ) : null}
-            {ruling.store_payout_usd != null ? (
-              <div className="flex justify-between gap-3"><dt className={adminMuted}>Tienda</dt><dd className="text-zinc-100">{usd(ruling.store_payout_usd)}</dd></div>
-            ) : null}
-            {ruling.products_amount_usd != null ? (
-              <div className="flex justify-between gap-3"><dt className={adminMuted}>Productos que quedan</dt><dd className="text-zinc-100">{usd(ruling.products_amount_usd)}</dd></div>
-            ) : null}
-            {ruling.delivery_amount_usd != null ? (
-              <div className="flex justify-between gap-3"><dt className={adminMuted}>Domicilio que queda</dt><dd className="text-zinc-100">{usd(ruling.delivery_amount_usd)}</dd></div>
-            ) : null}
-            {ruling.fee_usd != null ? (
-              <div className="flex justify-between gap-3"><dt className={adminMuted}>Comisión que queda</dt><dd className="text-zinc-100">{usd(ruling.fee_usd)}</dd></div>
-            ) : null}
-          </dl>
-          <p className="mt-3 text-sm font-semibold text-zinc-100">{RULING_OUTCOME[ruling.outcome] || ruling.outcome}</p>
-          {ruling.error ? <p className="mt-1 text-sm text-orange-100">{ruling.error}</p> : null}
-          {ruling.buyer_transfer_id ? <p className={`mt-2 text-xs ${adminMuted}`}>Transferencia al comprador: {ruling.buyer_transfer_id}</p> : null}
-          {ruling.store_transfer_id ? <p className={`text-xs ${adminMuted}`}>Transferencia a la tienda: {ruling.store_transfer_id}</p> : null}
-        </article>
-      ))}
+    <ul className="mt-2 space-y-1 text-sm text-zinc-200">
+      {lines.map((line) => <li key={line.key}>{line.label}</li>)}
+    </ul>
+  )
+}
+
+function FinalResolution({ rulings, order }) {
+  const ruling = appliedRuling(rulings)
+  if (!ruling) return null
+  const returned = returnedToBuyer(ruling)
+  const validated = validatedToStore(ruling, order)
+  const storeAmount = Number(ruling.store_payout_usd)
+  const buyerWins = ruling.winner === 'buyer'
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-4">
+      <h3 className="text-sm font-semibold text-zinc-50">
+        {buyerWins ? 'Fallo a favor del comprador' : 'Fallo a favor de la tienda'}
+      </h3>
+      {buyerWins ? (
+        <div className="mt-3">
+          <p className={`text-sm ${adminMuted}`}>Artículos y cantidades</p>
+          <ResolutionLines lines={returned} />
+          <p className="mt-2 text-sm font-semibold text-zinc-50">Monto: {usd(ruling.buyer_amount_usd)}</p>
+        </div>
+      ) : null}
+      {!buyerWins && returned.length ? (
+        <div className="mt-3">
+          <p className={`text-sm ${adminMuted}`}>Artículos, cantidades y envío devueltos al comprador</p>
+          <ResolutionLines lines={returned} />
+          <p className="mt-2 text-sm font-semibold text-zinc-50">Monto: {usd(ruling.buyer_amount_usd)}</p>
+        </div>
+      ) : null}
+      {storeAmount > 0 ? (
+        <div className={buyerWins ? 'mt-4' : 'mt-3'}>
+          <p className={`text-sm ${adminMuted}`}>Artículos, cantidades y envío validados a la tienda</p>
+          <ResolutionLines lines={validated} />
+          <p className="mt-2 text-sm font-semibold text-zinc-50">Monto: {usd(storeAmount)}</p>
+        </div>
+      ) : null}
     </section>
   )
 }
@@ -569,7 +585,7 @@ export default function AdminDisputes() {
               ) : null}
 
               <PartyMotives reports={detail.reports} />
-              <RulingHistory rulings={detail.rulings} />
+              <FinalResolution rulings={detail.rulings} order={detail.order} />
 
               <div className="grid gap-4 lg:grid-cols-2">
                 <section className="rounded-2xl border border-zinc-800 bg-zinc-950/30 p-4">
