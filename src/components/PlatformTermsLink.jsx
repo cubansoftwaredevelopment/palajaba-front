@@ -20,14 +20,6 @@ export default function PlatformTermsLink({ className = '' }) {
   )
 }
 
-export function PlatformTermsFooter({ className = '' }) {
-  return (
-    <p className={`text-center text-xs text-brand-carmelita/70 ${className}`}>
-      <PlatformTermsLink className={`${linkClass} text-current`} />
-    </p>
-  )
-}
-
 export function AcceptPlatformTerms({ id, checked, onChange }) {
   return (
     <div className="flex items-start gap-3">

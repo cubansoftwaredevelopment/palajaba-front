@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import PlatformTermsLink from '../PlatformTermsLink'
 import Logo from '../Logo'
 import { ADMIN_PAGE_TITLES } from '../../constants/adminNav'
 import { clearAdminToken, getAdminToken } from '../../lib/adminAuth'
@@ -168,9 +167,6 @@ export default function AdminLayout() {
 
       <div className="relative min-w-0 pt-[calc(var(--safe-top)+4.75rem)] sm:pt-[calc(var(--safe-top)+5.25rem)]">
         <Outlet />
-        <p className="px-4 py-8 text-center text-xs text-zinc-400">
-          <PlatformTermsLink className="font-semibold underline underline-offset-2" />
-        </p>
       </div>
 
       <AdminNav open={navOpen} onClose={() => setNavOpen(false)} openDisputeCount={openDisputeCount} />

@@ -9,7 +9,6 @@ import {
   BuyerSellerReturnFooter,
   BuyerSellerReturnHeaderLink,
 } from './BuyerSellerReturnLink'
-import { PlatformTermsFooter } from '../../components/PlatformTermsLink'
 import { useBuyerMarketplaceHub } from '../../lib/buyerMarketplaceHub'
 import { isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
 
@@ -21,7 +20,6 @@ export default function BuyerShell({
   headerEnd = null,
   headerSearch = null,
   flushBottom = false,
-  hideTermsFooter = false,
   footer = null,
   children,
 }) {
@@ -88,7 +86,6 @@ export default function BuyerShell({
         <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${flushBottom || pageFooter ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
           {children}
           {pageFooter ? <div className={`mt-auto ${footerPaddingClass}`}>{footer}</div> : null}
-          {pageFooter || flushBottom || hideTermsFooter ? null : <PlatformTermsFooter className="mt-10" />}
         </div>
       </div>
 

@@ -348,7 +348,6 @@ function BuyerHomeContent({ preview = null }) {
   return (
     <BuyerDisplayedLocationProvider location={location}>
       <BuyerShell
-        hideTermsFooter
         footer={<BuyerFeedFooter />}
         headerStart={
           <BuyerLocationDisplay

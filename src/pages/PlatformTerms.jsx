@@ -60,7 +60,7 @@ export default function PlatformTerms() {
   const returnTo = returnPath(useLocation().state)
 
   return (
-    <AuthShell backTo={returnTo || '/'} backLabel={returnTo ? 'Volver' : 'Inicio'} contentWidth="narrow" hideTermsFooter>
+    <AuthShell backTo={returnTo || '/'} backLabel={returnTo ? 'Volver' : 'Inicio'} contentWidth="narrow">
       <article className="pb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-carmelita/70">Palajaba</p>
         <h1 className="mt-2 font-display text-3xl font-bold text-brand-green">Términos y condiciones</h1>

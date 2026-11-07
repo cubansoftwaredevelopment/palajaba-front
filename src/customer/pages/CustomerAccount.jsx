@@ -21,7 +21,6 @@ import SellerNotificationToast from '../../components/seller/SellerNotificationT
 import { orderModalMotionClass, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { connectCustomerEvents, startCustomerPush, stopCustomerPush } from '../../live/utils'
-import { PlatformTermsFooter } from '../../components/PlatformTermsLink'
 import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
@@ -961,7 +960,6 @@ export default function CustomerAccount() {
             </div>
           ) : null}
         </div>
-        <PlatformTermsFooter className="mx-auto mt-10 w-full max-w-md px-4 pb-4 lg:max-w-none lg:px-8" />
       </main>
       <CustomerNavigation mobile hasOrderWarning={hasOrderWarning} />
 
