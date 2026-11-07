@@ -171,26 +171,12 @@ export const PLATFORM_TERMS_SECTIONS = [
           'Total a pagar = base de cálculo + cargo de Palajaba + impuestos u otros cargos que deban informarse.',
         ],
       },
-      { type: 'h', text: '6.3. Ejemplo ilustrativo' },
-      {
-        type: 'table',
-        headers: ['Concepto', 'Importe'],
-        rows: [
-          ['Precio del producto', '100,00 USD'],
-          ['Coste del envío', '10,00 USD'],
-          ['Base de cálculo', '110,00 USD'],
-          ['Cargo de Palajaba (10 %)', '11,00 USD'],
-          ['Total pagado por el cliente', '121,00 USD'],
-          ['Importe correspondiente al proveedor', '110,00 USD'],
-        ],
-      },
-      { type: 'p', text: 'El ejemplo es ilustrativo. El porcentaje real será el vigente y mostrado durante el proceso de compra.' },
-      { type: 'h', text: '6.4. Importe que corresponde al proveedor' },
+      { type: 'h', text: '6.3. Importe que corresponde al proveedor' },
       {
         type: 'p',
         text: 'Conforme al modelo económico previsto, el importe correspondiente al proveedor por un pedido completado será el importe íntegro del precio del producto y del coste de envío indicado para esa operación. El cargo de Palajaba se cobra adicionalmente al cliente y no se descuenta de dicho importe, sin perjuicio de ajustes expresamente acordados en el contrato de suministro, devoluciones, incumplimientos atribuibles al proveedor o exigencias legales.',
       },
-      { type: 'h', text: '6.5. Cambios en los porcentajes' },
+      { type: 'h', text: '6.4. Cambios en los porcentajes' },
       {
         type: 'p',
         text: 'Palajaba podrá modificar el porcentaje del cargo de servicio. Los cambios se comunicarán mediante la plataforma o los canales oficiales y se aplicarán a las compras posteriores a su entrada en vigor. No se modificarán retroactivamente las condiciones económicas de pedidos ya confirmados.',

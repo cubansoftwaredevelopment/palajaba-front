@@ -18,6 +18,7 @@ export default function AuthShell({
   contentWidth,
   hideLogo = false,
   hideHeader = false,
+  hideTermsFooter = false,
 }) {
   const widthKey = contentWidth ?? (wide ? 'wide' : centered ? 'narrow' : 'default')
   const widthClass = CONTENT_WIDTH[widthKey] ?? CONTENT_WIDTH.default
@@ -65,9 +66,11 @@ export default function AuthShell({
           {children}
         </div>
       </div>
-      <footer className="relative z-10 shrink-0 border-t border-brand-green/8 bg-brand-white/90 px-5 py-3 pb-[max(0.75rem,var(--safe-bottom))] text-center">
-        <PlatformTermsLink className="text-xs font-semibold text-brand-green underline underline-offset-2" />
-      </footer>
+      {hideTermsFooter ? null : (
+        <footer className="relative z-10 shrink-0 border-t border-brand-green/8 bg-brand-white/90 px-5 py-3 pb-[max(0.75rem,var(--safe-bottom))] text-center">
+          <PlatformTermsLink className="text-xs font-semibold text-brand-green underline underline-offset-2" />
+        </footer>
+      )}
     </main>
   )
 }
