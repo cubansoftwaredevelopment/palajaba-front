@@ -28,7 +28,7 @@ export default function RegisterPlan() {
   const [planTier, setPlanTier] = useState('')
   const [trialSelected, setTrialSelected] = useState(false)
   const [billing, setBilling] = useState('monthly')
-  const { getPlanPrice, formatPlanAmount, cupPerUnit } = usePlanPricing()
+  const { getPlanPrice, formatPlanAmount, cupPerUnit, qvapayPlanDiscountPercent } = usePlanPricing()
 
   function continueToRegistration() {
     if (trialSelected) {
@@ -143,6 +143,11 @@ export default function RegisterPlan() {
                 {usdEquivalent != null ? (
                   <span className="mt-1 block text-sm font-semibold text-brand-green/80">
                     ≈ {usdEquivalent.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD/{price.label}
+                  </span>
+                ) : null}
+                {usdEquivalent != null && qvapayPlanDiscountPercent > 0 ? (
+                  <span className="mt-1 block text-xs font-semibold text-brand-green">
+                    Con QvaPay: {(Math.round(usdEquivalent * (100 - qvapayPlanDiscountPercent)) / 100).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
                   </span>
                 ) : null}
                 <span className="mt-2 block text-sm leading-relaxed text-brand-carmelita/85">{plan.description}</span>

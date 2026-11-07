@@ -36,6 +36,7 @@ const pagerButton =
 const EMPTY_FILTERS = {
   store: '',
   phone: '',
+  qvapay: '',
   transfer: '',
   status: 'all',
   approved: '',
@@ -216,6 +217,7 @@ export default function AdminDashboard() {
           !includesText(item.email || '', filters.store)
         ) return false
         if (!includesText(item.phone, filters.phone)) return false
+        if (!includesText(item.qvapay_username || '', filters.qvapay)) return false
         const transferLabel = item.is_trial
           ? `Prueba ${item.transfer_id}`
           : item.is_launch_promo
@@ -313,6 +315,7 @@ export default function AdminDashboard() {
                 <tr className="border-b border-zinc-800 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-400">
                   <th className="px-3 py-2">Negocio</th>
                   <th className="px-3 py-2">Teléfono</th>
+                  <th className="px-3 py-2">QvaPay</th>
                   <th className="px-3 py-2">ID transferencia</th>
                   <th className="px-3 py-2">Suscripción</th>
                   <th className="px-3 py-2">Aprobada</th>
@@ -338,6 +341,15 @@ export default function AdminDashboard() {
                       className={filterInput}
                       placeholder="Filtrar teléfono"
                       aria-label="Filtrar por teléfono"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.qvapay}
+                      onChange={(event) => updateFilter('qvapay', event.target.value)}
+                      className={filterInput}
+                      placeholder="Filtrar QvaPay"
+                      aria-label="Filtrar por usuario de QvaPay"
                     />
                   </th>
                   <th className="px-2 py-2">
@@ -406,7 +418,7 @@ export default function AdminDashboard() {
               <tbody>
                 {pageItems.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                    <td colSpan={10} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                       Ningún negocio coincide con estos filtros.
                     </td>
                   </tr>
@@ -422,6 +434,7 @@ export default function AdminDashboard() {
                         ) : null}
                       </td>
                       <td className="px-3 py-3 whitespace-nowrap text-zinc-300">{item.phone}</td>
+                      <td className="px-3 py-3 font-mono text-xs break-all text-zinc-300">{item.qvapay_username || '—'}</td>
                       <td className="px-3 py-3 font-mono text-xs break-all text-zinc-300">
                         {item.is_trial ? 'Prueba' : item.is_launch_promo ? 'Promoción' : item.transfer_id}
                       </td>

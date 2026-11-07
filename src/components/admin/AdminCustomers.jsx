@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AdminPillSelect from './AdminPillSelect'
 import ConfirmDialog from './ConfirmDialog'
 import AdminSelect from './AdminSelect'
 import {
@@ -21,6 +22,15 @@ const pagerButton =
   'inline-flex min-h-9 items-center rounded-xl border border-zinc-800/90 bg-zinc-900/70 px-3 text-xs font-medium text-zinc-100 disabled:opacity-40'
 const actionButton =
   'inline-flex min-h-9 items-center rounded-xl border border-zinc-700 px-3 text-xs font-semibold text-zinc-100 transition-colors hover:border-zinc-500 disabled:opacity-40'
+const EMPTY_FILTERS = {
+  customer: '',
+  phone: '',
+  qvapay: '',
+  identity: '',
+  created: '',
+  orders: '',
+  access: 'all',
+}
 
 function includesText(value, query) {
   const needle = query.trim().toLowerCase()
@@ -33,7 +43,7 @@ export default function AdminCustomers() {
   const [customers, setCustomers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [query, setQuery] = useState('')
+  const [filters, setFilters] = useState(EMPTY_FILTERS)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [pending, setPending] = useState(null)
@@ -62,18 +72,28 @@ export default function AdminCustomers() {
   }, [loadCustomers])
 
   const filtered = useMemo(
-    () => customers.filter((item) => (
-      includesText(item.full_name, query)
-      || includesText(item.email, query)
-      || includesText(item.phone, query)
-      || includesText(item.identity_card, query)
-    )),
-    [customers, query],
+    () => customers.filter((item) => {
+      if (!includesText(item.full_name, filters.customer) && !includesText(item.email, filters.customer)) return false
+      if (!includesText(item.phone, filters.phone)) return false
+      if (!includesText(item.qvapay_username, filters.qvapay)) return false
+      if (!includesText(item.identity_card, filters.identity)) return false
+      if (!includesText(item.created_at ? formatDateTime(item.created_at) : '', filters.created)) return false
+      if (!includesText(item.order_count ?? 0, filters.orders)) return false
+      if (filters.access === 'revoked' && !item.purchase_revoked) return false
+      if (filters.access === 'allowed' && item.purchase_revoked) return false
+      return true
+    }),
+    [customers, filters],
   )
 
   useEffect(() => {
     setPage(1)
-  }, [pageSize, query])
+  }, [pageSize, filters])
+
+  function updateFilter(field, value) {
+    setFilters((current) => ({ ...current, [field]: value }))
+    setPage(1)
+  }
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize))
   const currentPage = Math.min(page, pageCount)
@@ -126,6 +146,7 @@ export default function AdminCustomers() {
               <tr className="border-b border-zinc-800 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-400">
                 <th className="px-3 py-2">Cliente</th>
                 <th className="px-3 py-2">Teléfono</th>
+                <th className="px-3 py-2">QvaPay</th>
                 <th className="px-3 py-2">Carnet</th>
                 <th className="px-3 py-2">Alta</th>
                 <th className="px-3 py-2">Pedidos</th>
@@ -133,21 +154,79 @@ export default function AdminCustomers() {
                 <th className="px-3 py-2">Acciones</th>
               </tr>
               <tr className="border-b border-zinc-800 bg-zinc-950/40">
-                <th className="px-2 py-2" colSpan={7}>
+                <th className="px-2 py-2">
                   <input
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    value={filters.customer}
+                    onChange={(event) => updateFilter('customer', event.target.value)}
                     className={filterInput}
-                    placeholder="Filtrar por nombre, correo, teléfono o carnet"
-                    aria-label="Filtrar clientes"
+                    placeholder="Filtrar cliente"
+                    aria-label="Filtrar por cliente"
                   />
                 </th>
+                <th className="px-2 py-2">
+                  <input
+                    value={filters.phone}
+                    onChange={(event) => updateFilter('phone', event.target.value)}
+                    className={filterInput}
+                    placeholder="Filtrar teléfono"
+                    aria-label="Filtrar por teléfono"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    value={filters.qvapay}
+                    onChange={(event) => updateFilter('qvapay', event.target.value)}
+                    className={filterInput}
+                    placeholder="Filtrar QvaPay"
+                    aria-label="Filtrar por usuario de QvaPay"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    value={filters.identity}
+                    onChange={(event) => updateFilter('identity', event.target.value)}
+                    className={filterInput}
+                    placeholder="Filtrar carnet"
+                    aria-label="Filtrar por carnet"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    value={filters.created}
+                    onChange={(event) => updateFilter('created', event.target.value)}
+                    className={filterInput}
+                    placeholder="Filtrar fecha"
+                    aria-label="Filtrar por fecha de alta"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    value={filters.orders}
+                    onChange={(event) => updateFilter('orders', event.target.value)}
+                    className={filterInput}
+                    placeholder="Filtrar pedidos"
+                    aria-label="Filtrar por cantidad de pedidos"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <AdminPillSelect
+                    value={filters.access === 'all' ? '' : filters.access}
+                    onChange={(value) => updateFilter('access', value || 'all')}
+                    allLabel="Todos"
+                    ariaLabel="Filtrar por acceso"
+                    options={[
+                      { value: 'allowed', label: 'Puede comprar' },
+                      { value: 'revoked', label: 'Revocado' },
+                    ]}
+                  />
+                </th>
+                <th className="px-2 py-2" />
               </tr>
             </thead>
             <tbody>
               {pageItems.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                  <td colSpan={8} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                     {customers.length === 0 ? 'Aún no hay clientes.' : 'Ningún cliente coincide con este filtro.'}
                   </td>
                 </tr>
@@ -160,6 +239,7 @@ export default function AdminCustomers() {
                     ) : null}
                   </td>
                   <td className="px-3 py-3 whitespace-nowrap text-zinc-300">{item.phone || '—'}</td>
+                  <td className="px-3 py-3 font-mono text-xs break-all text-zinc-300">{item.qvapay_username || '—'}</td>
                   <td className="px-3 py-3 whitespace-nowrap text-zinc-300">{item.identity_card || '—'}</td>
                   <td className="px-3 py-3 whitespace-nowrap text-zinc-300">
                     {item.created_at ? formatDateTime(item.created_at) : '—'}

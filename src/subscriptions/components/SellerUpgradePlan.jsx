@@ -111,7 +111,7 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
   const paidPlanActive = !isTrial && !subscriptionInactive
   const [billing, setBilling] = useState(currentBilling)
   const [selectedPlanId, setSelectedPlanId] = useState(null)
-  const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount, cupPerUnit } = usePlanPricing()
+  const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount, cupPerUnit, qvapayPlanDiscountPercent } = usePlanPricing()
   const currentPlanName = currentPlan.name
   const planOptions = PLAN_TIER_ORDER.map((tierId) => PLAN_TIERS[tierId])
 
@@ -209,6 +209,11 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
                 {usdEquivalent != null ? (
                   <p className="mt-1 text-sm font-semibold text-brand-green/80">
                     ≈ {usdEquivalent.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD/{price.label}
+                  </p>
+                ) : null}
+                {usdEquivalent != null && qvapayPlanDiscountPercent > 0 ? (
+                  <p className="mt-1 text-xs font-semibold text-brand-green">
+                    Con QvaPay: {(Math.round(usdEquivalent * (100 - qvapayPlanDiscountPercent)) / 100).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
                   </p>
                 ) : null}
                 <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">

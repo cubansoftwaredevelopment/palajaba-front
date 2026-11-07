@@ -14,6 +14,7 @@ export function usePlanPricing() {
   const [cupPerUnit, setCupPerUnit] = useState(() => getCupPerUnit())
   const [ready, setReady] = useState(() => areExchangeRatesAvailable())
   const [planPrices, setPlanPrices] = useState(DEFAULT_PLAN_PRICES)
+  const [qvapayPlanDiscountPercent, setQvapayPlanDiscountPercent] = useState(0)
 
   useEffect(() => {
     let mounted = true
@@ -28,6 +29,8 @@ export function usePlanPricing() {
       if (pricesPayload?.plan_prices) {
         setPlanPrices(normalizePlanPrices(pricesPayload.plan_prices))
       }
+      const discount = Number(pricesPayload?.qvapay_plan_discount_percent)
+      setQvapayPlanDiscountPercent(Number.isFinite(discount) ? discount : 0)
     })
 
     return () => {
@@ -39,6 +42,7 @@ export function usePlanPricing() {
     ready,
     cupPerUnit,
     planPrices,
+    qvapayPlanDiscountPercent,
     getPlanPrice: (tier, billing) => getPlanPrice(tier, billing, cupPerUnit, planPrices),
     getPlanYearlySavings: (tier) => getPlanYearlySavings(tier, cupPerUnit, planPrices),
     getPlanPeriodSavings: (tier, billing) =>
