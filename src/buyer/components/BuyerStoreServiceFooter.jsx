@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
-import PlatformTermsLink from '../../components/PlatformTermsLink'
+import { Link, useLocation } from 'react-router-dom'
+import { BRAND_NAME } from '../../constants/branding'
+import { PLATFORM_TERMS_PATH } from '../../lib/platformTerms'
 import {
   STORE_PAGES,
   isStorePagePublished,
@@ -38,9 +39,11 @@ export default function BuyerStoreServiceFooter({
   homeTo = '',
   clearFab = false,
 }) {
+  const route = useLocation()
   const serviceLinks = STORE_PAGES.filter((page) => isStorePagePublished(pages, page.key))
   const home = homeTo || storePublicPath(storeSlug)
   const line = storeFooterLine(provinceName, offersDelivery)
+  const termsState = { ...(linkState || {}), returnTo: `${route.pathname}${route.search}` }
 
   return (
     <footer
@@ -56,31 +59,29 @@ export default function BuyerStoreServiceFooter({
         {line ? <p className="mt-4 text-center text-sm text-brand-carmelita/80">{line}</p> : null}
         <div className="mt-8 grid w-full grid-cols-2 gap-x-8">
           <div>
-            {serviceLinks.length ? (
-              <>
-                <h2 className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-brand-carmelita">
-                  Servicio al cliente
-                </h2>
-                <ul className="mt-3">
-                  {serviceLinks.map((page) => (
-                    <li key={page.key}>
-                      <FooterLink to={storePagePublicPath(storeSlug, page.slug)} state={linkState}>
-                        {page.label}
-                      </FooterLink>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            ) : null}
+            <h2 className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-brand-carmelita">
+              Servicio al cliente
+            </h2>
+            <ul className="mt-3">
+              {serviceLinks.map((page) => (
+                <li key={page.key}>
+                  <FooterLink to={storePagePublicPath(storeSlug, page.slug)} state={linkState}>
+                    {page.label}
+                  </FooterLink>
+                </li>
+              ))}
+              <li>
+                <FooterLink to={PLATFORM_TERMS_PATH} state={termsState}>
+                  Términos de {BRAND_NAME}
+                </FooterLink>
+              </li>
+            </ul>
           </div>
           <div>
             <h2 className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-brand-carmelita">Otros</h2>
             <ul className="mt-3">
               <li>
                 <FooterLink to={home}>Inicio</FooterLink>
-              </li>
-              <li>
-                <PlatformTermsLink className="block py-1.5 text-[0.95rem] leading-snug text-brand-carmelita transition-colors touch-manipulation hover:text-brand-green" />
               </li>
             </ul>
           </div>
