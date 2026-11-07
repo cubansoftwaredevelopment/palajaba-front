@@ -6,6 +6,7 @@ import { authFormWrap, authPageIntro } from '../components/authStyles'
 import PasswordField from '../components/PasswordField'
 import PhoneField from '../components/PhoneField'
 import RegisterProgress from '../components/RegisterProgress'
+import { AcceptPlatformTerms } from '../../components/PlatformTermsLink'
 import Button from '../../components/Button'
 import {
   alertErrorClass,
@@ -41,8 +42,9 @@ function isValidEmail(value) {
   return email.includes('@') && email.split('@')[1]?.includes('.')
 }
 
-function validateForm({ storeName, email, phone, password, confirmPassword }) {
+function validateForm({ storeName, email, phone, password, confirmPassword, acceptedTerms }) {
   if (!storeName.trim()) return 'El nombre de la tienda es obligatorio.'
+  if (!acceptedTerms) return 'Debes aceptar los términos y condiciones.'
   if (!email.trim()) return 'El correo es obligatorio.'
   if (!isValidEmail(email)) return 'El correo no es válido.'
   const phoneDigits = getPhoneDigits(phone)
@@ -76,6 +78,7 @@ export default function RegisterForm() {
   const [phoneDigits, setPhoneDigits] = useState(() => getActiveSmsCooldownPhone())
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [smsCooldownEndsAt, setSmsCooldownEndsAt] = useState(() => getSmsCooldownUntil(getActiveSmsCooldownPhone()))
@@ -99,6 +102,7 @@ export default function RegisterForm() {
       phone: phoneDigits,
       password,
       confirmPassword,
+      acceptedTerms,
     })
 
     if (validationError) {
@@ -127,6 +131,7 @@ export default function RegisterForm() {
         email: email.trim().toLowerCase(),
         phone: phoneDigits,
         password,
+        accepted_terms: true,
         billing_period: billing,
         plan_tier: planTier,
         ...(kind === 'account' ? { qvapay_purchase_id: location.state?.qvapayPurchaseId } : {}),
@@ -267,6 +272,8 @@ export default function RegisterForm() {
             autoComplete="new-password"
           />
 
+          <AcceptPlatformTerms id="store-terms" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} />
+
           {smsCooldownRemaining > 0 ? (
             <p className={alertErrorClass} role="alert">
               {smsFailUserMessage(smsCooldownRemaining)}
@@ -277,7 +284,7 @@ export default function RegisterForm() {
             </p>
           ) : null}
 
-          <Button type="submit" className="mt-1" disabled={loading || smsCooldownRemaining > 0}>
+          <Button type="submit" className="mt-1" disabled={loading || smsCooldownRemaining > 0 || !acceptedTerms}>
             {loading
               ? 'Enviando códigos…'
               : smsCooldownRemaining > 0

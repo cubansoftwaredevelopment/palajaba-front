@@ -9,6 +9,7 @@ import {
   BuyerSellerReturnFooter,
   BuyerSellerReturnHeaderLink,
 } from './BuyerSellerReturnLink'
+import { PlatformTermsFooter } from '../../components/PlatformTermsLink'
 import { useBuyerMarketplaceHub } from '../../lib/buyerMarketplaceHub'
 import { isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
 
@@ -78,6 +79,7 @@ export default function BuyerShell({
       <div className="page-scroll buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
         <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${flushBottom ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
           {children}
+          {flushBottom ? null : <PlatformTermsFooter className="mt-10" />}
         </div>
       </div>
 

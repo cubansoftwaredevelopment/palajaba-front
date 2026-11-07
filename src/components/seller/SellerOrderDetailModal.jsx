@@ -9,6 +9,7 @@ import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 import OrderDocumentDownloads from '../../buyer/components/OrderDocumentDownloads'
+import OrderPlatformTerms from '../../buyer/components/OrderPlatformTerms'
 import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
 import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
@@ -599,6 +600,7 @@ export default function SellerOrderDetailModal({
             downloading={documentDownload}
             onDownload={downloadDocument}
           />
+          <OrderPlatformTerms terms={order.platform_terms} />
 
           {order.buyer_zone ? (
             <p className="mt-3 text-xs text-brand-carmelita/85">

@@ -4,6 +4,7 @@ import AuthCard from '../../auth/components/AuthCard'
 import AuthHeader from '../../auth/components/AuthHeader'
 import AuthShell from '../../auth/components/AuthShell'
 import PasswordField from '../../auth/components/PasswordField'
+import { AcceptPlatformTerms } from '../../components/PlatformTermsLink'
 import Button from '../../components/Button'
 import { alertErrorClass, inputClass, labelClass } from '../../auth/components/formStyles'
 import { addCustomerFavorite, confirmCustomerRegistration, resendCustomerRegistration, startCustomerRegistration } from '../api.js'
@@ -14,6 +15,7 @@ export default function CustomerRegister() {
   const navigate = useNavigate()
   const location = useLocation()
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', identity_card: '', password: '' })
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [challenge, setChallenge] = useState(null)
   const [emailCode, setEmailCode] = useState('')
   const [phoneCode, setPhoneCode] = useState('')
@@ -28,6 +30,10 @@ export default function CustomerRegister() {
 
   async function start(event) {
     event.preventDefault()
+    if (!acceptedTerms) {
+      setError('Debes aceptar los términos y condiciones.')
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -35,6 +41,7 @@ export default function CustomerRegister() {
         ...form,
         email: form.email.trim().toLowerCase(),
         phone: form.phone.replace(/\D/g, '').replace(/^53(?=\d{8}$)/, ''),
+        accepted_terms: true,
       })
       if (result.otp_bypassed) {
         const confirmed = await confirmCustomerRegistration({
@@ -97,8 +104,9 @@ export default function CustomerRegister() {
               ))}
               <div><label htmlFor="customer-identity" className={labelClass}>Carnet de identidad <span className="text-brand-carmelita">*</span></label><input id="customer-identity" type="text" value={form.identity_card} onChange={(event) => change('identity_card', event.target.value)} className={inputClass} required /></div>
               <PasswordField id="customer-password" label="Contraseña" value={form.password} onChange={(event) => change('password', event.target.value)} />
+              <AcceptPlatformTerms id="customer-terms" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} />
               {error ? <p className={alertErrorClass} role="alert">{error}</p> : null}
-              <Button type="submit" disabled={loading}>{loading ? 'Enviando códigos…' : 'Continuar y verificar'}</Button>
+              <Button type="submit" disabled={loading || !acceptedTerms}>{loading ? 'Enviando códigos…' : 'Continuar y verificar'}</Button>
             </form>
           ) : (
             <form onSubmit={confirm} className="flex flex-col gap-3.5" noValidate>

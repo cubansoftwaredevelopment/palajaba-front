@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import PlatformTermsLink from '../../components/PlatformTermsLink'
 import {
   STORE_PAGES,
   isStorePagePublished,
@@ -77,6 +78,9 @@ export default function BuyerStoreServiceFooter({
             <ul className="mt-3">
               <li>
                 <FooterLink to={home}>Inicio</FooterLink>
+              </li>
+              <li>
+                <PlatformTermsLink className="block py-1.5 text-[0.95rem] leading-snug text-brand-carmelita transition-colors touch-manipulation hover:text-brand-green" />
               </li>
             </ul>
           </div>

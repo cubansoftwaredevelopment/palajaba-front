@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import OrderPlatformTerms from '../buyer/components/OrderPlatformTerms'
 import AdminButton from '../components/admin/AdminButton'
 import AdminModal from '../components/admin/AdminModal'
 import Checkbox from '../components/ui/Checkbox'
@@ -201,6 +202,7 @@ function OrderDetailModal({ order, reports, onClose }) {
       ) : (
         <p className={`mt-2 text-sm ${adminMuted}`}>Este pedido no tiene productos registrados.</p>
       )}
+      <OrderPlatformTerms terms={order.platform_terms} tone="admin" />
       {order.disputed ? <div className="mt-5"><PartyMotives reports={reports} /></div> : null}
     </AdminModal>
   )

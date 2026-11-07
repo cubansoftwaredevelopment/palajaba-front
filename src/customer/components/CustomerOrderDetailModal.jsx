@@ -13,6 +13,7 @@ import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { downloadCustomerOrderDocument } from '../../lib/api.js'
 import OrderDocumentDownloads from '../../buyer/components/OrderDocumentDownloads'
+import OrderPlatformTerms from '../../buyer/components/OrderPlatformTerms'
 import QvaPayReleaseCountdown from './QvaPayReleaseCountdown.jsx'
 
 export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
@@ -206,6 +207,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
           downloading={documentDownload}
           onDownload={downloadDocument}
         />
+        <OrderPlatformTerms terms={order.platform_terms} />
         {documentError ? <p role="alert" className="mt-2 text-sm font-semibold text-red-700">{documentError}</p> : null}
         {order.completed_at ? <p className="mt-4 text-xs text-brand-carmelita/65">Completado: {formatDate(order.completed_at)}</p> : null}
       </section>

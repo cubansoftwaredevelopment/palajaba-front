@@ -55,6 +55,7 @@ import CustomerRoute from './buyer/components/CustomerRoute'
 import PublicStoreRoute from './buyer/components/PublicStoreRoute'
 import RedirectLegacyStoreRoute from './buyer/components/RedirectLegacyStoreRoute'
 import DownloadAppPage from './pages/DownloadAppPage'
+import PlatformTerms from './pages/PlatformTerms'
 import QvaPayReturn from './pages/QvaPayReturn'
 import AppDevicePresence from './lib/appDevicePresence'
 import { disableBuyerLocationPersistence } from './lib/buyerLocation'
@@ -143,6 +144,7 @@ const router = createBrowserRouter([
       { path: 'registro/otp', element: <RegisterOtp /> },
       { path: 'registro/exito', element: <RegisterSuccess /> },
       { path: 'aplicacion', element: <DownloadAppPage /> },
+      { path: 'terminos', element: <PlatformTerms /> },
       {
         path: 'admin',
         element: <Outlet />,

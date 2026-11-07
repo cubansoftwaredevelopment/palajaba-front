@@ -1,3 +1,4 @@
+import { PlatformTermsFooter } from '../PlatformTermsLink'
 import Logo from '../Logo'
 import { SellerBottomNav, SellerSidebarNav } from './SellerNav'
 import {
@@ -149,11 +150,15 @@ export default function SellerShell({
           </header>
 
           {catalogLayout ? (
-            <main className={mainClassName}>{children}</main>
+            <>
+              <main className={mainClassName}>{children}</main>
+              <PlatformTermsFooter className="shrink-0 bg-brand-green py-3 text-brand-white/80 [&_a]:text-brand-white" />
+            </>
           ) : (
             <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <div className={sellerScrollArea}>
                 <div className={mainClassName}>{children}</div>
+                <PlatformTermsFooter className="mx-auto mt-8 w-full max-w-md px-4 pb-6 sm:px-5 lg:max-w-none lg:px-8" />
               </div>
             </main>
           )}

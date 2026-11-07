@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import Logo from '../../components/Logo'
+import PlatformTermsLink from '../../components/PlatformTermsLink'
 
 const CONTENT_WIDTH = {
   default: 'max-w-md lg:max-w-5xl',
@@ -64,6 +65,9 @@ export default function AuthShell({
           {children}
         </div>
       </div>
+      <footer className="relative z-10 shrink-0 border-t border-brand-green/8 bg-brand-white/90 px-5 py-3 pb-[max(0.75rem,var(--safe-bottom))] text-center">
+        <PlatformTermsLink className="text-xs font-semibold text-brand-green underline underline-offset-2" />
+      </footer>
     </main>
   )
 }
