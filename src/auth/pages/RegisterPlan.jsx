@@ -30,6 +30,12 @@ export default function RegisterPlan() {
   const [billing, setBilling] = useState('monthly')
   const { getPlanPrice, formatPlanAmount, cupPerUnit, qvapayPlanDiscountPercent } = usePlanPricing()
 
+  const returnTo = (() => {
+    const value = location.state?.returnTo
+    if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return ''
+    return value
+  })()
+
   function continueToRegistration() {
     if (trialSelected) {
       navigate('/registro', {
@@ -52,7 +58,7 @@ export default function RegisterPlan() {
   }
 
   return (
-    <AuthShell backTo="/crear-cuenta" backLabel="Tipo de cuenta" contentWidth="plans">
+    <AuthShell backTo={returnTo || '/crear-cuenta'} backLabel={returnTo ? 'Volver' : 'Tipo de cuenta'} contentWidth="plans">
       <section className="animate-fade-in" aria-label="Seleccionar plan de tienda">
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(250px,0.8fr)] lg:items-center">
           <AuthHeader

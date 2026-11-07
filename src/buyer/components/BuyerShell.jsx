@@ -21,6 +21,8 @@ export default function BuyerShell({
   headerEnd = null,
   headerSearch = null,
   flushBottom = false,
+  hideTermsFooter = false,
+  footer = null,
   children,
 }) {
   const showBackLink = Boolean(backTo) && !headerStart
@@ -29,13 +31,19 @@ export default function BuyerShell({
   const currencyContext = useContext(BuyerDisplayCurrencyContext)
   const showCurrencyTag = marketplaceHub && !isSellerPreview && Boolean(currencyContext)
   const sellerBrowsing = isSellerBrowsingMarketplace() && !isSellerPreview
-  const scrollPaddingClass = flushBottom
+  const pageFooter = Boolean(footer)
+  const scrollPaddingClass = flushBottom || pageFooter
     ? ''
     : marketplaceHub
       ? sellerBrowsing
         ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'
         : buyerMarketplaceScrollPadding
       : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
+  const footerPaddingClass = marketplaceHub
+    ? sellerBrowsing
+      ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'
+      : buyerMarketplaceScrollPadding
+    : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
 
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
@@ -77,9 +85,10 @@ export default function BuyerShell({
       {showCurrencyTag ? <BuyerCurrencyTag /> : null}
 
       <div className="page-scroll buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
-        <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${flushBottom ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
+        <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${flushBottom || pageFooter ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
           {children}
-          {flushBottom ? null : <PlatformTermsFooter className="mt-10" />}
+          {pageFooter ? <div className={`mt-auto ${footerPaddingClass}`}>{footer}</div> : null}
+          {pageFooter || flushBottom || hideTermsFooter ? null : <PlatformTermsFooter className="mt-10" />}
         </div>
       </div>
 

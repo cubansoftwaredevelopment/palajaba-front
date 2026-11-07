@@ -7,6 +7,7 @@ const RESERVED_STORE_SLUGS = new Set([
   'configuracion',
   'aplicacion',
   'terminos',
+  'preguntas',
   'g',
 ])
 

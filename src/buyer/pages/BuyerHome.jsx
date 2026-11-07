@@ -8,6 +8,7 @@ import BuyerHeaderSearch from "../components/BuyerHeaderSearch";
 import BuyerLocationDisplay from "../components/BuyerLocationDisplay";
 import { MARKETPLACE_CATEGORY_EVENT } from "../components/BuyerMarketplaceNav";
 import { BuyerSearchResults } from "../components/BuyerMarketplaceSearch";
+import BuyerFeedFooter from "../components/BuyerFeedFooter";
 import BuyerShell from "../components/BuyerShell";
 import StatePanel from "../../components/ui/StatePanel";
 import LoadingState from "../../components/ui/LoadingState";
@@ -347,6 +348,8 @@ function BuyerHomeContent({ preview = null }) {
   return (
     <BuyerDisplayedLocationProvider location={location}>
       <BuyerShell
+        hideTermsFooter
+        footer={<BuyerFeedFooter />}
         headerStart={
           <BuyerLocationDisplay
             province={location.province}

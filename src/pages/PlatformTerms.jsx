@@ -1,6 +1,12 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import AuthShell from '../auth/components/AuthShell'
 import { PLATFORM_TERMS_SECTIONS, PLATFORM_TERMS_VERSION } from '../lib/platformTerms'
+
+function returnPath(state) {
+  const returnTo = state?.returnTo
+  if (typeof returnTo !== 'string' || !returnTo.startsWith('/') || returnTo.startsWith('//')) return ''
+  return returnTo
+}
 
 function TermsBlock({ block }) {
   if (block.type === 'h') {
@@ -51,8 +57,10 @@ function TermsBlock({ block }) {
 }
 
 export default function PlatformTerms() {
+  const returnTo = returnPath(useLocation().state)
+
   return (
-    <AuthShell backTo="/" backLabel="Inicio" contentWidth="narrow">
+    <AuthShell backTo={returnTo || '/'} backLabel={returnTo ? 'Volver' : 'Inicio'} contentWidth="narrow">
       <article className="pb-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-carmelita/70">Palajaba</p>
         <h1 className="mt-2 font-display text-3xl font-bold text-brand-green">Términos y condiciones</h1>
@@ -66,7 +74,7 @@ export default function PlatformTerms() {
           </section>
         ))}
         <p className="mt-10 text-sm text-brand-carmelita/80">
-          <Link to="/" className="font-semibold text-brand-green underline">Volver al inicio</Link>
+          <Link to={returnTo || '/'} className="font-semibold text-brand-green underline">{returnTo ? 'Volver' : 'Volver al inicio'}</Link>
         </p>
       </article>
     </AuthShell>
