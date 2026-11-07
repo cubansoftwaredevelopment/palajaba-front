@@ -1,6 +1,10 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BRAND_NAME } from '../../constants/branding'
+import { openExternalUrl } from '../../lib/nativeApp'
 import { PLATFORM_TERMS_PATH } from '../../lib/platformTerms'
+import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
+import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 import {
   STORE_PAGES,
   isStorePagePublished,
@@ -9,6 +13,12 @@ import {
 } from '../../lib/storePages'
 import { storePublicPath } from '../../lib/storeSlug'
 import StoreMark from './StoreMark'
+
+const SUPPORT_MESSAGE = 'Hola, necesito ayuda con Pa\' La Jaba.'
+const QVAPAY_REGISTER_URL = 'https://www.qvapay.com/register'
+const FAQ_PATH = '/preguntas'
+const CATALOG_PATH = '/registro/planes'
+const linkClass = 'block w-full py-1.5 text-left text-[0.95rem] leading-snug text-brand-carmelita transition-colors touch-manipulation hover:text-brand-green'
 
 function storeFooterLine(provinceName, offersDelivery) {
   const place = String(provinceName || '').trim()
@@ -21,7 +31,7 @@ function FooterLink({ to, state, children }) {
     <Link
       to={to}
       state={state}
-      className="block py-1.5 text-[0.95rem] leading-snug text-brand-carmelita transition-colors touch-manipulation hover:text-brand-green"
+      className={linkClass}
     >
       {children}
     </Link>
@@ -40,10 +50,26 @@ export default function BuyerStoreServiceFooter({
   clearFab = false,
 }) {
   const route = useLocation()
+  const [supportPhone, setSupportPhone] = useState('')
   const serviceLinks = STORE_PAGES.filter((page) => isStorePagePublished(pages, page.key))
   const home = homeTo || storePublicPath(storeSlug)
   const line = storeFooterLine(provinceName, offersDelivery)
   const termsState = { ...(linkState || {}), returnTo: `${route.pathname}${route.search}` }
+  const supportUrl = buildWhatsAppUrl(supportPhone, SUPPORT_MESSAGE)
+
+  useEffect(() => {
+    let cancelled = false
+    fetchRenewalContactPhone()
+      .then((data) => {
+        if (!cancelled) setSupportPhone(data?.renewal_contact_phone || '')
+      })
+      .catch(() => {
+        if (!cancelled) setSupportPhone('')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return (
     <footer
@@ -63,6 +89,9 @@ export default function BuyerStoreServiceFooter({
               Servicio al cliente
             </h2>
             <ul className="mt-3">
+              <li>
+                <FooterLink to={FAQ_PATH} state={termsState}>Preguntas y respuestas</FooterLink>
+              </li>
               {serviceLinks.map((page) => (
                 <li key={page.key}>
                   <FooterLink to={storePagePublicPath(storeSlug, page.slug)} state={linkState}>
@@ -75,6 +104,16 @@ export default function BuyerStoreServiceFooter({
                   Términos de {BRAND_NAME}
                 </FooterLink>
               </li>
+              <li>
+                <button
+                  type="button"
+                  onClick={() => supportUrl && openExternalUrl(supportUrl)}
+                  disabled={!supportUrl}
+                  className={`${linkClass} disabled:cursor-not-allowed disabled:opacity-40`}
+                >
+                  Contactar soporte
+                </button>
+              </li>
             </ul>
           </div>
           <div>
@@ -82,6 +121,14 @@ export default function BuyerStoreServiceFooter({
             <ul className="mt-3">
               <li>
                 <FooterLink to={home}>Inicio</FooterLink>
+              </li>
+              <li>
+                <FooterLink to={CATALOG_PATH} state={termsState}>Crear un catálogo</FooterLink>
+              </li>
+              <li>
+                <button type="button" onClick={() => openExternalUrl(QVAPAY_REGISTER_URL)} className={linkClass}>
+                  Crear cuenta en QvaPay
+                </button>
               </li>
             </ul>
           </div>

@@ -13,12 +13,12 @@ export default function StoreMark({ photoUrl, storeName, size = 'sm' }) {
   const showPhoto = Boolean(photoSrc) && failedPhotoUrl !== photoSrc
 
   return (
-    <span className={`inline-grid shrink-0 place-items-center overflow-hidden rounded-full bg-brand-white ring-2 ring-brand-green/15 ${SIZES[size] || SIZES.sm}`}>
+    <span className={`relative inline-grid shrink-0 place-items-center overflow-hidden rounded-full bg-brand-white ring-2 ring-brand-green/15 ${SIZES[size] || SIZES.sm}`}>
       {showPhoto ? (
         <img
           src={photoSrc}
           alt=""
-          className="h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover object-center"
           onError={() => setFailedPhotoUrl(photoSrc)}
         />
       ) : (
