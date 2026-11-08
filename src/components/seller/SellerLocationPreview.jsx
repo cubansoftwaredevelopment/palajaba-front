@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { addSellerMapTiles, sellerMapMarkerIcon, SELLER_MAP_LOCATION_ZOOM, SELLER_MAP_PREVIEW_ZOOM } from '../../lib/sellerMap'
+import { addSellerMapTiles, buyerMapMarkerIcon, sellerMapMarkerIcon, SELLER_MAP_LOCATION_ZOOM, SELLER_MAP_PREVIEW_ZOOM } from '../../lib/sellerMap'
 
 export default function SellerLocationPreview({
   location,
@@ -9,6 +9,8 @@ export default function SellerLocationPreview({
   viewOnly = false,
   banner = false,
   mapClassName = '',
+  viewer = null,
+  mapControl = null,
 }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
@@ -40,10 +42,27 @@ export default function SellerLocationPreview({
     addSellerMapTiles(map)
     L.marker(center, { icon: sellerMapMarkerIcon }).addTo(map)
 
+    const viewerLat = Number(viewer?.lat)
+    const viewerLng = Number(viewer?.lng)
+    const hasViewer = Number.isFinite(viewerLat) && Number.isFinite(viewerLng)
+    const bounds = hasViewer ? L.latLngBounds([center, [viewerLat, viewerLng]]) : null
+    if (hasViewer) {
+      L.marker([viewerLat, viewerLng], { icon: buyerMapMarkerIcon, title: 'Tu ubicación' }).addTo(map)
+    }
+
+    const fitMap = (shouldFrame) => {
+      map.invalidateSize()
+      if (!shouldFrame || !bounds) return
+      map.fitBounds(bounds, {
+        padding: [32, 32],
+        maxZoom: canExplore ? SELLER_MAP_LOCATION_ZOOM : SELLER_MAP_PREVIEW_ZOOM,
+      })
+    }
+
     mapInstanceRef.current = map
-    const timer = setTimeout(() => map.invalidateSize(), canExplore ? 150 : 80)
-    const lateTimer = setTimeout(() => map.invalidateSize(), 320)
-    const observer = new ResizeObserver(() => map.invalidateSize())
+    const timer = setTimeout(() => fitMap(true), canExplore ? 150 : 80)
+    const lateTimer = setTimeout(() => fitMap(true), 320)
+    const observer = new ResizeObserver(() => fitMap(!canExplore))
     observer.observe(mapRef.current)
 
     return () => {
@@ -53,7 +72,7 @@ export default function SellerLocationPreview({
       map.remove()
       mapInstanceRef.current = null
     }
-  }, [banner, interactive, viewOnly, location?.lat, location?.lng])
+  }, [banner, interactive, viewOnly, location?.lat, location?.lng, viewer?.lat, viewer?.lng])
 
   if (!location) return null
 
@@ -87,23 +106,12 @@ export default function SellerLocationPreview({
               : 'Mapa con la ubicación de tu negocio'
           }
         />
+        {mapControl}
         {!interactive ? (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-brand-white/90 to-transparent" />
         ) : null}
       </div>
       <div className="relative z-10 flex items-center gap-2 border-t border-brand-green/8 bg-brand-white/80 px-3 py-2.5 backdrop-blur-sm">
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-green/10 text-brand-green">
-          <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-            <path
-              fillRule="evenodd"
-              d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.017.007.006.003zM10 11.25a2.25 2.25 0 100-4.5 2.25 2.25 0 000 4.5z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </span>
-        <p className="min-w-0 flex-1 truncate text-sm font-medium text-brand-green">
-          {location.label || 'Ubicación marcada en el mapa'}
-        </p>
         {viewOnly ? (
           <span className="shrink-0 text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70">
             Solo lectura

@@ -4,6 +4,7 @@ import WelcomeOnboarding from '../components/onboarding/WelcomeOnboarding'
 import Welcome from './Welcome'
 import { getCustomerToken } from '../lib/customerAuth'
 import { getSellerToken } from '../lib/sellerAuth'
+import { resolveBuyerEntryPath } from '../lib/buyerLocation'
 import {
   hasCompletedWelcomeOnboarding,
   markWelcomeOnboardingComplete,
@@ -13,7 +14,7 @@ export default function WelcomeGate() {
   const [completed, setCompleted] = useState(() => hasCompletedWelcomeOnboarding())
 
   if (getSellerToken() || getCustomerToken()) {
-    return <Navigate to="/comprar/provincia" replace />
+    return <Navigate to={resolveBuyerEntryPath()} replace />
   }
 
   if (!completed) {

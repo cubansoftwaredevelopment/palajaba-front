@@ -466,10 +466,10 @@ export const buyerStorePageMapBtn =
   'inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 transition-colors touch-manipulation active:bg-zinc-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:w-auto sm:gap-1.5 sm:px-3.5 sm:text-xs sm:font-semibold'
 
 export const buyerStoreMapOverlay =
-  'fixed inset-0 z-[70] bg-brand-green/25 backdrop-blur-[2px]'
+  'fixed inset-0 z-[80] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'
 
 export const buyerStoreMapModal =
-  'fixed inset-x-3 top-[3dvh] z-[80] flex max-h-[94dvh] min-h-[min(94dvh,40rem)] flex-col overflow-hidden rounded-3xl border border-brand-green/10 bg-brand-white shadow-[0_16px_48px_rgba(89,128,44,0.2)] sm:inset-x-auto sm:left-1/2 sm:w-[min(36rem,calc(100vw-1.5rem))] sm:-translate-x-1/2'
+  'relative flex h-[min(92dvh,44rem)] min-h-0 w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:rounded-3xl'
 
 export const buyerStoreMapModalBody =
   'flex min-h-0 flex-1 flex-col overflow-hidden px-4 pb-4 pt-0'

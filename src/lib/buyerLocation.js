@@ -8,11 +8,24 @@ let persistBuyerPrefs = true
 let memoryLocation = null
 let memoryAdditionalMunicipalities = {}
 
-try {
-  localStorage.removeItem(STORAGE_KEY)
-  localStorage.removeItem(ADDITIONAL_MUNICIPALITIES_KEY)
-} catch {
-  // El navegador puede bloquear localStorage.
+function readStoredJson(key) {
+  try {
+    const raw = localStorage.getItem(key)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function writeStoredJson(key, value) {
+  if (!persistBuyerPrefs) return
+  try {
+    if (value == null) localStorage.removeItem(key)
+    else localStorage.setItem(key, JSON.stringify(value))
+  } catch {
+    // El navegador puede bloquear localStorage.
+  }
 }
 
 /** La vista previa del admin no debe reescribir la ubicación real del navegador. */
@@ -49,6 +62,36 @@ function normalizeStoredLocation(raw) {
   }
 }
 
+function normalizeAdditionalMunicipalities(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {}
+  const store = {}
+  for (const [provinceId, ids] of Object.entries(raw)) {
+    if (!getProvinceById(provinceId) || !Array.isArray(ids)) continue
+    const valid = [...new Set(
+      ids
+        .filter((id) => typeof id === 'string' && id.trim())
+        .map((id) => id.trim())
+        .filter((id) => getMunicipalityById(provinceId, id)),
+    )]
+    if (valid.length > 0) store[provinceId] = valid
+  }
+  return store
+}
+
+function hydrateBuyerZone() {
+  memoryLocation = normalizeStoredLocation(readStoredJson(STORAGE_KEY))
+  memoryAdditionalMunicipalities = normalizeAdditionalMunicipalities(
+    readStoredJson(ADDITIONAL_MUNICIPALITIES_KEY),
+  )
+}
+
+try {
+  hydrateBuyerZone()
+} catch {
+  memoryLocation = null
+  memoryAdditionalMunicipalities = {}
+}
+
 function persistBuyerLocation(province, municipality = null) {
   if (!persistBuyerPrefs) return
   memoryLocation = {
@@ -63,6 +106,7 @@ function persistBuyerLocation(province, municipality = null) {
         }
       : null,
   }
+  writeStoredJson(STORAGE_KEY, memoryLocation)
 }
 
 export function getBuyerLocation() {
@@ -112,6 +156,9 @@ export function setBuyerMunicipality(municipality) {
 
 export function clearBuyerLocation() {
   memoryLocation = null
+  memoryAdditionalMunicipalities = {}
+  writeStoredJson(STORAGE_KEY, null)
+  writeStoredJson(ADDITIONAL_MUNICIPALITIES_KEY, null)
 }
 
 export function hasCompleteBuyerLocation() {
@@ -119,7 +166,7 @@ export function hasCompleteBuyerLocation() {
   return Boolean(location?.province?.id && location?.municipality?.id)
 }
 
-/** Ruta inicial al entrar a comprar según la zona elegida en esta visita. */
+/** Ruta inicial al entrar a comprar según la zona guardada. */
 export function resolveBuyerEntryPath() {
   const location = getBuyerLocation()
   if (location?.province?.id && location?.municipality?.id) return '/comprar'
@@ -158,6 +205,10 @@ export function setAdditionalMunicipalities(provinceId, municipalityIds) {
   }
 
   memoryAdditionalMunicipalities = store
+  writeStoredJson(
+    ADDITIONAL_MUNICIPALITIES_KEY,
+    Object.keys(store).length === 0 ? null : store,
+  )
 }
 
 function readMarketplaceCategoryFilterStore() {

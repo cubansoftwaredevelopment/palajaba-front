@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core'
+import { Geolocation } from '@capacitor/geolocation'
 import { LIVE_EVENT_NOTIFICATION } from './constants'
 import { customerEventsUrl, registerSellerDevice, sellerEventsUrl, unregisterSellerDevice } from './api'
 import { registerCustomerDevice, unregisterCustomerDevice } from '../buyer/api.js'
@@ -172,12 +173,13 @@ export async function watchForegroundLocation(onUpdate, onPermission) {
     onPermission?.('denied')
   }
 
+  const nativePermission = isNativeApp() ? Geolocation.requestPermissions() : null
+
   async function start() {
     if (stopped || denied) return
     stopWatch()
     if (isNativeApp()) {
-      const { Geolocation } = await import('@capacitor/geolocation')
-      const permission = await Geolocation.requestPermissions()
+      const permission = await nativePermission
       if (permission.location !== 'granted' && permission.coarseLocation !== 'granted') {
         deny()
         return
@@ -221,6 +223,21 @@ export async function watchForegroundLocation(onUpdate, onPermission) {
     start()
   }
 
+  if (!isNativeApp()) {
+    if (!navigator.geolocation) {
+      deny()
+    } else {
+      const watchId = navigator.geolocation.watchPosition(
+        (position) => onUpdate(readPosition(position)),
+        (error) => {
+          if (error?.code === 1) deny()
+        },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
+      )
+      stopWatch = () => navigator.geolocation.clearWatch(watchId)
+    }
+  }
+
   let removeAppListener = () => {}
   if (isNativeApp()) {
     const { App } = await import('@capacitor/app')
@@ -236,7 +253,7 @@ export async function watchForegroundLocation(onUpdate, onPermission) {
   }
 
   document.addEventListener('visibilitychange', handleVisibility)
-  await start()
+  if (isNativeApp()) await start()
 
   return () => {
     stopped = true

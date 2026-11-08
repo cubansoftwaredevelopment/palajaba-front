@@ -14,7 +14,9 @@ import { addCustomerFavorite, customerLogin } from '../../buyer/api.js'
 import { setAdminToken } from '../../lib/adminAuth'
 import { setSellerSession } from '../../lib/sellerAuth'
 import { setCustomerSession, updateCustomerProfile } from '../../lib/customerAuth'
+import { resolveBuyerEntryPath } from '../../lib/buyerLocation'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+
 const ACCOUNT_TYPES = [
   { id: 'store', label: 'Tienda' },
   { id: 'customer', label: 'Cliente' },
@@ -60,7 +62,7 @@ export default function Login() {
             sessionStorage.removeItem('pala_jaba_pending_favorite')
           }
         } catch { /* account sign-in succeeds even if saving a favorite temporarily fails */ }
-        navigate('/comprar/provincia', { replace: true })
+        navigate(resolveBuyerEntryPath(), { replace: true })
       } else {
         const normalizedIdentifier = identifier.trim()
         const phoneDigits = normalizedIdentifier.replace(/\D/g, '')

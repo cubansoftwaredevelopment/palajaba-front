@@ -10,6 +10,8 @@ import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPre
 import BuyerStoreBio from './BuyerStoreBio'
 import BuyerStoreBannerCover, { storeBannerAspectClass } from './BuyerStoreBannerCover'
 import { socialLinkLabel, socialLinkUrl, socialLinksFromProfile } from '../../lib/socialLinks'
+import { useLiveLocation } from '../../live/context/LiveLocationContext.jsx'
+import { LOCATION_PERMISSION_GRANTED } from '../../live/constants'
 import {
   buyerStoreMapModal,
   buyerStoreMapModalBody,
@@ -90,6 +92,9 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
   const showMapBanner = banners.length === 0 && hasMap
   const [photoOpen, setPhotoOpen] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
+  const { coords, requestLocation } = useLiveLocation()
+  const [showMyLocation, setShowMyLocation] = useState(false)
+  const viewer = showMyLocation && coords ? coords : null
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
   const mapMotionClass = orderModalMotionClass(mapClosing)
   const [shareOpen, setShareOpen] = useState(false)
@@ -127,7 +132,10 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
         {showMapBanner ? (
           <button
             type="button"
-            onClick={() => setMapOpen(true)}
+            onClick={() => {
+              setShowMyLocation(false)
+              setMapOpen(true)
+            }}
             className={`relative z-0 block w-full cursor-pointer overflow-hidden bg-brand-green/10 text-left touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/80 ${storeBannerAspectClass}`}
             aria-label="Ver ubicación en el mapa"
           >
@@ -172,7 +180,10 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
                 {hasMap ? (
                   <button
                     type="button"
-                    onClick={() => setMapOpen(true)}
+                    onClick={() => {
+              setShowMyLocation(false)
+              setMapOpen(true)
+            }}
                     className="flex h-10 w-10 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-sm touch-manipulation active:bg-zinc-50"
                     aria-label="Ver mapa"
                   >
@@ -239,13 +250,17 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
               aria-labelledby="buyer-store-map-title"
               className={buyerStoreMapModal}
             >
+              <div className="mx-auto mb-1 mt-3 h-1 w-10 shrink-0 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
               <div className={buyerStoreMapModalHeader}>
-                <h2 id="buyer-store-map-title" className="font-display text-base font-bold text-brand-green">
+                <h2 id="buyer-store-map-title" className="min-w-0 font-display text-base font-bold text-brand-green">
                   Ubicación en mapa
                 </h2>
                 <button
                   type="button"
-                  onClick={() => setMapOpen(false)}
+                  onClick={() => {
+                    setShowMyLocation(false)
+                    setMapOpen(false)
+                  }}
                   className="flex h-10 w-10 items-center justify-center rounded-full text-brand-carmelita touch-manipulation active:bg-brand-green/8"
                   aria-label="Cerrar mapa"
                 >
@@ -254,8 +269,27 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
                   </svg>
                 </button>
               </div>
-              <div className={buyerStoreMapModalBody}>
-                <SellerLocationPreview location={catalog.business_location} interactive />
+              <div className={`${buyerStoreMapModalBody} relative`}>
+                <SellerLocationPreview location={catalog.business_location} interactive viewer={viewer} />
+                <button
+                  type="button"
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    setShowMyLocation(true)
+                    requestLocation()
+                  }}
+                  aria-pressed={showMyLocation}
+                  aria-label="Mostrar mi ubicación"
+                  title="Mostrar mi ubicación"
+                  className={`absolute bottom-20 right-7 z-[1300] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(89,128,44,0.18)] ring-1 ring-brand-green/15 touch-manipulation active:scale-95 ${showMyLocation ? 'text-brand-green' : 'text-zinc-500'}`}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
+                    <circle cx="12" cy="12" r="3.25" fill="currentColor" stroke="none" />
+                    <circle cx="12" cy="12" r="7.25" />
+                    <path d="M12 2.5v2.25M12 19.25V21.5M2.5 12h2.25M19.25 12H21.5" strokeLinecap="round" />
+                  </svg>
+                </button>
               </div>
             </div>
           </div>
