@@ -9,7 +9,6 @@ export const PROFILE_PANEL_IDS = Object.freeze({
   gestores: 'gestores',
   advanced: 'advanced',
   feedback: 'feedback',
-  marketplace: 'marketplace',
   advertising: 'advertising',
   plan: 'plan',
   payments: 'payments',
@@ -80,13 +79,6 @@ const PANELS = Object.freeze({
     kind: 'panel',
     icon: 'feedback',
   },
-  [PROFILE_PANEL_IDS.marketplace]: {
-    id: PROFILE_PANEL_IDS.marketplace,
-    label: 'Explorar el marketplace',
-    description: 'Entra desde tu cuenta. Para comprar usa una cuenta de cliente',
-    kind: 'action',
-    icon: 'marketplace',
-  },
   [PROFILE_PANEL_IDS.advertising]: {
     id: PROFILE_PANEL_IDS.advertising,
     label: 'Publicidad',
@@ -114,9 +106,8 @@ export const PROFILE_MENU_SECTIONS = Object.freeze([
   {
     id: 'marketplace',
     title: '',
-    ariaLabel: 'Marketplace, publicidad y plan',
+    ariaLabel: 'Publicidad y plan',
     itemIds: [
-      PROFILE_PANEL_IDS.marketplace,
       PROFILE_PANEL_IDS.advertising,
       PROFILE_PANEL_IDS.plan,
     ],

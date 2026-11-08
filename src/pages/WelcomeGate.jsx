@@ -13,7 +13,11 @@ import {
 export default function WelcomeGate() {
   const [completed, setCompleted] = useState(() => hasCompletedWelcomeOnboarding())
 
-  if (getSellerToken() || getCustomerToken()) {
+  if (getSellerToken()) {
+    return <Navigate to="/tienda" replace />
+  }
+
+  if (getCustomerToken()) {
     return <Navigate to={resolveBuyerEntryPath()} replace />
   }
 

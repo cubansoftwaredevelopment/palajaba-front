@@ -92,7 +92,7 @@ function ArcOption({ open, from, to, index, children }) {
 
 function OptionLabel({ open, life, children }) {
   return (
-    <span className="pointer-events-none absolute bottom-[calc(100%+0.3rem)] left-1/2 w-max -translate-x-1/2">
+    <span className="absolute bottom-[calc(100%+0.3rem)] left-1/2 w-max -translate-x-1/2">
       <span
         className="inline-block whitespace-nowrap rounded-full bg-brand-white/95 px-2.5 py-1 text-xs font-semibold text-brand-green shadow-[0_4px_12px_rgba(89,128,44,0.12)] motion-reduce:animate-none"
         style={driftStyle(open, life.label, life.fade)}
@@ -449,13 +449,12 @@ export default function BuyerMarketplaceNav({
             </NavLink>
           ) : sellerSignedIn ? (
             <NavLink
-              to="/login"
-              state={{ backTo: `${route.pathname}${route.search}${route.hash}`, accountType: 'customer' }}
+              to="/tienda"
               className={optionClass}
-              aria-label="Entrar con cuenta de cliente"
+              aria-label="Ir a mi tienda"
               onClick={() => setMenuOpen(false)}
             >
-              <OptionLabel open={menuOpen} life={lifeFor(2)}>Cuenta de cliente</OptionLabel>
+              <OptionLabel open={menuOpen} life={lifeFor(2)}>Mi tienda</OptionLabel>
               <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
             </NavLink>
           ) : accountSignedIn ? (

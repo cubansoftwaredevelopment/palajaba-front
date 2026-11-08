@@ -22,7 +22,6 @@ test('getProfileMenuSections agrupa General y Cuenta sin solapes', () => {
 
   const ids = sections.flatMap((section) => section.items.map((item) => item.id))
   assert.deepEqual(ids, [
-    PROFILE_PANEL_IDS.marketplace,
     PROFILE_PANEL_IDS.advertising,
     PROFILE_PANEL_IDS.plan,
     PROFILE_PANEL_IDS.identity,
@@ -45,25 +44,22 @@ test('isProfileFormPanel solo marca paneles del formulario principal', () => {
   assert.equal(isProfileFormPanel(PROFILE_PANEL_IDS.location), true)
   assert.equal(isProfileFormPanel(PROFILE_PANEL_IDS.advanced), false)
   assert.equal(isProfileFormPanel(PROFILE_PANEL_IDS.storeContent), false)
-  assert.equal(isProfileFormPanel(PROFILE_PANEL_IDS.marketplace), false)
+  assert.equal(isProfileFormPanel('marketplace'), false)
 })
 
-test('resolveProfileMenuAction abre paneles y trata marketplace como acción', () => {
+test('resolveProfileMenuAction abre paneles y descarta el marketplace', () => {
   assert.deepEqual(resolveProfileMenuAction(PROFILE_PANEL_IDS.social), {
     type: 'open',
     panelId: PROFILE_PANEL_IDS.social,
   })
-  assert.deepEqual(resolveProfileMenuAction(PROFILE_PANEL_IDS.marketplace), {
-    type: 'action',
-    panelId: PROFILE_PANEL_IDS.marketplace,
-  })
+  assert.equal(resolveProfileMenuAction('marketplace'), null)
   assert.equal(resolveProfileMenuAction('no-existe'), null)
 })
 
 test('openProfilePanel ignora acciones y closeProfilePanel vuelve al hub', () => {
   assert.equal(openProfilePanel(null, PROFILE_PANEL_IDS.identity), PROFILE_PANEL_IDS.identity)
-  assert.equal(openProfilePanel(PROFILE_PANEL_IDS.identity, PROFILE_PANEL_IDS.marketplace), PROFILE_PANEL_IDS.identity)
-  assert.equal(isProfileHubPanel(PROFILE_PANEL_IDS.marketplace), false)
+  assert.equal(openProfilePanel(PROFILE_PANEL_IDS.identity, 'marketplace'), PROFILE_PANEL_IDS.identity)
+  assert.equal(isProfileHubPanel('marketplace'), false)
   assert.equal(isProfileHubPanel(PROFILE_PANEL_IDS.advertising), true)
   assert.equal(openProfilePanel(null, PROFILE_PANEL_IDS.advertising), PROFILE_PANEL_IDS.advertising)
   assert.equal(closeProfilePanel(), null)

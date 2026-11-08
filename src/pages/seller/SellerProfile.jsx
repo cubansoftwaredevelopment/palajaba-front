@@ -50,7 +50,6 @@ import {
   sameBusinessArea,
   sameDeliveryAreas,
 } from '../../lib/businessArea'
-import { beginSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
 import {
   socialLinksError,
   socialLinksFromProfile,
@@ -240,12 +239,6 @@ export default function SellerProfile() {
   function handleMenuSelect(panelId) {
     const action = resolveProfileMenuAction(panelId)
     if (!action) return
-
-    if (action.type === 'action' && action.panelId === PROFILE_PANEL_IDS.marketplace) {
-      const path = beginSellerMarketplaceVisit(profile, '/tienda/perfil')
-      navigate(path)
-      return
-    }
 
     setError('')
     setActivePanel(openProfilePanel(activePanel, action.panelId))

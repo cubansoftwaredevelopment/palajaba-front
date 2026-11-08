@@ -39,6 +39,7 @@ import AdminBanners from './pages/AdminBanners'
 import AdminDiscountCodes from './pages/AdminDiscountCodes'
 import AdminSettings from './pages/AdminSettings'
 import AdminFinance from './pages/AdminFinance'
+import RejectSellerMarketplace from './buyer/components/RejectSellerMarketplace'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
 import { BuyerDisplayCurrencyProvider, BuyerJabaProvider } from './buyer/context.js'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
@@ -87,7 +88,11 @@ const router = createBrowserRouter([
       { path: 'cancel', element: <QvaPayReturn result="cancel" /> },
       {
         path: 'comprar',
-        element: <BuyerJabaLayout />,
+        element: (
+          <RejectSellerMarketplace>
+            <BuyerJabaLayout />
+          </RejectSellerMarketplace>
+        ),
         children: [
           { path: 'provincia', element: <BuyerSelectProvince /> },
           { path: 'municipio', element: <BuyerSelectMunicipality /> },
