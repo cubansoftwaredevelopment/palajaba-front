@@ -353,10 +353,6 @@ export default function SellerOrderDetailModal({
       setLocalError('Escribe el motivo del reembolso.')
       return
     }
-    if (!refundImages.length) {
-      setLocalError('Adjunta al menos una imagen del motivo.')
-      return
-    }
     if (!refundPreview.changed) {
       setLocalError('Baja una cantidad, quita un producto o devuelve el domicilio.')
       return
