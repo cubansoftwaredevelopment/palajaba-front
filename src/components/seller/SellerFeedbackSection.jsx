@@ -19,7 +19,7 @@ const FEEDBACK_TYPES = [
   { id: 'suggestion', label: 'Sugerencia' },
 ]
 
-export default function SellerFeedbackSection({ embedded = false }) {
+export default function SellerFeedbackSection({ embedded = false, readOnly = false }) {
   const [open, setOpen] = useState(embedded)
   const [feedbackType, setFeedbackType] = useState('suggestion')
   const [message, setMessage] = useState('')
@@ -119,7 +119,7 @@ export default function SellerFeedbackSection({ embedded = false }) {
         </p>
       )}
 
-      <button type="submit" disabled={!canSubmit} className={`mt-4 ${sellerBtnPrimary}`}>
+      <button type="submit" disabled={readOnly || !canSubmit} className={`mt-4 ${sellerBtnPrimary}`}>
         {loading ? 'Enviando…' : 'Enviar mensaje'}
       </button>
     </form>

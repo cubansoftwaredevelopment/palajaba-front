@@ -13,6 +13,7 @@ import SellerCatalogActionsMenu from '../components/SellerCatalogActionsMenu'
 import SellerCatalogFab from '../components/SellerCatalogFab'
 import SellerCatalogView from '../components/SellerCatalogView'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
+import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import ShareCatalogModal from '../components/ShareCatalogModal'
 import ShareSelectedProductsModal from '../components/ShareSelectedProductsModal'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
@@ -33,6 +34,7 @@ import { getUserFacingMessage } from '../../lib/userFacingError'
 
 export default function SellerCatalog() {
   const { profile } = useOutletContext()
+  const readOnly = useSellerReadOnly()
   const navigate = useNavigate()
   const [summary, setSummary] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -158,9 +160,9 @@ export default function SellerCatalog() {
   }
 
   const hasLocalCategories = (summary?.categories?.length ?? 0) > 0
-  const canReorderCategories = (summary?.categories?.length ?? 0) >= 2
+  const canReorderCategories = !readOnly && (summary?.categories?.length ?? 0) >= 2
   const canShareCatalog = Boolean(profile?.store_name)
-  const canChangeTheme = Boolean(resolveStoreSlug(profile))
+  const canChangeTheme = !readOnly && Boolean(resolveStoreSlug(profile))
   const showCatalogActionsMenu =
     !loading && (canReorderCategories || canShareCatalog || canChangeTheme)
   const showProductForm = summary && (showCreateProduct || productToEdit)
@@ -216,7 +218,7 @@ export default function SellerCatalog() {
         ) : null}
 
         {!loading && !error && !hasLocalCategories && (
-          <SellerCatalogEmpty onCreateCategory={() => setShowCreateCategory(true)} />
+          <SellerCatalogEmpty onCreateCategory={readOnly ? undefined : () => setShowCreateCategory(true)} />
         )}
 
         {!loading && !error && hasLocalCategories && (
@@ -227,17 +229,19 @@ export default function SellerCatalog() {
               selectedProductIds={selectedProductIds}
               onToggleProduct={toggleProductSelection}
               onShareSelected={openShareSelected}
-              onAddProduct={openCreateProduct}
+              onAddProduct={readOnly ? undefined : openCreateProduct}
               onViewProduct={setProductToView}
-              onEditProduct={setProductToEdit}
-              onDeleteProduct={setProductToDelete}
-              onDeleteCategory={setCategoryToDelete}
-              onOrganizeProducts={setCategoryToOrganize}
+              onEditProduct={readOnly ? undefined : setProductToEdit}
+              onDeleteProduct={readOnly ? undefined : setProductToDelete}
+              onDeleteCategory={readOnly ? undefined : setCategoryToDelete}
+              onOrganizeProducts={readOnly ? undefined : setCategoryToOrganize}
             />
-            <SellerCatalogFab
-              onAddCategory={() => setShowCreateCategory(true)}
-              onAddProduct={() => openCreateProduct()}
-            />
+            {readOnly ? null : (
+              <SellerCatalogFab
+                onAddCategory={() => setShowCreateCategory(true)}
+                onAddProduct={() => openCreateProduct()}
+              />
+            )}
           </>
         )}
 
@@ -246,8 +250,8 @@ export default function SellerCatalog() {
             product={productToView.product}
             categoryName={productToView.categoryName}
             onClose={() => setProductToView(null)}
-            onEdit={setProductToEdit}
-            onDelete={setProductToDelete}
+            onEdit={readOnly ? undefined : setProductToEdit}
+            onDelete={readOnly ? undefined : setProductToDelete}
           />
         )}
 

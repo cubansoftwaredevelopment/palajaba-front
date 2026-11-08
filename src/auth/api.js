@@ -32,20 +32,11 @@ export function completePasswordReset(payload) {
   })
 }
 
-export async function sellerLogin(payload) {
-  const data = await request('/api/auth/login', {
+export function sellerLogin(payload) {
+  return request('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
-
-  if (data?.subscription_expired) {
-    throw new ApiError(data.subscription_expired.message, {
-      code: 'subscription_expired',
-      data: data.subscription_expired,
-    })
-  }
-
-  return data
 }
 
 function customerHeaders(token) { return { Authorization: `Bearer ${token}` } }

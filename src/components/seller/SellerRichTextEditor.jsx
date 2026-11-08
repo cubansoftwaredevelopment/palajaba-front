@@ -136,7 +136,7 @@ function ToolbarMenu({ open, onClose, label, pressed, onToggle, buttonClass, but
   )
 }
 
-export default function SellerRichTextEditor({ content, onChange, uploadImage, placeholder, imageAlt = 'Imagen de la página' }) {
+export default function SellerRichTextEditor({ content, onChange, uploadImage, placeholder, imageAlt = 'Imagen de la página', editable = true }) {
   const inputRef = useRef(null)
   const onChangeRef = useRef(onChange)
   const colorSelection = useRef(null)
@@ -156,6 +156,7 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
 
   const editor = useEditor({
     extensions,
+    editable,
     content: content || EMPTY_STORE_PAGE,
     onUpdate: ({ editor: updated }) => {
       onChangeRef.current?.(updated.getJSON())
@@ -313,6 +314,8 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
 
   return (
     <div className="flex flex-col gap-2">
+      {editable ? (
+      <>
       <input
         ref={inputRef}
         type="file"
@@ -483,7 +486,9 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
         </form>
       ) : null}
       </div>
-      <div className="relative min-h-48 overflow-y-auto rounded-b-xl border border-t-0 border-brand-green/12 bg-white">
+      </>
+      ) : null}
+      <div className={`relative min-h-48 overflow-y-auto border border-brand-green/12 bg-white ${editable ? 'rounded-b-xl border-t-0' : 'rounded-xl'}`}>
         <div className="min-h-full [&_.ProseMirror]:flow-root [&_.ProseMirror_p]:m-0 [&_.ProseMirror_.node-image_[data-node-view-wrapper]]:!m-0 [&_.ProseMirror_.node-image_img]:!block [&_.ProseMirror_.node-image_img]:!h-auto [&_.ProseMirror_.node-image_img]:!w-full [&_.ProseMirror_a]:font-semibold [&_.ProseMirror_a]:underline [&_.ProseMirror_a]:underline-offset-2 [&_.ProseMirror_h1]:my-2 [&_.ProseMirror_h1]:font-display [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:leading-tight [&_.ProseMirror_h2]:my-2 [&_.ProseMirror_h2]:font-display [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:leading-tight [&_.ProseMirror_h3]:my-2 [&_.ProseMirror_h3]:font-display [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h4]:my-2 [&_.ProseMirror_h4]:text-base [&_.ProseMirror_h4]:font-semibold [&_.ProseMirror_ol]:my-2 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_ul]:my-2 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-5">
           <EditorContent editor={editor} />
         </div>

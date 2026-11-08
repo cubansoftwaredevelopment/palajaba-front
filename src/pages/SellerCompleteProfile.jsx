@@ -34,10 +34,12 @@ import { IMAGE_UPLOAD_HINT, validateImageFile } from '../lib/imageUpload'
 import { dedupeDeliveryAreas } from '../lib/businessArea'
 import { getSellerToken, updateSellerProfileCache } from '../lib/sellerAuth'
 import { socialLinksError, socialLinksFromProfile, socialLinksPayload } from '../lib/socialLinks'
+import { useSellerReadOnly } from '../components/seller/sellerReadOnly'
 
 export default function SellerCompleteProfile() {
   const navigate = useNavigate()
   const { profile, refreshProfile } = useOutletContext()
+  const readOnly = useSellerReadOnly()
   const fileInputRef = useRef(null)
 
   const [photoUrl, setPhotoUrl] = useState(profile?.profile_photo_url ?? null)
@@ -126,7 +128,7 @@ export default function SellerCompleteProfile() {
     }
   }
 
-  const submitDisabled = loading || photoUploading
+  const submitDisabled = readOnly || loading || photoUploading
 
   const submitButton = (
     <button
@@ -156,6 +158,7 @@ export default function SellerCompleteProfile() {
         </div>
 
         <form id="seller-profile-form" onSubmit={handleSubmit} className={`mt-4 ${sellerFormGrid}`} noValidate>
+          <fieldset disabled={readOnly} className="contents min-w-0 border-0 p-0">
           <input
             ref={fileInputRef}
             type="file"
@@ -249,7 +252,8 @@ export default function SellerCompleteProfile() {
             </p>
           )}
 
-          <div className={`hidden sm:block ${sellerFormActions}`}>{submitButton}</div>
+          {readOnly ? null : <div className={`hidden sm:block ${sellerFormActions}`}>{submitButton}</div>}
+          </fieldset>
         </form>
       </section>
 
@@ -264,9 +268,11 @@ export default function SellerCompleteProfile() {
         />
       )}
 
+      {readOnly ? null : (
       <div className="sm:hidden">
         <div className={sellerStickyBar}>{submitButton}</div>
       </div>
+      )}
     </>
   )
 }

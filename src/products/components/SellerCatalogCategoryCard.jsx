@@ -57,7 +57,7 @@ export default function SellerCatalogCategoryCard({
               </svg>
             </button>
           ) : null}
-          {(category.product_count ?? products.length) > 0 ? (
+          {onOrganizeProducts && (category.product_count ?? products.length) > 0 ? (
             <button
               type="button"
               onClick={() => onOrganizeProducts(category)}
@@ -70,6 +70,7 @@ export default function SellerCatalogCategoryCard({
               </svg>
             </button>
           ) : null}
+          {onDeleteCategory ? (
           <button
             type="button"
             onClick={() => onDeleteCategory(category)}
@@ -80,6 +81,7 @@ export default function SellerCatalogCategoryCard({
               <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
             </svg>
           </button>
+          ) : null}
         </div>
       </div>
 
@@ -100,6 +102,7 @@ export default function SellerCatalogCategoryCard({
           </div>
         )}
 
+        {onAddProduct ? (
         <button
           type="button"
           onClick={() => onAddProduct(category.id)}
@@ -110,6 +113,7 @@ export default function SellerCatalogCategoryCard({
           </svg>
           Agregar producto
         </button>
+        ) : null}
       </div>
     </article>
   )

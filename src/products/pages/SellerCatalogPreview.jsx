@@ -10,6 +10,7 @@ import BuyerStoreProfileHeader from '../../buyer/components/BuyerStoreProfileHea
 import BuyerStoreServiceFooter from '../../buyer/components/BuyerStoreServiceFooter'
 import { buyerHomeSections } from '../../buyer/components/buyerStyles'
 import StatePanel from '../../components/ui/StatePanel'
+import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import LoadingState from '../../components/ui/LoadingState'
 import { BuyerDisplayCurrencyProvider, useBuyerDisplayCurrency } from '../../buyer/context.js'
 import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
@@ -66,6 +67,7 @@ export default function SellerCatalogPreview() {
 
 function SellerCatalogPreviewContent() {
   const { profile, refreshProfile } = useOutletContext()
+  const readOnly = useSellerReadOnly()
   const { currencies } = useBuyerDisplayCurrency()
   const storeSlug = resolveStoreSlug(profile)
   const previewLocation = useMemo(() => {
@@ -244,7 +246,7 @@ function SellerCatalogPreviewContent() {
   const headerEnd = (
     <div className="flex items-center gap-2">
       <BuyerLoginButton />
-      <CatalogPreviewThemeButton onClick={() => setShowThemePicker(true)} />
+      {readOnly ? null : <CatalogPreviewThemeButton onClick={() => setShowThemePicker(true)} />}
     </div>
   )
 
@@ -276,7 +278,7 @@ function SellerCatalogPreviewContent() {
           Ir al perfil
         </Link>
       </StatePanel>,
-      { header: <CatalogPreviewThemeButton onClick={() => setShowThemePicker(true)} /> },
+      { header: readOnly ? null : <CatalogPreviewThemeButton onClick={() => setShowThemePicker(true)} /> },
     )
   }
 

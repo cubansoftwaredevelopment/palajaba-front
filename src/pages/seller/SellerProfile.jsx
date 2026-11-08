@@ -12,6 +12,7 @@ import SellerStoreBanners from '../../components/seller/SellerStoreBanners'
 import SellerStorePages from '../../components/seller/SellerStorePages'
 import SellerUpgradePlan from '../../components/seller/SellerUpgradePlan'
 import SellerQvaPaySettings from '../../components/seller/SellerQvaPaySettings'
+import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection'
 import ConfirmModal from '../../components/ConfirmModal'
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
@@ -109,6 +110,7 @@ export default function SellerProfile() {
   const navigate = useNavigate()
   const routeLocation = useLocation()
   const { profile, refreshProfile } = useOutletContext()
+  const readOnly = useSellerReadOnly()
   const fileInputRef = useRef(null)
   const menuSections = useMemo(() => getProfileMenuSections(profile), [profile])
 
@@ -349,7 +351,7 @@ export default function SellerProfile() {
 
   if (!profile) return null
 
-  const submitDisabled = loading || photoUploading || !hasChanges
+  const submitDisabled = readOnly || loading || photoUploading || !hasChanges
   const panelMeta = getProfilePanel(activePanel)
   const showFormSave = isProfileFormPanel(activePanel)
 
@@ -504,19 +506,19 @@ export default function SellerProfile() {
       case PROFILE_PANEL_IDS.gestores:
         return gestoresFields
       case PROFILE_PANEL_IDS.advanced:
-        return <SellerAdvancedProfileSettings profile={profile} onUpdated={refreshProfile} embedded />
+        return <SellerAdvancedProfileSettings profile={profile} onUpdated={refreshProfile} embedded readOnly={readOnly} />
       case PROFILE_PANEL_IDS.feedback:
-        return <SellerFeedbackSection embedded />
+        return <SellerFeedbackSection embedded readOnly={readOnly} />
       case PROFILE_PANEL_IDS.advertising:
-        return <SellerAdvertisingPlans profile={profile} />
+        return <SellerAdvertisingPlans profile={profile} readOnly={readOnly} />
       case PROFILE_PANEL_IDS.plan:
         return <SellerUpgradePlan profile={profile} onUpdated={refreshProfile} />
       case PROFILE_PANEL_IDS.banners:
-        return <SellerStoreBanners profile={profile} onUpdated={refreshProfile} />
+        return <SellerStoreBanners profile={profile} onUpdated={refreshProfile} readOnly={readOnly} />
       case PROFILE_PANEL_IDS.storeContent:
-        return <SellerStorePages profile={profile} onUpdated={refreshProfile} />
+        return <SellerStorePages profile={profile} onUpdated={refreshProfile} readOnly={readOnly} />
       case PROFILE_PANEL_IDS.payments:
-        return <SellerQvaPaySettings onUpdated={refreshProfile} />
+        return <SellerQvaPaySettings onUpdated={refreshProfile} readOnly={readOnly} />
       default:
         return null
     }
@@ -540,7 +542,7 @@ export default function SellerProfile() {
         />
       ) : null}
       <CustomerQvaPayPrompt
-        open={showQvaPayPrompt}
+        open={showQvaPayPrompt && !readOnly}
         description="Agrega y verifica tu usuario de QvaPay en tu perfil para poder recibir pagos."
         addLabel="Ir al perfil"
         onAddUser={() => {
@@ -601,6 +603,7 @@ export default function SellerProfile() {
           type="file"
           accept="image/jpeg,image/png,image/webp"
           className="sr-only"
+          disabled={readOnly}
           onChange={handlePhotoChange}
         />
 
@@ -641,7 +644,9 @@ export default function SellerProfile() {
                 profile={profile}
                 photoUrl={photoUrl}
                 photoUploading={photoUploading}
-                onPhotoClick={() => fileInputRef.current?.click()}
+                onPhotoClick={() => {
+                  if (!readOnly) fileInputRef.current?.click()
+                }}
                 onUpgradeClick={() => handleMenuSelect(PROFILE_PANEL_IDS.plan)}
               />
 
@@ -676,7 +681,9 @@ export default function SellerProfile() {
                 className={`${sellerSectionGap} rounded-2xl border border-brand-green/12 bg-brand-white p-4 shadow-sm sm:p-5`}
                 noValidate
               >
-                {renderActivePanelBody()}
+                <fieldset disabled={readOnly} className="min-w-0 border-0 p-0">
+                  {renderActivePanelBody()}
+                </fieldset>
 
                 {error && (
                   <p className={sellerAlertError} role="alert">
@@ -684,7 +691,7 @@ export default function SellerProfile() {
                   </p>
                 )}
 
-                <div className={sellerFormActions}>{submitButton}</div>
+                {readOnly ? null : <div className={sellerFormActions}>{submitButton}</div>}
               </form>
             ) : (
               <div className="rounded-2xl border border-brand-green/12 bg-brand-white p-4 shadow-sm sm:p-5">

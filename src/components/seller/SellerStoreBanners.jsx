@@ -11,7 +11,7 @@ import { buyerStorePageHeader, buyerStorePageName } from '../../buyer/components
 
 const PREVIEW_MIN_WIDTH = 320
 
-export default function SellerStoreBanners({ profile, onUpdated }) {
+export default function SellerStoreBanners({ profile, onUpdated, readOnly = false }) {
   const fileInputRef = useRef(null)
   const [banners, setBanners] = useState(profile?.store_banners ?? [])
   const [uploading, setUploading] = useState(false)
@@ -106,7 +106,7 @@ export default function SellerStoreBanners({ profile, onUpdated }) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading || !canManageBanners}
+              disabled={readOnly || uploading || !canManageBanners}
               className={`${sellerBtnPrimary} !w-auto px-4`}
             >
               {uploading ? 'Subiendo…' : 'Agregar banner'}
@@ -144,7 +144,7 @@ export default function SellerStoreBanners({ profile, onUpdated }) {
                         <button
                           type="button"
                           onClick={() => handleToggle(banner)}
-                          disabled={togglingId === banner.id || !canManageBanners}
+                          disabled={readOnly || togglingId === banner.id || !canManageBanners}
                           className={`${sellerBtnSecondary} !w-auto px-3 text-xs`}
                         >
                           {togglingId === banner.id ? 'Guardando…' : (active ? 'Desactivar' : 'Activar')}
@@ -152,7 +152,7 @@ export default function SellerStoreBanners({ profile, onUpdated }) {
                         <button
                           type="button"
                           onClick={() => handleDelete(banner.id)}
-                          disabled={deletingId === banner.id}
+                          disabled={readOnly || deletingId === banner.id}
                           className={`${sellerBtnSecondary} !w-auto px-3 text-xs`}
                         >
                           {deletingId === banner.id ? 'Quitando…' : 'Quitar'}

@@ -61,9 +61,11 @@ export default function SellerCatalogEmpty({ onCreateCategory }) {
         </ol>
 
         <div className="mt-5 flex flex-col gap-2">
-          <button type="button" onClick={onCreateCategory} className={sellerBtnPrimary}>
-            Crear primera categoría
-          </button>
+          {onCreateCategory ? (
+            <button type="button" onClick={onCreateCategory} className={sellerBtnPrimary}>
+              Crear primera categoría
+            </button>
+          ) : null}
           <p className={`text-center ${sellerComingSoon}`}>
             La categoría local organiza tu tienda; la global clasifica el producto en el marketplace.
           </p>

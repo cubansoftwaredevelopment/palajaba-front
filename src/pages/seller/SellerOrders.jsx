@@ -7,6 +7,7 @@ import SellerOrderItem from '../../components/seller/SellerOrderItem'
 import SellerOrdersGroup from '../../components/seller/SellerOrdersGroup'
 import SellerOrdersTabs from '../../components/seller/SellerOrdersTabs'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
+import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import { sellerBtnPrimaryCompact, sellerChip, sellerFocusRing, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
@@ -85,6 +86,7 @@ const EmptyOrdersIcon = (
 )
 
 export default function SellerOrders() {
+  const readOnly = useSellerReadOnly()
   const [searchParams, setSearchParams] = useSearchParams()
   const orderSearchTarget = searchParams.get('search')?.trim() ?? ''
   const [orders, setOrders] = useState([])
@@ -409,7 +411,7 @@ export default function SellerOrders() {
         eyebrow="Pedidos"
         title="Bandeja de pedidos"
         subtitle="Usa las pestañas para alternar entre pendientes y ventas ya cerradas."
-        action={(
+        action={readOnly ? null : (
           <button
             type="button"
             className={sellerBtnPrimaryCompact}

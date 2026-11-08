@@ -71,7 +71,9 @@ export default function SellerCatalogProductItem({
         </span>
       </button>
 
+      {onEdit || onDelete ? (
       <div className="flex shrink-0 items-center gap-1">
+        {onEdit ? (
         <button
           type="button"
           onClick={() => onEdit(product)}
@@ -82,6 +84,8 @@ export default function SellerCatalogProductItem({
             <path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
           </svg>
         </button>
+        ) : null}
+        {onDelete ? (
         <button
           type="button"
           onClick={() => onDelete(product)}
@@ -92,7 +96,9 @@ export default function SellerCatalogProductItem({
             <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
           </svg>
         </button>
+        ) : null}
       </div>
+      ) : null}
     </div>
   )
 }

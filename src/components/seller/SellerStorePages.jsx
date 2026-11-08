@@ -63,7 +63,7 @@ function draftsFromProfile(profile) {
   )
 }
 
-export default function SellerStorePages({ profile, onUpdated }) {
+export default function SellerStorePages({ profile, onUpdated, readOnly = false }) {
   const [pageKey, setPageKey] = useState(STORE_PAGES[0].key)
   const [drafts, setDrafts] = useState(() => draftsFromProfile(profile))
   const [saving, setSaving] = useState(false)
@@ -143,6 +143,7 @@ export default function SellerStorePages({ profile, onUpdated }) {
       <SellerRichTextEditor
         key={pageKey}
         content={drafts[pageKey] || EMPTY_STORE_PAGE}
+        editable={!readOnly}
         onChange={updateDraft}
         uploadImage={uploadImage}
         placeholder={`Escribe ${activePage.label.toLowerCase()}…`}
@@ -153,7 +154,7 @@ export default function SellerStorePages({ profile, onUpdated }) {
         <button type="button" onClick={() => setPreviewOpen(true)} className={sellerBtnSecondary}>
           Vista previa
         </button>
-        <button type="button" onClick={savePage} disabled={saving} className={sellerBtnPrimary}>
+        <button type="button" onClick={savePage} disabled={readOnly || saving} className={sellerBtnPrimary}>
           {saving ? 'Guardando…' : `Guardar ${activePage.label}`}
         </button>
       </div>

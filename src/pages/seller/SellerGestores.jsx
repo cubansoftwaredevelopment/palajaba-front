@@ -24,6 +24,7 @@ import {
   maxGestoresForPlan,
 } from '../../lib/gestorPlanLimits'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import {
   areAllProductsSelected,
   buildCatalogAccessPayload,
@@ -72,6 +73,7 @@ const PeopleIcon = (
 )
 
 export default function SellerGestores() {
+  const readOnly = useSellerReadOnly()
   const { profile } = useOutletContext()
   const storeSlug = resolveStoreSlug(profile)
   const loginUrl = storeSlug
@@ -436,7 +438,7 @@ export default function SellerGestores() {
                 setNewUsername(e.target.value)
               }}
               className={sellerInput}
-              disabled={creating || atGestorLimit}
+              disabled={readOnly || creating || atGestorLimit}
             />
             {createError ? (
               <p className="mt-1.5 text-xs text-brand-carmelita" role="alert">
@@ -448,7 +450,7 @@ export default function SellerGestores() {
           </div>
           <button
             type="submit"
-            disabled={creating || atGestorLimit || !newUsername.trim()}
+            disabled={readOnly || creating || atGestorLimit || !newUsername.trim()}
             className={sellerBtnPrimaryCompact}
           >
             {creating ? 'Creando…' : 'Agregar'}
@@ -481,7 +483,8 @@ export default function SellerGestores() {
                   <button
                     type="button"
                     onClick={() => setGestorToDelete(gestor)}
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-carmelita/10 active:text-brand-carmelita"
+                    disabled={readOnly}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-carmelita/10 active:text-brand-carmelita disabled:opacity-40"
                     aria-label={`Eliminar gestor ${gestor.username}`}
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
@@ -508,7 +511,7 @@ export default function SellerGestores() {
         <ul className="mt-4 space-y-1" aria-label="Teléfonos para ventas">
           <li>
             <label className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 transition-colors touch-manipulation active:bg-brand-green/5">
-              <Checkbox checked={includeStorePhone} onChange={handleToggleStorePhone} />
+              <Checkbox checked={includeStorePhone} disabled={readOnly} onChange={handleToggleStorePhone} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-brand-green">
                   Número del negocio
@@ -524,7 +527,7 @@ export default function SellerGestores() {
             return (
               <li key={gestor.id}>
                 <label className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 transition-colors touch-manipulation active:bg-brand-green/5">
-                  <Checkbox checked={checked} onChange={() => handleToggleCheckoutPhone(gestor.id)} />
+                  <Checkbox checked={checked} disabled={readOnly} onChange={() => handleToggleCheckoutPhone(gestor.id)} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-brand-green">
                       @{gestor.username}
@@ -553,7 +556,7 @@ export default function SellerGestores() {
           <button
             type="button"
             onClick={handleSaveCheckoutPhones}
-            disabled={!checkoutPhonesIsDirty || savingCheckoutPhones}
+            disabled={readOnly || !checkoutPhonesIsDirty || savingCheckoutPhones}
             className={sellerBtnPrimary}
           >
             {savingCheckoutPhones ? 'Guardando…' : 'Guardar teléfonos de venta'}
@@ -573,6 +576,7 @@ export default function SellerGestores() {
           <button
             type="button"
             className={sellerChoice(accessMode === 'all')}
+            disabled={readOnly}
             onClick={() => handleModeChange('all')}
           >
             Todos
@@ -580,6 +584,7 @@ export default function SellerGestores() {
           <button
             type="button"
             className={sellerChoice(accessMode === 'selected')}
+            disabled={readOnly}
             onClick={() => handleModeChange('selected')}
           >
             Solo seleccionados
@@ -600,7 +605,8 @@ export default function SellerGestores() {
                 <button
                   type="button"
                   onClick={handleSelectAll}
-                  className="text-xs font-semibold text-brand-green touch-manipulation active:text-brand-green/80"
+                  disabled={readOnly}
+                  className="text-xs font-semibold text-brand-green touch-manipulation active:text-brand-green/80 disabled:opacity-40"
                 >
                   {allSelected ? 'Quitar todos' : 'Seleccionar todos'}
                 </button>
@@ -622,7 +628,7 @@ export default function SellerGestores() {
                     >
                       <Checkbox
                         checked={checked}
-                        disabled={disabled}
+                        disabled={disabled || readOnly}
                         onChange={() => handleToggleProduct(product.product_id)}
                       />
                       {product.image_url ? (
@@ -665,7 +671,7 @@ export default function SellerGestores() {
           <button
             type="button"
             onClick={handleSaveAccess}
-            disabled={!accessIsDirty || savingAccess || products.length === 0}
+            disabled={readOnly || !accessIsDirty || savingAccess || products.length === 0}
             className={sellerBtnPrimary}
           >
             {savingAccess ? 'Guardando…' : 'Guardar productos de la red'}

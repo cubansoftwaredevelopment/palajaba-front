@@ -6,8 +6,7 @@ import SellerNotificationToast from './SellerNotificationToast'
 import SellerNotificationsPanel from './SellerNotificationsPanel'
 import SellerShell from './SellerShell'
 import StatePanel from '../ui/StatePanel'
-import SubscriptionExpiredScreen from './SubscriptionExpiredScreen'
-import { ApiError, fetchSellerNotifications, fetchSellerOrders, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
+import { fetchSellerNotifications, fetchSellerOrders, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
 import { fetchSellerProfile } from '../../auth/api.js'
 import {
   clearSellerSession,
@@ -16,6 +15,7 @@ import {
 } from '../../lib/sellerAuth'
 import { clearSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
 import { getSellerDefaultPath, getSellerNavItems, sellerHasGestores } from '../../lib/planAccess'
+import { SellerReadOnlyContext } from './sellerReadOnly'
 import { getSellerPlan } from '../../subscriptions/constants.js'
 import { requestSellerOrdersRefresh, SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { requestSellerProductsRefresh } from '../../lib/sellerProductsRefresh'
@@ -36,7 +36,6 @@ export default function SellerLayout() {
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
   const [pendingOrderCount, setPendingOrderCount] = useState(0)
-  const [expiredInfo, setExpiredInfo] = useState(null)
   const previousNotificationCountRef = useRef(null)
 
   const refreshProfile = useCallback(async () => {
@@ -151,11 +150,6 @@ export default function SellerLayout() {
         }
       } catch (err) {
         if (!cancelled) {
-          if (err instanceof ApiError && err.code === 'subscription_expired') {
-            clearSellerSession()
-            setExpiredInfo(err.data)
-            return
-          }
           if (isSessionError(err)) {
             clearSellerSession()
           }
@@ -243,20 +237,6 @@ export default function SellerLayout() {
     return <SellerLoadingScreen />
   }
 
-  if (expiredInfo) {
-    return (
-      <SubscriptionExpiredScreen
-        storeName={expiredInfo.store_name}
-        subscriptionEndsAt={expiredInfo.subscription_ends_at}
-        renewalContactPhone={expiredInfo.renewal_contact_phone}
-        onBack={() => {
-          setExpiredInfo(null)
-          navigate('/login', { replace: true })
-        }}
-      />
-    )
-  }
-
   if (loadError) {
     return (
       <main className="flex min-h-dvh flex-col bg-brand-white">
@@ -293,9 +273,11 @@ export default function SellerLayout() {
   }
 
   const sellerNavItems = getSellerNavItems(profile)
+  const readOnly = profile?.subscription_active === false
 
   if (isCatalogPreview) {
     return (
+      <SellerReadOnlyContext.Provider value={readOnly}>
       <>
         <Outlet context={{ profile, refreshProfile }} />
         <SellerNotificationToast
@@ -317,11 +299,12 @@ export default function SellerLayout() {
           />
         )}
       </>
+      </SellerReadOnlyContext.Provider>
     )
   }
 
   return (
-    <>
+    <SellerReadOnlyContext.Provider value={readOnly}>
       <SellerShell
         storeName={profile.store_name}
         planName={getSellerPlan(profile).name}
@@ -364,6 +347,6 @@ export default function SellerLayout() {
           onConfirm={confirmLogout}
         />
       )}
-    </>
+    </SellerReadOnlyContext.Provider>
   )
 }

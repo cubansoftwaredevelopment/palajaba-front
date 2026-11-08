@@ -148,6 +148,12 @@ export default function SellerShell({
             </div>
           </header>
 
+          {!subscriptionActive ? (
+            <p className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm font-semibold text-amber-900" role="status">
+              Tu suscripción está inactiva. Puedes ver la cuenta y pedir un plan. El resto está en solo lectura.
+            </p>
+          ) : null}
+
           {catalogLayout ? (
             <main className={mainClassName}>{children}</main>
           ) : (

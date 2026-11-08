@@ -251,8 +251,8 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
                       currentPlanName={currentPlanName}
                       targetPlanName={tier.name}
                       billingLabel={BILLING_LABELS[billing]}
-                      label={`Pasar a ${tier.name}`}
-                      disabled={isCurrentTier}
+                      label={isCurrentTier && subscriptionInactive ? `Renovar ${tier.name}` : `Pasar a ${tier.name}`}
+                      disabled={isCurrentTier && !subscriptionInactive}
                     />
                   )}
                 />

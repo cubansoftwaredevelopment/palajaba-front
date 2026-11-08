@@ -40,6 +40,7 @@ import {
   sellerModalSheet,
   sellerModalTitle,
 } from './sellerStyles'
+import { useSellerReadOnly } from './sellerReadOnly'
 
 const PAYMENT_CURRENCIES = ['CUP', 'USD', 'EUR', 'MLC']
 
@@ -99,6 +100,7 @@ export default function SellerOrderDetailModal({
   onQvaRefund,
   onSubmitEvidence,
 }) {
+  const readOnly = useSellerReadOnly()
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [editableItems, setEditableItems] = useState(order.items)
   const [deliveryPrice, setDeliveryPrice] = useState(
@@ -192,7 +194,7 @@ export default function SellerOrderDetailModal({
   const supportReported = Boolean(qvapay?.seller_support_reported) || supportReportedOrderId === order.id
   const qvaAwaitingStore = isQvaOrder && qvapay?.request_status === 'pending_seller'
   const qvaAwaitingEvidence = isQvaOrder && qvapay?.payment_status === 'paid'
-  const canEditItems = isPending && !isQvaOrder
+  const canEditItems = isPending && !isQvaOrder && !readOnly
   const canRefund = isQvaOrder
     && qvapay?.payment_status === 'paid'
     && (qvapay?.release_status === 'held' || qvapay?.release_status === 'retry')
@@ -572,7 +574,7 @@ export default function SellerOrderDetailModal({
               id="payment-currency"
               ariaLabel="Moneda de pago"
               value={paymentCurrency}
-              disabled={!isPending}
+              disabled={readOnly || !isPending}
               onChange={(next) => {
                 setPaymentCurrency(next)
                 setLocalError('')
@@ -652,7 +654,7 @@ export default function SellerOrderDetailModal({
             </div>
           ) : null}
 
-          {order.delivery_requested && isPending && (!isQvaOrder || qvaAwaitingStore) ? (
+          {order.delivery_requested && isPending && (!isQvaOrder || qvaAwaitingStore) && !readOnly ? (
             <div className="mt-4 grid grid-cols-[1fr_auto] gap-2">
               <div>
                 <label htmlFor="delivery-price" className={sellerLabel}>
@@ -689,7 +691,7 @@ export default function SellerOrderDetailModal({
             </div>
           ) : null}
 
-          {order.delivery_requested && !isPending && order.delivery_price != null ? (
+          {order.delivery_requested && (!isPending || readOnly) && order.delivery_price != null ? (
             <p className={`mt-4 ${sellerAlertSuccess}`}>
               Domicilio: {formatPrice(order.delivery_price, order.delivery_currency ?? 'CUP')}
             </p>
@@ -712,15 +714,17 @@ export default function SellerOrderDetailModal({
               {evidence?.status === 'rejected' && !orderSettled ? (
                 <div className="mt-3 space-y-3 rounded-xl border border-red-200 bg-red-50 p-3">
                   <p className="text-sm font-semibold text-red-900">Evidencia rechazada. El pago continúa retenido; puedes preparar una nueva evidencia o consultar a soporte.</p>
+                  {readOnly ? null : (
                   <button type="button" onClick={askSupport} className="inline-flex min-h-10 items-center justify-center rounded-xl border border-brand-green/20 bg-brand-white px-4 text-sm font-bold text-brand-green hover:bg-brand-green/[0.04]">
                     Consultar a soporte
                   </button>
+                  )}
                 </div>
               ) : null}
             </section>
           ) : null}
 
-          {canRefund ? (
+          {canRefund && !readOnly ? (
             <section className="mt-4 rounded-2xl border border-brand-green/12 bg-brand-white p-4">
               <button
                 type="button"
@@ -816,7 +820,7 @@ export default function SellerOrderDetailModal({
             </section>
           ) : null}
 
-          {qvaAwaitingEvidence && canSendQvaPayEvidence(qvapay) ? (
+          {qvaAwaitingEvidence && canSendQvaPayEvidence(qvapay) && !readOnly ? (
             <SellerOrderEvidenceEditor
               orderId={order.id}
               submitting={saving}
@@ -869,7 +873,7 @@ export default function SellerOrderDetailModal({
                   <button
                     type="button"
                     onClick={() => setConfirmCancel(true)}
-                    disabled={saving || cancelling}
+                    disabled={readOnly || saving || cancelling}
                     className={`mt-3 ${sellerBtnSecondary} !border-brand-carmelita/20 !text-brand-carmelita active:!bg-brand-carmelita/8`}
                   >
                     Cancelar pedido
@@ -887,7 +891,7 @@ export default function SellerOrderDetailModal({
         </div>
 
         <div className="shrink-0 flex gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
-          {!qvaAwaitingStore ? (
+          {!qvaAwaitingStore || readOnly ? (
             <button
               type="button"
               onClick={onClose}
@@ -897,7 +901,7 @@ export default function SellerOrderDetailModal({
               Cerrar
             </button>
           ) : null}
-          {isPending && !isQvaOrder && hasPendingChanges ? (
+          {isPending && !isQvaOrder && hasPendingChanges && !readOnly ? (
             <button
               type="button"
               onClick={handleSaveChanges}
@@ -907,12 +911,12 @@ export default function SellerOrderDetailModal({
               {saving ? 'Guardando…' : 'Guardar cambios'}
             </button>
           ) : null}
-          {qvaAwaitingStore ? (
+          {qvaAwaitingStore && !readOnly ? (
             <>
               <button type="button" onClick={handleRejectQvaPay} disabled={saving || cancelling} className={`${sellerBtnDanger} min-w-0 flex-1 px-2 text-center leading-tight`}>Rechazar solicitud</button>
               <button type="button" onClick={handleAcceptQvaPay} disabled={saving || cancelling} className={`${sellerBtnPrimary} min-w-0 flex-1 px-2 text-center leading-tight`}>{saving ? 'Creando…' : 'Aceptar y enviar factura'}</button>
             </>
-          ) : isPending && !isQvaOrder ? (
+          ) : isPending && !isQvaOrder && !readOnly ? (
             <button
               type="button"
               onClick={handleComplete}

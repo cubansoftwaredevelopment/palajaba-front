@@ -94,7 +94,7 @@ function OtpCodeField({ id, label, hint, value, onChange }) {
   )
 }
 
-export default function SellerAdvancedProfileSettings({ profile, onUpdated, embedded = false }) {
+export default function SellerAdvancedProfileSettings({ profile, onUpdated, embedded = false, readOnly = false }) {
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [emailOpen, setEmailOpen] = useState(false)
   const [storeNameOpen, setStoreNameOpen] = useState(false)
@@ -399,7 +399,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
             </p>
           )}
 
-          <button type="submit" disabled={!canSaveStoreName} className={`mt-4 ${sellerBtnPrimary}`}>
+          <button type="submit" disabled={readOnly || !canSaveStoreName} className={`mt-4 ${sellerBtnPrimary}`}>
             {storeNameLoading ? 'Guardando…' : 'Guardar nombre'}
           </button>
         </form>
@@ -455,7 +455,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
               <button
                 type="button"
                 onClick={handlePhoneResend}
-                disabled={phoneLoading || phoneResendLocked}
+                disabled={readOnly || phoneLoading || phoneResendLocked}
                 className={`mt-3 ${sellerBtnSecondary}`}
               >
                 {phoneLoading
@@ -483,7 +483,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
           <button
             type="submit"
-            disabled={phoneChallengeId ? !canConfirmPhone : !canSendPhone}
+            disabled={readOnly || (phoneChallengeId ? !canConfirmPhone : !canSendPhone)}
             className={`mt-4 ${sellerBtnPrimary}`}
           >
             {phoneLoading
@@ -542,7 +542,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
               <button
                 type="button"
                 onClick={handleEmailResend}
-                disabled={emailLoading || emailRemaining > 0}
+                disabled={readOnly || emailLoading || emailRemaining > 0}
                 className={`mt-3 ${sellerBtnSecondary}`}
               >
                 {emailLoading
@@ -568,7 +568,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
           <button
             type="submit"
-            disabled={emailChallengeId ? !canConfirmEmail : !canSendEmail}
+            disabled={readOnly || (emailChallengeId ? !canConfirmEmail : !canSendEmail)}
             className={`mt-4 ${sellerBtnPrimary}`}
           >
             {emailLoading

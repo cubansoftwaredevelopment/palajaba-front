@@ -4,7 +4,7 @@ import { getSellerToken } from '../../lib/sellerAuth'
 import SellerSection from './SellerSection'
 import { sellerAlertError, sellerAlertSuccess, sellerBtnDanger, sellerBtnPrimary, sellerHint, sellerInput, sellerLabel } from './sellerStyles'
 
-export default function SellerQvaPaySettings({ onUpdated }) {
+export default function SellerQvaPaySettings({ onUpdated, readOnly = false }) {
   const [username, setUsername] = useState('')
   const [savedUsername, setSavedUsername] = useState('')
   const [verified, setVerified] = useState(false)
@@ -62,23 +62,23 @@ export default function SellerQvaPaySettings({ onUpdated }) {
     <SellerSection label="Cuenta QvaPay" hint="Los pagos se retienen hasta que el cliente acepte la entrega o venza el plazo de revisión de 48 horas.">
       <form onSubmit={save} className="flex flex-col gap-3">
         <label htmlFor="qvapay-username" className={sellerLabel}>Usuario QvaPay</label>
-        <input id="qvapay-username" value={username} onChange={(event) => setUsername(event.target.value)} className={sellerInput} placeholder="Tu usuario de QvaPay" autoComplete="off" disabled={loading || saving} />
+        <input id="qvapay-username" value={username} onChange={(event) => setUsername(event.target.value)} className={sellerInput} placeholder="Tu usuario de QvaPay" autoComplete="off" disabled={readOnly || loading || saving} />
         <p className={sellerHint}>Verificaremos que el usuario exista antes de habilitarlo. El mismo método estará disponible para todos los planes.</p>
         {error ? <p role="alert" className={sellerAlertError}>{error}</p> : null}
         {message ? <p role="status" className={sellerAlertSuccess}>{message}</p> : null}
         {verificationUnavailable ? (
           <div className="rounded-xl border border-brand-green/15 bg-brand-green/5 p-3">
             <p className="text-sm leading-relaxed text-brand-carmelita">La verificación de QvaPay no está disponible ahora. Puedes guardar el usuario de todas formas; el problema está de nuestro lado.</p>
-            <button type="button" onClick={() => { void save(null, true) }} disabled={saving || !username.trim()} className={`${sellerBtnPrimary} mt-3 min-h-11 w-full`}>
+            <button type="button" onClick={() => { void save(null, true) }} disabled={readOnly || saving || !username.trim()} className={`${sellerBtnPrimary} mt-3 min-h-11 w-full`}>
               Guardar de todas formas
             </button>
           </div>
         ) : null}
         <div className="grid grid-cols-2 gap-2">
-          <button type="submit" disabled={loading || saving || !username.trim() || (verified && username.trim().toLowerCase() === savedUsername.toLowerCase())} className={`${sellerBtnPrimary} min-h-12 min-w-0 px-2 text-xs leading-tight sm:text-sm ${savedUsername ? '!w-auto' : 'col-span-2'}`}>
+          <button type="submit" disabled={readOnly || loading || saving || !username.trim() || (verified && username.trim().toLowerCase() === savedUsername.toLowerCase())} className={`${sellerBtnPrimary} min-h-12 min-w-0 px-2 text-xs leading-tight sm:text-sm ${savedUsername ? '!w-auto' : 'col-span-2'}`}>
             {saving ? 'Verificando…' : savedUsername && username.trim().toLowerCase() === savedUsername.toLowerCase() && !verified ? 'Reintentar verificación' : savedUsername ? 'Actualizar usuario' : 'Verificar y guardar'}
           </button>
-          {savedUsername ? <button type="button" onClick={remove} disabled={saving} className={`${sellerBtnDanger} min-h-12 min-w-0 !w-auto px-2 text-xs leading-tight sm:text-sm`}>Eliminar cuenta</button> : null}
+          {savedUsername ? <button type="button" onClick={remove} disabled={readOnly || saving} className={`${sellerBtnDanger} min-h-12 min-w-0 !w-auto px-2 text-xs leading-tight sm:text-sm`}>Eliminar cuenta</button> : null}
         </div>
       </form>
     </SellerSection>

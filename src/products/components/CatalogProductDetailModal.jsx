@@ -150,7 +150,9 @@ export default function CatalogProductDetailModal({
           </dl>
         </div>
 
+        {onEdit || onDelete ? (
         <div className="shrink-0 grid grid-cols-2 gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
+          {onDelete ? (
           <button
             type="button"
             onClick={() => {
@@ -161,6 +163,8 @@ export default function CatalogProductDetailModal({
           >
             Eliminar
           </button>
+          ) : null}
+          {onEdit ? (
           <button
             type="button"
             onClick={() => {
@@ -171,7 +175,9 @@ export default function CatalogProductDetailModal({
           >
             Editar
           </button>
+          ) : null}
         </div>
+        ) : null}
       </div>
     </div>
   )
