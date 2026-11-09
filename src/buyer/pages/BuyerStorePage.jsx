@@ -294,29 +294,31 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
                   location={location}
                 />
 
-                {!hasProducts ? (
-                  <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
-                    <p className="font-display text-lg font-bold text-brand-green">
-                      Sin productos disponibles
-                    </p>
-                    <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-                      {isGestorCatalog
-                        ? "Este gestor todavía no tiene productos en su catálogo."
-                        : "Esta tienda no tiene productos publicados en este momento."}
-                    </p>
-                  </div>
-                ) : (
-                  visibleSections.map((section) => (
-                    <BuyerCategoryProductRow
-                      key={section.category_id}
-                      section={section}
-                      href={storeCategoryPath(storeSlug, section, gestorUsername)}
-                      loadMore={createLoadMore(section)}
-                      storePhotoUrl={catalog.store?.profile_photo_url}
-                      storeName={catalog.store?.store_name}
-                    />
-                  ))
-                )}
+                <div className="mt-6 flex flex-col gap-7 sm:mt-8 sm:gap-8">
+                  {!hasProducts ? (
+                    <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
+                      <p className="font-display text-lg font-bold text-brand-green">
+                        Sin productos disponibles
+                      </p>
+                      <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
+                        {isGestorCatalog
+                          ? "Este gestor todavía no tiene productos en su catálogo."
+                          : "Esta tienda no tiene productos publicados en este momento."}
+                      </p>
+                    </div>
+                  ) : (
+                    visibleSections.map((section) => (
+                      <BuyerCategoryProductRow
+                        key={section.category_id}
+                        section={section}
+                        href={storeCategoryPath(storeSlug, section, gestorUsername)}
+                        loadMore={createLoadMore(section)}
+                        storePhotoUrl={catalog.store?.profile_photo_url}
+                        storeName={catalog.store?.store_name}
+                      />
+                    ))
+                  )}
+                </div>
               </div>
               <BuyerStoreServiceFooter
                 storeName={catalog.store?.store_name}
