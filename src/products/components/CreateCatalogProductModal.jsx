@@ -257,17 +257,17 @@ export default function CreateCatalogProductModal({
 
         if (!cancelled) {
 
-          setCurrencies(currencyData)
+          setCurrencies(currencyData.filter((item) => item.code !== 'QUSD'))
 
           setBusinessCategories(Array.isArray(allBusinessCategories) ? allBusinessCategories : [])
 
           if (currencyData.length > 0) {
 
-            setBaseCurrency((current) =>
-
-              currencyData.some((item) => item.code === current) ? current : currencyData[0].code,
-
-            )
+            setBaseCurrency((current) => {
+              const code = current === 'QUSD' ? 'USD' : current
+              return currencyData.some((item) => item.code === code) ? code : currencyData[0].code
+            })
+            setAcceptedCurrencies((current) => current.filter((code) => code !== 'QUSD'))
 
           }
 

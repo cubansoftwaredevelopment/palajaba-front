@@ -1,4 +1,4 @@
-/** Monedas soportadas. QUSD es la moneda de QvaPay y usa la misma tasa que el USD. */
+/** Monedas que el comprador puede ver en el feed. QUSD vale lo mismo que el USD. */
 export const DISPLAY_CURRENCIES = [
   { code: 'CUP', label: 'CUP', fullLabel: 'Peso cubano' },
   { code: 'USD', label: 'USD', fullLabel: 'Dólar estadounidense' },

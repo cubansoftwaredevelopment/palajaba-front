@@ -42,6 +42,7 @@ function withServiceFee(amount, currency, percent) {
 }
 
 function applyServiceFee(price, product) {
+  if (String(price?.currency || '').trim().toUpperCase() !== 'QUSD') return price
   const percent = Number(product?.service_fee_percent)
   if (!percent) return price
   const amount = withServiceFee(price.amount, price.currency, percent)
@@ -123,11 +124,12 @@ export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCu
   const listAmount = Number(product.base_price)
   const saleAmount = productSaleAmount(product)
   const baseCurrency = product.base_currency
+  const requestedCurrency = String(displayCurrency || '').trim().toUpperCase()
   const discountPercent = productDiscountPercent(product)
   const includeFee = options.applyServiceFee !== false
   const present = (price) => (includeFee ? applyServiceFee(price, product) : price)
 
-  if (!productAcceptsCurrency(product, displayCurrency)) {
+  if (!productAcceptsCurrency(product, requestedCurrency)) {
     return present(withDiscount(
       {
         amount: saleAmount,
@@ -141,21 +143,21 @@ export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCu
     ))
   }
 
-  if (displayCurrency === baseCurrency) {
+  if (requestedCurrency === String(baseCurrency || '').trim().toUpperCase() || samePaymentCurrency(requestedCurrency, baseCurrency)) {
     return present(withDiscount(
       {
         amount: saleAmount,
-        currency: baseCurrency,
+        currency: requestedCurrency,
         converted: false,
         conversionPending: false,
-        label: formatPrice(saleAmount, baseCurrency),
+        label: formatPrice(saleAmount, requestedCurrency),
       },
       product,
       discountPercent ? listAmount : null,
     ))
   }
 
-  const amount = convertBetweenCurrencies(saleAmount, baseCurrency, displayCurrency, cupPerUnit)
+  const amount = convertBetweenCurrencies(saleAmount, baseCurrency, requestedCurrency, cupPerUnit)
   if (amount === null) {
     return present(withDiscount(
       {
@@ -171,16 +173,16 @@ export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCu
   }
 
   const originalAmount = discountPercent
-    ? convertBetweenCurrencies(listAmount, baseCurrency, displayCurrency, cupPerUnit)
+    ? convertBetweenCurrencies(listAmount, baseCurrency, requestedCurrency, cupPerUnit)
     : null
 
   return present(withDiscount(
     {
       amount,
-      currency: displayCurrency,
+      currency: requestedCurrency,
       converted: true,
       conversionPending: false,
-      label: formatPrice(amount, displayCurrency),
+      label: formatPrice(amount, requestedCurrency),
     },
     product,
     originalAmount,

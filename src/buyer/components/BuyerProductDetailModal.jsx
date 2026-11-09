@@ -20,7 +20,6 @@ import BuyerModalPortal from './BuyerModalPortal'
 import { useDismissibleModal } from './useOrderModalPresence'
 import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
-import QvaPayProductBadge from './QvaPayProductBadge'
 import ProductPhotoGallery from './ProductPhotoGallery'
 
 import {
@@ -184,17 +183,13 @@ export default function BuyerProductDetailModal({
 
 
   const acceptedCurrencies = useMemo(
-
-    () => [
-
-      product.base_currency,
-
-      ...(product.accepted_currencies ?? []).filter((currency) => currency !== product.base_currency),
-
-    ],
-
+    () => {
+      const codes = [product.base_currency, ...(product.accepted_currencies ?? [])]
+        .map((currency) => (String(currency || '').toUpperCase() === 'QUSD' ? 'USD' : currency))
+        .filter(Boolean)
+      return [...new Set(codes)]
+    },
     [product.accepted_currencies, product.base_currency],
-
   )
 
 
@@ -358,12 +353,6 @@ export default function BuyerProductDetailModal({
 
                 </p>
 
-              ) : null}
-
-              {product.store?.qvapay_enabled ? (
-                <div className="mt-2">
-                  <QvaPayProductBadge />
-                </div>
               ) : null}
 
               <h2 id="buyer-product-detail-title" className={buyerProductDetailName}>
