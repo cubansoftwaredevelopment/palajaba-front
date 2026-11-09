@@ -130,7 +130,7 @@ export default function BuyerCurrencyTag() {
 
   return (
     <div className="relative z-20 shrink-0">
-      <div className="mx-auto flex w-full max-w-5xl px-5 py-2 lg:px-10">
+      <div className="mx-auto flex w-full max-w-5xl px-5 pb-3 pt-2.5 lg:px-10">
         <div className="relative -ml-1">
           <div
             ref={closedMeasureRef}

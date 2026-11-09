@@ -73,17 +73,15 @@ export default function BuyerStoreServiceFooter({
 
   return (
     <footer
-      className={`store-service-footer relative -mx-5 mt-auto px-5 pt-10 text-brand-carmelita sm:-mx-6 sm:px-8 lg:-mx-10 lg:px-10 ${
-        clearFab
-          ? 'pb-[calc(7.5rem+var(--safe-bottom))]'
-          : 'pb-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))]'
+      className={`store-service-footer relative -mx-5 mt-auto px-5 pt-6 text-brand-carmelita sm:-mx-6 sm:px-8 lg:-mx-10 lg:px-10 ${
+        clearFab ? 'pb-[max(0.75rem,var(--safe-bottom))]' : 'pb-6'
       }`}
       aria-label="Servicio al cliente"
     >
       <div className="mx-auto flex w-full max-w-md flex-col items-center">
         <StoreMark photoUrl={photoUrl} storeName={storeName} size="lg" />
-        {line ? <p className="mt-4 text-center text-sm text-brand-carmelita/80">{line}</p> : null}
-        <div className="mt-8 grid w-full grid-cols-2 gap-x-8">
+        {line ? <p className="mt-3 text-center text-sm text-brand-carmelita/80">{line}</p> : null}
+        <div className="mt-6 grid w-full grid-cols-2 gap-x-8">
           <div>
             <h2 className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-brand-carmelita">
               Servicio al cliente
@@ -133,7 +131,7 @@ export default function BuyerStoreServiceFooter({
             </ul>
           </div>
         </div>
-        <p className="mt-10 text-center text-xs text-brand-carmelita/70">
+        <p className="mt-6 text-center text-xs text-brand-carmelita/70">
           {storeCopyrightLine(storeName)}
         </p>
       </div>

@@ -10,8 +10,8 @@ import BuyerStoreServiceFooter from "../components/BuyerStoreServiceFooter";
 import StatePanel from "../../components/ui/StatePanel";
 import LoadingState from "../../components/ui/LoadingState";
 import DeadState from "../../components/ui/DeadState";
-import { MARKETPLACE_LABEL } from "../../constants/branding";
-import { buyerHomeSections } from "../components/buyerStyles";
+import { DEAD_MASCOT, MARKETPLACE_LABEL } from "../../constants/branding";
+import { DISPLAY_CURRENCIES } from "../../constants/currencies";
 import Button from "../../components/Button";
 import {
   fetchMarketplaceGestorStoreCatalog,
@@ -32,6 +32,20 @@ import { resolveUserFacingError } from "../../lib/userFacingError";
 import { usePublicStoreLocation } from "./usePublicStoreLocation";
 
 const PAGE_SIZE = 5;
+
+function emptyCatalogMessage(currencies, isGestorCatalog) {
+  const filtered =
+    currencies.length > 0 && currencies.length < DISPLAY_CURRENCIES.length;
+  if (filtered) {
+    const list = currencies.join(", ");
+    return isGestorCatalog
+      ? `Este gestor no tiene productos en ${list}.`
+      : `Esta tienda no tiene productos en ${list} en este momento.`;
+  }
+  return isGestorCatalog
+    ? "Este gestor todavía no tiene productos en su catálogo."
+    : "Esta tienda no tiene productos publicados en este momento.";
+}
 
 export default function BuyerStorePage() {
   const { storeSlug, gestorUsername } = useParams();
@@ -287,39 +301,40 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
           ) : null}
 
           {!loading && !loadError && catalog ? (
-            <div className="flex min-h-full flex-1 flex-col">
-              <div className={buyerHomeSections}>
-                <BuyerStoreProfileHeader
-                  catalog={catalog}
-                  location={location}
-                />
+            <div className="flex min-h-full flex-1 flex-col pt-3">
+              <BuyerStoreProfileHeader
+                catalog={catalog}
+                location={location}
+              />
 
-                <div className="mt-6 flex flex-col gap-7 sm:mt-8 sm:gap-8">
-                  {!hasProducts ? (
-                    <div className="rounded-3xl border border-brand-yellow/25 bg-brand-yellow/15 px-5 py-6 text-center lg:text-left">
-                      <p className="font-display text-lg font-bold text-brand-green">
-                        Sin productos disponibles
-                      </p>
-                      <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-                        {isGestorCatalog
-                          ? "Este gestor todavía no tiene productos en su catálogo."
-                          : "Esta tienda no tiene productos publicados en este momento."}
-                      </p>
-                    </div>
-                  ) : (
-                    visibleSections.map((section) => (
-                      <BuyerCategoryProductRow
-                        key={section.category_id}
-                        section={section}
-                        href={storeCategoryPath(storeSlug, section, gestorUsername)}
-                        loadMore={createLoadMore(section)}
-                        storePhotoUrl={catalog.store?.profile_photo_url}
-                        storeName={catalog.store?.store_name}
-                      />
-                    ))
-                  )}
+              {hasProducts ? (
+                <div className="mt-8 flex flex-col gap-7 sm:mt-10 sm:gap-8">
+                  {visibleSections.map((section) => (
+                    <BuyerCategoryProductRow
+                      key={section.category_id}
+                      section={section}
+                      href={storeCategoryPath(storeSlug, section, gestorUsername)}
+                      loadMore={createLoadMore(section)}
+                      storePhotoUrl={catalog.store?.profile_photo_url}
+                      storeName={catalog.store?.store_name}
+                    />
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <div className="mt-8 flex flex-1 flex-col items-center justify-center px-3 py-8 text-center sm:mt-10">
+                  <img
+                    src={DEAD_MASCOT.src}
+                    alt=""
+                    className="h-28 w-28 object-contain"
+                  />
+                  <p className="mt-4 font-display text-lg font-bold text-brand-green">
+                    Sin productos disponibles
+                  </p>
+                  <p className="mt-2 max-w-xs text-sm leading-relaxed text-brand-carmelita/90">
+                    {emptyCatalogMessage(currencies, isGestorCatalog)}
+                  </p>
+                </div>
+              )}
               <BuyerStoreServiceFooter
                 storeName={catalog.store?.store_name}
                 storeSlug={catalog.store?.store_slug || storeSlug}
