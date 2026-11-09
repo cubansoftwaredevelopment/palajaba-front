@@ -17,7 +17,7 @@ export function flattenCatalogProducts(catalog) {
   return products.sort((a, b) => a.name.localeCompare(b.name, 'es'))
 }
 
-const PAYMENT_CURRENCIES = ['CUP', 'USD', 'EUR', 'MLC']
+const PAYMENT_CURRENCIES = ['CUP', 'USD', 'EUR', 'MLC', 'QUSD']
 
 export function getProductSearchStatus({
   query = '',

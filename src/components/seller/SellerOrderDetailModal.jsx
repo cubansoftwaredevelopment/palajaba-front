@@ -42,7 +42,7 @@ import {
 } from './sellerStyles'
 import { useSellerReadOnly } from './sellerReadOnly'
 
-const PAYMENT_CURRENCIES = ['CUP', 'USD', 'EUR', 'MLC']
+const PAYMENT_CURRENCIES = ['CUP', 'USD', 'EUR', 'MLC', 'QUSD']
 
 function DetailRow({ label, children }) {
   return (
@@ -675,7 +675,7 @@ export default function SellerOrderDetailModal({
                   ariaLabel="Moneda del domicilio"
                   value={deliveryCurrency}
                   onChange={setDeliveryCurrency}
-                  options={['CUP', 'USD', 'MLC'].map((currency) => ({
+                  options={['CUP', 'USD', 'MLC', 'QUSD'].map((currency) => ({
                     value: currency,
                     label: currency,
                   }))}

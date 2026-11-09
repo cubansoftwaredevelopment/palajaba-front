@@ -16,6 +16,7 @@ const CURRENCY_COLORS = {
   CUP: '#59802c',
   USD: '#7b4c38',
   MLC: '#c9970a',
+  QUSD: '#6759EF',
 }
 
 function RevenueSeriesList({ series, title }) {

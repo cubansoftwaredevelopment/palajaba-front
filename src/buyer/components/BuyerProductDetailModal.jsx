@@ -20,6 +20,7 @@ import BuyerModalPortal from './BuyerModalPortal'
 import { useDismissibleModal } from './useOrderModalPresence'
 import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
+import QvaPayProductBadge from './QvaPayProductBadge'
 import ProductPhotoGallery from './ProductPhotoGallery'
 
 import {
@@ -359,7 +360,11 @@ export default function BuyerProductDetailModal({
 
               ) : null}
 
-
+              {product.store?.qvapay_enabled ? (
+                <div className="mt-2">
+                  <QvaPayProductBadge />
+                </div>
+              ) : null}
 
               <h2 id="buyer-product-detail-title" className={buyerProductDetailName}>
 

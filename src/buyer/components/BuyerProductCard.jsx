@@ -18,6 +18,7 @@ import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerS
 import BuyerProductImage from './BuyerProductImage'
 import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
+import QvaPayProductBadge from './QvaPayProductBadge'
 import { isCustomerAuthenticated, getCustomerProfile, getCustomerToken, updateCustomerProfile, CUSTOMER_AUTH_CHANGE_EVENT } from '../../lib/customerAuth'
 import { addCustomerFavorite, removeCustomerFavorite } from '../api.js'
 import {
@@ -180,6 +181,9 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
                 <span className={buyerProductDiscountBadge}>-{discountPercent}%</span>
               ) : null}
             </button>
+            {product.store?.qvapay_enabled ? (
+              <QvaPayProductBadge className="absolute bottom-2 left-2 z-10" />
+            ) : null}
             <button type="button" onClick={handleFavorite} className="absolute bottom-2 right-2 z-10 grid h-9 w-9 place-items-center rounded-full bg-brand-white/95 text-brand-carmelita shadow-[0_2px_8px_rgba(28,33,24,0.2)]" aria-label={favorite ? 'Quitar de guardados' : 'Guardar oferta'} title={favorite ? 'Quitar de guardados' : 'Guardar oferta'}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill={favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z" /></svg>
             </button>

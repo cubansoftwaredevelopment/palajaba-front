@@ -22,12 +22,14 @@ const CURRENCY_COLORS = {
   CUP: '#59802c',
   USD: '#7b4c38',
   MLC: '#c9970a',
+  QUSD: '#6759EF',
 }
 
 const CURRENCY_GRADIENTS = {
   CUP: ['#59802c', '#59802c22'],
   USD: ['#7b4c38', '#7b4c3822'],
   MLC: ['#c9970a', '#c9970a22'],
+  QUSD: ['#6759EF', '#6759EF22'],
 }
 
 function formatRevenueTick(value, currency) {

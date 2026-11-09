@@ -32,12 +32,15 @@ export function setCupPerUnit(nextRates, { available = true } = {}) {
     return
   }
 
+  const usd = Number(nextRates.USD)
+  const qusd = Number(nextRates.QUSD)
   ratesAvailable = true
   cupPerUnit = {
     CUP: 1,
-    USD: Number(nextRates.USD),
+    USD: usd,
     EUR: Number(nextRates.EUR),
     MLC: Number(nextRates.MLC),
+    QUSD: Number.isFinite(qusd) && qusd > 0 ? qusd : usd,
   }
 }
 
