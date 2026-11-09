@@ -15,6 +15,8 @@ function samePaymentCurrency(left, right) {
 }
 
 function productAcceptsCurrency(product, currencyCode) {
+  const requested = String(currencyCode || '').trim().toUpperCase()
+  if (requested === 'QUSD' && !product?.store?.qvapay_enabled) return false
   return productAcceptedCurrencies(product).some((code) => samePaymentCurrency(code, currencyCode))
 }
 
