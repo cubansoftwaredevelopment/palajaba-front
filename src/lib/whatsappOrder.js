@@ -69,7 +69,7 @@ export function buildStoreOrderMessage({
 }) {
   const lines = items.map((item) => {
     const qty = item.quantity ?? 1
-    const price = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
+    const price = resolveDisplayPrice(item, displayCurrency, cupPerUnit, { applyServiceFee: false })
     const unitPrice = formatPrice(price.amount, price.currency)
     const line =
       qty > 1
@@ -80,7 +80,7 @@ export function buildStoreOrderMessage({
 
   const totalsByCurrency = {}
   for (const item of items) {
-    const price = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
+    const price = resolveDisplayPrice(item, displayCurrency, cupPerUnit, { applyServiceFee: false })
     const amount = Number(price.amount) * (item.quantity ?? 1)
     totalsByCurrency[price.currency] = (totalsByCurrency[price.currency] ?? 0) + amount
   }

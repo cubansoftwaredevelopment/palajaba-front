@@ -30,11 +30,40 @@ export function normalizeDisplayCurrencies(displayCurrency) {
   return displayCurrency ? [displayCurrency] : []
 }
 
-export function resolveDisplayPrices(product, displayCurrency, cupPerUnit = getCupPerUnit()) {
+function withServiceFee(amount, currency, percent) {
+  const base = Number(amount)
+  const rate = Number(percent)
+  if (!Number.isFinite(base) || !Number.isFinite(rate) || rate <= 0) return base
+  const cents = Math.round(base * 100)
+  const feeCents = Math.round((cents * rate) / 100)
+  const total = (cents + feeCents) / 100
+  if (String(currency || '').toUpperCase() === 'CUP') return Math.round(total)
+  return total
+}
+
+function applyServiceFee(price, product) {
+  const percent = Number(product?.service_fee_percent)
+  if (!percent) return price
+  const amount = withServiceFee(price.amount, price.currency, percent)
+  const next = {
+    ...price,
+    amount,
+    label: formatPrice(amount, price.currency),
+  }
+  if (price.originalAmount == null) return next
+  const originalAmount = withServiceFee(price.originalAmount, price.currency, percent)
+  return {
+    ...next,
+    originalAmount,
+    originalLabel: formatPrice(originalAmount, price.currency),
+  }
+}
+
+export function resolveDisplayPrices(product, displayCurrency, cupPerUnit = getCupPerUnit(), options) {
   const selected = normalizeDisplayCurrencies(displayCurrency)
   const wanted = selected.filter((code) => productAcceptsCurrency(product, code))
   const codes = wanted.length ? wanted : [product.base_currency].filter(Boolean)
-  return codes.map((code) => resolveDisplayPrice(product, code, cupPerUnit))
+  return codes.map((code) => resolveDisplayPrice(product, code, cupPerUnit, options))
 }
 
 export function pickCheckoutCurrency(product, displayCurrency) {
@@ -90,14 +119,16 @@ function withDiscount(price, product, originalAmount) {
   }
 }
 
-export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCupPerUnit()) {
+export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCupPerUnit(), options = {}) {
   const listAmount = Number(product.base_price)
   const saleAmount = productSaleAmount(product)
   const baseCurrency = product.base_currency
   const discountPercent = productDiscountPercent(product)
+  const includeFee = options.applyServiceFee !== false
+  const present = (price) => (includeFee ? applyServiceFee(price, product) : price)
 
   if (!productAcceptsCurrency(product, displayCurrency)) {
-    return withDiscount(
+    return present(withDiscount(
       {
         amount: saleAmount,
         currency: baseCurrency,
@@ -107,11 +138,11 @@ export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCu
       },
       product,
       discountPercent ? listAmount : null,
-    )
+    ))
   }
 
   if (displayCurrency === baseCurrency) {
-    return withDiscount(
+    return present(withDiscount(
       {
         amount: saleAmount,
         currency: baseCurrency,
@@ -121,12 +152,12 @@ export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCu
       },
       product,
       discountPercent ? listAmount : null,
-    )
+    ))
   }
 
   const amount = convertBetweenCurrencies(saleAmount, baseCurrency, displayCurrency, cupPerUnit)
   if (amount === null) {
-    return withDiscount(
+    return present(withDiscount(
       {
         amount: saleAmount,
         currency: baseCurrency,
@@ -136,14 +167,14 @@ export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCu
       },
       product,
       discountPercent ? listAmount : null,
-    )
+    ))
   }
 
   const originalAmount = discountPercent
     ? convertBetweenCurrencies(listAmount, baseCurrency, displayCurrency, cupPerUnit)
     : null
 
-  return withDiscount(
+  return present(withDiscount(
     {
       amount,
       currency: displayCurrency,
@@ -153,5 +184,5 @@ export function resolveDisplayPrice(product, displayCurrency, cupPerUnit = getCu
     },
     product,
     originalAmount,
-  )
+  ))
 }
