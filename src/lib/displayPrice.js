@@ -4,9 +4,18 @@ import { productDiscountPercent, productSaleAmount } from '../products/context.j
 
 export { productDiscountPercent, productSaleAmount }
 
+const DOLLAR_CURRENCIES = new Set(['USD', 'QUSD'])
+
+function samePaymentCurrency(left, right) {
+  const a = String(left || '').trim().toUpperCase()
+  const b = String(right || '').trim().toUpperCase()
+  if (!a || !b) return false
+  if (a === b) return true
+  return DOLLAR_CURRENCIES.has(a) && DOLLAR_CURRENCIES.has(b)
+}
+
 function productAcceptsCurrency(product, currencyCode) {
-  if (product.base_currency === currencyCode) return true
-  return (product.accepted_currencies ?? []).includes(currencyCode)
+  return productAcceptedCurrencies(product).some((code) => samePaymentCurrency(code, currencyCode))
 }
 
 export function productAcceptedCurrencies(product) {
@@ -23,8 +32,7 @@ export function normalizeDisplayCurrencies(displayCurrency) {
 
 export function resolveDisplayPrices(product, displayCurrency, cupPerUnit = getCupPerUnit()) {
   const selected = normalizeDisplayCurrencies(displayCurrency)
-  const accepted = productAcceptedCurrencies(product)
-  const wanted = selected.filter((code) => accepted.includes(code))
+  const wanted = selected.filter((code) => productAcceptsCurrency(product, code))
   const codes = wanted.length ? wanted : [product.base_currency].filter(Boolean)
   return codes.map((code) => resolveDisplayPrice(product, code, cupPerUnit))
 }
@@ -36,7 +44,11 @@ export function pickCheckoutCurrency(product, displayCurrency) {
 export function needsExchangeRatesForDisplay(product, displayCurrency) {
   if (!product || !displayCurrency) return false
   const codes = normalizeDisplayCurrencies(displayCurrency)
-  return codes.some((code) => productAcceptsCurrency(product, code) && code !== product.base_currency)
+  return codes.some(
+    (code) =>
+      productAcceptsCurrency(product, code) &&
+      !samePaymentCurrency(code, product.base_currency),
+  )
 }
 
 export function convertBetweenCurrencies(
@@ -45,7 +57,7 @@ export function convertBetweenCurrencies(
   toCurrency,
   cupPerUnit = getCupPerUnit(),
 ) {
-  if (fromCurrency === toCurrency) return amount
+  if (fromCurrency === toCurrency || samePaymentCurrency(fromCurrency, toCurrency)) return amount
   if (!areExchangeRatesAvailable()) return null
 
   const fromRate = cupPerUnit[fromCurrency]
