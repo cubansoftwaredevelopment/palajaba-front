@@ -26,6 +26,10 @@ export function fetchCustomerProfile(token) {
   return request('/api/customers/me', { headers: authHeaders(token) })
 }
 
+export function deleteCustomerAccount(token) {
+  return request('/api/customers/me', { method: 'DELETE', headers: authHeaders(token) })
+}
+
 export function startCustomerEmailOtp(token, email) {
   return request('/api/customers/me/email/otp/start', { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ email }) })
 }

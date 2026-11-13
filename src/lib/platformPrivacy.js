@@ -1,5 +1,6 @@
-export const PLATFORM_PRIVACY_VERSION = '2026-03-13'
+export const PLATFORM_PRIVACY_VERSION = '2026-03-13-b'
 export const PLATFORM_PRIVACY_PATH = '/privacidad'
+export const PLATFORM_PRIVACY_DELETE_HASH = 'eliminar-cuenta'
 
 export const PLATFORM_PRIVACY_SECTIONS = [
   {
@@ -108,7 +109,29 @@ export const PLATFORM_PRIVACY_SECTIONS = [
     ],
   },
   {
-    title: '8. Modificaciones',
+    title: '8. Eliminación de cuenta',
+    anchor: 'eliminar-cuenta',
+    blocks: [
+      {
+        type: 'p',
+        text: 'Si creaste una cuenta en Palajaba, puedes solicitar la eliminación de tu cuenta y de los datos asociados. En la aplicación, el cliente puede hacerlo desde Perfil y la tienda desde Cuenta (nombre, teléfono y correo). También puedes solicitarlo contactando al soporte de Palajaba a través de los canales publicados en la plataforma, sin necesidad de reinstalar la app.',
+      },
+      {
+        type: 'p',
+        text: 'Al eliminar una cuenta de cliente, Palajaba borra de forma permanente el perfil, direcciones, favoritos, credenciales, métodos de pago guardados en la cuenta, notificaciones y dispositivos vinculados. No se eliminan los pedidos ya registrados: las tiendas conservan el historial operativo del pedido (productos, importes, estados y datos de contacto capturados en el momento de la compra) para cumplimiento, entregas, reclamaciones y obligaciones legales.',
+      },
+      {
+        type: 'p',
+        text: 'Al eliminar una cuenta de tienda, Palajaba borra de forma permanente el registro de la tienda, el catálogo, gestores, avisos y datos de acceso. No se eliminan los pedidos ya registrados: los clientes conservan su historial con el nombre de la tienda y el detalle del pedido capturado en la compra.',
+      },
+      {
+        type: 'p',
+        text: 'La eliminación podrá rechazarse temporalmente mientras existan pedidos pendientes de confirmación, pagos en curso o disputas abiertas. Cuando proceda, se informará al usuario para que regularice esas operaciones antes de borrar la cuenta.',
+      },
+    ],
+  },
+  {
+    title: '9. Modificaciones',
     blocks: [
       {
         type: 'p',

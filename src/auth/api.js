@@ -93,6 +93,13 @@ export function fetchSellerProfile(token) {
   })
 }
 
+export function deleteSellerAccount(token) {
+  return request('/api/auth/me', {
+    method: 'DELETE',
+    headers: authHeaders(token),
+  })
+}
+
 export function fetchSellerBusinessCategories(token) {
   return request('/api/auth/me/business-categories', {
     headers: authHeaders(token),

@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
+import AccountDeleteModal from '../AccountDeleteModal'
 import SellerProfileFieldGroup from './SellerProfileFieldGroup'
 import SellerSection from './SellerSection'
 import {
   sellerAlertError,
+  sellerBtnDanger,
   sellerBtnPrimary,
   sellerBtnSecondary,
   sellerFocusRing,
@@ -15,6 +18,7 @@ import {
 } from './sellerStyles'
 import {
   confirmSellerContactOtp,
+  deleteSellerAccount,
   resendSellerContactOtp,
   startSellerEmailOtp,
   startSellerPhoneOtp,
@@ -27,7 +31,7 @@ import {
   getPhoneDigits,
   phoneDigitsFromStored,
 } from '../../lib/phone'
-import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
+import { clearSellerSession, getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import {
   applySmsFailFromError,
@@ -95,9 +99,13 @@ function OtpCodeField({ id, label, hint, value, onChange }) {
 }
 
 export default function SellerAdvancedProfileSettings({ profile, onUpdated, embedded = false, readOnly = false }) {
+  const navigate = useNavigate()
   const [phoneOpen, setPhoneOpen] = useState(false)
   const [emailOpen, setEmailOpen] = useState(false)
   const [storeNameOpen, setStoreNameOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   const [phoneDigits, setPhoneDigits] = useState(() => phoneDigitsFromStored(profile?.phone))
   const [phoneLoading, setPhoneLoading] = useState(false)
@@ -581,19 +589,72 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
           </button>
         </form>
       </CollapsibleSection>
+
+      <SellerSection>
+        <h3 className="text-sm font-semibold text-red-700">Eliminar cuenta</h3>
+        <p className={`mt-2 ${sellerHint}`}>
+          Se borrarán la tienda, el catálogo, gestores y datos de acceso. Los pedidos ya registrados se conservan para los clientes.
+        </p>
+        <button
+          type="button"
+          disabled={readOnly}
+          onClick={() => {
+            setDeleteError('')
+            setDeleteOpen(true)
+          }}
+          className={`mt-4 ${sellerBtnDanger}`}
+        >
+          Eliminar cuenta
+        </button>
+      </SellerSection>
     </>
   )
 
+  async function confirmDeleteAccount() {
+    if (deleteLoading || readOnly) return
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      await deleteSellerAccount(getSellerToken())
+      clearSellerSession()
+      navigate('/', { replace: true })
+    } catch (cause) {
+      setDeleteError(getUserFacingMessage(cause, 'No pudimos eliminar la cuenta.'))
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const deleteModal = deleteOpen ? (
+    <AccountDeleteModal
+      onClose={() => {
+        if (!deleteLoading) setDeleteOpen(false)
+      }}
+      onConfirm={() => void confirmDeleteAccount()}
+      loading={deleteLoading}
+      error={deleteError}
+      description="Se borrarán la tienda, el catálogo, gestores y datos de acceso de forma permanente. Los pedidos ya registrados se conservan como historial para los clientes."
+    />
+  ) : null
+
   if (embedded) {
-    return <div className="flex flex-col gap-2.5 sm:gap-3">{body}</div>
+    return (
+      <>
+        <div className="flex flex-col gap-2.5 sm:gap-3">{body}</div>
+        {deleteModal}
+      </>
+    )
   }
 
   return (
-    <SellerProfileFieldGroup
-      title="Configuración avanzada"
-      description="Opciones sensibles de tu cuenta. Los cambios de teléfono y correo se confirman con un código."
-    >
-      {body}
-    </SellerProfileFieldGroup>
+    <>
+      <SellerProfileFieldGroup
+        title="Configuración avanzada"
+        description="Opciones sensibles de tu cuenta. Los cambios de teléfono y correo se confirman con un código."
+      >
+        {body}
+      </SellerProfileFieldGroup>
+      {deleteModal}
+    </>
   )
 }

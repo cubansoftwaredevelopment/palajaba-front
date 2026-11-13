@@ -27,6 +27,7 @@
     "test:admin-subscription": "node scripts/tests/adminSubscriptionReplace.unit.test.mjs && node scripts/tests/adminSubscriptionReplace.integration.test.mjs",
     "test:subscription-qvapay": "node scripts/tests/subscriptionQvaPay.unit.test.mjs",
     "test:buyer-product-card": "node scripts/tests/buyerProductCard.unit.test.mjs && node scripts/tests/buyerProductCard.integration.test.mjs",
+    "test:account-deletion": "node scripts/tests/accountDeletion.unit.test.mjs && node scripts/tests/accountDeletion.integration.test.mjs",
     "verify:checkout-flow": "node scripts/verify-checkout-flow.mjs",
     "verify:categories": "node scripts/verify-business-categories.mjs",
     "verify:media-urls": "node scripts/verify-media-urls.mjs",

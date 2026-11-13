@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, dismissCustomerQvaPayPrompt } from '../api.js'
+import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, dismissCustomerQvaPayPrompt, deleteCustomerAccount } from '../api.js'
 import { clearCustomerSession, CUSTOMER_PURCHASE_REVOKED_MESSAGE, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
+import AccountDeleteModal from '../../components/AccountDeleteModal'
 import { fetchMarketplaceProduct } from '../../buyer/api.js'
 import CustomerNavigation from '../components/CustomerNavigation.jsx'
 import CustomerQvaPayPrompt from '../components/CustomerQvaPayPrompt.jsx'
@@ -60,6 +61,9 @@ export default function CustomerAccount() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
   const [addressOpen, setAddressOpen] = useState(false)
   const { present: addressPresent, closing: addressClosing } = useOrderModalPresence(addressOpen)
   const addressMotionClass = orderModalMotionClass(addressClosing)
@@ -297,6 +301,21 @@ export default function CustomerAccount() {
   function logout() {
     clearCustomerSession()
     navigate('/', { replace: true })
+  }
+
+  async function confirmDeleteAccount() {
+    if (!token || deleteLoading) return
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      await deleteCustomerAccount(token)
+      clearCustomerSession()
+      navigate('/', { replace: true })
+    } catch (cause) {
+      setDeleteError(getUserFacingMessage(cause, 'No pudimos eliminar la cuenta.'))
+    } finally {
+      setDeleteLoading(false)
+    }
   }
 
   const unreadNotificationCount = paymentNotifications.filter((notification) => !notification.read_at).length
@@ -730,6 +749,23 @@ export default function CustomerAccount() {
                       </button>
                     </form>
                   </section>
+
+                  <section className={sectionClass}>
+                    <h2 className="mb-2 text-lg font-bold text-red-700">Eliminar cuenta</h2>
+                    <p className="text-sm leading-relaxed text-brand-carmelita">
+                      Se borrarán tu perfil, direcciones, favoritos y datos de acceso. Los pedidos ya hechos se conservan para las tiendas.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDeleteError('')
+                        setDeleteOpen(true)
+                      }}
+                      className="mt-4 min-h-11 rounded-xl bg-red-700 px-4 font-bold text-white"
+                    >
+                      Eliminar cuenta
+                    </button>
+                  </section>
                 </>
               ) : null}
 
@@ -985,6 +1021,17 @@ export default function CustomerAccount() {
 
       {selectedOrder ? <CustomerOrderDetailModal order={selectedOrder} onClose={() => setSelectedOrder(null)} onUpdated={load} /> : null}
       {logoutOpen ? <SellerLogoutModal onClose={() => setLogoutOpen(false)} onConfirm={logout} /> : null}
+      {deleteOpen ? (
+        <AccountDeleteModal
+          onClose={() => {
+            if (!deleteLoading) setDeleteOpen(false)
+          }}
+          onConfirm={() => void confirmDeleteAccount()}
+          loading={deleteLoading}
+          error={deleteError}
+          description="Se borrarán tu perfil, direcciones, favoritos y datos de acceso de forma permanente. Los pedidos ya registrados se conservan como historial para las tiendas."
+        />
+      ) : null}
       <SellerNotificationToast
         toast={liveNotificationToast}
         aboveNav

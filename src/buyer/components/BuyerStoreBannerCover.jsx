@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { resolveMediaUrl } from '../../lib/media'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { isUnservableLegacyBannerUrl, resolveMediaUrl } from '../../lib/media'
 
 const NO_BANNERS = []
 
@@ -9,11 +9,22 @@ export const storeBannerAspectClass = 'aspect-[160/81]'
 export default function BuyerStoreBannerCover({ banners = NO_BANNERS }) {
   const [index, setIndex] = useState(0)
   const [animate, setAnimate] = useState(true)
+  const [failedIds, setFailedIds] = useState(() => new Set())
   const indexRef = useRef(0)
   indexRef.current = index
-  const slides = banners.length > 1 ? [...banners, banners[0]] : banners
+  const usableBanners = useMemo(
+    () =>
+      banners.filter(
+        (banner) =>
+          banner?.image_url &&
+          !isUnservableLegacyBannerUrl(banner.image_url) &&
+          !failedIds.has(banner.id),
+      ),
+    [banners, failedIds],
+  )
+  const slides = usableBanners.length > 1 ? [...usableBanners, usableBanners[0]] : usableBanners
 
-  const bannerKey = banners.map((banner) => banner.id).join('|')
+  const bannerKey = usableBanners.map((banner) => banner.id).join('|')
 
   useEffect(() => {
     setIndex(0)
@@ -21,10 +32,10 @@ export default function BuyerStoreBannerCover({ banners = NO_BANNERS }) {
   }, [bannerKey])
 
   useEffect(() => {
-    if (banners.length <= 1) return undefined
+    if (usableBanners.length <= 1) return undefined
     const id = window.setInterval(() => {
       const current = indexRef.current
-      if (current >= banners.length) {
+      if (current >= usableBanners.length) {
         setAnimate(false)
         setIndex(0)
         return
@@ -33,37 +44,37 @@ export default function BuyerStoreBannerCover({ banners = NO_BANNERS }) {
       setIndex(current + 1)
     }, 5000)
     return () => window.clearInterval(id)
-  }, [banners.length])
+  }, [usableBanners.length])
 
   useEffect(() => {
-    if (!banners.length || index <= banners.length) return undefined
+    if (!usableBanners.length || index <= usableBanners.length) return undefined
     setAnimate(false)
     setIndex(0)
     return undefined
-  }, [banners.length, index])
+  }, [usableBanners.length, index])
 
   const goTo = useCallback((next) => {
-    if (banners.length <= 1) return
-    const count = banners.length
+    if (usableBanners.length <= 1) return
+    const count = usableBanners.length
     const normalized = ((next % count) + count) % count
     setAnimate(true)
     setIndex(normalized)
-  }, [banners.length])
+  }, [usableBanners.length])
 
   function handleSlideEnd(event) {
     if (event.target !== event.currentTarget || event.propertyName !== 'transform') return
-    if (banners.length > 1 && index >= banners.length) {
+    if (usableBanners.length > 1 && index >= usableBanners.length) {
       setAnimate(false)
       setIndex(0)
     }
   }
 
-  if (!banners.length) {
+  if (!usableBanners.length) {
     return <div className={`relative z-0 w-full bg-brand-green ${storeBannerAspectClass}`} />
   }
 
   const safeIndex = Math.min(index, Math.max(slides.length - 1, 0))
-  const activeDot = safeIndex % banners.length
+  const activeDot = safeIndex % usableBanners.length
 
   return (
     <div className={`relative z-0 w-full overflow-hidden bg-brand-green/10 ${storeBannerAspectClass}`}>
@@ -79,13 +90,21 @@ export default function BuyerStoreBannerCover({ banners = NO_BANNERS }) {
               alt=""
               className="h-full w-full object-cover"
               loading={slideIndex === 0 ? 'eager' : 'lazy'}
+              onError={() => {
+                setFailedIds((current) => {
+                  if (current.has(banner.id)) return current
+                  const next = new Set(current)
+                  next.add(banner.id)
+                  return next
+                })
+              }}
             />
           </div>
         ))}
       </div>
-      {banners.length > 1 ? (
+      {usableBanners.length > 1 ? (
         <div className="absolute bottom-14 right-3 flex gap-1.5 sm:bottom-16">
-          {banners.map((item, itemIndex) => (
+          {usableBanners.map((item, itemIndex) => (
             <button
               key={item.id}
               type="button"

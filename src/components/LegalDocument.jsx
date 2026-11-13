@@ -53,7 +53,7 @@ export default function LegalDocument({ eyebrow = 'Palajaba', title, version, se
       <h1 className="mt-2 font-display text-3xl font-bold text-brand-green">{title}</h1>
       {version ? <p className="mt-2 text-xs text-brand-carmelita/70">Versión {version}</p> : null}
       {sections.map((section) => (
-        <section key={section.title} className="mt-8">
+        <section key={section.title} id={section.anchor || undefined} className="mt-8 scroll-mt-24">
           <h2 className="text-lg font-semibold text-brand-green">{section.title}</h2>
           {section.blocks.map((block, index) => (
             <LegalBlock key={`${section.title}-${index}`} block={block} />

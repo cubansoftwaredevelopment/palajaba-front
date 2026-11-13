@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchMarketplaceBanners } from '../api.js'
-import { resolveMediaUrl } from '../../lib/media'
+import { isUnservableLegacyBannerUrl, resolveMediaUrl } from '../../lib/media'
 
 export default function BuyerBannerCarousel({ provinceId = null, initialBannerId = null }) {
   const [banners, setBanners] = useState([])
@@ -16,7 +16,9 @@ export default function BuyerBannerCarousel({ provinceId = null, initialBannerId
     fetchMarketplaceBanners(provinceId)
       .then((data) => {
         if (cancelled) return
-        const list = Array.isArray(data) ? data : []
+        const list = (Array.isArray(data) ? data : []).filter(
+          (item) => item?.image_url && !isUnservableLegacyBannerUrl(item.image_url),
+        )
         setBanners(list)
         const focus = list.findIndex((item) => item.id === initialBannerId)
         setIndex(focus >= 0 ? focus : 0)
@@ -101,6 +103,9 @@ export default function BuyerBannerCarousel({ provinceId = null, initialBannerId
                 alt={banner.title || 'Banner promocional'}
                 className="h-full w-full object-cover"
                 loading={slideIndex === 0 ? 'eager' : 'lazy'}
+                onError={() => {
+                  setBanners((current) => current.filter((item) => item.id !== banner.id))
+                }}
               />
             )
             return (

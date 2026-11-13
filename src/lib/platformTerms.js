@@ -1,4 +1,4 @@
-export const PLATFORM_TERMS_VERSION = '2026-11-07'
+export const PLATFORM_TERMS_VERSION = '2026-03-13'
 export const PLATFORM_TERMS_PATH = '/terminos'
 
 export const PLATFORM_TERMS_SECTIONS = [
@@ -339,7 +339,7 @@ export const PLATFORM_TERMS_SECTIONS = [
       },
       {
         type: 'p',
-        text: 'El detalle sobre qué datos se tratan, con qué finalidades, durante cuánto tiempo y cómo ejercer derechos se regula en la Política de Privacidad de Palajaba, disponible en /privacidad.',
+        text: 'El cliente y la tienda pueden solicitar la eliminación de su cuenta desde la plataforma. Esa eliminación borra de forma permanente los datos de cuenta asociados, pero no elimina los pedidos ya registrados, que se conservan como historial operativo para las partes y para el cumplimiento de obligaciones legales. El detalle del procedimiento y de los datos conservados se regula en la Política de Privacidad de Palajaba, disponible en /privacidad#eliminar-cuenta.',
       },
     ],
   },

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import AuthShell from '../auth/components/AuthShell'
 import LegalDocument from '../components/LegalDocument'
@@ -10,7 +11,15 @@ function returnPath(state) {
 }
 
 export default function PlatformPrivacy() {
-  const returnTo = returnPath(useLocation().state)
+  const location = useLocation()
+  const returnTo = returnPath(location.state)
+
+  useEffect(() => {
+    const hash = String(location.hash || '').replace(/^#/, '')
+    if (!hash) return
+    const node = document.getElementById(hash)
+    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [location.hash])
 
   return (
     <AuthShell backTo={returnTo || '/'} backLabel={returnTo ? 'Volver' : 'Inicio'} contentWidth="narrow">
