@@ -4,7 +4,7 @@ import AuthCard from '../../auth/components/AuthCard'
 import AuthHeader from '../../auth/components/AuthHeader'
 import AuthShell from '../../auth/components/AuthShell'
 import PasswordField from '../../auth/components/PasswordField'
-import { AcceptPlatformTerms } from '../../components/PlatformTermsLink'
+import { AcceptPlatformPrivacy, AcceptPlatformTerms } from '../../components/PlatformTermsLink'
 import Button from '../../components/Button'
 import { alertErrorClass, inputClass, labelClass } from '../../auth/components/formStyles'
 import { addCustomerFavorite, confirmCustomerRegistration, resendCustomerRegistration, startCustomerRegistration } from '../api.js'
@@ -16,6 +16,7 @@ export default function CustomerRegister() {
   const location = useLocation()
   const [form, setForm] = useState({ full_name: '', email: '', phone: '', identity_card: '', password: '' })
   const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
   const [challenge, setChallenge] = useState(null)
   const [emailCode, setEmailCode] = useState('')
   const [phoneCode, setPhoneCode] = useState('')
@@ -32,6 +33,10 @@ export default function CustomerRegister() {
     event.preventDefault()
     if (!acceptedTerms) {
       setError('Debes aceptar los términos y condiciones.')
+      return
+    }
+    if (!acceptedPrivacy) {
+      setError('Debes aceptar la política de privacidad.')
       return
     }
     setLoading(true)
@@ -105,8 +110,9 @@ export default function CustomerRegister() {
               <div><label htmlFor="customer-identity" className={labelClass}>Carnet de identidad <span className="text-brand-carmelita">*</span></label><input id="customer-identity" type="text" value={form.identity_card} onChange={(event) => change('identity_card', event.target.value)} className={inputClass} required /></div>
               <PasswordField id="customer-password" label="Contraseña" value={form.password} onChange={(event) => change('password', event.target.value)} />
               <AcceptPlatformTerms id="customer-terms" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} />
+              <AcceptPlatformPrivacy id="customer-privacy" checked={acceptedPrivacy} onChange={(event) => setAcceptedPrivacy(event.target.checked)} />
               {error ? <p className={alertErrorClass} role="alert">{error}</p> : null}
-              <Button type="submit" disabled={loading || !acceptedTerms}>{loading ? 'Enviando códigos…' : 'Continuar y verificar'}</Button>
+              <Button type="submit" disabled={loading || !acceptedTerms || !acceptedPrivacy}>{loading ? 'Enviando códigos…' : 'Continuar y verificar'}</Button>
             </form>
           ) : (
             <form onSubmit={confirm} className="flex flex-col gap-3.5" noValidate>

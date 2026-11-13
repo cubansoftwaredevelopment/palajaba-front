@@ -5,6 +5,7 @@ import { BRAND_NAME } from '../../constants/branding'
 import { getAdditionalMunicipalities, getBuyerLocation } from '../../lib/buyerLocation'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
+import { PLATFORM_PRIVACY_PATH } from '../../lib/platformPrivacy'
 import { PLATFORM_TERMS_PATH } from '../../lib/platformTerms'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 
@@ -65,6 +66,9 @@ export default function BuyerFeedFooter() {
               </li>
               <li>
                 <Link to={PLATFORM_TERMS_PATH} state={{ returnTo }} className={linkClass}>Términos y condiciones</Link>
+              </li>
+              <li>
+                <Link to={PLATFORM_PRIVACY_PATH} state={{ returnTo }} className={linkClass}>Política de privacidad</Link>
               </li>
               <li>
                 <button type="button" onClick={contactSupport} disabled={!supportUrl} className={`${linkClass} disabled:cursor-not-allowed disabled:opacity-40`}>

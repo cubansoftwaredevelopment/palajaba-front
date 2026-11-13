@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "vite",
@@ -31,9 +31,9 @@
     "verify:categories": "node scripts/verify-business-categories.mjs",
     "verify:media-urls": "node scripts/verify-media-urls.mjs",
     "preview": "vite preview",
-    "cap:sync": "npm run build && cap sync",
-    "cap:android": "cap open android",
-    "cap:ios": "cap open ios",
+    "cap:sync": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/cap-sync.ps1",
+    "cap:android": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/cap.ps1 open android",
+    "cap:ios": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/cap.ps1 open ios",
     "apk": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/apk.ps1"
   },
   "dependencies": {

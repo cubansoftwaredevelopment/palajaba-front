@@ -335,15 +335,11 @@ export const PLATFORM_TERMS_SECTIONS = [
     blocks: [
       {
         type: 'p',
-        text: 'Palajaba conservará los registros de pedidos y operaciones durante el tiempo necesario para mantener la integridad de la plataforma, permitir consultas históricas, elaborar estadísticas, atender reclamaciones y cumplir obligaciones legales.',
+        text: 'Palajaba conservará los registros de pedidos y operaciones durante el tiempo necesario para mantener la integridad de la plataforma, permitir consultas históricas, elaborar estadísticas, atender reclamaciones y cumplir obligaciones legales. La suspensión, inactividad o cierre de una cuenta no supondrá la eliminación automática del historial comercial.',
       },
       {
         type: 'p',
-        text: 'Los registros podrán incluir identidades y datos de contacto de las partes, productos, cantidades, importes, costes de envío, cargos de servicio, fechas, estados, comunicaciones, evidencias, pagos, reembolsos y pagos a proveedores. La suspensión, inactividad o cierre de una cuenta no supondrá la eliminación automática del historial comercial.',
-      },
-      {
-        type: 'p',
-        text: 'Cuando determinados datos personales dejen de ser necesarios, Palajaba podrá anonimizar, seudonimizar o restringir su acceso, siempre que ello no comprometa obligaciones legales, trazabilidad de operaciones ni conservación legítima de estadísticas históricas. El tratamiento de datos personales se regirá también por la Política de Privacidad de Palajaba.',
+        text: 'El detalle sobre qué datos se tratan, con qué finalidades, durante cuánto tiempo y cómo ejercer derechos se regula en la Política de Privacidad de Palajaba, disponible en /privacidad.',
       },
     ],
   },

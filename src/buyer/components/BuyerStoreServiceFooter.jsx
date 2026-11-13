@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { BRAND_NAME } from '../../constants/branding'
 import { openExternalUrl } from '../../lib/nativeApp'
+import { PLATFORM_PRIVACY_PATH } from '../../lib/platformPrivacy'
 import { PLATFORM_TERMS_PATH } from '../../lib/platformTerms'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
@@ -100,6 +101,11 @@ export default function BuyerStoreServiceFooter({
               <li>
                 <FooterLink to={PLATFORM_TERMS_PATH} state={termsState}>
                   Términos de {BRAND_NAME}
+                </FooterLink>
+              </li>
+              <li>
+                <FooterLink to={PLATFORM_PRIVACY_PATH} state={termsState}>
+                  Privacidad de {BRAND_NAME}
                 </FooterLink>
               </li>
               <li>

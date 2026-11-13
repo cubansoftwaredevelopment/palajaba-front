@@ -10,6 +10,9 @@ const fallbackPath = resolve('dist/404.html')
 const SPA_ROUTES = [
   'login',
   'aplicacion',
+  'terminos',
+  'privacidad',
+  'preguntas',
   'crear-cuenta',
   'registro',
   'registro/planes',
