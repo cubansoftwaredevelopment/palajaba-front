@@ -82,6 +82,7 @@ let pushRole = 'seller'
 
 export const OPEN_SELLER_NOTIFICATIONS_EVENT = 'pala-jaba-open-seller-notifications'
 export const OPEN_CUSTOMER_AVISOS_EVENT = 'pala-jaba-open-customer-avisos'
+export const OPEN_APP_UPDATE_EVENT = 'pala-jaba-open-app-update'
 
 function readPushData(notification) {
   const raw = notification?.data || notification?.notification?.data || {}
@@ -94,6 +95,17 @@ function readPushData(notification) {
 
 function dispatchPushNavigation(data) {
   const screen = String(data.screen || '').trim()
+  if (screen === 'app_update') {
+    window.dispatchEvent(
+      new CustomEvent(OPEN_APP_UPDATE_EVENT, {
+        detail: {
+          platform: data.platform || '',
+          version: data.version || '',
+        },
+      }),
+    )
+    return
+  }
   if (screen === 'seller_notifications' || (!screen && pushRole === 'seller')) {
     window.dispatchEvent(
       new CustomEvent(OPEN_SELLER_NOTIFICATIONS_EVENT, {
@@ -134,6 +146,12 @@ async function ensurePushListeners(PushNotifications) {
   })
   await PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
     dispatchPushNavigation(readPushData(event?.notification))
+  })
+  await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+    const data = readPushData(notification)
+    if (String(data.screen || '').trim() === 'app_update') {
+      dispatchPushNavigation(data)
+    }
   })
 }
 

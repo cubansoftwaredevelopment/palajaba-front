@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useMatch } from 'react-router-dom'
+import { OPEN_APP_UPDATE_EVENT } from '../../live/utils'
 import {
   APP_RELEASE_PROMPT_EVENT,
+  clearUpdatePromptDismissed,
   consumeAppReleasePromptPending,
   peekAppReleasePromptPending,
   rememberDownloadPromptDismissed,
@@ -43,13 +45,32 @@ export default function AppReleasePromptGate() {
   const [busy, setBusy] = useState(false)
   const [bouncePlatform, setBouncePlatform] = useState('')
   const [promptTick, setPromptTick] = useState(0)
+  const [forceUpdateCheck, setForceUpdateCheck] = useState(false)
 
   useEffect(() => {
     function onPromptRequest() {
       setPromptTick((value) => value + 1)
     }
+    function onAppUpdatePush(event) {
+      const detail = event?.detail || {}
+      const currentPlatform = getNativePlatformKey()
+      if (
+        detail.platform &&
+        currentPlatform &&
+        detail.platform !== currentPlatform
+      ) {
+        return
+      }
+      clearUpdatePromptDismissed()
+      setForceUpdateCheck(true)
+      setPromptTick((value) => value + 1)
+    }
     window.addEventListener(APP_RELEASE_PROMPT_EVENT, onPromptRequest)
-    return () => window.removeEventListener(APP_RELEASE_PROMPT_EVENT, onPromptRequest)
+    window.addEventListener(OPEN_APP_UPDATE_EVENT, onAppUpdatePush)
+    return () => {
+      window.removeEventListener(APP_RELEASE_PROMPT_EVENT, onPromptRequest)
+      window.removeEventListener(OPEN_APP_UPDATE_EVENT, onAppUpdatePush)
+    }
   }, [])
 
   useEffect(() => {
@@ -58,7 +79,7 @@ export default function AppReleasePromptGate() {
 
     ;(async () => {
       const pending = peekAppReleasePromptPending()
-      const consider = Boolean(pending || comprarHome || sellerHome)
+      const consider = Boolean(pending || comprarHome || sellerHome || forceUpdateCheck)
       if (!consider) return
 
       const inNative = isInNativeApp()
@@ -96,24 +117,24 @@ export default function AppReleasePromptGate() {
         guestHasBuild,
       })
 
-      if (action === 'update') {
+      if (action === 'update' || (forceUpdateCheck && inNative)) {
         const release =
           platform === 'ios'
             ? resolvedMains?.ios || publicMains?.ios
             : platform === 'android'
               ? resolvedMains?.android || publicMains?.android
               : null
-        if (
-          !release ||
-          !version ||
-          !shouldShowUpdatePrompt(version, release.version) ||
-          wasUpdatePromptDismissed(release.version)
-        ) {
+        const shouldOpen =
+          Boolean(release && version && shouldShowUpdatePrompt(version, release.version)) &&
+          (forceUpdateCheck || !wasUpdatePromptDismissed(release.version))
+        if (!shouldOpen) {
           if (pending) consumeAppReleasePromptPending()
+          if (forceUpdateCheck) setForceUpdateCheck(false)
           setUpdateOpen(false)
           return
         }
         if (pending) consumeAppReleasePromptPending()
+        if (forceUpdateCheck) setForceUpdateCheck(false)
         setNativeVersion(version)
         setMainRelease(release)
         setUpdatePlatform(platform)
@@ -143,7 +164,7 @@ export default function AppReleasePromptGate() {
     return () => {
       cancelled = true
     }
-  }, [location.pathname, location.search, comprarHome, sellerHome, promptTick])
+  }, [location.pathname, location.search, comprarHome, sellerHome, promptTick, forceUpdateCheck])
 
   useEffect(() => {
     if (!bouncePlatform) return undefined

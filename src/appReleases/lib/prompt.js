@@ -53,6 +53,14 @@ export function rememberUpdatePromptDismissed(version) {
   }
 }
 
+export function clearUpdatePromptDismissed() {
+  try {
+    window.sessionStorage.removeItem(UPDATE_PROMPT_DISMISS_KEY)
+  } catch {
+    /* ignore */
+  }
+}
+
 export const APP_RELEASE_PROMPT_EVENT = 'pala-jaba-app-prompt'
 
 /** Tras login: limpia dismiss de sesión y marca que hay que evaluar el aviso. */
