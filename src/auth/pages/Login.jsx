@@ -14,6 +14,7 @@ import { addCustomerFavorite, customerLogin } from '../../buyer/api.js'
 import { setAdminToken } from '../../lib/adminAuth'
 import { setSellerSession } from '../../lib/sellerAuth'
 import { setCustomerSession, updateCustomerProfile } from '../../lib/customerAuth'
+import { requestAppReleasePromptOnLogin } from '../../appReleases/lib/prompt.js'
 import { resolveBuyerEntryPath } from '../../lib/buyerLocation'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
@@ -55,6 +56,7 @@ export default function Login() {
       if (accountType === 'customer') {
         const data = await customerLogin(identifier.trim(), password)
         setCustomerSession(data.access_token, data.customer)
+        requestAppReleasePromptOnLogin()
         try {
           const favoriteId = sessionStorage.getItem('pala_jaba_pending_favorite')
           if (favoriteId) {
@@ -72,6 +74,7 @@ export default function Login() {
           : { method: 'store_name', store_name: normalizedIdentifier, password }
         const data = await sellerLogin(payload)
         setSellerSession(data.access_token, data.seller)
+        requestAppReleasePromptOnLogin()
         navigate('/tienda', { replace: true })
       }
     } catch (err) {

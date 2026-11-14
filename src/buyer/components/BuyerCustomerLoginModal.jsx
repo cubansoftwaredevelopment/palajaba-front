@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { customerLogin } from '../api.js'
+import { requestAppReleasePromptOnLogin } from '../../appReleases/lib/prompt.js'
 import { setCustomerSession } from '../../lib/customerAuth'
 import { isSellerAuthenticated } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
@@ -21,6 +22,7 @@ export default function BuyerCustomerLoginModal({ onClose, onLogin }) {
     try {
       const data = await customerLogin(phone.trim(), password)
       setCustomerSession(data.access_token, data.customer)
+      requestAppReleasePromptOnLogin()
       onLogin(data.customer)
     } catch (cause) {
       setError(getUserFacingMessage(cause, 'No pudimos iniciar sesión. Revisa tus datos.'))

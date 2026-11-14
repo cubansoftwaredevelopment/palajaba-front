@@ -62,6 +62,14 @@ export function fetchMainAppReleases() {
   return request('/api/marketplace/app-releases/main')
 }
 
+export function fetchAppReleasePromptStatus(token) {
+  return request('/api/marketplace/app-releases/prompt-status', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  })
+}
+
 export function recordAppReleaseDownload(token, releaseId) {
   return request(`/api/marketplace/app-releases/${encodeURIComponent(releaseId)}/download`, {
     method: 'POST',

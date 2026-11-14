@@ -1,6 +1,7 @@
 import { App } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import {
+  fetchAppReleasePromptStatus,
   fetchMainAppReleases,
   recordAppReleaseDownload,
   resolveAppReleaseFileUrl,
@@ -53,7 +54,25 @@ export function getNativePlatformKey() {
   } catch {
     /* ignore */
   }
+  try {
+    const shellPlatform = String(window.PalaJabaApp?.platform || '').trim().toLowerCase()
+    if (shellPlatform === 'ios' || shellPlatform === 'iphone' || shellPlatform === 'ipad') return 'ios'
+    if (shellPlatform === 'android') return 'android'
+  } catch {
+    /* ignore */
+  }
+  if (typeof navigator !== 'undefined') {
+    const ua = navigator.userAgent || ''
+    if (/iPhone|iPad|iPod/i.test(ua)) return 'ios'
+    if (/Android/i.test(ua)) return 'android'
+  }
   return null
+}
+
+export function platformLabel(platform) {
+  if (platform === 'ios') return 'Apple'
+  if (platform === 'android') return 'Android'
+  return 'app'
 }
 
 export function sessionTokenForAppDownload() {
@@ -70,6 +89,24 @@ export async function loadMainAppReleases() {
     return await fetchMainAppReleases()
   } catch {
     return { android: null, ios: null }
+  }
+}
+
+export async function loadAppReleasePromptStatus() {
+  const token = sessionTokenForAppDownload()
+  if (!token) return null
+  try {
+    return await fetchAppReleasePromptStatus(token)
+  } catch {
+    return null
+  }
+}
+
+export function mainsFromPromptStatus(status) {
+  if (!status) return { android: null, ios: null }
+  return {
+    android: status.android?.main || null,
+    ios: status.ios?.main || null,
   }
 }
 

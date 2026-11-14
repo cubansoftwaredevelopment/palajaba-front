@@ -37,6 +37,28 @@
   --animate-jaba-badge-bump: jaba-badge-bump 0.35s ease-out;
   --animate-jaba-toast-in: jaba-toast-in 0.28s ease-out;
   --animate-jaba-toast-out: jaba-toast-out 0.25s ease-in forwards;
+  --animate-app-download-bounce: app-download-bounce 0.7s cubic-bezier(0.28, 1.4, 0.4, 1);
+
+  @keyframes app-download-bounce {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+    18% {
+      transform: translateY(-10px) scale(1.12);
+    }
+    36% {
+      transform: translateY(0) scale(0.96);
+    }
+    54% {
+      transform: translateY(-6px) scale(1.08);
+    }
+    72% {
+      transform: translateY(0) scale(0.98);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
 
   @keyframes jaba-badge-bump {
     0% {

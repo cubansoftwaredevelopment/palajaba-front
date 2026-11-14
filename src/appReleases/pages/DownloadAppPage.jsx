@@ -49,37 +49,49 @@ function DownloadButtons({ mains, busy, onDownload }) {
   const ios = mains?.ios || null
   const androidHref = androidDownloadFallbackHref(mains)
   const iosHref = releaseFileHref(ios)
+  const showAndroid = Boolean(android && androidHref)
+  const showIos = Boolean(ios && iosHref)
+
+  if (!showAndroid && !showIos) return null
 
   return (
     <div className="flex w-full flex-col gap-2">
-      <button
-        type="button"
-        disabled={busy === 'android' || !androidHref}
-        onClick={() => onDownload('android', android, androidHref)}
-        className={downloadButtonClass}
-      >
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-          <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-        </svg>
-        {busy === 'android'
-          ? 'Descargando…'
-          : android
-            ? `Descargar Android · ${android.version}`
-            : 'Descargar APK'}
-      </button>
-      <button
-        type="button"
-        disabled={busy === 'ios' || !iosHref}
-        onClick={() => onDownload('ios', ios, iosHref)}
-        className={`${downloadButtonClass} border border-brand-green/20 bg-brand-white text-brand-green shadow-none sm:hover:bg-brand-green/[0.06]`}
-      >
-        {busy === 'ios'
-          ? 'Descargando…'
-          : ios
-            ? `Descargar iOS · ${ios.version}`
-            : 'iOS próximamente'}
-      </button>
+      {showAndroid ? (
+        <button
+          type="button"
+          disabled={busy === 'android'}
+          onClick={() => onDownload('android', android, androidHref)}
+          className={downloadButtonClass}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+            <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+          </svg>
+          {busy === 'android' ? 'Descargando…' : `Descargar Android · ${android.version}`}
+        </button>
+      ) : null}
+      {showIos ? (
+        <button
+          type="button"
+          disabled={busy === 'ios'}
+          onClick={() => onDownload('ios', ios, iosHref)}
+          className={`${downloadButtonClass} border border-brand-green/20 bg-brand-white text-brand-green shadow-none sm:hover:bg-brand-green/[0.06]`}
+        >
+          {busy === 'ios' ? 'Descargando…' : `Descargar iOS · ${ios.version}`}
+        </button>
+      ) : null}
     </div>
+  )
+}
+
+function PlatformBadge({ mains }) {
+  const platforms = []
+  if (mains?.android) platforms.push('Android')
+  if (mains?.ios) platforms.push('iOS')
+  if (!platforms.length) return null
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-green/15 bg-brand-green/[0.06] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-brand-green">
+      {platforms.join(' · ')}
+    </span>
   )
 }
 
@@ -160,9 +172,7 @@ export default function DownloadAppPage() {
             </div>
           </div>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-green/15 bg-brand-green/[0.06] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-brand-green">
-            Android · iOS
-          </span>
+          <PlatformBadge mains={mains} />
 
           <h1
             id="app-download-title"

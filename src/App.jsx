@@ -61,7 +61,7 @@ import PlatformFaq from './pages/PlatformFaq'
 import PlatformPrivacy from './pages/PlatformPrivacy'
 import PlatformTerms from './pages/PlatformTerms'
 import QvaPayReturn from './pages/QvaPayReturn'
-import AppUpdatePrompt from './appReleases/components/AppUpdatePrompt'
+import AppReleasePromptGate from './appReleases/components/AppReleasePromptGate'
 import AppDevicePresence from './lib/appDevicePresence'
 import { disableBuyerLocationPersistence } from './lib/buyerLocation'
 
@@ -74,6 +74,7 @@ function RootLayout() {
   return (
     <>
       <Outlet />
+      <AppReleasePromptGate />
       <ScrollToTopButton />
     </>
   )
@@ -207,7 +208,6 @@ function App() {
   return (
     <>
       <AppDevicePresence />
-      <AppUpdatePrompt />
       <RouterProvider router={router} />
     </>
   )
