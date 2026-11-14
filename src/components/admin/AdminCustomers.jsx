@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AdminAppDownloadsCell, { formatAppDownloadsText } from './AdminAppDownloadsCell'
 import AdminPillSelect from './AdminPillSelect'
 import ConfirmDialog from './ConfirmDialog'
 import AdminSelect from './AdminSelect'
@@ -37,16 +38,6 @@ function includesText(value, query) {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
   return String(value ?? '').toLowerCase().includes(needle)
-}
-
-function formatAppDownloads(downloads) {
-  if (!Array.isArray(downloads) || !downloads.length) return '—'
-  return downloads
-    .map((item) => {
-      const platform = item.platform === 'ios' ? 'iOS' : 'Android'
-      return `${platform} ${item.version}`
-    })
-    .join(' · ')
 }
 
 export default function AdminCustomers() {
@@ -90,7 +81,7 @@ export default function AdminCustomers() {
       if (!includesText(item.identity_card, filters.identity)) return false
       if (!includesText(item.created_at ? formatDateTime(item.created_at) : '', filters.created)) return false
       if (!includesText(item.order_count ?? 0, filters.orders)) return false
-      if (!includesText(formatAppDownloads(item.app_downloads), filters.app)) return false
+      if (!includesText(formatAppDownloadsText(item.app_downloads), filters.app)) return false
       if (filters.access === 'revoked' && !item.purchase_revoked) return false
       if (filters.access === 'allowed' && item.purchase_revoked) return false
       return true
@@ -162,7 +153,7 @@ export default function AdminCustomers() {
                 <th className="px-3 py-2">Carnet</th>
                 <th className="px-3 py-2">Alta</th>
                 <th className="px-3 py-2">Pedidos</th>
-                <th className="px-3 py-2">App</th>
+                <th className="px-3 py-2">Dispositivo</th>
                 <th className="px-3 py-2">Acceso</th>
                 <th className="px-3 py-2">Acciones</th>
               </tr>
@@ -226,8 +217,8 @@ export default function AdminCustomers() {
                     value={filters.app}
                     onChange={(event) => updateFilter('app', event.target.value)}
                     className={filterInput}
-                    placeholder="Filtrar app"
-                    aria-label="Filtrar por app descargada"
+                    placeholder="Android / iOS"
+                    aria-label="Filtrar por dispositivo"
                   />
                 </th>
                 <th className="px-2 py-2">
@@ -267,7 +258,9 @@ export default function AdminCustomers() {
                     {item.created_at ? formatDateTime(item.created_at) : '—'}
                   </td>
                   <td className="px-3 py-3 tabular-nums text-zinc-100">{item.order_count ?? 0}</td>
-                  <td className="px-3 py-3 text-xs text-zinc-300">{formatAppDownloads(item.app_downloads)}</td>
+                  <td className="px-3 py-3">
+                    <AdminAppDownloadsCell downloads={item.app_downloads} />
+                  </td>
                   <td className="px-3 py-3">
                     <span className={item.purchase_revoked ? adminBadgeRejected : adminBadgeApproved}>
                       {item.purchase_revoked ? 'Revocado' : 'Puede comprar'}

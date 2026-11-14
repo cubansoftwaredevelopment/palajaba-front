@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AdminAppDownloadsCell, { formatAppDownloadsText } from '../components/admin/AdminAppDownloadsCell'
 import AdminPillSelect from '../components/admin/AdminPillSelect'
 import AdminSelect from '../components/admin/AdminSelect'
 import ConfirmDialog from '../components/admin/ConfirmDialog'
@@ -84,16 +85,6 @@ function includesText(value, query) {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
   return String(value ?? '').toLowerCase().includes(needle)
-}
-
-function formatAppDownloads(downloads) {
-  if (!Array.isArray(downloads) || !downloads.length) return '—'
-  return downloads
-    .map((item) => {
-      const platform = item.platform === 'ios' ? 'iOS' : 'Android'
-      return `${platform} ${item.version}`
-    })
-    .join(' · ')
 }
 
 function subscriptionTime(item) {
@@ -239,7 +230,7 @@ export default function AdminDashboard() {
         if (!includesText(item.approved_at ? formatDateTime(item.approved_at) : '', filters.approved)) return false
         if (filters.plan !== 'all' && getSellerPlan(item).id !== filters.plan) return false
         if (filters.billing !== 'all' && item.billing_period !== filters.billing) return false
-        if (!includesText(formatAppDownloads(item.app_downloads), filters.app)) return false
+        if (!includesText(formatAppDownloadsText(item.app_downloads), filters.app)) return false
         return true
       }),
     [filters, registrations],
@@ -334,7 +325,7 @@ export default function AdminDashboard() {
                   <th className="px-3 py-2">Plan</th>
                   <th className="px-3 py-2">Tiempo de suscripción</th>
                   <th className="px-3 py-2">Pedidos pendientes / confirmados</th>
-                  <th className="px-3 py-2">App</th>
+                  <th className="px-3 py-2">Dispositivo</th>
                   <th className="px-3 py-2">Acciones</th>
                 </tr>
                 <tr className="border-b border-zinc-800 bg-zinc-950/40">
@@ -429,8 +420,8 @@ export default function AdminDashboard() {
                       value={filters.app}
                       onChange={(event) => updateFilter('app', event.target.value)}
                       className={filterInput}
-                      placeholder="Filtrar app"
-                      aria-label="Filtrar por app descargada"
+                      placeholder="Android / iOS"
+                      aria-label="Filtrar por dispositivo"
                     />
                   </th>
                   <th className="px-2 py-2" />
@@ -479,8 +470,8 @@ export default function AdminDashboard() {
                           {item.completed_orders_count ?? 0} confirmados
                         </div>
                       </td>
-                      <td className="px-3 py-3 text-xs text-zinc-300">
-                        {formatAppDownloads(item.app_downloads)}
+                      <td className="px-3 py-3">
+                        <AdminAppDownloadsCell downloads={item.app_downloads} />
                       </td>
                       <td className="px-3 py-3">
                         <RegistrationActionsMenu
