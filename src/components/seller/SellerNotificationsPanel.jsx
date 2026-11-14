@@ -5,6 +5,7 @@ import RenewPlanButton from './RenewPlanButton'
 import SellerModalPortal from './SellerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import LoadingState from '../ui/LoadingState'
+import NotificationBodyText from '../ui/NotificationBodyText'
 import {
   sellerBtnPrimary,
   sellerBtnSecondary,
@@ -97,9 +98,10 @@ function NotificationCard({ notification, onClose, onMarkRead, storeName = '' })
             {formatRelativeTime(notification.created_at)}
           </p>
 
-          <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
-            {notification.content}
-          </p>
+          <NotificationBodyText
+            text={notification.content}
+            className="mt-2 whitespace-pre-line text-sm leading-relaxed text-brand-carmelita/90"
+          />
 
           {(hasViewOrdersAction || hasRenewAction) && (
             <div className="mt-3 flex flex-wrap gap-2">

@@ -11,6 +11,7 @@ import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { formatDateTime } from '../lib/dates'
 import LoadingState from '../components/ui/LoadingState'
+import NotificationBodyText from '../components/ui/NotificationBodyText'
 
 export default function AdminNotifications({ embedded = false }) {
   const navigate = useNavigate()
@@ -186,9 +187,10 @@ export default function AdminNotifications({ embedded = false }) {
                   ) : null}
                 </div>
               ) : null}
-              <p className={`mt-3 whitespace-pre-wrap text-sm leading-relaxed ${adminSubtle}`}>
-                {item.content}
-              </p>
+              <NotificationBodyText
+                text={item.content}
+                className={`mt-3 whitespace-pre-wrap text-sm leading-relaxed ${adminSubtle}`}
+              />
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
                 <p className={`text-xs ${adminMuted}`}>{smsSendCountLabel(item.sms_send_count)}</p>
                 <AdminButton

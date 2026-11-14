@@ -80,6 +80,63 @@ let deviceToken = ''
 let pushListening = false
 let pushRole = 'seller'
 
+export const OPEN_SELLER_NOTIFICATIONS_EVENT = 'pala-jaba-open-seller-notifications'
+export const OPEN_CUSTOMER_AVISOS_EVENT = 'pala-jaba-open-customer-avisos'
+
+function readPushData(notification) {
+  const raw = notification?.data || notification?.notification?.data || {}
+  const data = {}
+  for (const [key, value] of Object.entries(raw)) {
+    data[String(key)] = String(value ?? '')
+  }
+  return data
+}
+
+function dispatchPushNavigation(data) {
+  const screen = String(data.screen || '').trim()
+  if (screen === 'seller_notifications' || (!screen && pushRole === 'seller')) {
+    window.dispatchEvent(
+      new CustomEvent(OPEN_SELLER_NOTIFICATIONS_EVENT, {
+        detail: {
+          notificationId: data.notification_id || '',
+          kind: data.kind || '',
+        },
+      }),
+    )
+    return
+  }
+  if (screen === 'customer_avisos' || (!screen && pushRole === 'customer')) {
+    window.dispatchEvent(
+      new CustomEvent(OPEN_CUSTOMER_AVISOS_EVENT, {
+        detail: {
+          notificationId: data.notification_id || '',
+          orderId: data.order_id || '',
+        },
+      }),
+    )
+  }
+}
+
+async function ensurePushListeners(PushNotifications) {
+  if (pushListening) return
+  pushListening = true
+  await PushNotifications.addListener('registration', async (event) => {
+    deviceToken = event.value
+    const platform = Capacitor.getPlatform()
+    if (platform !== 'android' && platform !== 'ios') return
+    try {
+      if (pushRole === 'customer') {
+        await registerCustomerDevice({ token: event.value, platform }, pushAuthToken)
+      } else {
+        await registerSellerDevice({ token: event.value, platform })
+      }
+    } catch { /* push no disponible; la bandeja queda guardada en el servidor */ }
+  })
+  await PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
+    dispatchPushNavigation(readPushData(event?.notification))
+  })
+}
+
 export async function startSellerPush(accessToken) {
   if (!isNativeApp()) return
   pushRole = 'seller'
@@ -87,23 +144,7 @@ export async function startSellerPush(accessToken) {
   const { PushNotifications } = await import('@capacitor/push-notifications')
   const permission = await PushNotifications.requestPermissions()
   if (permission.receive !== 'granted') return
-
-  if (!pushListening) {
-    pushListening = true
-    await PushNotifications.addListener('registration', async (event) => {
-      deviceToken = event.value
-      const platform = Capacitor.getPlatform()
-      if (platform !== 'android' && platform !== 'ios') return
-      try {
-        if (pushRole === 'customer') {
-          await registerCustomerDevice({ token: event.value, platform }, pushAuthToken)
-        } else {
-          await registerSellerDevice({ token: event.value, platform })
-        }
-      } catch { /* push no disponible; la bandeja queda guardada en el servidor */ }
-    })
-  }
-
+  await ensurePushListeners(PushNotifications)
   await PushNotifications.register()
 }
 
@@ -114,18 +155,7 @@ export async function startCustomerPush(accessToken) {
   const { PushNotifications } = await import('@capacitor/push-notifications')
   const permission = await PushNotifications.requestPermissions()
   if (permission.receive !== 'granted') return
-  if (!pushListening) {
-    pushListening = true
-    await PushNotifications.addListener('registration', async (event) => {
-      deviceToken = event.value
-      const platform = Capacitor.getPlatform()
-      if (platform !== 'android' && platform !== 'ios') return
-      try {
-        if (pushRole === 'customer') await registerCustomerDevice({ token: event.value, platform }, pushAuthToken)
-        else await registerSellerDevice({ token: event.value, platform })
-      } catch { /* la bandeja persistente sigue disponible */ }
-    })
-  }
+  await ensurePushListeners(PushNotifications)
   await PushNotifications.register()
 }
 

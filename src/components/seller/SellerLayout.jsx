@@ -20,7 +20,12 @@ import { getSellerPlan } from '../../subscriptions/constants.js'
 import { requestSellerOrdersRefresh, SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { requestSellerProductsRefresh } from '../../lib/sellerProductsRefresh'
 import { SELLER_LIVE_POLL_MS } from '../../live/constants'
-import { connectSellerEvents, startSellerPush, stopSellerPush } from '../../live/utils'
+import {
+  connectSellerEvents,
+  OPEN_SELLER_NOTIFICATIONS_EVENT,
+  startSellerPush,
+  stopSellerPush,
+} from '../../live/utils'
 import { isSessionError, resolveUserFacingError } from '../../lib/userFacingError'
 
 export default function SellerLayout() {
@@ -134,6 +139,14 @@ export default function SellerLayout() {
     setShowNotifications(false)
     refreshUnreadCount()
   }
+
+  useEffect(() => {
+    function onOpenFromPush() {
+      void openNotifications()
+    }
+    window.addEventListener(OPEN_SELLER_NOTIFICATIONS_EVENT, onOpenFromPush)
+    return () => window.removeEventListener(OPEN_SELLER_NOTIFICATIONS_EVENT, onOpenFromPush)
+  }, [])
 
   useEffect(() => {
     let cancelled = false

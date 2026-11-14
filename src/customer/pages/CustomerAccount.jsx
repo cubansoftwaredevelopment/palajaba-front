@@ -17,11 +17,17 @@ import { formatPrice } from '../../lib/money'
 import BuyerOrderLocationMap from '../../buyer/components/BuyerOrderLocationMap'
 import BuyerProductCard from '../../buyer/components/BuyerProductCard'
 import Logo from '../../components/Logo'
+import NotificationBodyText from '../../components/ui/NotificationBodyText'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
 import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
 import { orderModalMotionClass, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
 import { getUserFacingMessage } from '../../lib/userFacingError'
-import { connectCustomerEvents, startCustomerPush, stopCustomerPush } from '../../live/utils'
+import {
+  connectCustomerEvents,
+  OPEN_CUSTOMER_AVISOS_EVENT,
+  startCustomerPush,
+  stopCustomerPush,
+} from '../../live/utils'
 import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
@@ -147,6 +153,15 @@ export default function CustomerAccount() {
     void startCustomerPush(token)
     return () => { void stopCustomerPush(token) }
   }, [token])
+
+  useEffect(() => {
+    if (!token) return undefined
+    function onOpenFromPush() {
+      navigate('/cliente/avisos')
+    }
+    window.addEventListener(OPEN_CUSTOMER_AVISOS_EVENT, onOpenFromPush)
+    return () => window.removeEventListener(OPEN_CUSTOMER_AVISOS_EVENT, onOpenFromPush)
+  }, [navigate, token])
 
   useEffect(() => {
     if (!token) return undefined
@@ -940,7 +955,7 @@ export default function CustomerAccount() {
                         <strong className="text-brand-green">{notification.title}</strong>
                         {!notification.read_at ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green" aria-label="Sin leer" /> : null}
                       </div>
-                      <p className="mt-1 whitespace-pre-line text-sm text-brand-carmelita">{notification.content}</p>
+                      <NotificationBodyText text={notification.content} className="mt-1 whitespace-pre-line text-sm text-brand-carmelita" />
                       {Array.isArray(notification.images) && notification.images.length ? (
                         <span className="mt-3 flex flex-wrap gap-2">
                           {notification.images.map((image) => (

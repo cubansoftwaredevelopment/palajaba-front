@@ -6,9 +6,17 @@ export function shouldShowDownloadPrompt(inNativeApp) {
   return !inNativeApp
 }
 
+export function normalizeAppVersion(value) {
+  return String(value || '')
+    .trim()
+    .replace(/^v/i, '')
+    .replace(/\s+/g, '')
+    .toLowerCase()
+}
+
 export function shouldShowUpdatePrompt(nativeVersion, mainVersion) {
-  const current = String(nativeVersion || '').trim()
-  const main = String(mainVersion || '').trim()
+  const current = normalizeAppVersion(nativeVersion)
+  const main = normalizeAppVersion(mainVersion)
   if (!current || !main) return false
   return current !== main
 }

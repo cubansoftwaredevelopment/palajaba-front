@@ -7,6 +7,7 @@ import {
   rememberDownloadPromptDismissed,
   rememberUpdatePromptDismissed,
   resolveAppReleasePromptAction,
+  shouldShowUpdatePrompt,
   wasDownloadPromptDismissed,
   wasUpdatePromptDismissed,
 } from '../lib/prompt.js'
@@ -98,18 +99,25 @@ export default function AppReleasePromptGate() {
       if (action === 'update') {
         const release =
           platform === 'ios'
-            ? resolvedMains?.ios
+            ? resolvedMains?.ios || publicMains?.ios
             : platform === 'android'
-              ? resolvedMains?.android
+              ? resolvedMains?.android || publicMains?.android
               : null
-        if (!release || wasUpdatePromptDismissed(release.version)) {
+        if (
+          !release ||
+          !version ||
+          !shouldShowUpdatePrompt(version, release.version) ||
+          wasUpdatePromptDismissed(release.version)
+        ) {
           if (pending) consumeAppReleasePromptPending()
+          setUpdateOpen(false)
           return
         }
         if (pending) consumeAppReleasePromptPending()
         setNativeVersion(version)
         setMainRelease(release)
         setUpdatePlatform(platform)
+        setDownloadOpen(false)
         setUpdateOpen(true)
         return
       }
@@ -117,15 +125,19 @@ export default function AppReleasePromptGate() {
       if (action === 'download') {
         if (wasDownloadPromptDismissed()) {
           if (pending) consumeAppReleasePromptPending()
+          setDownloadOpen(false)
           return
         }
         if (pending) consumeAppReleasePromptPending()
         setMains(resolvedMains)
+        setUpdateOpen(false)
         setDownloadOpen(true)
         return
       }
 
       if (pending) consumeAppReleasePromptPending()
+      setUpdateOpen(false)
+      setDownloadOpen(false)
     })()
 
     return () => {

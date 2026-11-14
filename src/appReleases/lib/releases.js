@@ -35,7 +35,9 @@ export async function getNativeAppVersion() {
   try {
     if (Capacitor.isNativePlatform()) {
       const info = await App.getInfo()
-      return String(info?.version || '').trim() || null
+      // Capacitor: `version` = versionName; no usar `build` (versionCode).
+      const versionName = String(info?.version || '').trim()
+      if (versionName) return versionName
     }
   } catch {
     /* sin plugin App */
