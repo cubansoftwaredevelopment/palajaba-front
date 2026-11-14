@@ -41,6 +41,12 @@ const NAV_ICONS = {
       <path d="M3 10h18" />
     </svg>
   ),
+  apps: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+      <rect x="7" y="2" width="10" height="20" rx="2" />
+      <path d="M11 18h2" />
+    </svg>
+  ),
   finanzas: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
       <rect x="2" y="6" width="20" height="12" rx="2" />

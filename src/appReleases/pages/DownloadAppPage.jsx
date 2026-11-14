@@ -1,17 +1,22 @@
+import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import Logo from '../components/Logo'
-import { BRAND_NAME } from '../constants/branding'
-import { isNativeAppShell } from '../lib/nativeApp'
+import Logo from '../../components/Logo'
+import { BRAND_NAME } from '../../constants/branding'
 import {
-  APP_ANDROID_BADGE,
-  APP_DOWNLOAD_FILENAME,
-  APP_DOWNLOAD_URL,
+  androidDownloadFallbackHref,
+  isInNativeApp,
+  loadMainAppReleases,
+  releaseFileHref,
+  startAppReleaseDownload,
+} from '../lib/releases.js'
+import { isNativeAppShell } from '../../lib/nativeApp'
+import {
   APP_FEATURES,
   APP_HEADLINE,
   APP_INSTALL_HINT,
   APP_LOGO,
   APP_TAGLINE,
-} from '../constants/mobileApp'
+} from '../constants.js'
 
 const downloadButtonClass =
   'inline-flex w-full min-h-12 items-center justify-center gap-2.5 rounded-full bg-brand-green px-6 py-3.5 text-sm font-semibold text-brand-white shadow-[0_8px_24px_rgba(89,128,44,0.32)] transition-all duration-200 touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-white sm:hover:-translate-y-px sm:hover:bg-[#4d7026]'
@@ -39,24 +44,74 @@ function FeatureIcon({ name }) {
   )
 }
 
-function DownloadButton({ className = '' }) {
+function DownloadButtons({ mains, busy, onDownload }) {
+  const android = mains?.android || null
+  const ios = mains?.ios || null
+  const androidHref = androidDownloadFallbackHref(mains)
+  const iosHref = releaseFileHref(ios)
+
   return (
-    <a
-      href={APP_DOWNLOAD_URL}
-      download={APP_DOWNLOAD_FILENAME}
-      className={`${downloadButtonClass} ${className}`.trim()}
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-        <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
-      </svg>
-      Descargar APK
-    </a>
+    <div className="flex w-full flex-col gap-2">
+      <button
+        type="button"
+        disabled={busy === 'android' || !androidHref}
+        onClick={() => onDownload('android', android, androidHref)}
+        className={downloadButtonClass}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+          <path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+        </svg>
+        {busy === 'android'
+          ? 'Descargando…'
+          : android
+            ? `Descargar Android · ${android.version}`
+            : 'Descargar APK'}
+      </button>
+      <button
+        type="button"
+        disabled={busy === 'ios' || !iosHref}
+        onClick={() => onDownload('ios', ios, iosHref)}
+        className={`${downloadButtonClass} border border-brand-green/20 bg-brand-white text-brand-green shadow-none sm:hover:bg-brand-green/[0.06]`}
+      >
+        {busy === 'ios'
+          ? 'Descargando…'
+          : ios
+            ? `Descargar iOS · ${ios.version}`
+            : 'iOS próximamente'}
+      </button>
+    </div>
   )
 }
 
 export default function DownloadAppPage() {
-  if (isNativeAppShell()) {
+  const [mains, setMains] = useState(null)
+  const [busy, setBusy] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+    loadMainAppReleases().then((data) => {
+      if (!cancelled) setMains(data)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (isNativeAppShell() || isInNativeApp()) {
     return <Navigate to="/" replace />
+  }
+
+  async function handleDownload(platform, release, fallbackHref) {
+    setBusy(platform)
+    try {
+      if (release) {
+        await startAppReleaseDownload(release)
+        return
+      }
+      if (fallbackHref) window.location.assign(fallbackHref)
+    } finally {
+      setBusy('')
+    }
   }
 
   return (
@@ -106,10 +161,7 @@ export default function DownloadAppPage() {
           </div>
 
           <span className="inline-flex items-center gap-1.5 rounded-full border border-brand-green/15 bg-brand-green/[0.06] px-3 py-1 text-[0.65rem] font-bold uppercase tracking-[0.14em] text-brand-green">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H6v10zM3.5 8C2.67 8 2 8.67 2 9.5v7c0 .83.67 1.5 1.5 1.5S5 17.33 5 16.5v-7C5 8.67 4.33 8 3.5 8z" />
-            </svg>
-            {APP_ANDROID_BADGE}
+            Android · iOS
           </span>
 
           <h1
@@ -135,13 +187,13 @@ export default function DownloadAppPage() {
           </ul>
 
           <div className="mt-8 hidden w-full sm:block">
-            <DownloadButton />
+            <DownloadButtons mains={mains} busy={busy} onDownload={handleDownload} />
           </div>
 
           <details className="group mt-6 w-full text-left">
             <summary className="cursor-pointer list-none rounded-2xl border border-brand-green/10 bg-brand-white/80 px-4 py-3 text-sm font-semibold text-brand-carmelita/90 touch-manipulation marker:content-none [&::-webkit-details-marker]:hidden">
               <span className="flex items-center justify-between gap-2">
-                ¿Primera vez con un APK?
+                ¿Primera vez instalando?
                 <svg
                   className="h-4 w-4 shrink-0 text-brand-green transition-transform group-open:rotate-180"
                   viewBox="0 0 24 24"
@@ -169,8 +221,8 @@ export default function DownloadAppPage() {
       </main>
 
       <div className="fixed inset-x-0 bottom-0 z-20 border-t border-brand-green/10 bg-brand-white/95 px-5 py-3 backdrop-blur-md pb-[max(0.75rem,var(--safe-bottom))] sm:hidden">
-        <DownloadButton />
-        <p className="mt-2 text-center text-[0.65rem] text-brand-carmelita/70">{BRAND_NAME} · Android</p>
+        <DownloadButtons mains={mains} busy={busy} onDownload={handleDownload} />
+        <p className="mt-2 text-center text-[0.65rem] text-brand-carmelita/70">{BRAND_NAME}</p>
       </div>
     </div>
   )

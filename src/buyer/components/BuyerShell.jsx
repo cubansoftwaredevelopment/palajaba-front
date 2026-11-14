@@ -1,5 +1,6 @@
 import { useContext } from 'react'
 import { Link } from 'react-router-dom'
+import AppDownloadPrompt from '../../appReleases/components/AppDownloadPrompt.jsx'
 import { BuyerDisplayCurrencyContext } from '../context.js'
 import BuyerCurrencyTag from './BuyerCurrencyTag'
 import BuyerJabaButton from './BuyerJabaButton'
@@ -74,6 +75,7 @@ export default function BuyerShell({
           {headerSearch ? <div className="min-w-0 flex-1">{headerSearch}</div> : headerStart ? null : <div className="flex-1" />}
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             {headerEnd}
+            {marketplaceHub && !isSellerPreview ? <AppDownloadPrompt /> : null}
             {!isSellerPreview ? <BuyerSellerReturnHeaderLink /> : null}
             {!isSellerPreview ? <BuyerJabaButton /> : null}
           </div>

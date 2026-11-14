@@ -42,6 +42,7 @@ const SPA_ROUTES = [
   'admin/disputas',
   'admin/productos',
   'admin/banners',
+  'admin/apps',
   'admin/finanzas',
   'admin/configuracion',
 ]

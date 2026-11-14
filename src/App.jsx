@@ -36,6 +36,7 @@ import AdminInbox from './pages/AdminInbox'
 import AdminDisputes from './pages/AdminDisputes'
 import AdminProducts from './products/pages/AdminProducts'
 import AdminBanners from './pages/AdminBanners'
+import AdminApps from './appReleases/pages/AdminApps'
 import AdminDiscountCodes from './pages/AdminDiscountCodes'
 import AdminSettings from './pages/AdminSettings'
 import AdminFinance from './pages/AdminFinance'
@@ -55,11 +56,12 @@ import CustomerPasswordReset from './buyer/pages/CustomerPasswordReset'
 import CustomerRoute from './buyer/components/CustomerRoute'
 import PublicStoreRoute from './buyer/components/PublicStoreRoute'
 import RedirectLegacyStoreRoute from './buyer/components/RedirectLegacyStoreRoute'
-import DownloadAppPage from './pages/DownloadAppPage'
+import DownloadAppPage from './appReleases/pages/DownloadAppPage'
 import PlatformFaq from './pages/PlatformFaq'
 import PlatformPrivacy from './pages/PlatformPrivacy'
 import PlatformTerms from './pages/PlatformTerms'
 import QvaPayReturn from './pages/QvaPayReturn'
+import AppUpdatePrompt from './appReleases/components/AppUpdatePrompt'
 import AppDevicePresence from './lib/appDevicePresence'
 import { disableBuyerLocationPersistence } from './lib/buyerLocation'
 
@@ -170,6 +172,7 @@ const router = createBrowserRouter([
               { path: 'notificaciones', element: <Navigate to="/admin/mensajes" replace /> },
               { path: 'productos', element: <AdminProducts /> },
               { path: 'banners', element: <AdminBanners /> },
+              { path: 'apps', element: <AdminApps /> },
               { path: 'finanzas', element: <AdminFinance /> },
               { path: 'configuracion', element: <AdminSettings /> },
             ],
@@ -204,6 +207,7 @@ function App() {
   return (
     <>
       <AppDevicePresence />
+      <AppUpdatePrompt />
       <RouterProvider router={router} />
     </>
   )
