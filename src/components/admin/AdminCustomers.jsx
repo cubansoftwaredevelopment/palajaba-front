@@ -29,6 +29,7 @@ const EMPTY_FILTERS = {
   identity: '',
   created: '',
   orders: '',
+  app: '',
   access: 'all',
 }
 
@@ -36,6 +37,16 @@ function includesText(value, query) {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
   return String(value ?? '').toLowerCase().includes(needle)
+}
+
+function formatAppDownloads(downloads) {
+  if (!Array.isArray(downloads) || !downloads.length) return '—'
+  return downloads
+    .map((item) => {
+      const platform = item.platform === 'ios' ? 'iOS' : 'Android'
+      return `${platform} ${item.version}`
+    })
+    .join(' · ')
 }
 
 export default function AdminCustomers() {
@@ -79,6 +90,7 @@ export default function AdminCustomers() {
       if (!includesText(item.identity_card, filters.identity)) return false
       if (!includesText(item.created_at ? formatDateTime(item.created_at) : '', filters.created)) return false
       if (!includesText(item.order_count ?? 0, filters.orders)) return false
+      if (!includesText(formatAppDownloads(item.app_downloads), filters.app)) return false
       if (filters.access === 'revoked' && !item.purchase_revoked) return false
       if (filters.access === 'allowed' && item.purchase_revoked) return false
       return true
@@ -141,7 +153,7 @@ export default function AdminCustomers() {
 
       {loading ? <LoadingState variant="admin" message="Cargando clientes…" /> : (
         <div className="overflow-x-auto rounded-2xl border border-brand-green/10">
-          <table className="w-full min-w-[52rem] border-collapse text-left text-sm">
+          <table className="w-full min-w-[60rem] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-zinc-800 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-400">
                 <th className="px-3 py-2">Cliente</th>
@@ -150,6 +162,7 @@ export default function AdminCustomers() {
                 <th className="px-3 py-2">Carnet</th>
                 <th className="px-3 py-2">Alta</th>
                 <th className="px-3 py-2">Pedidos</th>
+                <th className="px-3 py-2">App</th>
                 <th className="px-3 py-2">Acceso</th>
                 <th className="px-3 py-2">Acciones</th>
               </tr>
@@ -209,6 +222,15 @@ export default function AdminCustomers() {
                   />
                 </th>
                 <th className="px-2 py-2">
+                  <input
+                    value={filters.app}
+                    onChange={(event) => updateFilter('app', event.target.value)}
+                    className={filterInput}
+                    placeholder="Filtrar app"
+                    aria-label="Filtrar por app descargada"
+                  />
+                </th>
+                <th className="px-2 py-2">
                   <AdminPillSelect
                     value={filters.access === 'all' ? '' : filters.access}
                     onChange={(value) => updateFilter('access', value || 'all')}
@@ -226,7 +248,7 @@ export default function AdminCustomers() {
             <tbody>
               {pageItems.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                  <td colSpan={9} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                     {customers.length === 0 ? 'Aún no hay clientes.' : 'Ningún cliente coincide con este filtro.'}
                   </td>
                 </tr>
@@ -245,6 +267,7 @@ export default function AdminCustomers() {
                     {item.created_at ? formatDateTime(item.created_at) : '—'}
                   </td>
                   <td className="px-3 py-3 tabular-nums text-zinc-100">{item.order_count ?? 0}</td>
+                  <td className="px-3 py-3 text-xs text-zinc-300">{formatAppDownloads(item.app_downloads)}</td>
                   <td className="px-3 py-3">
                     <span className={item.purchase_revoked ? adminBadgeRejected : adminBadgeApproved}>
                       {item.purchase_revoked ? 'Revocado' : 'Puede comprar'}

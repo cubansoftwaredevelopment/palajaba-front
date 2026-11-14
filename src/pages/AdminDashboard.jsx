@@ -42,6 +42,7 @@ const EMPTY_FILTERS = {
   approved: '',
   plan: 'all',
   billing: 'all',
+  app: '',
 }
 
 const STATUS_BADGES = {
@@ -83,6 +84,16 @@ function includesText(value, query) {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
   return String(value ?? '').toLowerCase().includes(needle)
+}
+
+function formatAppDownloads(downloads) {
+  if (!Array.isArray(downloads) || !downloads.length) return '—'
+  return downloads
+    .map((item) => {
+      const platform = item.platform === 'ios' ? 'iOS' : 'Android'
+      return `${platform} ${item.version}`
+    })
+    .join(' · ')
 }
 
 function subscriptionTime(item) {
@@ -228,6 +239,7 @@ export default function AdminDashboard() {
         if (!includesText(item.approved_at ? formatDateTime(item.approved_at) : '', filters.approved)) return false
         if (filters.plan !== 'all' && getSellerPlan(item).id !== filters.plan) return false
         if (filters.billing !== 'all' && item.billing_period !== filters.billing) return false
+        if (!includesText(formatAppDownloads(item.app_downloads), filters.app)) return false
         return true
       }),
     [filters, registrations],
@@ -310,7 +322,7 @@ export default function AdminDashboard() {
 
         {!loading ? (
           <div className="overflow-x-auto rounded-2xl border border-brand-green/10">
-            <table className="w-full min-w-[72rem] border-collapse text-left text-sm xl:min-w-full">
+            <table className="w-full min-w-[80rem] border-collapse text-left text-sm xl:min-w-full">
               <thead>
                 <tr className="border-b border-zinc-800 text-[0.65rem] font-semibold uppercase tracking-wide text-zinc-400">
                   <th className="px-3 py-2">Negocio</th>
@@ -322,6 +334,7 @@ export default function AdminDashboard() {
                   <th className="px-3 py-2">Plan</th>
                   <th className="px-3 py-2">Tiempo de suscripción</th>
                   <th className="px-3 py-2">Pedidos pendientes / confirmados</th>
+                  <th className="px-3 py-2">App</th>
                   <th className="px-3 py-2">Acciones</th>
                 </tr>
                 <tr className="border-b border-zinc-800 bg-zinc-950/40">
@@ -411,14 +424,22 @@ export default function AdminDashboard() {
                       ]}
                     />
                   </th>
-                  <th className="px-2 py-2" />
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.app}
+                      onChange={(event) => updateFilter('app', event.target.value)}
+                      className={filterInput}
+                      placeholder="Filtrar app"
+                      aria-label="Filtrar por app descargada"
+                    />
+                  </th>
                   <th className="px-2 py-2" />
                 </tr>
               </thead>
               <tbody>
                 {pageItems.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                    <td colSpan={11} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                       Ningún negocio coincide con estos filtros.
                     </td>
                   </tr>
@@ -457,6 +478,9 @@ export default function AdminDashboard() {
                         <div className="mt-1 text-xs text-zinc-400">
                           {item.completed_orders_count ?? 0} confirmados
                         </div>
+                      </td>
+                      <td className="px-3 py-3 text-xs text-zinc-300">
+                        {formatAppDownloads(item.app_downloads)}
                       </td>
                       <td className="px-3 py-3">
                         <RegistrationActionsMenu

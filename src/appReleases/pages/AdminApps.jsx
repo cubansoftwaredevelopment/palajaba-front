@@ -56,6 +56,7 @@ function PlatformTable({
           <thead className="bg-zinc-950/60 text-xs uppercase tracking-wide text-zinc-500">
             <tr>
               <th className="px-3 py-2.5 font-medium">Versión</th>
+              <th className="px-3 py-2.5 font-medium">Descargas</th>
               <th className="px-3 py-2.5 font-medium">Subida</th>
               <th className="px-3 py-2.5 font-medium">Estado</th>
               <th className="px-3 py-2.5 font-medium">Acciones</th>
@@ -64,7 +65,7 @@ function PlatformTable({
           <tbody>
             {!items.length ? (
               <tr>
-                <td colSpan={4} className={`px-3 py-8 text-center ${adminMuted}`}>
+                <td colSpan={5} className={`px-3 py-8 text-center ${adminMuted}`}>
                   Aún no hay builds {meta.label}.
                 </td>
               </tr>
@@ -74,6 +75,7 @@ function PlatformTable({
                 return (
                   <tr key={item.id} className="border-t border-zinc-800/70">
                     <td className="px-3 py-3 font-medium tabular-nums text-zinc-100">{item.version}</td>
+                    <td className="px-3 py-3 tabular-nums text-zinc-100">{item.download_count ?? 0}</td>
                     <td className={`px-3 py-3 ${adminSubtle}`}>{formatDateTime(item.uploaded_at)}</td>
                     <td className="px-3 py-3">
                       {item.is_main ? (
