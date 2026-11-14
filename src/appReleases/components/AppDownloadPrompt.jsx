@@ -141,7 +141,13 @@ export function DownloadModal({ onClose, mains, bouncePlatform, onDownload }) {
                 Lleva Pa&apos; La Jaba en el bolsillo
               </h2>
               <p className="mt-2 max-w-sm text-sm leading-relaxed text-brand-carmelita/90">
-                Descarga la app para Android o iOS y compra o vende con más comodidad.
+                {showAndroid && showIos
+                  ? 'Descarga la app para Android o iOS y compra o vende con más comodidad.'
+                  : showAndroid
+                    ? 'Descarga la app para Android y compra o vende con más comodidad.'
+                    : showIos
+                      ? 'Descarga la app para iOS y compra o vende con más comodidad.'
+                      : 'Pronto podrás descargar la app móvil.'}
               </p>
               <Link
                 to="/aplicacion"
@@ -190,6 +196,9 @@ export default function AppDownloadPrompt() {
   const [mains, setMains] = useState(null)
   const [bouncePlatform, setBouncePlatform] = useState('')
   const visible = shouldShowDownloadPrompt() && !isInNativeApp()
+  const showAndroid = Boolean(mains?.android)
+  const showIos = Boolean(mains?.ios)
+  const hasAnyBuild = showAndroid || showIos
 
   useEffect(() => {
     if (!visible) return undefined
@@ -208,7 +217,7 @@ export default function AppDownloadPrompt() {
     return () => window.clearTimeout(timer)
   }, [bouncePlatform])
 
-  if (!visible) return null
+  if (!visible || mains === null || !hasAnyBuild) return null
 
   function handleClose() {
     rememberDownloadPromptDismissed()
@@ -236,26 +245,30 @@ export default function AppDownloadPrompt() {
         aria-expanded={open}
         title="Descargar la app"
       >
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden
-          className={`lg:h-7 lg:w-7 ${bouncePlatform === 'android' ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
-        >
-          <path d="M17.6 9.48 19.1 6.9a.5.5 0 0 0-.86-.5l-1.55 2.68A8.2 8.2 0 0 0 12 8c-1.7 0-3.27.5-4.69 1.35L5.76 6.4a.5.5 0 1 0-.86.5l1.5 2.58A8 8 0 0 0 4 15.5V16a1 1 0 0 0 1 1h1v2.5a1.5 1.5 0 0 0 3 0V17h6v2.5a1.5 1.5 0 0 0 3 0V17h1a1 1 0 0 0 1-1v-.5a8 8 0 0 0-2.4-5.52ZM9.25 13.25a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5.5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
-        </svg>
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          aria-hidden
-          className={`lg:h-6 lg:w-6 ${bouncePlatform === 'ios' ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
-        >
-          <path d="M16.7 12.2c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.7-1.7-3.3-1.7-1.4-.1-2.7.8-3.4.8s-1.8-.8-3-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.2-2.5 1.2-2.6-.1 0-2.4-.9-2.5-3.7Zm-2.4-7c.6-.8 1.1-1.8.9-2.9-1 0-2.1.6-2.7 1.4-.5.7-1.1 1.8-.9 2.8 1.1.1 2.1-.5 2.7-1.3Z" />
-        </svg>
+        {showAndroid ? (
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden
+            className={`lg:h-7 lg:w-7 ${bouncePlatform === 'android' ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
+          >
+            <path d="M17.6 9.48 19.1 6.9a.5.5 0 0 0-.86-.5l-1.55 2.68A8.2 8.2 0 0 0 12 8c-1.7 0-3.27.5-4.69 1.35L5.76 6.4a.5.5 0 1 0-.86.5l1.5 2.58A8 8 0 0 0 4 15.5V16a1 1 0 0 0 1 1h1v2.5a1.5 1.5 0 0 0 3 0V17h6v2.5a1.5 1.5 0 0 0 3 0V17h1a1 1 0 0 0 1-1v-.5a8 8 0 0 0-2.4-5.52ZM9.25 13.25a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5.5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
+          </svg>
+        ) : null}
+        {showIos ? (
+          <svg
+            width="22"
+            height="22"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            aria-hidden
+            className={`lg:h-6 lg:w-6 ${bouncePlatform === 'ios' ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
+          >
+            <path d="M16.7 12.2c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.7-1.7-3.3-1.7-1.4-.1-2.7.8-3.4.8s-1.8-.8-3-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.2-2.5 1.2-2.6-.1 0-2.4-.9-2.5-3.7Zm-2.4-7c.6-.8 1.1-1.8.9-2.9-1 0-2.1.6-2.7 1.4-.5.7-1.1 1.8-.9 2.8 1.1.1 2.1-.5 2.7-1.3Z" />
+          </svg>
+        ) : null}
       </button>
       {open ? (
         <DownloadModal
