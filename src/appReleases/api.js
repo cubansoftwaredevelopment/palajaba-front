@@ -16,28 +16,51 @@ export function fetchAdminAppReleases(token, platform = null) {
   })
 }
 
-export async function createAdminAppRelease(token, file, { platform, version }) {
+export function createAdminAppRelease(token, file, { platform, version, onProgress } = {}) {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('platform', platform)
   formData.append('version', version)
-  const response = await fetch(`${getApiBase()}/api/admin/app-releases`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: formData,
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${getApiBase()}/api/admin/app-releases`)
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    xhr.responseType = 'json'
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable || typeof onProgress !== 'function') return
+      const percent = Math.max(0, Math.min(100, Math.round((event.loaded / event.total) * 100)))
+      onProgress(percent)
+    }
+
+    xhr.onload = () => {
+      const data = xhr.response && typeof xhr.response === 'object' ? xhr.response : {}
+      if (xhr.status >= 200 && xhr.status < 300) {
+        if (typeof onProgress === 'function') onProgress(100)
+        resolve(data)
+        return
+      }
+      const parsed = parseApiErrorDetail(data.detail)
+      reject(
+        new ApiError(parsed.message || 'No pudimos subir el build.', {
+          code: parsed.code,
+          data: parsed.data,
+          status: xhr.status,
+        }),
+      )
+    }
+
+    xhr.onerror = () => {
+      reject(new ApiError('No pudimos subir el build.', { status: 0 }))
+    }
+
+    xhr.onabort = () => {
+      reject(new ApiError('Subida cancelada.', { status: 0, code: 'upload_aborted' }))
+    }
+
+    xhr.send(formData)
   })
-  if (!response.ok) {
-    const data = await response.json().catch(() => ({}))
-    const parsed = parseApiErrorDetail(data.detail)
-    throw new ApiError(parsed.message, {
-      code: parsed.code,
-      data: parsed.data,
-      status: response.status,
-    })
-  }
-  return response.json()
 }
 
 export function setAdminAppReleaseMain(token, releaseId) {

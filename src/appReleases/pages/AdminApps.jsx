@@ -126,6 +126,7 @@ export default function AdminApps() {
   const [version, setVersion] = useState('')
   const [file, setFile] = useState(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [deleteTarget, setDeleteTarget] = useState(null)
 
   const loadReleases = useCallback(async () => {
@@ -162,6 +163,7 @@ export default function AdminApps() {
     setUploadPlatform(null)
     setVersion('')
     setFile(null)
+    setUploadProgress(0)
   }
 
   async function handleUpload(event) {
@@ -171,6 +173,7 @@ export default function AdminApps() {
       return
     }
     setUploading(true)
+    setUploadProgress(0)
     setError('')
     setSuccess('')
     try {
@@ -178,9 +181,14 @@ export default function AdminApps() {
       await createAdminAppRelease(token, file, {
         platform: uploadPlatform,
         version: version.trim(),
+        onProgress: setUploadProgress,
       })
       setSuccess(`Build ${uploadPlatform} ${version.trim()} subido.`)
-      closeUpload()
+      setUploading(false)
+      setUploadProgress(0)
+      setUploadPlatform(null)
+      setVersion('')
+      setFile(null)
       await loadReleases()
     } catch (err) {
       if (isSessionError(err)) {
@@ -301,15 +309,30 @@ export default function AdminApps() {
                 accept={uploadMeta.accept}
                 className={`${adminInput} file:mr-3 file:rounded-lg file:border-0 file:bg-brand-green/20 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-green`}
                 onChange={(event) => setFile(event.target.files?.[0] || null)}
+                disabled={uploading}
                 required
               />
             </div>
+            {uploading ? (
+              <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 px-3 py-3" aria-live="polite">
+                <div className="mb-2 flex items-center justify-between gap-3 text-xs font-semibold text-zinc-300">
+                  <span>Subiendo build…</span>
+                  <span className="tabular-nums text-brand-green">{uploadProgress}%</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-zinc-800">
+                  <div
+                    className="h-full rounded-full bg-brand-green transition-[width] duration-150 ease-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              </div>
+            ) : null}
             <div className="flex justify-end gap-2">
               <AdminButton type="button" variant="secondary" onClick={closeUpload} disabled={uploading}>
                 Cancelar
               </AdminButton>
-              <AdminButton type="submit" disabled={uploading}>
-                {uploading ? 'Subiendo…' : 'Subir'}
+              <AdminButton type="submit" disabled={uploading || !file || !version.trim()}>
+                {uploading ? `Subiendo ${uploadProgress}%` : 'Subir'}
               </AdminButton>
             </div>
           </form>
