@@ -33,6 +33,19 @@ export function registerSellerDevice(device) {
   return liveRequest('/api/live/devices', { method: 'POST', body: device })
 }
 
+/** FCM de la app nativa sin sesión (avisos de actualización). */
+export async function registerAppPushDevice(device) {
+  const response = await fetch(`${apiBase()}/api/marketplace/app-push-devices`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(device),
+  })
+  if (!response.ok) {
+    throw new Error('No se pudo registrar el dispositivo para actualizaciones.')
+  }
+  return response.json()
+}
+
 export function unregisterSellerDevice(token) {
   return liveRequest('/api/live/devices', { method: 'DELETE', body: { token } })
 }

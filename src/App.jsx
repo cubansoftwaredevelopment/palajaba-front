@@ -64,6 +64,7 @@ import QvaPayReturn from './pages/QvaPayReturn'
 import AppReleasePromptGate from './appReleases/components/AppReleasePromptGate'
 import AppDevicePresence from './lib/appDevicePresence'
 import { disableBuyerLocationPersistence } from './lib/buyerLocation'
+import { startAnonymousNativePush } from './live/utils'
 
 if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vista') === 'preview') {
   disableBuyerLocationPersistence()
@@ -203,6 +204,10 @@ const router = createBrowserRouter([
     ],
   },
 ])
+
+if (typeof window !== 'undefined') {
+  void startAnonymousNativePush()
+}
 
 function App() {
   return (

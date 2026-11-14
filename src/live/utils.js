@@ -1,7 +1,13 @@
 import { Capacitor } from '@capacitor/core'
 import { Geolocation } from '@capacitor/geolocation'
 import { LIVE_EVENT_NOTIFICATION } from './constants'
-import { customerEventsUrl, registerSellerDevice, sellerEventsUrl, unregisterSellerDevice } from './api'
+import {
+  customerEventsUrl,
+  registerAppPushDevice,
+  registerSellerDevice,
+  sellerEventsUrl,
+  unregisterSellerDevice,
+} from './api'
 import { registerCustomerDevice, unregisterCustomerDevice } from '../buyer/api.js'
 
 export function isNativeApp() {
@@ -78,7 +84,9 @@ export function connectCustomerEvents(accessToken, onNotification, onDataUpdate)
 let pushAuthToken = ''
 let deviceToken = ''
 let pushListening = false
-let pushRole = 'seller'
+/** @type {'customer' | 'seller' | null} */
+let pushRole = null
+let anonymousPushStarted = false
 
 export const OPEN_SELLER_NOTIFICATIONS_EVENT = 'pala-jaba-open-seller-notifications'
 export const OPEN_CUSTOMER_AVISOS_EVENT = 'pala-jaba-open-customer-avisos'
@@ -158,12 +166,19 @@ async function ensurePushListeners(PushNotifications) {
     const platform = Capacitor.getPlatform()
     if (platform !== 'android' && platform !== 'ios') return
     try {
-      if (pushRole === 'customer') {
+      await registerAppPushDevice({ token: event.value, platform })
+    } catch {
+      /* sin red; se reintentará al próximo arranque */
+    }
+    try {
+      if (pushRole === 'customer' && pushAuthToken) {
         await registerCustomerDevice({ token: event.value, platform }, pushAuthToken)
-      } else {
+      } else if (pushRole === 'seller') {
         await registerSellerDevice({ token: event.value, platform })
       }
-    } catch { /* push no disponible; la bandeja queda guardada en el servidor */ }
+    } catch {
+      /* push de cuenta no disponible */
+    }
   })
   await PushNotifications.addListener('pushNotificationActionPerformed', (event) => {
     dispatchPushNavigation(readPushData(event?.notification))
@@ -176,17 +191,29 @@ async function ensurePushListeners(PushNotifications) {
   })
 }
 
-async function startNativePush(accessToken, role) {
+async function registerNativePush() {
   if (!isNativeApp()) return
-  if (role === 'customer' && !accessToken) return
-  pushRole = role
-  pushAuthToken = accessToken || ''
   const { PushNotifications } = await import('@capacitor/push-notifications')
   const permission = await PushNotifications.requestPermissions()
   if (permission.receive !== 'granted') return
   await ensureAndroidPushChannel(PushNotifications)
   await ensurePushListeners(PushNotifications)
   await PushNotifications.register()
+}
+
+/** Push de actualización: no requiere cuenta. */
+export async function startAnonymousNativePush() {
+  if (!isNativeApp() || anonymousPushStarted) return
+  anonymousPushStarted = true
+  await registerNativePush()
+}
+
+async function startNativePush(accessToken, role) {
+  if (!isNativeApp()) return
+  if (role === 'customer' && !accessToken) return
+  pushRole = role
+  pushAuthToken = accessToken || ''
+  await registerNativePush()
 }
 
 export async function startSellerPush(accessToken) {
@@ -201,11 +228,13 @@ export async function stopSellerPush() {
   if (!deviceToken || !pushAuthToken) {
     deviceToken = ''
     pushAuthToken = ''
+    pushRole = null
     return
   }
   const token = deviceToken
   deviceToken = ''
   pushAuthToken = ''
+  pushRole = null
   try {
     await unregisterSellerDevice(token)
   } catch {
@@ -218,7 +247,7 @@ export async function stopCustomerPush(accessToken = pushAuthToken) {
   const token = deviceToken
   deviceToken = ''
   pushAuthToken = ''
-  pushRole = 'seller'
+  pushRole = null
   try { await unregisterCustomerDevice(token, accessToken) } catch { /* sesión finalizada */ }
 }
 
