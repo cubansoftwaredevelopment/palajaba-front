@@ -281,7 +281,7 @@ export default function AdminApps() {
       {uploadPlatform && uploadMeta ? (
         <AdminModal
           title={`Subir build ${uploadMeta.label}`}
-          subtitle={`Archivo ${uploadMeta.ext} y versión visible para los usuarios.`}
+          subtitle={`Archivo ${uploadMeta.ext}. La versión debe ser la del binario (versionName / CFBundleShortVersionString).`}
           onClose={closeUpload}
         >
           <form className="flex flex-col gap-4" onSubmit={handleUpload}>
@@ -294,10 +294,14 @@ export default function AdminApps() {
                 className={adminInput}
                 value={version}
                 onChange={(event) => setVersion(event.target.value)}
-                placeholder="1.0.1"
+                placeholder="1.0.6"
                 required
                 autoFocus
               />
+              <p className={`mt-1.5 text-xs ${adminMuted}`}>
+                Debe coincidir con la del APK/IPA. Genera el APK con{' '}
+                <span className="font-mono text-zinc-300">npm run apk -- -AppVersion 1.0.6</span>.
+              </p>
             </div>
             <div>
               <label className={adminLabel} htmlFor="app-release-file">
