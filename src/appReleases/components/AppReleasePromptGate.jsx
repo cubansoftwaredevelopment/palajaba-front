@@ -21,6 +21,7 @@ import {
   loadMainAppReleases,
   mainsFromPromptStatus,
   startAppReleaseDownload,
+  syncNativeInstalledVersion,
 } from '../lib/releases.js'
 import { DownloadModal } from './AppDownloadPrompt.jsx'
 import { UpdateModal } from './AppUpdatePrompt.jsx'
@@ -84,6 +85,12 @@ export default function AppReleasePromptGate() {
 
       const inNative = isInNativeApp()
       const platform = inNative ? getNativePlatformKey() : null
+      // Guest descargó e instaló → al iniciar sesión (o al abrir home con sesión)
+      // publica la versionName para el usuario y el contador del build.
+      if (inNative) {
+        await syncNativeInstalledVersion()
+        if (cancelled) return
+      }
       const [status, publicMains, version] = await Promise.all([
         loadAppReleasePromptStatus(),
         loadMainAppReleases(),

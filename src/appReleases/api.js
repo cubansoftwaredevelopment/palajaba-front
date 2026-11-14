@@ -102,6 +102,20 @@ export function recordAppReleaseDownload(token, releaseId) {
   })
 }
 
+export function syncAppInstalledVersion(token, { platform, version, deviceId }) {
+  return request('/api/marketplace/app-releases/sync-installed', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      platform,
+      version,
+      ...(deviceId ? { device_id: deviceId } : {}),
+    }),
+  })
+}
+
 export function resolveAppReleaseFileUrl(releaseId) {
   if (!releaseId) return null
   const path = `/api/marketplace/app-releases/${encodeURIComponent(releaseId)}/file`

@@ -8,14 +8,18 @@ import { getSellerToken } from './sellerAuth'
 const STORAGE_KEY = 'pala-jaba-device-id'
 const INTERVAL_MS = 60_000
 
-function readDeviceId() {
-  const existing = localStorage.getItem(STORAGE_KEY)
-  if (existing && existing.length >= 8) return existing
-  const next =
-    globalThis.crypto?.randomUUID?.() ??
-    `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 14)}`
-  localStorage.setItem(STORAGE_KEY, next)
-  return next
+export function getAppDeviceId() {
+  try {
+    const existing = localStorage.getItem(STORAGE_KEY)
+    if (existing && existing.length >= 8) return existing
+    const next =
+      globalThis.crypto?.randomUUID?.() ??
+      `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 14)}`
+    localStorage.setItem(STORAGE_KEY, next)
+    return next
+  } catch {
+    return null
+  }
 }
 
 function sessionKind() {
@@ -49,7 +53,7 @@ export default function AppDevicePresence() {
       if (stopped || document.visibilityState === 'hidden') return
       const current = coordsRef.current
       const body = {
-        device_id: readDeviceId(),
+        device_id: getAppDeviceId(),
         platform,
         session_kind: sessionKind(),
       }

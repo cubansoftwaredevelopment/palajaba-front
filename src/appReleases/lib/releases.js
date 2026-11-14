@@ -5,11 +5,13 @@ import {
   fetchMainAppReleases,
   recordAppReleaseDownload,
   resolveAppReleaseFileUrl,
+  syncAppInstalledVersion,
 } from '../api.js'
 import {
   shouldShowDownloadPrompt as shouldShowDownloadPromptFor,
   shouldShowUpdatePrompt,
 } from './prompt.js'
+import { getAppDeviceId } from '../../lib/appDevicePresence'
 import { getCustomerToken } from '../../lib/customerAuth'
 import { isNativeAppShell } from '../../lib/nativeApp'
 import { getSellerToken } from '../../lib/sellerAuth'
@@ -135,4 +137,26 @@ export async function startAppReleaseDownload(release) {
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
+}
+
+/**
+ * En la app nativa, tras login (o con sesión activa): publica la versionName
+ * instalada para actualizar el perfil del usuario y el contador del build.
+ */
+export async function syncNativeInstalledVersion() {
+  if (!isInNativeApp()) return null
+  const token = sessionTokenForAppDownload()
+  if (!token) return null
+  const platform = getNativePlatformKey()
+  const version = await getNativeAppVersion()
+  if (!platform || !version) return null
+  try {
+    return await syncAppInstalledVersion(token, {
+      platform,
+      version,
+      deviceId: getAppDeviceId(),
+    })
+  } catch {
+    return null
+  }
 }
