@@ -32,7 +32,6 @@ test('getProfileMenuSections agrupa General y Cuenta sin solapes', () => {
     PROFILE_PANEL_IDS.gestores,
     PROFILE_PANEL_IDS.payments,
     PROFILE_PANEL_IDS.advanced,
-    PROFILE_PANEL_IDS.feedback,
   ])
   assert.equal(isProfileFormPanel(PROFILE_PANEL_IDS.gestores), true)
   assert.equal(isProfileFormPanel(PROFILE_PANEL_IDS.storeContent), false)

@@ -224,11 +224,6 @@ export default function SellerNotificationsPanel({
                     {markingAll ? 'Marcando…' : 'Marcar todas como leídas'}
                   </button>
                 ) : null}
-                {!loading && unreadCount > unreadSystemCount ? (
-                  <p className="mt-2 text-[0.65rem] text-brand-carmelita/65">
-                    Los avisos del administrador debes marcarlos uno a uno.
-                  </p>
-                ) : null}
               </div>
               <button
                 type="button"

@@ -31,8 +31,8 @@ function NotificationsLink({ active }) {
     <Link
       to="/admin/mensajes"
       className={active ? adminIconButtonActive : adminIconButton}
-      aria-label="Mensajes y avisos"
-      title="Mensajes/Avisos"
+      aria-label="Avisos"
+      title="Avisos"
     >
       <svg
         width="20"

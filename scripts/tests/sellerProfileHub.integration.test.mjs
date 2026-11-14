@@ -53,11 +53,10 @@ test('flujo integrado: hub → identidad → guardar panel → volver → ubicac
 })
 
 test('flujo integrado: cuenta avanzada no muestra Guardar cambios del form', () => {
-  const result = simulateProfileHubFlow([PROFILE_PANEL_IDS.advanced, PROFILE_PANEL_IDS.feedback])
-  assert.equal(result.activePanel, PROFILE_PANEL_IDS.feedback)
+  const result = simulateProfileHubFlow([PROFILE_PANEL_IDS.advanced])
+  assert.equal(result.activePanel, PROFILE_PANEL_IDS.advanced)
   assert.deepEqual(result.opened, [
     { panelId: PROFILE_PANEL_IDS.advanced, showsSave: false },
-    { panelId: PROFILE_PANEL_IDS.feedback, showsSave: false },
   ])
 })
 

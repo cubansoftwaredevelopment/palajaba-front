@@ -232,27 +232,6 @@ export function sendAdminNotificationSms(token, batchId) {
   });
 }
 
-export function submitSellerFeedback(token, payload) {
-  return request("/api/auth/me/feedback", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify(payload),
-  });
-}
-
-export function fetchAdminFeedback(token, filter = "all") {
-  const params = new URLSearchParams();
-  if (filter && filter !== "all") params.set("filter", filter);
-  const query = params.toString() ? `?${params.toString()}` : "";
-  return request(`/api/admin/feedback${query}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
 export function fetchAdminDisputes(token) {
   return request('/api/admin/disputes', { headers: { Authorization: `Bearer ${token}` } })
 }
@@ -287,32 +266,6 @@ export function ruleAdminDispute(token, disputeId, payload) {
     headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   })
-}
-
-export function fetchAdminFeedbackUnreadCount(token) {
-  return request("/api/admin/feedback/unread-count", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function markAdminFeedbackRead(token, feedbackId) {
-  return request(`/api/admin/feedback/${feedbackId}/read`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-}
-
-export function deleteAdminFeedback(token, feedbackId) {
-  return request(`/api/admin/feedback/${feedbackId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
 }
 
 export function fetchAdminSettings(token) {

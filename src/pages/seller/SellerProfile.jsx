@@ -13,7 +13,6 @@ import SellerStorePages from '../../components/seller/SellerStorePages'
 import SellerUpgradePlan from '../../components/seller/SellerUpgradePlan'
 import SellerQvaPaySettings from '../../components/seller/SellerQvaPaySettings'
 import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
-import SellerFeedbackSection from '../../components/seller/SellerFeedbackSection'
 import ConfirmModal from '../../components/ConfirmModal'
 import SellerProfileHeroCard from '../../components/seller/SellerProfileHeroCard'
 import SellerProfileMenuList from '../../components/seller/SellerProfileMenuList'
@@ -500,8 +499,6 @@ export default function SellerProfile() {
         return gestoresFields
       case PROFILE_PANEL_IDS.advanced:
         return <SellerAdvancedProfileSettings profile={profile} onUpdated={refreshProfile} embedded readOnly={readOnly} />
-      case PROFILE_PANEL_IDS.feedback:
-        return <SellerFeedbackSection embedded readOnly={readOnly} />
       case PROFILE_PANEL_IDS.advertising:
         return <SellerAdvertisingPlans profile={profile} readOnly={readOnly} />
       case PROFILE_PANEL_IDS.plan:

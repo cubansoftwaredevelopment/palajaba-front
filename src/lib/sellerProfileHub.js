@@ -8,7 +8,6 @@ export const PROFILE_PANEL_IDS = Object.freeze({
   storeContent: 'storeContent',
   gestores: 'gestores',
   advanced: 'advanced',
-  feedback: 'feedback',
   advertising: 'advertising',
   plan: 'plan',
   payments: 'payments',
@@ -72,13 +71,6 @@ const PANELS = Object.freeze({
     kind: 'panel',
     icon: 'account',
   },
-  [PROFILE_PANEL_IDS.feedback]: {
-    id: PROFILE_PANEL_IDS.feedback,
-    label: 'Quejas y sugerencias',
-    description: 'Escríbenos al equipo',
-    kind: 'panel',
-    icon: 'feedback',
-  },
   [PROFILE_PANEL_IDS.advertising]: {
     id: PROFILE_PANEL_IDS.advertising,
     label: 'Publicidad',
@@ -130,7 +122,6 @@ export const PROFILE_MENU_SECTIONS = Object.freeze([
     title: 'Cuenta',
     itemIds: [
       PROFILE_PANEL_IDS.advanced,
-      PROFILE_PANEL_IDS.feedback,
     ],
   },
 ])
