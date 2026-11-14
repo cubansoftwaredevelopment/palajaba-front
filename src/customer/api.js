@@ -22,6 +22,13 @@ export function markCustomerPaymentNotificationRead(token, id) {
   })
 }
 
+export function markAllCustomerPaymentNotificationsRead(token) {
+  return request('/api/customers/me/notifications/read-all', {
+    method: 'POST',
+    headers: authHeaders(token),
+  })
+}
+
 export function fetchCustomerProfile(token) {
   return request('/api/customers/me', { headers: authHeaders(token) })
 }

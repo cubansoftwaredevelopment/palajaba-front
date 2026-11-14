@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, dismissCustomerQvaPayPrompt, deleteCustomerAccount } from '../api.js'
+import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, markAllCustomerPaymentNotificationsRead, dismissCustomerQvaPayPrompt, deleteCustomerAccount } from '../api.js'
 import { clearCustomerSession, CUSTOMER_PURCHASE_REVOKED_MESSAGE, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
 import AccountDeleteModal from '../../components/AccountDeleteModal'
 import { fetchMarketplaceProduct } from '../../buyer/api.js'
@@ -181,15 +181,43 @@ export default function CustomerAccount() {
     })
   }, [loadPaymentNotifications, refreshCustomerOrders, token])
 
+  async function markPaymentNotificationRead(notification) {
+    if (!notification || notification.read_at) return notification
+    const updated = await markCustomerPaymentNotificationRead(token, notification.id)
+    setPaymentNotifications((current) =>
+      current.map((item) => (item.id === notification.id ? updated : item)),
+    )
+    return updated
+  }
+
+  async function handleMarkNotificationRead(notification) {
+    try {
+      await markPaymentNotificationRead(notification)
+    } catch (cause) {
+      setError(getUserFacingMessage(cause, 'No pudimos marcar el aviso como leído.'))
+    }
+  }
+
+  async function handleMarkAllNotificationsRead() {
+    try {
+      await markAllCustomerPaymentNotificationsRead(token)
+      const now = new Date().toISOString()
+      setPaymentNotifications((current) =>
+        current.map((item) => (item.read_at ? item : { ...item, read_at: now })),
+      )
+    } catch (cause) {
+      setError(getUserFacingMessage(cause, 'No pudimos marcar los avisos como leídos.'))
+    }
+  }
+
   async function openPaymentNotification(notification) {
     try {
-      const updated = notification.read_at ? notification : await markCustomerPaymentNotificationRead(token, notification.id)
-      setPaymentNotifications((current) => current.map((item) => item.id === notification.id ? updated : item))
+      await markPaymentNotificationRead(notification)
       const order = orders.find((item) => item.id === notification.order_id)
       if (order) setSelectedOrder(order)
-      else await load()
+      else if (notification.order_id) await load()
     } catch (cause) {
-      setError(getUserFacingMessage(cause, 'No pudimos abrir la notificación.'))
+      setError(getUserFacingMessage(cause, 'No pudimos abrir el aviso.'))
     }
   }
 
@@ -949,8 +977,22 @@ export default function CustomerAccount() {
                       <button type="button" onClick={loadPaymentNotifications} className="min-h-10 rounded-xl bg-brand-green px-4 text-sm font-bold text-brand-white">Reintentar</button>
                     </div>
                   ) : null}
+                  {!notificationsLoading && !notificationsError && unreadNotificationCount > 0 ? (
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={handleMarkAllNotificationsRead}
+                        className="min-h-9 rounded-full border border-brand-green/20 bg-brand-white px-3 text-xs font-semibold text-brand-green touch-manipulation active:bg-brand-green/8"
+                      >
+                        Marcar todas como leídas
+                      </button>
+                    </div>
+                  ) : null}
                   {!notificationsLoading && !notificationsError && paymentNotifications.length ? paymentNotifications.map((notification) => (
-                    <button key={notification.id} type="button" onClick={() => openPaymentNotification(notification)} className={`w-full rounded-2xl border p-4 text-left transition ${notification.read_at ? 'border-brand-green/10 bg-brand-white' : 'border-brand-green/25 bg-brand-green/[0.04]'}`}>
+                    <article
+                      key={notification.id}
+                      className={`w-full rounded-2xl border p-4 text-left ${notification.read_at ? 'border-brand-green/10 bg-brand-white' : 'border-brand-green/25 bg-brand-green/[0.04]'}`}
+                    >
                       <div className="flex items-start justify-between gap-3">
                         <strong className="text-brand-green">{notification.title}</strong>
                         {!notification.read_at ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green" aria-label="Sin leer" /> : null}
@@ -963,8 +1005,28 @@ export default function CustomerAccount() {
                           ))}
                         </span>
                       ) : null}
-                      <p className="mt-2 text-xs text-brand-carmelita/60">{formatDate(notification.created_at)} · Toca para abrir el pedido</p>
-                    </button>
+                      <p className="mt-2 text-xs text-brand-carmelita/60">{formatDate(notification.created_at)}</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {notification.order_id ? (
+                          <button
+                            type="button"
+                            onClick={() => openPaymentNotification(notification)}
+                            className="min-h-9 rounded-xl bg-brand-green px-3 text-xs font-bold text-brand-white touch-manipulation"
+                          >
+                            Ver pedido
+                          </button>
+                        ) : null}
+                        {!notification.read_at ? (
+                          <button
+                            type="button"
+                            onClick={() => handleMarkNotificationRead(notification)}
+                            className="min-h-9 rounded-xl border border-brand-green/20 bg-brand-white px-3 text-xs font-semibold text-brand-green touch-manipulation active:bg-brand-green/8"
+                          >
+                            Marcar como leída
+                          </button>
+                        ) : null}
+                      </div>
+                    </article>
                   )) : null}
                   {!notificationsLoading && !notificationsError && !paymentNotifications.length ? <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">No tienes avisos de pagos.</p></div> : null}
                 </section>
