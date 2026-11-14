@@ -6,27 +6,47 @@ React + Vite + Capacitor (`com.palajaba.app`).
 
 La versión que ve el usuario y que compara el aviso de actualización es el **`versionName`** del APK (`android/app/build.gradle`). Debe coincidir con la versión que subes en **Admin → Apps**.
 
+### Entornos (`.env`)
+
+| Archivo | Uso |
+| --- | --- |
+| `.env.development` | API/local o staging (ver `.env.development.example`) |
+| `.env.production` | API de producción (ver `.env.production.example`) |
+
+Al generar el APK se copia el archivo del entorno a `.env` y Vite construye con ese modo.
+
 ### 1. Generar el APK
 
 Desde `palajaba-front` (Windows / PowerShell), con Node 22 y Java (Android Studio):
 
 ```powershell
-npm run apk -- -AppVersion 1.0.7
+# Producción (.env.production)
+npm run apk:prod -- -AppVersion 1.0.7
+
+# Desarrollo (.env.development)
+npm run apk:dev -- -AppVersion 1.0.7
+```
+
+Equivalente:
+
+```powershell
+npm run apk -- -Prod -AppVersion 1.0.7
+npm run apk -- -Dev -AppVersion 1.0.7
 ```
 
 Ese comando:
 
-1. Escribe `versionName` y sube `versionCode` en `android/app/build.gradle`
-2. Hace `npm run build` y `npx cap sync`
-3. Compila `assembleDebug`
-4. Copia el APK a `apk/palajaba1.0.7.apk` (el nombre incluye la versión)
+1. Activa `.env.production` o `.env.development`
+2. Escribe `versionName` y sube `versionCode` en `android/app/build.gradle`
+3. Hace `vite build --mode …`, `npx cap sync` y `assembleDebug`
+4. Copia el APK a `apk/palajaba1.0.7.apk`
 
 **Importante:** usa `-AppVersion`, no `-Version` (PowerShell se queda con `-Version` y no actualiza el build).
 
 Opcional: fijar el `versionCode` a mano:
 
 ```powershell
-npm run apk -- -AppVersion 1.0.7 -VersionCode 10
+npm run apk:prod -- -AppVersion 1.0.7 -VersionCode 10
 ```
 
 ### 2. Publicar en Admin

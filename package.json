@@ -36,7 +36,9 @@
     "cap:sync": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/cap-sync.ps1",
     "cap:android": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/cap.ps1 open android",
     "cap:ios": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/cap.ps1 open ios",
-    "apk": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/apk.ps1"
+    "apk": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/apk.ps1",
+    "apk:dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/apk.ps1 -Dev",
+    "apk:prod": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/apk.ps1 -Prod"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",

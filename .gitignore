@@ -20,9 +20,10 @@ ios/App/App/GoogleService-Info.plist
 # Variables de entorno y secretos (NUNCA subir a GitHub)
 .env
 .env.*
-.env.production
 .env.local.dev
 !.env.example
+!.env.development.example
+!.env.production.example
 
 # Editor directories and files
 .vscode/*

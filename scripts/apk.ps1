@@ -1,12 +1,19 @@
 # Genera el bundle web, sincroniza Capacitator y deja el APK de prueba.
 # IMPORTANTE: no usar -Version (lo consume powershell.exe). Usar -AppVersion.
+# Entorno: -Prod / -Dev  (o -Env prod|dev). Copia .env.production / .env.development → .env
 param(
     [Parameter(Mandatory = $true)]
     [ValidatePattern('^[0-9A-Za-z][0-9A-Za-z._+-]*$')]
     [Alias('V')]
     [string]$AppVersion,
 
-    [int]$VersionCode = 0
+    [int]$VersionCode = 0,
+
+    [ValidateSet('dev', 'prod', 'development', 'production')]
+    [string]$Env = '',
+
+    [switch]$Prod,
+    [switch]$Dev
 )
 
 $ErrorActionPreference = "Stop"
@@ -79,9 +86,77 @@ function Update-IosMarketingVersion {
     }
 }
 
+function Resolve-ViteMode {
+    if ($Prod -and $Dev) {
+        throw "Usa solo uno: -Prod o -Dev."
+    }
+    if ($Prod) { return 'production' }
+    if ($Dev) { return 'development' }
+    if ($Env) {
+        if ($Env -in @('dev', 'development')) { return 'development' }
+        return 'production'
+    }
+    throw "Indica el entorno: -Prod o -Dev (ej. npm run apk:prod -- -AppVersion 1.0.7)."
+}
+
+function Use-FrontEnvFile {
+    param([string]$Mode)
+
+    $sourceName = ".env.$Mode"
+    $sourcePath = Join-Path $FrontRoot $sourceName
+    $activePath = Join-Path $FrontRoot ".env"
+    if (-not (Test-Path $sourcePath)) {
+        $example = Join-Path $FrontRoot "$sourceName.example"
+        throw "No existe $sourceName. Copia $sourceName.example a $sourceName y ajústalo."
+    }
+
+    Copy-Item $sourcePath $activePath -Force
+
+    Get-Content $sourcePath | ForEach-Object {
+        $line = $_.Trim()
+        if (-not $line -or $line.StartsWith('#')) { return }
+        $eq = $line.IndexOf('=')
+        if ($eq -lt 1) { return }
+        $key = $line.Substring(0, $eq).Trim()
+        $value = $line.Substring($eq + 1).Trim()
+        Set-Item -Path "Env:$key" -Value $value
+    }
+
+    Write-Output "Entorno: $Mode ($sourceName → .env)"
+    Write-Output "VITE_API_URL=$($env:VITE_API_URL)"
+}
+
+function Invoke-FrontProductionBuild {
+    param([string]$Mode)
+
+    npx vite build --mode $Mode
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    node scripts/copy-spa-fallback.mjs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    node scripts/generate-sitemap.mjs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    node scripts/generate-store-seo-pages.mjs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    node scripts/verify-sitemap.mjs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    node scripts/verify-store-seo-pages.mjs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+    node scripts/verify-checkout-flow.mjs
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+}
+
 Ensure-Node22
 Ensure-JavaHome
 Set-Location $FrontRoot
+
+$viteMode = Resolve-ViteMode
+Use-FrontEnvFile -Mode $viteMode
 
 $gradlePath = Join-Path $FrontRoot "android\app\build.gradle"
 $iosPlist = Join-Path $FrontRoot "ios\App\App\Info.plist"
@@ -90,8 +165,7 @@ Update-IosMarketingVersion -PlistPath $iosPlist -VersionName $AppVersion
 
 Write-Output "Node $(node -v)"
 Write-Output "Android versionName=$AppVersion versionCode=$appliedCode"
-npm run build
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+Invoke-FrontProductionBuild -Mode $viteMode
 
 npx cap sync
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -113,6 +187,7 @@ Copy-Item $apkSource $apkTarget -Force
 
 Write-Output ""
 Write-Output "APK Android: $apkTarget"
+Write-Output "Modo Vite: $viteMode"
 Write-Output "versionName embebido: $AppVersion (versionCode $appliedCode)"
 Write-Output "Sube este APK en Admin → Apps con versión exacta: $AppVersion"
 Write-Output "Bundle iOS: $(Join-Path $FrontRoot 'ios\App\App\public')"
