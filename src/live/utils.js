@@ -129,6 +129,27 @@ function dispatchPushNavigation(data) {
   }
 }
 
+/** Debe coincidir con ANDROID_PUSH_CHANNEL_ID en palajaba-back/app/live/push.py */
+export const ANDROID_PUSH_CHANNEL_ID = 'pala_jaba_push'
+
+async function ensureAndroidPushChannel(PushNotifications) {
+  if (Capacitor.getPlatform() !== 'android') return
+  try {
+    await PushNotifications.createChannel({
+      id: ANDROID_PUSH_CHANNEL_ID,
+      name: 'Pa\' La Jaba',
+      description: 'Avisos de pedidos, tienda y actualizaciones de la app',
+      importance: 5,
+      visibility: 1,
+      sound: 'default',
+      vibration: true,
+      lights: true,
+    })
+  } catch {
+    /* canal ya existe o Android < 8 */
+  }
+}
+
 async function ensurePushListeners(PushNotifications) {
   if (pushListening) return
   pushListening = true
@@ -155,26 +176,25 @@ async function ensurePushListeners(PushNotifications) {
   })
 }
 
-export async function startSellerPush(accessToken) {
+async function startNativePush(accessToken, role) {
   if (!isNativeApp()) return
-  pushRole = 'seller'
-  pushAuthToken = accessToken
+  if (role === 'customer' && !accessToken) return
+  pushRole = role
+  pushAuthToken = accessToken || ''
   const { PushNotifications } = await import('@capacitor/push-notifications')
   const permission = await PushNotifications.requestPermissions()
   if (permission.receive !== 'granted') return
+  await ensureAndroidPushChannel(PushNotifications)
   await ensurePushListeners(PushNotifications)
   await PushNotifications.register()
 }
 
+export async function startSellerPush(accessToken) {
+  await startNativePush(accessToken, 'seller')
+}
+
 export async function startCustomerPush(accessToken) {
-  if (!isNativeApp() || !accessToken) return
-  pushRole = 'customer'
-  pushAuthToken = accessToken
-  const { PushNotifications } = await import('@capacitor/push-notifications')
-  const permission = await PushNotifications.requestPermissions()
-  if (permission.receive !== 'granted') return
-  await ensurePushListeners(PushNotifications)
-  await PushNotifications.register()
+  await startNativePush(accessToken, 'customer')
 }
 
 export async function stopSellerPush() {
