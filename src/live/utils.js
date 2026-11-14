@@ -138,18 +138,19 @@ function dispatchPushNavigation(data) {
 }
 
 /** Debe coincidir con ANDROID_PUSH_CHANNEL_ID en palajaba-back/app/live/push.py */
-export const ANDROID_PUSH_CHANNEL_ID = 'pala_jaba_push'
+export const ANDROID_PUSH_CHANNEL_ID = 'pala_jaba_push_v2'
 
 async function ensureAndroidPushChannel(PushNotifications) {
   if (Capacitor.getPlatform() !== 'android') return
   try {
+    // Sin `sound`: Android usa el tono de notificación del usuario.
+    // (sound: 'default' en Capacitor busca res/raw/default y no el del sistema.)
     await PushNotifications.createChannel({
       id: ANDROID_PUSH_CHANNEL_ID,
       name: 'Pa\' La Jaba',
       description: 'Avisos de pedidos, tienda y actualizaciones de la app',
       importance: 5,
       visibility: 1,
-      sound: 'default',
       vibration: true,
       lights: true,
     })
