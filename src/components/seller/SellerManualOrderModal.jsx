@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { searchSellerOrderedProducts } from '../../products/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
@@ -61,6 +62,7 @@ function QuantityStepper({ value, onChange, max = 99 }) {
 }
 
 export default function SellerManualOrderModal({ onClose: requestClose, onCreated }) {
+  const navigate = useNavigate()
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
   const [searchLoading, setSearchLoading] = useState(true)
   const [searchError, setSearchError] = useState('')
@@ -352,11 +354,25 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                     </div>
                   ))}
                 </div>
-              ) : (
-                <p className="rounded-2xl border border-brand-yellow/25 bg-brand-yellow/15 px-4 py-3 text-center text-sm text-brand-carmelita/90">
-                  Agrega al menos un producto para registrar la venta.
-                </p>
-              )}
+              ) : null}
+
+              {!searchLoading && !searchError && !hasOrderedProducts ? (
+                <div className="rounded-2xl border border-brand-yellow/25 bg-brand-yellow/15 px-4 py-4 text-center">
+                  <p className="text-sm text-brand-carmelita/90">
+                    Agrega al menos un producto para registrar la venta.
+                  </p>
+                  <button
+                    type="button"
+                    className={`${sellerBtnPrimary} mt-3`}
+                    onClick={() => {
+                      onClose()
+                      navigate('/tienda/catalogo')
+                    }}
+                  >
+                    Ir al catálogo
+                  </button>
+                </div>
+              ) : null}
 
               <div className={`${sellerSection} space-y-2`}>
                 <label htmlFor="manual-order-payment-currency" className={sellerLabel}>

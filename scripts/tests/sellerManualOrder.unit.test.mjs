@@ -85,8 +85,8 @@ test('inferManualOrderPaymentCurrency infiere moneda única', () => {
 
 test('getProductSearchStatus distingue catálogo vacío, vista previa y sin coincidencias', () => {
   const none = getProductSearchStatus({ hasOrderedProducts: false, total: 0, shown: 0 })
-  assert.equal(none.type, 'empty')
-  assert.match(none.message, /catálogo/)
+  assert.equal(none.type, 'empty-catalog')
+  assert.equal(none.message, '')
 
   const preview = getProductSearchStatus({
     hasOrderedProducts: true,

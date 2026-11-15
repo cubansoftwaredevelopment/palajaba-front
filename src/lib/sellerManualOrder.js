@@ -26,7 +26,8 @@ export function getProductSearchStatus({
   hasOrderedProducts = false,
 } = {}) {
   if (!hasOrderedProducts) {
-    return { type: 'empty', message: 'No hay productos disponibles en el catálogo.' }
+    // El aviso con CTA al catálogo vive en el modal; aquí no duplicamos texto.
+    return { type: 'empty-catalog', message: '' }
   }
 
   const normalized = String(query ?? '').trim()
