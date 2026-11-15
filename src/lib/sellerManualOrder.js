@@ -26,7 +26,7 @@ export function getProductSearchStatus({
   hasOrderedProducts = false,
 } = {}) {
   if (!hasOrderedProducts) {
-    return { type: 'empty', message: 'No hay productos con pedidos.' }
+    return { type: 'empty', message: 'No hay productos disponibles en el catálogo.' }
   }
 
   const normalized = String(query ?? '').trim()

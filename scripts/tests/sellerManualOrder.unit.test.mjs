@@ -83,10 +83,10 @@ test('inferManualOrderPaymentCurrency infiere moneda única', () => {
   assert.equal(inferManualOrderPaymentCurrency(lineItems), 'USD')
 })
 
-test('getProductSearchStatus distingue pedidos vacíos, vista previa y sin coincidencias', () => {
+test('getProductSearchStatus distingue catálogo vacío, vista previa y sin coincidencias', () => {
   const none = getProductSearchStatus({ hasOrderedProducts: false, total: 0, shown: 0 })
   assert.equal(none.type, 'empty')
-  assert.match(none.message, /pedidos/)
+  assert.match(none.message, /catálogo/)
 
   const preview = getProductSearchStatus({
     hasOrderedProducts: true,
