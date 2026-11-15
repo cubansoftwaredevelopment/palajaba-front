@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.palajaba.app",
+      "sha256_cert_fingerprints": [
+        "88:54:A2:CC:F8:B0:9C:99:EB:BD:AF:1D:29:FD:16:24:12:81:0B:74:72:ED:C3:97:8A:B1:86:9B:DC:6D:31:BD"
+      ]
+    }
+  }
+]

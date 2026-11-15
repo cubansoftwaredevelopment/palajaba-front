@@ -37,9 +37,10 @@ npm run apk -- -Dev -AppVersion 1.0.7
 Ese comando:
 
 1. Activa `.env.production` o `.env.development`
-2. Escribe `versionName` y sube `versionCode` en `android/app/build.gradle`
-3. Hace `vite build --mode …`, `npx cap sync` y `assembleDebug`
-4. Copia el APK a `apk/palajaba1.0.7.apk`
+2. Reescribe el host de deep links en `AndroidManifest.xml` y `App.entitlements` con el hostname de `VITE_SITE_URL`
+3. Escribe `versionName` y sube `versionCode` en `android/app/build.gradle`
+4. Hace `vite build --mode …`, `npx cap sync` y `assembleDebug`
+5. Copia el APK a `apk/palajaba1.0.7.apk`
 
 **Importante:** usa `-AppVersion`, no `-Version` (PowerShell se queda con `-Version` y no actualiza el build).
 
@@ -74,3 +75,59 @@ npm run apk:prod -- -AppVersion 1.0.7 -VersionCode 10
 | Main + push | Admin → Apps → Set main |
 
 iOS: el script actualiza el web bundle y el `CFBundleShortVersionString` del Info.plist local; el IPA se genera en un Mac con Xcode.
+
+## Deep links (Android App Links + iOS Universal Links)
+
+Cualquier URL bajo **`VITE_SITE_URL`** (SITE_URL del front) puede abrir la app nativa cuando está instalada y verificada. El bridge navega a `pathname + search + hash` (todas las rutas de la SPA).
+
+| Pieza | Dónde |
+| --- | --- |
+| Base de enlaces | `VITE_SITE_URL` (prod: `.env.production` / Render) |
+| Android intent-filter | `android/app/src/main/AndroidManifest.xml` → `apk:dev` / `apk:prod` escriben el host de `VITE_SITE_URL` |
+| iOS Associated Domains | `ios/App/App/App.entitlements` → `applinks:<host>` del mismo `VITE_SITE_URL` |
+| Android association | `public/.well-known/assetlinks.json` → se sirve en `{SITE_URL}/.well-known/assetlinks.json` |
+| iOS association | `public/.well-known/apple-app-site-association` → `{SITE_URL}/.well-known/apple-app-site-association` |
+| JS bridge | `src/lib/nativeDeepLinks.js` (solo acepta el hostname de `VITE_SITE_URL`) |
+
+### Android: fingerprint SHA256
+
+El `assetlinks.json` debe incluir el SHA256 del certificado con el que firmas la APK instalada. Hoy `npm run apk` usa **debug**:
+
+```powershell
+& "C:\Program Files\Android\Android Studio\jbr\bin\keytool.exe" -list -v `
+  -keystore "$env:USERPROFILE\.android\debug.keystore" `
+  -storepass android -alias androiddebugkey
+```
+
+Copia la línea `SHA256:` en `public/.well-known/assetlinks.json`. Si firmas con un keystore de release, añade ese fingerprint al mismo array.
+
+Tras instalar la APK:
+
+```bash
+adb shell pm verify-app-links --re-verify com.palajaba.app
+adb shell pm get-app-links com.palajaba.app
+```
+
+Pruebas (sustituye `SITE_URL` por tu `VITE_SITE_URL`, p. ej. `https://palajaba.com`):
+
+```bash
+adb shell am start -a android.intent.action.VIEW -d "$SITE_URL/comprar"
+adb shell am start -a android.intent.action.VIEW -d "$SITE_URL/tienda/pedidos"
+adb shell am start -a android.intent.action.VIEW -d "$SITE_URL/aplicacion"
+```
+
+### iOS: Team ID y Associated Domains
+
+1. En Apple Developer, activa **Associated Domains** para el App ID `com.palajaba.app`.
+2. Sustituye `TEAMID` en `public/.well-known/apple-app-site-association` por tu Apple Team ID (`TEAMID.com.palajaba.app`).
+3. Firma la app con un perfil que incluya Associated Domains.
+4. Tras desplegar el front, comprueba que `{SITE_URL}/.well-known/apple-app-site-association` responde **200**, JSON, sin redirect.
+
+### Verificación web
+
+Tras el deploy del front:
+
+- `{SITE_URL}/.well-known/assetlinks.json`
+- `{SITE_URL}/.well-known/apple-app-site-association`
+
+`apk:dev` y `apk:prod` reescriben el host en `AndroidManifest.xml` y `App.entitlements` desde `VITE_SITE_URL` de ese entorno. `.well-known` tiene que publicarse en ese mismo origen.

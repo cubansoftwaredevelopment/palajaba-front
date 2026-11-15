@@ -126,6 +126,73 @@ function Use-FrontEnvFile {
     Write-Output "VITE_API_URL=$($env:VITE_API_URL)"
 }
 
+function Write-Utf8NoBom {
+    param(
+        [string]$Path,
+        [string]$Content
+    )
+
+    $utf8 = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText($Path, $Content, $utf8)
+}
+
+function Get-SiteHostnameFromEnv {
+    $raw = "$($env:VITE_SITE_URL)".Trim()
+    if (-not $raw) {
+        throw "VITE_SITE_URL está vacío. Los deep links necesitan el host de ese entorno."
+    }
+
+    try {
+        $uri = [Uri]$raw
+    } catch {
+        throw "VITE_SITE_URL no es una URL válida: $raw"
+    }
+
+    $siteHost = $uri.Host.ToLowerInvariant()
+    if ($uri.Scheme -notin @('http', 'https') -or -not $siteHost) {
+        throw "VITE_SITE_URL debe ser una URL http(s) con host. Valor: $raw"
+    }
+    if ($siteHost -match '[\s"<>]') {
+        throw "El host de VITE_SITE_URL no es válido: $siteHost"
+    }
+    return $siteHost
+}
+
+function Update-DeepLinkHost {
+    param([string]$SiteHost)
+
+    $manifestPath = Join-Path $FrontRoot "android\app\src\main\AndroidManifest.xml"
+    $entitlementsPath = Join-Path $FrontRoot "ios\App\App\App.entitlements"
+
+    if (-not (Test-Path $manifestPath)) {
+        throw "No existe $manifestPath"
+    }
+
+    $manifest = Get-Content -Raw -Path $manifestPath
+    if ($manifest -notmatch 'android:host="[^"]+"') {
+        throw "No se encontró android:host en AndroidManifest.xml"
+    }
+    $updatedManifest = [regex]::Replace($manifest, 'android:host="[^"]+"', "android:host=`"$SiteHost`"")
+    if ($updatedManifest -ne $manifest) {
+        Write-Utf8NoBom -Path $manifestPath -Content $updatedManifest
+    }
+
+    if (Test-Path $entitlementsPath) {
+        $entitlements = Get-Content -Raw -Path $entitlementsPath
+        if ($entitlements -notmatch 'applinks:[^<"\s]+') {
+            throw "No se encontró applinks: en App.entitlements"
+        }
+        $updatedEntitlements = [regex]::Replace($entitlements, 'applinks:[^<"\s]+', "applinks:$SiteHost")
+        if ($updatedEntitlements -ne $entitlements) {
+            Write-Utf8NoBom -Path $entitlementsPath -Content $updatedEntitlements
+        }
+    } else {
+        Write-Output "Aviso: no se encontró App.entitlements; se omite el host iOS."
+    }
+
+    Write-Output "Deep links host: $SiteHost"
+}
+
 function Invoke-FrontProductionBuild {
     param([string]$Mode)
 
@@ -157,6 +224,8 @@ Set-Location $FrontRoot
 
 $viteMode = Resolve-ViteMode
 Use-FrontEnvFile -Mode $viteMode
+$siteHost = Get-SiteHostnameFromEnv
+Update-DeepLinkHost -SiteHost $siteHost
 
 $gradlePath = Join-Path $FrontRoot "android\app\build.gradle"
 $iosPlist = Join-Path $FrontRoot "ios\App\App\Info.plist"
@@ -188,6 +257,7 @@ Copy-Item $apkSource $apkTarget -Force
 Write-Output ""
 Write-Output "APK Android: $apkTarget"
 Write-Output "Modo Vite: $viteMode"
+Write-Output "Deep links: https://$siteHost"
 Write-Output "versionName embebido: $AppVersion (versionCode $appliedCode)"
 Write-Output "Sube este APK en Admin → Apps con versión exacta: $AppVersion"
 Write-Output "Bundle iOS: $(Join-Path $FrontRoot 'ios\App\App\public')"

@@ -63,6 +63,7 @@ import PlatformTerms from './pages/PlatformTerms'
 import QvaPayReturn from './pages/QvaPayReturn'
 import AppReleasePromptGate from './appReleases/components/AppReleasePromptGate'
 import AppDevicePresence from './lib/appDevicePresence'
+import { NativeDeepLinkBridge } from './lib/nativeDeepLinks'
 import { disableBuyerLocationPersistence } from './lib/buyerLocation'
 import { startAnonymousNativePush } from './live/utils'
 
@@ -74,6 +75,7 @@ if (typeof window !== 'undefined' && new URLSearchParams(window.location.search)
 function RootLayout() {
   return (
     <>
+      <NativeDeepLinkBridge />
       <Outlet />
       <AppReleasePromptGate />
       <ScrollToTopButton />

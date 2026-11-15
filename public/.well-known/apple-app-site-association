@@ -1,0 +1,14 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TEAMID.com.palajaba.app"],
+        "components": [
+          { "/": "/*" }
+        ],
+        "paths": ["*"]
+      }
+    ]
+  }
+}
