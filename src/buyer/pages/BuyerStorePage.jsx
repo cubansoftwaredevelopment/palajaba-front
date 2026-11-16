@@ -27,7 +27,7 @@ import { validateGestorUsername } from "../../lib/sellerGestores";
 import { recordStoreProfileView } from "../../lib/storeProfileView";
 import { setStoreCheckoutPhones } from "../../lib/storeCheckoutPhones";
 import { getAdditionalMunicipalities } from "../../lib/buyerLocation";
-import { storePublicPath } from "../../lib/storeSlug";
+import { storeGestorPublicPath, storePublicPath } from "../../lib/storeSlug";
 import { resolveUserFacingError } from "../../lib/userFacingError";
 import { usePublicStoreLocation } from "./usePublicStoreLocation";
 

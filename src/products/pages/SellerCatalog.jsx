@@ -26,7 +26,7 @@ import {
   sellerSectionGap,
 } from '../../components/seller/sellerStyles'
 import { sellerHasProductDiscounts } from '../../subscriptions/constants.js'
-import { fetchSellerCatalog } from '../api.js'
+import { createCatalogProduct, fetchSellerCatalog, updateCatalogProduct } from '../api.js'
 import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { resolveStoreSlug } from '../../lib/storeShare'
@@ -93,14 +93,39 @@ export default function SellerCatalog() {
     loadCatalog()
   }
 
-  function handleProductSaved(product, { created = false } = {}) {
+  function closeProductForm() {
     setShowCreateProduct(false)
     setCreateProductLocalCategoryId('')
     setProductToEdit(null)
+  }
+
+  function handleProductSaved(product, { created = false } = {}) {
+    closeProductForm()
+    setError('')
     setSuccessMessage(
       created ? `Producto «${product.name}» creado.` : `Producto «${product.name}» actualizado.`,
     )
     loadCatalog()
+  }
+
+  function handleProductPersist({ isEditing, productId, formData }) {
+    setError('')
+    closeProductForm()
+    const token = getSellerToken()
+    const request = isEditing
+      ? updateCatalogProduct(token, productId, formData)
+      : createCatalogProduct(token, formData)
+    request
+      .then((saved) => handleProductSaved(saved, { created: !isEditing }))
+      .catch((err) => {
+        setSuccessMessage('')
+        setError(
+          getUserFacingMessage(
+            err,
+            `No se pudo ${isEditing ? 'actualizar' : 'crear'} el producto.`,
+          ),
+        )
+      })
   }
 
   function handleProductDeleted(product) {
@@ -273,14 +298,8 @@ export default function SellerCatalog() {
             allowProductDiscount={sellerHasProductDiscounts(profile)}
             defaultOffersDelivery={Boolean(profile?.offers_delivery)}
             profile={profile}
-            onClose={() => {
-              setShowCreateProduct(false)
-              setCreateProductLocalCategoryId('')
-              setProductToEdit(null)
-            }}
-            onSaved={(product) =>
-              handleProductSaved(product, { created: !productToEdit })
-            }
+            onClose={closeProductForm}
+            onPersist={handleProductPersist}
           />
         )}
 
