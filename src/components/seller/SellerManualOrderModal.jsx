@@ -15,6 +15,8 @@ import {
   PAYMENT_CURRENCIES,
   validateManualOrderDraft,
 } from '../../lib/sellerManualOrder'
+import SubscriptionDatePicker from '../SubscriptionDatePicker'
+import { formatDateForApi, startOfDay } from '../../lib/dates'
 import SellerModalPortal from './SellerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
@@ -79,6 +81,8 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
     phone_secondary: '',
     notes: '',
   })
+  const [includeSaleDate, setIncludeSaleDate] = useState(false)
+  const [saleDate, setSaleDate] = useState(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [productSearch, setProductSearch] = useState('')
@@ -182,6 +186,11 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
       return
     }
 
+    if (includeSaleDate && !saleDate) {
+      setError('Elige la fecha de venta o desactiva esa opción.')
+      return
+    }
+
     if (withDelivery) {
       if (!delivery.recipient_name.trim() || !delivery.address.trim() || !delivery.phone_primary.trim()) {
         setError('Completa nombre, dirección y teléfono del domicilio.')
@@ -196,6 +205,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
     const payload = buildManualOrderPayload({
       lineItems,
       paymentCurrency: paymentCurrency || inferManualOrderPaymentCurrency(lineItems) || null,
+      soldAt: includeSaleDate ? formatDateForApi(saleDate) : null,
       delivery: withDelivery
         ? {
             recipient_name: delivery.recipient_name.trim(),
@@ -389,6 +399,32 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                     ...PAYMENT_CURRENCIES.map((currency) => ({ value: currency, label: currency })),
                   ]}
                 />
+              </div>
+
+              <div className={`${sellerSection} space-y-3`}>
+                <label className="flex items-center gap-2.5 text-sm text-brand-carmelita">
+                  <Checkbox
+                    id="manual-order-sale-date"
+                    checked={includeSaleDate}
+                    onChange={(event) => {
+                      const next = event.target.checked
+                      setIncludeSaleDate(next)
+                      if (next) setSaleDate((current) => current ?? startOfDay(new Date()))
+                    }}
+                  />
+                  Agregar fecha de venta
+                </label>
+                {includeSaleDate ? (
+                  <SubscriptionDatePicker
+                    value={saleDate}
+                    onChange={(next) => next && setSaleDate(next)}
+                    minDate={new Date(2015, 0, 1)}
+                    maxDate={startOfDay(new Date())}
+                    caption="Fecha de venta"
+                  />
+                ) : (
+                  <p className={sellerHint}>Si no la indicas, el pedido queda con la fecha de hoy.</p>
+                )}
               </div>
 
               <div className={`${sellerSection} space-y-3`}>

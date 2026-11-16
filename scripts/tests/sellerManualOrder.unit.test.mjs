@@ -65,6 +65,19 @@ test('buildManualOrderPayload replica estructura de pedido normal', () => {
     ],
     payment_currency: 'CUP',
   })
+  assert.equal(payload.sold_at, undefined)
+})
+
+test('buildManualOrderPayload incluye la fecha de venta solo si se indica', () => {
+  const lineItem = createManualOrderLineItem(
+    { id: 'p1', name: 'Arroz', base_price: 100, base_currency: 'CUP' },
+    1,
+  )
+  const payload = buildManualOrderPayload({
+    lineItems: [lineItem],
+    soldAt: '2026-11-01',
+  })
+  assert.equal(payload.sold_at, '2026-11-01')
 })
 
 test('validateManualOrderDraft detecta stock insuficiente', () => {
