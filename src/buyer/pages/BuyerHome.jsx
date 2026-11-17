@@ -349,6 +349,7 @@ function BuyerHomeContent({ preview = null }) {
     <BuyerDisplayedLocationProvider location={location}>
       <BuyerShell
         footer={<BuyerFeedFooter />}
+        headerLayout="stack"
         headerStart={
           <BuyerLocationDisplay
             province={location.province}
@@ -361,6 +362,7 @@ function BuyerHomeContent({ preview = null }) {
             provinceId={location.province.id}
             municipalityId={location.municipality.id}
             additionalMunicipalityIds={additionalMunicipalityIds}
+            showGo
           />
         }
       >

@@ -3,6 +3,7 @@ import { Link, Navigate, useParams } from "react-router-dom";
 import CatalogThemeScope from "../../components/catalog/CatalogThemeScope";
 import BuyerCategoryProductRow from "../components/BuyerCategoryProductRow";
 import BuyerHeaderSearch from "../components/BuyerHeaderSearch";
+import { BuyerStoreIdentity } from "../components/BuyerStoreHeader";
 import BuyerMarketplaceNav from "../components/BuyerMarketplaceNav";
 import BuyerShell from "../components/BuyerShell";
 import BuyerStoreProfileHeader from "../components/BuyerStoreProfileHeader";
@@ -235,8 +236,14 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       <BuyerDisplayedLocationProvider location={location}>
         <BuyerShell
           flushBottom
-          backTo={backTo}
-          backLabel={backLabel}
+          headerLayout="stack"
+          headerStart={
+            <BuyerStoreIdentity
+              store={catalog?.store}
+              backTo={backTo}
+              backLabel={backLabel || "Volver"}
+            />
+          }
           headerSearch={
             <BuyerHeaderSearch
               provinceId={location.province.id}
@@ -244,6 +251,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
               additionalMunicipalityIds={additionalMunicipalityIds}
               storeSlug={storeSlug}
               gestorUsername={gestorUsername}
+              showGo
             />
           }
         >

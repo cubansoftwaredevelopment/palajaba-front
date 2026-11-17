@@ -59,6 +59,7 @@ export function fetchMarketplaceFeed({
   limitPerCategory = 20,
   limit = 4,
   offset = 0,
+  deliveryOnly = false,
 }) {
   const params = new URLSearchParams({
     province_id: provinceId,
@@ -69,6 +70,7 @@ export function fetchMarketplaceFeed({
   })
   appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   appendDisplayCurrency(params, currency)
+  if (deliveryOnly) params.set('solo_domicilio', 'true')
   return request(`/api/marketplace/feed?${params}`)
 }
 
@@ -106,6 +108,7 @@ export function fetchMarketplaceSearch({
   offset = 0,
   storeSlug,
   gestorUsername,
+  deliveryOnly = false,
 }) {
   const params = new URLSearchParams({
     province_id: provinceId,
@@ -119,6 +122,7 @@ export function fetchMarketplaceSearch({
   if (gestorUsername) params.set('gestor_username', gestorUsername)
   appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   appendDisplayCurrency(params, currency)
+  if (deliveryOnly && !storeSlug) params.set('solo_domicilio', 'true')
   return request(`/api/marketplace/search?${params}`)
 }
 
@@ -177,6 +181,7 @@ export function fetchMarketplaceCategoryProducts({
   globalCategoryId,
   limit = 20,
   offset = 0,
+  deliveryOnly = false,
 }) {
   const params = new URLSearchParams({
     province_id: provinceId,
@@ -187,6 +192,7 @@ export function fetchMarketplaceCategoryProducts({
   })
   appendAdditionalMunicipalities(params, additionalMunicipalityIds)
   appendDisplayCurrency(params, currency)
+  if (deliveryOnly) params.set('solo_domicilio', 'true')
   return request(`/api/marketplace/products?${params}`)
 }
 

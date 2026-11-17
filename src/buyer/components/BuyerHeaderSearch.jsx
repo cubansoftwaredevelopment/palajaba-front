@@ -15,6 +15,78 @@ const NO_EXTRA_MUNICIPALITIES = [];
 
 const EMPTY_SUGGESTIONS = { products: [], stores: [] };
 
+const SEARCH_HINTS = [
+  "buscar cadenas, reloj, ecoflow",
+  "buscar arroz, café, aceite",
+  "buscar audífonos, cargador, perfume",
+  "buscar zapatos, camisa, bolso",
+];
+
+const TYPE_MS = 58;
+const ERASE_MS = 32;
+const HOLD_MS = 1400;
+const GAP_MS = 320;
+
+function useTypingPlaceholder(phrases) {
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    const reduced =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      setText(phrases[0] || "");
+      return undefined;
+    }
+
+    let phraseIndex = 0;
+    let count = 0;
+    let erasing = false;
+    let timer = 0;
+
+    const step = () => {
+      const phrase = phrases[phraseIndex] || "";
+      if (!erasing) {
+        count += 1;
+        setText(phrase.slice(0, count));
+        if (count >= phrase.length) {
+          erasing = true;
+          timer = window.setTimeout(step, HOLD_MS);
+          return;
+        }
+        timer = window.setTimeout(step, TYPE_MS);
+        return;
+      }
+      count -= 1;
+      setText(phrase.slice(0, Math.max(0, count)));
+      if (count <= 0) {
+        erasing = false;
+        phraseIndex = (phraseIndex + 1) % phrases.length;
+        timer = window.setTimeout(step, GAP_MS);
+        return;
+      }
+      timer = window.setTimeout(step, ERASE_MS);
+    };
+
+    timer = window.setTimeout(step, 360);
+    return () => window.clearTimeout(timer);
+  }, [phrases]);
+
+  return text;
+}
+
+function SearchHint({ text, className }) {
+  return (
+    <span
+      className={`pointer-events-none absolute flex items-center overflow-hidden text-sm text-brand-carmelita/45 ${className}`}
+      aria-hidden="true"
+    >
+      <span className="truncate">{text}</span>
+      <span className="ml-px inline-block h-4 w-px shrink-0 bg-brand-carmelita/40 motion-safe:animate-pulse" />
+    </span>
+  );
+}
+
 function ProductMark() {
   return (
     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
@@ -122,6 +194,7 @@ export default function BuyerHeaderSearch({
   additionalMunicipalityIds = NO_EXTRA_MUNICIPALITIES,
   storeSlug = null,
   gestorUsername = null,
+  showGo = false,
 }) {
   const navigate = useNavigate();
   const { isInJaba, addProduct, buyProduct } = useBuyerJaba();
@@ -139,6 +212,7 @@ export default function BuyerHeaderSearch({
   const visibleRef = useRef(false);
   const suppressFocus = useRef(false);
   const additionalMunicipalityKey = additionalMunicipalityIds.join(",");
+  const hint = useTypingPlaceholder(SEARCH_HINTS);
 
   useEffect(
     () => () => {
@@ -313,12 +387,11 @@ export default function BuyerHeaderSearch({
                 enterKeyHint="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder={
-                  storeSlug ? "Buscar en la tienda…" : "Buscar productos y tiendas…"
-                }
-                className="h-full w-full rounded-full border border-brand-green/20 bg-brand-white pl-10 pr-12 text-sm text-brand-green shadow-[0_8px_24px_rgba(89,128,44,0.12)] placeholder:text-brand-carmelita/45 focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/10"
+                placeholder=""
+                className="h-full w-full rounded-full border border-brand-green/20 bg-brand-white pl-10 pr-12 text-sm text-brand-green shadow-[0_8px_24px_rgba(89,128,44,0.12)] focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/10"
                 autoComplete="off"
               />
+              {query ? null : <SearchHint text={hint} className="left-10 right-12 top-0 h-full" />}
               {query ? (
                 <button
                   type="button"
@@ -447,11 +520,24 @@ export default function BuyerHeaderSearch({
           type="text"
           readOnly
           value=""
-          placeholder={storeSlug ? "Buscar en la tienda…" : "Buscar…"}
+          placeholder=""
           aria-label={storeSlug ? "Buscar en la tienda" : "Buscar productos y tiendas"}
           onFocus={openSearch}
-          className="h-10 w-full cursor-text rounded-full border border-brand-green/15 bg-brand-white pl-9 pr-3 text-sm text-brand-green shadow-[0_2px_10px_rgba(89,128,44,0.08)] placeholder:text-brand-carmelita/45 focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/10 lg:h-11"
+          className={`w-full cursor-text rounded-full border border-brand-green/15 bg-brand-white pl-9 text-sm text-brand-green shadow-[0_2px_10px_rgba(89,128,44,0.08)] focus:border-brand-green/35 focus:outline-none focus:ring-2 focus:ring-brand-green/10 ${showGo ? 'h-12 pr-14' : 'h-10 pr-3 lg:h-11'}`}
         />
+        <SearchHint text={hint} className={`left-9 ${showGo ? 'right-14' : 'right-3'} top-0 h-full`} />
+        {showGo ? (
+          <button
+            type="button"
+            onClick={openSearch}
+            className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-brand-green text-brand-white shadow-[0_4px_12px_rgba(89,128,44,0.28)] touch-manipulation active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40"
+            aria-label="Buscar"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </button>
+        ) : null}
       </div>
       {overlay}
       {selected ? (

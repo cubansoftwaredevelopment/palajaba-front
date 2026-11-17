@@ -198,6 +198,7 @@ function BuyerCategoryPageContent() {
   return (
     <BuyerDisplayedLocationProvider location={location}>
       <BuyerShell
+        headerLayout="stack"
         headerStart={
           <BuyerLocationDisplay
             province={location.province}
@@ -210,6 +211,7 @@ function BuyerCategoryPageContent() {
             provinceId={location.province.id}
             municipalityId={location.municipality.id}
             additionalMunicipalityIds={additionalMunicipalityIds}
+            showGo
           />
         }
       >

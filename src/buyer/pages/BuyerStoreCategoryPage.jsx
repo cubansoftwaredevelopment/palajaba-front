@@ -3,10 +3,10 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
 import BuyerStoreServiceFooter from '../components/BuyerStoreServiceFooter'
 import BuyerHeaderSearch from '../components/BuyerHeaderSearch'
+import { BuyerStoreIdentity } from '../components/BuyerStoreHeader'
 import BuyerMarketplaceNav from '../components/BuyerMarketplaceNav'
 import BuyerProductCard from '../components/BuyerProductCard'
 import BuyerShell from '../components/BuyerShell'
-import StoreMark from '../components/StoreMark'
 import {
   buyerCategorySectionTitle,
   buyerHomeSections,
@@ -290,6 +290,14 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
       <BuyerDisplayedLocationProvider location={location}>
         <BuyerShell
           flushBottom
+          headerLayout="stack"
+          headerStart={
+            <BuyerStoreIdentity
+              store={catalog?.store}
+              onBack={goBack}
+              backLabel="Volver"
+            />
+          }
           headerSearch={
             <BuyerHeaderSearch
               provinceId={location.province.id}
@@ -297,29 +305,13 @@ function BuyerStoreCategoryPageContent({ location, categorySlug, gestorUsername 
               additionalMunicipalityIds={additionalMunicipalityIds}
               storeSlug={storeSlug}
               gestorUsername={gestorUsername}
+              showGo
             />
           }
         >
           <div className="flex min-h-full flex-1 flex-col">
             <div className={buyerHomeSections}>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={goBack}
-                  aria-label="Atrás"
-                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-brand-green transition-colors touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8"
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
-                    <path d="M15 18l-6-6 6-6" />
-                  </svg>
-                </button>
-                <h1 className={`${buyerCategorySectionTitle} inline-flex min-w-0 items-center gap-2`}>
-                  {catalog?.store?.profile_photo_url || catalog?.store?.store_name ? (
-                    <StoreMark photoUrl={catalog.store.profile_photo_url} storeName={catalog.store.store_name} />
-                  ) : null}
-                  <span className="truncate">{categoryName}</span>
-                </h1>
-              </div>
+              <h1 className={buyerCategorySectionTitle}>{categoryName}</h1>
 
               {resolving || loading ? (
                 <LoadingState message="Cargando productos…" className="lg:items-start lg:text-left" />

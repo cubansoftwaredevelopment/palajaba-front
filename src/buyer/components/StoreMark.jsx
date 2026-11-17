@@ -3,6 +3,7 @@ import { resolveMediaUrl } from '../../lib/media'
 
 const SIZES = {
   sm: 'h-7 w-7 text-[0.55rem]',
+  md: 'h-10 w-10 text-xs',
   lg: 'h-16 w-16 text-xl',
 }
 
