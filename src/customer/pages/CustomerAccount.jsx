@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { PresenceContext } from 'framer-motion'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, markAllCustomerPaymentNotificationsRead, dismissCustomerQvaPayPrompt, deleteCustomerAccount } from '../api.js'
 import { clearCustomerSession, CUSTOMER_PURCHASE_REVOKED_MESSAGE, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
 import AccountDeleteModal from '../../components/AccountDeleteModal'
 import { fetchMarketplaceProduct } from '../../buyer/api.js'
-import CustomerNavigation from '../components/CustomerNavigation.jsx'
+import BuyerHeaderTools, { CUSTOMER_NOTICES_EVENT } from '../../buyer/components/BuyerHeaderTools'
+import BuyerJabaPanel from '../../buyer/components/BuyerJabaPanel'
+import BuyerMarketplaceNav from '../../buyer/components/BuyerMarketplaceNav'
 import CustomerQvaPayPrompt from '../components/CustomerQvaPayPrompt.jsx'
 import CustomerQvaPaySettings from '../components/CustomerQvaPaySettings.jsx'
 import CustomerOrderDetailModal from '../components/CustomerOrderDetailModal.jsx'
@@ -17,6 +20,8 @@ import { formatPrice } from '../../lib/money'
 import BuyerOrderLocationMap from '../../buyer/components/BuyerOrderLocationMap'
 import BuyerProductCard from '../../buyer/components/BuyerProductCard'
 import Logo from '../../components/Logo'
+import LoadingState from '../../components/ui/LoadingState'
+import SellerLocationPreview from '../../components/seller/SellerLocationPreview'
 import NotificationBodyText from '../../components/ui/NotificationBodyText'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
 import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
@@ -30,9 +35,16 @@ import {
   startCustomerPush,
   stopCustomerPush,
 } from '../../live/utils'
-import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
+import SearchBar from '../../buyer/components/SearchBar'
+import FilterModal from '../../components/filters/FilterModal'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
+
+const CUSTOMER_ORDER_HINTS = [
+  'buscar por tienda',
+  'buscar por producto',
+  'buscar por pedido',
+]
 
 function releaseClippedScroll(from) {
   let node = from?.parentElement || null
@@ -76,7 +88,8 @@ export default function CustomerAccount() {
   }
   const [orders, setOrders] = useState([])
   const [paymentNotifications, setPaymentNotifications] = useState([])
-  const [liveNotificationToast, setLiveNotificationToast] = useState(null)
+  const [liveNotificationToasts, setLiveNotificationToasts] = useState([])
+  const profileNoticesToastedRef = useRef(false)
   const [notificationsLoading, setNotificationsLoading] = useState(true)
   const [notificationsError, setNotificationsError] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -197,17 +210,35 @@ export default function CustomerAccount() {
       setPaymentNotifications((current) => current.some((item) => item.id === notification.id)
         ? current
         : [notification, ...current])
-      setLiveNotificationToast({
-        id: notification.id,
-        title: notification.title,
-        content: notification.content,
-      })
+      setLiveNotificationToasts((current) => (
+        current.some((item) => item.id === notification.id)
+          ? current
+          : [{ id: notification.id, title: notification.title, content: notification.content }, ...current]
+      ))
       void refreshCustomerOrders()
     }, () => {
       void refreshCustomerOrders()
       void loadPaymentNotifications()
     })
   }, [loadPaymentNotifications, refreshCustomerOrders, token])
+
+  useEffect(() => {
+    if (section !== 'perfil') {
+      profileNoticesToastedRef.current = false
+      return
+    }
+    if (notificationsLoading || notificationsError || profileNoticesToastedRef.current) return
+    profileNoticesToastedRef.current = true
+    const unread = paymentNotifications.filter((item) => !item.read_at)
+    if (!unread.length) return
+    setLiveNotificationToasts((current) => {
+      const seen = new Set(current.map((item) => item.id))
+      const incoming = unread
+        .filter((item) => !seen.has(item.id))
+        .map((item) => ({ id: item.id, title: item.title, content: item.content }))
+      return incoming.length ? [...incoming, ...current] : current
+    })
+  }, [notificationsError, notificationsLoading, paymentNotifications, section])
 
   async function markPaymentNotificationRead(notification) {
     if (!notification || notification.read_at) return notification
@@ -390,6 +421,10 @@ export default function CustomerAccount() {
   }
 
   const unreadNotificationCount = paymentNotifications.filter((notification) => !notification.read_at).length
+
+  useEffect(() => {
+    window.dispatchEvent(new Event(CUSTOMER_NOTICES_EVENT))
+  }, [paymentNotifications])
   const hasOrderWarning = orders.some(needsBuyerOrderAttention)
   const orderFilterOptions = useMemo(() => ({
     stores: [...new Set(orders.map((order) => order.store_name).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')),
@@ -470,7 +505,7 @@ export default function CustomerAccount() {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-brand-green/[0.035] text-brand-carmelita lg:flex-row">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-brand-green/[0.035] text-brand-carmelita">
       <CustomerQvaPayPrompt
         open={showQvaPayPrompt}
         onAddUser={() => {
@@ -479,64 +514,28 @@ export default function CustomerAccount() {
         }}
         onDone={(dismissForever) => { void finishQvaPayPrompt(dismissForever) }}
       />
-      <aside className="hidden w-60 shrink-0 overflow-y-auto border-r border-brand-green/10 bg-brand-white/70 px-3 py-6 lg:block lg:min-h-0">
-        <Link
-          to="/comprar"
-          className="mb-8 block px-3 text-sm font-bold text-brand-green"
-        >
-          ← Seguir comprando
-        </Link>
-        <CustomerNavigation hasOrderWarning={hasOrderWarning} />
-      </aside>
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain pb-[calc(5.5rem+var(--safe-bottom))] lg:pb-8">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain pb-[calc(5.5rem+var(--safe-bottom))]">
         <header className="z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 pt-[max(0.75rem,var(--safe-top))] pb-3 backdrop-blur-md sm:px-5 lg:px-8 lg:pt-[max(1rem,var(--safe-top))] lg:pb-4">
           <div className="mx-auto flex w-full max-w-md items-center gap-2.5 sm:gap-3 lg:max-w-none">
+            <Link
+              to="/comprar"
+              aria-label="Volver"
+              className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-brand-green touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </Link>
             <Logo className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
-            <p className="min-w-0 flex-1 truncate font-display text-sm font-bold text-brand-green sm:text-base lg:text-lg">
-              Bienvenido{' '}
-              <span className="text-brand-carmelita">{profile?.full_name || ''}</span>
-            </p>
-            <NavLink
-              to="/cliente/avisos"
-              aria-label={unreadNotificationCount ? `Notificaciones, ${unreadNotificationCount} sin leer` : 'Notificaciones'}
-              title="Notificaciones"
-              className={({ isActive }) => `relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35 ${isActive ? 'bg-brand-green/8 text-brand-green' : ''}`}
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              </svg>
-              {unreadNotificationCount > 0 ? (
-                <span className="absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-carmelita px-1 text-[0.6rem] font-bold leading-none text-brand-white">
-                  {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
-                </span>
-              ) : null}
-            </NavLink>
-            <button
-              type="button"
-              onClick={() => setLogoutOpen(true)}
-              aria-label="Cerrar sesión"
-              title="Cerrar sesión"
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" x2="9" y1="12" y2="12" />
-              </svg>
-            </button>
+            <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
+              <BuyerHeaderTools />
+            </div>
           </div>
         </header>
         <div className="mx-auto w-full max-w-5xl px-4 pt-6 sm:px-6 lg:px-8">
           <header className="mb-6">
             <div>
-              <Link
-                to="/comprar"
-                className="text-sm font-bold text-brand-green lg:hidden"
-              >
-                ← Seguir comprando
-              </Link>
-              <h1 className="mt-2 font-display text-3xl font-bold">
+              <h1 className="font-display text-3xl font-bold">
                 {section === 'avisos'
                   ? 'Avisos'
                   : CUSTOMER_NAV.find((item) => item.id === section)?.label || 'Mi cuenta'}
@@ -557,7 +556,7 @@ export default function CustomerAccount() {
             </p>
           ) : null}
           {loading ? (
-            <div className={sectionClass}>Cargando tu cuenta…</div>
+            <LoadingState message="Cargando tu cuenta…" />
           ) : profile ? (
             <div className="grid gap-4">
               {section === "perfil" ? (
@@ -822,6 +821,20 @@ export default function CustomerAccount() {
                   </section>
 
                   <section className={sectionClass}>
+                    <h2 className="mb-2 text-lg font-bold text-brand-green">Cerrar sesión</h2>
+                    <p className="text-sm leading-relaxed text-brand-carmelita">
+                      Sales de esta cuenta en este dispositivo. Tus datos se conservan.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setLogoutOpen(true)}
+                      className="mt-4 min-h-11 rounded-xl border border-brand-green/20 bg-brand-white px-4 font-bold text-brand-green"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </section>
+
+                  <section className={sectionClass}>
                     <h2 className="mb-2 text-lg font-bold text-red-700">Eliminar cuenta</h2>
                     <p className="text-sm leading-relaxed text-brand-carmelita">
                       Se borrarán tu perfil, direcciones, favoritos y datos de acceso. Los pedidos ya hechos se conservan para las tiendas.
@@ -858,53 +871,51 @@ export default function CustomerAccount() {
                   </div>
                   {profile.addresses?.length ? (
                     <ul className="space-y-3">
-                      {profile.addresses.map((address) => (
+                      {profile.addresses.map((address) => {
+                        const hasPoint = address.latitude != null && address.longitude != null
+                        return (
                         <li
                           key={address.id}
-                          className="flex items-stretch justify-between gap-3 rounded-xl bg-brand-green/[0.04] p-3"
+                          className="relative min-h-40 overflow-hidden rounded-2xl border border-brand-green/10"
                         >
-                          <button
-                            type="button"
-                            onClick={() => openEditAddress(address)}
-                            aria-label={`Editar dirección ${address.label}`}
-                            className="min-w-0 flex-1 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30"
-                          >
-                            <p className="font-semibold">{address.label}</p>
-                            <p className="text-sm text-brand-carmelita/75">
-                              {address.address}
-                            </p>
-                            {address.latitude != null ? (
-                              <p className="mt-1 text-xs text-brand-carmelita/60">
-                                Pin guardado
-                              </p>
-                            ) : null}
-                          </button>
-                          <div className="flex shrink-0 items-center gap-3">
-                            <button
-                              type="button"
-                              onClick={() => openEditAddress(address)}
-                              aria-label={`Editar dirección ${address.label}`}
-                              title="Editar dirección"
-                              className="grid h-9 w-9 place-items-center rounded-full text-brand-green transition hover:bg-brand-green/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30"
-                            >
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <path d="m15 5 4 4M4 20l4.5-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z" />
-                              </svg>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => removeAddress(address.id)}
-                              aria-label={`Eliminar dirección ${address.label}`}
-                              title="Eliminar dirección"
-                              className="grid h-9 w-9 place-items-center rounded-full text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
-                            >
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6" />
-                              </svg>
-                            </button>
+                          {hasPoint ? (
+                            <SellerLocationPreview
+                              banner
+                              location={{ lat: Number(address.latitude), lng: Number(address.longitude) }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 bg-brand-green/10" aria-hidden="true" />
+                          )}
+                          <div className="relative z-10 flex min-h-40 flex-col justify-end bg-gradient-to-t from-brand-white via-brand-white/85 to-brand-white/15 p-3">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => removeAddress(address.id)}
+                                aria-label={`Eliminar dirección ${address.label}`}
+                                title="Eliminar dirección"
+                                className="grid h-9 w-9 place-items-center rounded-full bg-brand-white/90 text-red-700 shadow-sm touch-manipulation active:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6" />
+                                </svg>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => openEditAddress(address)}
+                                aria-label={`Editar dirección ${address.label}`}
+                                title="Editar dirección"
+                                className="grid h-9 w-9 place-items-center rounded-full bg-brand-white/90 text-brand-green shadow-sm touch-manipulation active:bg-brand-green/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30"
+                              >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <path d="m15 5 4 4M4 20l4.5-1 10.7-10.7a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z" />
+                                </svg>
+                              </button>
+                            </div>
+                            <p className="mt-2 text-sm font-semibold text-brand-carmelita">{address.address}</p>
                           </div>
                         </li>
-                      ))}
+                        )
+                      })}
                     </ul>
                   ) : (
                     <p className="text-sm text-brand-carmelita/70">
@@ -918,29 +929,20 @@ export default function CustomerAccount() {
                 <section className="space-y-3">
                   {orders.length ? (
                     <>
-                      <div className="relative">
-                        <label>
-                          <span className="sr-only">Buscar pedidos</span>
-                          <input
-                            value={orderSearch}
-                            onChange={(event) => setOrderSearch(event.target.value)}
-                            placeholder="Buscar por tienda, producto o pedido"
-                            className="min-h-11 w-full rounded-xl border border-brand-green/15 bg-brand-white py-2 pl-11 pr-14 text-sm text-brand-carmelita placeholder:text-brand-carmelita/45 focus:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-green/15"
-                          />
-                        </label>
-                        {orderSearch ? (
-                          <button
-                            type="button"
-                            onClick={() => setOrderSearch('')}
-                            aria-label="Limpiar búsqueda"
-                            title="Limpiar búsqueda"
-                            className="absolute left-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-brand-carmelita/60 transition hover:bg-brand-green/8 hover:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
-                          >
-                            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
-                          </button>
-                        ) : null}
-                        <FilterButton count={activeOrderFilterCount} label="Filtrar pedidos" expanded={orderFiltersOpen} onClick={() => setOrderFiltersOpen(true)} />
-                      </div>
+                      <SearchBar
+                        id="customer-orders-search"
+                        value={orderSearch}
+                        onChange={(event) => setOrderSearch(event.target.value)}
+                        onClear={() => setOrderSearch('')}
+                        label="Buscar pedidos"
+                        phrases={CUSTOMER_ORDER_HINTS}
+                        filter={{
+                          count: activeOrderFilterCount,
+                          label: 'Filtrar pedidos',
+                          expanded: orderFiltersOpen,
+                          onClick: () => setOrderFiltersOpen(true),
+                        }}
+                      />
                       {visibleCustomerOrders.length ? (
                         <ul className="grid gap-3 md:grid-cols-2">
                       {visibleCustomerOrders.map((order) => {
@@ -998,7 +1000,7 @@ export default function CustomerAccount() {
 
               {section === "avisos" ? (
                 <section className="space-y-3">
-                  {notificationsLoading ? <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">Cargando avisos…</p></div> : null}
+                  {notificationsLoading ? <LoadingState message="Cargando avisos…" size="sm" /> : null}
                   {!notificationsLoading && notificationsError ? (
                     <div className={`${sectionClass} space-y-3`}>
                       <p role="alert" className="text-sm text-brand-carmelita">{notificationsError}</p>
@@ -1056,18 +1058,20 @@ export default function CustomerAccount() {
                       </div>
                     </article>
                   )) : null}
-                  {!notificationsLoading && !notificationsError && !paymentNotifications.length ? <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">No tienes avisos de pagos.</p></div> : null}
+                  {!notificationsLoading && !notificationsError && !paymentNotifications.length ? <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">No tienes avisos.</p></div> : null}
                 </section>
               ) : null}
 
               {section === "favoritos" ? (
                 <section className="space-y-4">
                   {favoriteProducts.length ? (
+                    <PresenceContext.Provider value={null}>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                      {favoriteProducts.map((product) => (
+                      {favoriteProducts.map((product, index) => (
                         <BuyerProductCard
                           key={product.id}
                           product={product}
+                          enterIndex={index}
                           allowBuyAfterWarning={Boolean(
                             product.warning_municipality,
                           )}
@@ -1091,6 +1095,7 @@ export default function CustomerAccount() {
                         />
                       ))}
                     </div>
+                    </PresenceContext.Provider>
                   ) : (
                     <p className="text-sm text-brand-carmelita/70">
                       Aún no tienes favoritos.
@@ -1102,7 +1107,8 @@ export default function CustomerAccount() {
           ) : null}
         </div>
       </main>
-      <CustomerNavigation mobile hasOrderWarning={hasOrderWarning} />
+      <BuyerJabaPanel />
+      <BuyerMarketplaceNav orderAttention={hasOrderWarning} />
 
       <FilterModal
         open={orderFiltersOpen}
@@ -1138,10 +1144,10 @@ export default function CustomerAccount() {
         />
       ) : null}
       <SellerNotificationToast
-        toast={liveNotificationToast}
+        toasts={liveNotificationToasts}
         aboveNav
-        onDone={(id) => setLiveNotificationToast((current) => current?.id === id ? null : current)}
-        onOpen={() => { setLiveNotificationToast(null); navigate('/cliente/avisos') }}
+        onDone={(id) => setLiveNotificationToasts((current) => current.filter((item) => item.id !== id))}
+        onOpen={() => { setLiveNotificationToasts([]); navigate('/cliente/avisos') }}
       />
 
       {addressPresent ? (

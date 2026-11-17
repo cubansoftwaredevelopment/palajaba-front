@@ -124,7 +124,7 @@ export default function SellerStats() {
   const hasStatistics = sellerHasStatistics(seller)
 
   return (
-    <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
+    <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
       <SellerPageHeader
         eyebrow="Estadísticas"
         title="Cómo va tu tienda"

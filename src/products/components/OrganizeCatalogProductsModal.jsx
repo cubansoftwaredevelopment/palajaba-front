@@ -10,7 +10,7 @@ import { formatPrice } from '../../lib/money'
 import { productDiscountPercent, productSaleAmount } from '../context.js'
 import { resolveMediaUrl } from '../../lib/media'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import {
   sellerAlertError,
   sellerBtnPrimary,
@@ -18,8 +18,6 @@ import {
   sellerFocusRing,
   sellerHint,
   sellerIconBtn,
-  sellerModalOverlay,
-  sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
 
@@ -36,7 +34,7 @@ function moveItem(list, fromIndex, toIndex) {
 }
 
 export default function OrganizeCatalogProductsModal({ category, onClose: requestClose, onSaved }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const [selectedMode, setSelectedMode] = useState(category.product_sort_mode || 'popularity')
   const [items, setItems] = useState(category.products ?? [])
   const [manualItems, setManualItems] = useState(category.products ?? [])
@@ -152,14 +150,12 @@ export default function OrganizeCatalogProductsModal({ category, onClose: reques
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="organize-products-title"
-        onClick={onClose}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="organize-products-title"
       >
-        <div {...sheetProps} className={sellerModalSheet} onClick={(event) => event.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="organize-products-title" className={sellerModalTitle}>
@@ -333,8 +329,7 @@ export default function OrganizeCatalogProductsModal({ category, onClose: reques
               Cancelar
             </button>
           </div>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

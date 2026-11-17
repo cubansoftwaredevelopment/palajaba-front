@@ -13,7 +13,7 @@ import CategoryAutocomplete from '../../components/seller/CategoryAutocomplete'
 import SellerSelect from '../../components/seller/SellerSelect'
 import Checkbox from '../../components/ui/Checkbox'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 
 import {
 
@@ -38,10 +38,6 @@ import {
   sellerModalFooter,
 
   sellerModalInput,
-
-  sellerModalOverlay,
-
-  sellerModalSheet,
 
   sellerModalTextarea,
 
@@ -143,7 +139,7 @@ export default function CreateCatalogProductModal({
   onPersist,
 
 }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
 
   const isEditing = Boolean(product)
 
@@ -621,29 +617,12 @@ export default function CreateCatalogProductModal({
 
     <SellerModalPortal>
 
-      <div
-
-        className={`${sellerModalOverlay} ${motionClass}`}
-
-        role="dialog"
-
-        aria-modal="true"
-
-        aria-labelledby="catalog-product-form-title"
-
-        onClick={onClose}
-
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="catalog-product-form-title"
       >
-
-        <div
-
-          {...sheetProps}
-
-          className={sellerModalSheet}
-
-          onClick={(event) => event.stopPropagation()}
-
-        >
 
           <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
 
@@ -1187,10 +1166,7 @@ export default function CreateCatalogProductModal({
           </div>
 
         </form>
-
-        </div>
-
-      </div>
+      </SellerMotionSheet>
 
     </SellerModalPortal>
 

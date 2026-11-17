@@ -2,6 +2,9 @@ import { getJabaItems, replaceJabaItems } from './buyerJaba'
 import { getAdditionalMunicipalities } from './buyerLocation'
 import { syncBuyerJaba } from '../buyer/api.js'
 
+const ZONE_REMOVAL_REASONS = new Set(['out_of_zone', 'store_unavailable'])
+let syncGeneration = 0
+
 function jabaItemFromApiProduct(product, quantity, previousItem = null) {
   const next = {
     id: product.id,
@@ -29,7 +32,8 @@ function jabaItemFromApiProduct(product, quantity, previousItem = null) {
   return next
 }
 
-export async function syncJabaWithBackend(location) {
+export async function syncJabaWithBackend(location, { signal } = {}) {
+  const generation = ++syncGeneration
   const current = getJabaItems()
   if (!current.length) {
     return { items: [], removed: [] }
@@ -47,20 +51,30 @@ export async function syncJabaWithBackend(location) {
       : [],
   })
 
+  if (signal?.aborted || generation !== syncGeneration) {
+    return { items: getJabaItems(), removed: [] }
+  }
+
   const previousById = new Map(current.map((item) => [item.id, item]))
-  const quantities = new Map(current.map((item) => [item.id, item.quantity ?? 1]))
-  const synced = (response.valid ?? []).map((product) =>
-    jabaItemFromApiProduct(
-      product,
-      quantities.get(product.id) ?? 1,
-      previousById.get(product.id),
-    ),
-  )
+  const removed = (response.removed ?? []).filter((item) => ZONE_REMOVAL_REASONS.has(item.reason))
+  const removedIds = new Set(removed.map((item) => item.product_id))
+  const validById = new Map((response.valid ?? []).map((product) => [product.id, product]))
+  const synced = getJabaItems().flatMap((item) => {
+    if (!previousById.has(item.id)) return [item]
+    if (removedIds.has(item.id)) return []
+    const product = validById.get(item.id)
+    if (!product) return [item]
+    return [jabaItemFromApiProduct(product, item.quantity ?? 1, previousById.get(item.id))]
+  })
+
+  if (generation !== syncGeneration || signal?.aborted) {
+    return { items: getJabaItems(), removed: [] }
+  }
 
   replaceJabaItems(synced)
 
   return {
     items: synced,
-    removed: response.removed ?? [],
+    removed,
   }
 }

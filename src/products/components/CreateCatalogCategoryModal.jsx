@@ -9,8 +9,6 @@ import {
   sellerModalBody,
   sellerModalFooter,
   sellerModalInput,
-  sellerModalOverlay,
-  sellerModalSheet,
   sellerLabel,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
@@ -18,10 +16,10 @@ import { createCatalogCategory } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 
 export default function CreateCatalogCategoryModal({ initialName = '', onClose: requestClose, onCreated }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const [name, setName] = useState(initialName)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -62,14 +60,12 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="create-catalog-category-title"
-        onClick={onClose}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="create-catalog-category-title"
       >
-        <div {...sheetProps} className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
           <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
             <h2 id="create-catalog-category-title" className={sellerModalTitle}>
               Nueva categoría
@@ -131,8 +127,7 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
               </button>
             </div>
           </form>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

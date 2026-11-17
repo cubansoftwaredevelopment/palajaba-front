@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import { createPortal } from 'react-dom'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import { sellerBtnPrimary, sellerBtnSecondary, sellerFocusRing, sellerModalTitle } from './sellerStyles'
 
 export default function SellerLogoutModal({ onClose: requestClose, onConfirm }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -16,19 +17,16 @@ export default function SellerLogoutModal({ onClose: requestClose, onConfirm }) 
     }
   }, [onClose])
 
-  return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-green/20 p-4 backdrop-blur-sm ${motionClass}`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="seller-logout-title"
-      onClick={onClose}
+  return createPortal(
+    <SellerMotionSheet
+      onClose={onClose}
+      closing={closing}
+      sheetProps={sheetProps}
+      variant="dialog"
+      labelledBy="seller-logout-title"
+      overlayClassName="fixed inset-0 z-[200] flex items-center justify-center bg-brand-green/20 p-4 backdrop-blur-sm"
+      panelClassName="relative w-full max-w-[18rem] rounded-2xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_16px_40px_rgba(89,128,44,0.18)]"
     >
-      <div
-        {...sheetProps}
-        className="relative w-full max-w-[18rem] animate-fade-in rounded-2xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_16px_40px_rgba(89,128,44,0.18)]"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div className="flex flex-col items-center text-center">
           <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-yellow/25 text-brand-green">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
@@ -55,7 +53,7 @@ export default function SellerLogoutModal({ onClose: requestClose, onConfirm }) 
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </SellerMotionSheet>,
+    document.body,
   )
 }

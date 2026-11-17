@@ -8,13 +8,11 @@ import {
   paletteFromTheme,
 } from '../constants.js'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import {
   sellerAlertError,
   sellerBtnSecondary,
   sellerFocusRing,
-  sellerModalOverlay,
-  sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
 
@@ -86,7 +84,7 @@ export default function CatalogThemePickerModal({
   onPaletteChange,
   onPaletteCommit,
 }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const themes = listCatalogThemes()
   const currentTheme = normalizeCatalogTheme(selectedTheme)
   const currentPalette = normalizeCatalogPalette(palette, currentTheme)
@@ -94,14 +92,12 @@ export default function CatalogThemePickerModal({
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="catalog-theme-title"
-        onClick={onClose}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="catalog-theme-title"
       >
-        <div {...sheetProps} className={sellerModalSheet} onClick={(event) => event.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="catalog-theme-title" className={sellerModalTitle}>
@@ -202,8 +198,7 @@ export default function CatalogThemePickerModal({
               </p>
             )}
           </div>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

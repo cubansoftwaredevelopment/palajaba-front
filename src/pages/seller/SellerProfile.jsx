@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom'
+import { useStepShift } from '../../motion/SellerPageMotion'
 import LocationMapModal from '../../components/seller/LocationMapModal'
 import SellerBusinessAreaFields, {
   getBusinessAreaFromSelection,
@@ -117,6 +119,8 @@ function releaseSellerScroll(scroller) {
 export default function SellerProfile() {
   const navigate = useNavigate()
   const routeLocation = useLocation()
+  const { reduced, shift } = useStepShift()
+  const stepClass = reduced ? '' : 'screen-step'
   const { profile, refreshProfile } = useOutletContext()
   const readOnly = useSellerReadOnly()
   const fileInputRef = useRef(null)
@@ -598,7 +602,7 @@ export default function SellerProfile() {
         </ConfirmModal>
       ) : null}
       <section
-        className={`animate-fade-in ${
+        className={`relative ${
           activePanel === PROFILE_PANEL_IDS.banners ? 'w-full' : sellerPageWrap
         }`}
       >
@@ -611,8 +615,9 @@ export default function SellerProfile() {
           onChange={handlePhotoChange}
         />
 
+        <AnimatePresence mode="popLayout" initial={false}>
         {!activePanel ? (
-          <div className="-mx-4 -mt-4 sm:-mx-5 lg:-mx-8 lg:-mt-8">
+          <motion.div key="hub" className={`-mx-4 -mt-4 w-[calc(100%+2rem)] sm:-mx-5 sm:w-[calc(100%+2.5rem)] lg:-mx-8 lg:-mt-8 lg:w-[calc(100%+4rem)] ${stepClass}`} {...shift}>
             <header className="relative overflow-hidden bg-brand-green px-4 pb-16 pt-5 sm:px-5 sm:pt-6 lg:px-8">
               <div
                 className="pointer-events-none absolute -right-10 -top-8 h-36 w-36 rounded-full bg-brand-yellow/20 blur-2xl"
@@ -658,9 +663,9 @@ export default function SellerProfile() {
                 <SellerProfileMenuList sections={menuSections} onSelect={handleMenuSelect} />
               </div>
             </div>
-          </div>
+          </motion.div>
         ) : (
-          <div className={`${sellerSectionGap} animate-fade-in`}>
+          <motion.div key={activePanel} className={`${sellerSectionGap} ${stepClass}`} {...shift}>
             <div className="flex flex-col gap-2">
               <BackToHubButton onClick={goToHub} />
               <div>
@@ -702,8 +707,9 @@ export default function SellerProfile() {
                 {renderActivePanelBody()}
               </div>
             )}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </section>
 
       <SellerNotificationToast

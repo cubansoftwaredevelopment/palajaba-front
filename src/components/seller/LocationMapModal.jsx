@@ -9,14 +9,14 @@ import {
   SELLER_MAP_LOCATION_ZOOM,
   sellerMapMarkerIcon,
 } from '../../lib/sellerMap'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import SellerModalPortal from './SellerModalPortal'
 
 const mapControlButton =
   'grid h-8 w-8 place-items-center rounded-full border border-brand-green/15 bg-white text-brand-green shadow-sm touch-manipulation active:bg-brand-green/8 disabled:opacity-50'
 
 export default function LocationMapModal({ initialLocation, onConfirm, onClose: requestClose }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markerRef = useRef(null)
@@ -122,19 +122,15 @@ export default function LocationMapModal({ initialLocation, onConfirm, onClose: 
 
   return (
     <SellerModalPortal>
-      <div
-        className={`fixed inset-0 flex bg-black/40 ${expanded ? '' : 'items-end justify-center sm:items-center sm:p-4'} ${motionClass}`}
-        style={{ zIndex: 500 }}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="map-modal-title"
-        onClick={onClose}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="map-modal-title"
+        variant={expanded ? 'detail' : 'sheet'}
+        overlayClassName={`fixed inset-0 z-[500] flex bg-black/40 ${expanded ? '' : 'items-end justify-center sm:items-center sm:p-4'}`}
+        panelClassName={`flex w-full min-w-0 flex-col overflow-hidden bg-brand-white ${expanded ? 'h-dvh max-h-dvh rounded-none' : 'h-[min(88dvh,760px)] max-w-5xl rounded-t-2xl border border-brand-green/12 shadow-xl sm:rounded-2xl'}`}
       >
-        <div
-          {...sheetProps}
-          className={`flex w-full min-w-0 flex-col overflow-hidden bg-brand-white ${expanded ? 'h-dvh max-h-dvh rounded-none' : 'h-[min(88dvh,760px)] max-w-5xl rounded-t-2xl border border-brand-green/12 shadow-xl sm:rounded-2xl'}`}
-          onClick={(event) => event.stopPropagation()}
-        >
           <div className={`relative z-20 flex shrink-0 items-center gap-2 border-b border-brand-green/8 bg-brand-white px-3 py-2 ${expanded ? 'pt-[max(0.5rem,var(--safe-top))]' : ''}`}>
             <button
               type="button"
@@ -195,8 +191,7 @@ export default function LocationMapModal({ initialLocation, onConfirm, onClose: 
               Confirmar
             </button>
           </div>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

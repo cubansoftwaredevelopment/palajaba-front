@@ -106,7 +106,7 @@ export default function BuyerJabaSyncAlert({ removed, onClose: requestClose }) {
           <div className={buyerJabaSyncBody}>
             <div className={buyerJabaSyncHero}>
               <div className={buyerJabaSyncHeroImage}>
-                <img src={JABA_BAG.src} alt="" className="h-16 w-16 object-contain opacity-90" decoding="async" />
+                <img src={JABA_BAG.src} alt="" className="h-14 w-14 object-contain" decoding="async" />
                 <span className={buyerJabaSyncCountBadge} aria-hidden="true">
                   −{removedCount}
                 </span>

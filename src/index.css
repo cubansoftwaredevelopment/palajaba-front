@@ -38,6 +38,50 @@
   --animate-jaba-toast-in: jaba-toast-in 0.28s ease-out;
   --animate-jaba-toast-out: jaba-toast-out 0.25s ease-in forwards;
   --animate-app-download-bounce: app-download-bounce 0.7s cubic-bezier(0.28, 1.4, 0.4, 1);
+  --animate-help-ring: help-ring 1.6s ease-in-out infinite;
+  --animate-help-jump: help-jump 0.42s cubic-bezier(0.28, 1.2, 0.4, 1) both;
+
+  @keyframes help-ring {
+    0%, 46%, 100% {
+      transform: rotate(0deg);
+    }
+    4% {
+      transform: rotate(-18deg);
+    }
+    8% {
+      transform: rotate(16deg);
+    }
+    12% {
+      transform: rotate(-14deg);
+    }
+    16% {
+      transform: rotate(12deg);
+    }
+    20% {
+      transform: rotate(-8deg);
+    }
+    24% {
+      transform: rotate(5deg);
+    }
+    28% {
+      transform: rotate(0deg);
+    }
+  }
+
+  @keyframes help-jump {
+    0% {
+      transform: translateY(0) scale(1);
+    }
+    40% {
+      transform: translateY(-7px) scale(1.12);
+    }
+    70% {
+      transform: translateY(1px) scale(0.96);
+    }
+    100% {
+      transform: translateY(0) scale(1);
+    }
+  }
 
   @keyframes app-download-bounce {
     0% {

@@ -7,14 +7,12 @@ import { isNativeAppShell } from '../../lib/nativeApp'
 import { getStoreCatalogUrl, getStoreShareMessage } from '../../lib/storeShare'
 import { canUseSystemShare, shareWithSystem } from '../../lib/buyerShare'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import {
   sellerAlertSuccess,
   sellerBtnSecondary,
   sellerFocusRing,
   sellerHint,
-  sellerModalOverlay,
-  sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
 
@@ -51,7 +49,7 @@ function ShareOption({ icon, label, hint, onClick, iconWrapClassName, disabled =
 }
 
 export default function ShareCatalogModal({ profile, onClose: requestClose }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const [view, setView] = useState('options')
   const [copyStatus, setCopyStatus] = useState('')
   const [shareError, setShareError] = useState('')
@@ -154,14 +152,12 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="share-catalog-title"
-        onClick={onClose}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="share-catalog-title"
       >
-        <div {...sheetProps} className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="share-catalog-title" className={sellerModalTitle}>
@@ -290,8 +286,7 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
               </div>
             )}
           </div>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

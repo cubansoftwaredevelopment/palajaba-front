@@ -4,6 +4,21 @@ import AdminButton from '../components/admin/AdminButton'
 import AdminToastStack from '../components/admin/AdminToastStack'
 import SendNotificationModal from '../components/admin/SendNotificationModal'
 import { notificationAudienceDetails, notificationAudienceDisplay } from '../constants/admin'
+
+function recipientCountLabel(item) {
+  const count = Number(item?.recipient_count) || 0
+  const audiences = (item?.audiences ?? []).filter(Boolean)
+  const sellerAudiences = audiences.filter((id) => id !== 'customers')
+  const includesCustomers = audiences.includes('customers')
+  const hasStores = (item?.target_store_names ?? []).length > 0 || Boolean(item?.target_store_name)
+  if (includesCustomers && !sellerAudiences.length && !hasStores) {
+    return `${count} cliente${count === 1 ? '' : 's'}`
+  }
+  if (includesCustomers) {
+    return `${count} destinatario${count === 1 ? '' : 's'}`
+  }
+  return `${count} vendedor${count === 1 ? '' : 'es'}`
+}
 import { adminAlertError, adminCard, adminMuted, adminSubtle } from '../components/admin/adminStyles'
 import { fetchAdminNotifications, sendAdminNotification, sendAdminNotificationSms } from '../lib/api'
 import { smsSendCountLabel } from '../lib/adminNotificationStores'
@@ -117,8 +132,8 @@ export default function AdminNotifications({ embedded = false }) {
     <div className={embedded ? '' : 'mx-auto w-full max-w-5xl px-4 py-5 sm:px-6 lg:px-8'}>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className={`text-sm leading-relaxed ${adminSubtle}`}>
-          Envía avisos a uno o varios grupos (plan y facturación) y a negocios concretos.
-          Cada aviso llega al panel del vendedor. El SMS se envía después, desde cada fila.
+          Envía avisos a vendedores, por plan o negocio, a todos los clientes o a clientes concretos.
+          Cada aviso llega a su panel. El SMS se envía después, desde cada fila.
         </p>
         <AdminButton type="button" className="sm:w-auto" onClick={() => setShowModal(true)}>
           Nueva notificación
@@ -139,7 +154,7 @@ export default function AdminNotifications({ embedded = false }) {
         <article className={`${adminCard} text-center`}>
           <p className="text-sm font-medium text-white">Aún no has enviado notificaciones</p>
           <p className={`mt-2 text-sm ${adminSubtle}`}>
-            Usa el botón «Nueva notificación» para avisar a los vendedores.
+            Usa el botón «Nueva notificación» para avisar a vendedores o clientes.
           </p>
         </article>
       )}
@@ -156,7 +171,7 @@ export default function AdminNotifications({ embedded = false }) {
                   <p className={`mt-1 text-xs ${adminMuted}`}>{formatDateTime(item.created_at)}</p>
                 </div>
                 <span className="shrink-0 rounded-md border border-brand-green/25 bg-brand-green/10 px-2 py-1 text-[0.65rem] font-semibold text-emerald-200/90">
-                  {item.recipient_count} vendedor{item.recipient_count === 1 ? '' : 'es'}
+                  {recipientCountLabel(item)}
                 </span>
               </div>
               {plans.length || stores.length ? (

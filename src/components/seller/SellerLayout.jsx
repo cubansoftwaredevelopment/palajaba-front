@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import SellerPageMotion from '../../motion/SellerPageMotion'
+import { sellerMain, sellerMainWithNav } from './sellerStyles'
 import SellerLoadingScreen from './SellerLoadingScreen'
 import SellerLogoutModal from './SellerLogoutModal'
 import SellerNotificationToast from './SellerNotificationToast'
@@ -36,7 +38,8 @@ export default function SellerLayout() {
   const [loadError, setLoadError] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [liveToast, setLiveToast] = useState(null)
+  const [liveToasts, setLiveToasts] = useState([])
+  const profileNoticesToastedRef = useRef(false)
   const [notifications, setNotifications] = useState([])
   const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
@@ -224,11 +227,15 @@ export default function SellerLayout() {
           if (notification.kind === 'new_order' || notification.kind === 'qvapay_evidence_rejected') {
             requestSellerOrdersRefresh()
           }
-          setLiveToast({
-            id: notification.id,
-            title: notification.title,
-            content: String(notification.content ?? '').replace(/\s+/g, ' ').trim(),
-          })
+          setLiveToasts((current) => (
+            current.some((item) => item.id === notification.id)
+              ? current
+              : [{
+                id: notification.id,
+                title: notification.title,
+                content: String(notification.content ?? '').replace(/\s+/g, ' ').trim(),
+              }, ...current]
+          ))
         }, (event) => {
           if (Number.isFinite(Number(event.pending_order_count))) {
             setPendingOrderCount(Number(event.pending_order_count))
@@ -245,6 +252,39 @@ export default function SellerLayout() {
       stopEvents()
     }
   }, [profile?.profile_completed, refreshPendingOrderCount, refreshProfile, refreshUnreadCount])
+
+  useEffect(() => {
+    if (location.pathname !== '/tienda/perfil') {
+      profileNoticesToastedRef.current = false
+      return undefined
+    }
+    if (!profile?.profile_completed || profileNoticesToastedRef.current) return undefined
+    profileNoticesToastedRef.current = true
+    const token = getSellerToken()
+    if (!token) return undefined
+    let cancelled = false
+    fetchSellerNotifications(token)
+      .then((data) => {
+        if (cancelled) return
+        const unread = (Array.isArray(data) ? data : []).filter((item) => !item.read_at)
+        if (!unread.length) return
+        setLiveToasts((current) => {
+          const seen = new Set(current.map((item) => item.id))
+          const incoming = unread
+            .filter((item) => !seen.has(item.id))
+            .map((item) => ({
+              id: item.id,
+              title: item.title,
+              content: String(item.content ?? '').replace(/\s+/g, ' ').trim(),
+            }))
+          return incoming.length ? [...incoming, ...current] : current
+        })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [location.pathname, profile?.profile_completed])
 
   if (loading) {
     return <SellerLoadingScreen />
@@ -292,12 +332,12 @@ export default function SellerLayout() {
     return (
       <SellerReadOnlyContext.Provider value={readOnly}>
       <>
-        <Outlet context={{ profile, refreshProfile }} />
+        <SellerPageMotion context={{ profile, refreshProfile }} />
         <SellerNotificationToast
-          toast={liveToast}
-          onDone={(id) => setLiveToast((current) => (current?.id === id ? null : current))}
+          toasts={liveToasts}
+          onDone={(id) => setLiveToasts((current) => current.filter((item) => item.id !== id))}
           onOpen={() => {
-            setLiveToast(null)
+            setLiveToasts([])
             openNotifications()
           }}
         />
@@ -330,7 +370,12 @@ export default function SellerLayout() {
         catalogLayout={isCatalogPage}
         navItems={sellerNavItems}
       >
-        <Outlet context={{ profile, refreshProfile }} />
+        <SellerPageMotion
+          context={{ profile, refreshProfile }}
+          fill={isCatalogPage}
+          scroll={showBottomNav && !isCatalogPage}
+          contentClassName={isCatalogPage ? '' : (showBottomNav ? sellerMainWithNav : sellerMain)}
+        />
       </SellerShell>
 
       {showNotifications && (
@@ -345,11 +390,11 @@ export default function SellerLayout() {
       )}
 
       <SellerNotificationToast
-        toast={liveToast}
+        toasts={liveToasts}
         aboveNav={showBottomNav}
-        onDone={(id) => setLiveToast((current) => (current?.id === id ? null : current))}
+        onDone={(id) => setLiveToasts((current) => current.filter((item) => item.id !== id))}
         onOpen={() => {
-          setLiveToast(null)
+          setLiveToasts([])
           openNotifications()
         }}
       />

@@ -237,14 +237,14 @@ export function BuyerJabaProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    let cancelled = false
+    const controller = new AbortController()
 
     async function syncOnLoad() {
       if (!getJabaItems().length) return
 
       try {
-        const { removed } = await syncJabaWithBackend(getBuyerLocation())
-        if (!cancelled && removed.length) {
+        const { removed } = await syncJabaWithBackend(getBuyerLocation(), { signal: controller.signal })
+        if (!controller.signal.aborted && removed.length) {
           setSyncRemoved(removed)
         }
       } catch {
@@ -255,7 +255,7 @@ export function BuyerJabaProvider({ children }) {
     syncOnLoad()
 
     return () => {
-      cancelled = true
+      controller.abort()
     }
   }, [])
 

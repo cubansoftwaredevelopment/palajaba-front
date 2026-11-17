@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import Button from './Button'
-import { useDismissibleModal } from '../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../motion/SellerMotionSheet'
 
 export default function ConfirmModal({
   title,
@@ -14,7 +14,7 @@ export default function ConfirmModal({
   onConfirm,
   onClose: requestClose,
 }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -28,18 +28,15 @@ export default function ConfirmModal({
   }, [onClose])
 
   return createPortal(
-    <div
-      className={`fixed inset-0 z-[100] flex items-end justify-center bg-brand-green/25 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:pb-4 ${motionClass}`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="confirm-modal-title"
-      onClick={onClose}
+    <SellerMotionSheet
+      onClose={onClose}
+      closing={closing}
+      sheetProps={sheetProps}
+      variant="dialog"
+      labelledBy="confirm-modal-title"
+      overlayClassName="fixed inset-0 z-[100] flex items-end justify-center bg-brand-green/25 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:pb-4"
+      panelClassName="relative w-full max-w-sm overflow-hidden rounded-3xl border border-brand-green/15 bg-brand-white p-6 shadow-[0_24px_60px_rgba(89,128,44,0.22)]"
     >
-      <div
-        {...sheetProps}
-        className="relative w-full max-w-sm animate-fade-in overflow-hidden rounded-3xl border border-brand-green/15 bg-brand-white p-6 shadow-[0_24px_60px_rgba(89,128,44,0.22)]"
-        onClick={(e) => e.stopPropagation()}
-      >
         <div
           className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-brand-yellow/30 blur-2xl"
           aria-hidden="true"
@@ -87,8 +84,7 @@ export default function ConfirmModal({
             ) : null}
           </div>
         </div>
-      </div>
-    </div>,
+    </SellerMotionSheet>,
     document.body,
   )
 }

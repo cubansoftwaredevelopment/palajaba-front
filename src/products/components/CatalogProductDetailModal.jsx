@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import ProductPhotoGallery from '../../buyer/components/ProductPhotoGallery'
 import { productDiscountPercent, productSaleAmount } from '../context.js'
 import { formatPrice } from '../../lib/money'
@@ -29,7 +29,7 @@ export default function CatalogProductDetailModal({
   onEdit,
   onDelete,
 }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -48,18 +48,14 @@ export default function CatalogProductDetailModal({
       : product.base_currency
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-sm sm:items-center sm:p-4 ${motionClass}`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="catalog-product-detail-title"
-      onClick={onClose}
+    <SellerMotionSheet
+      onClose={onClose}
+      closing={closing}
+      sheetProps={sheetProps}
+      labelledBy="catalog-product-detail-title"
+      overlayClassName="fixed inset-0 z-50 flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+      panelClassName="flex h-[min(85dvh,640px)] w-full max-w-md min-h-0 flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.2)] sm:rounded-3xl"
     >
-      <div
-        {...sheetProps}
-        className="flex h-[min(85dvh,640px)] w-full max-w-md min-h-0 animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.2)] sm:rounded-3xl"
-        onClick={(event) => event.stopPropagation()}
-      >
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
           <h2 id="catalog-product-detail-title" className={`min-w-0 truncate ${sellerModalTitle}`}>
             {product.name}
@@ -179,7 +175,6 @@ export default function CatalogProductDetailModal({
           ) : null}
         </div>
         ) : null}
-      </div>
-    </div>
+    </SellerMotionSheet>
   )
 }

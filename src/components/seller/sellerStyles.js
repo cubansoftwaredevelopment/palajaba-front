@@ -222,7 +222,7 @@ export const sellerModalOverlay =
   'fixed inset-0 z-[200] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'
 
 export const sellerModalSheet =
-  'relative flex w-full max-w-md max-h-[min(92dvh,760px)] min-h-0 animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:rounded-3xl'
+  'relative flex w-full max-w-md max-h-[min(92dvh,760px)] min-h-0 flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:rounded-3xl'
 
 export const sellerModalBody =
   'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4'
@@ -234,7 +234,7 @@ export const sellerNotificationsOverlay =
   'fixed inset-0 z-[200] flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'
 
 export const sellerNotificationsPanel =
-  'relative flex w-full max-w-md min-h-0 animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.2)] sm:max-h-[min(88dvh,40rem)] sm:rounded-3xl lg:max-w-lg'
+  'relative flex w-full max-w-md min-h-0 flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.2)] sm:max-h-[min(88dvh,40rem)] sm:rounded-3xl lg:max-w-lg'
 
 export const sellerNoticeToastShell =
   'pointer-events-none fixed inset-x-0 z-[85] flex justify-center px-4'

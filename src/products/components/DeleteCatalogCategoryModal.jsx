@@ -5,18 +5,16 @@ import {
   sellerBtnSecondary,
   sellerModalBody,
   sellerModalFooter,
-  sellerModalOverlay,
-  sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
 import { deleteCatalogCategory } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 
 export default function DeleteCatalogCategoryModal({ category, onClose: requestClose, onDeleted }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const productCount = category.product_count ?? category.products?.length ?? 0
@@ -50,14 +48,12 @@ export default function DeleteCatalogCategoryModal({ category, onClose: requestC
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="delete-category-title"
-        onClick={onClose}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="delete-category-title"
       >
-        <div {...sheetProps} className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
           <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
             <h2 id="delete-category-title" className={sellerModalTitle}>
               ¿Eliminar categoría?
@@ -101,8 +97,7 @@ export default function DeleteCatalogCategoryModal({ category, onClose: requestC
               {loading ? 'Eliminando…' : hasProducts ? 'Eliminar todo' : 'Eliminar'}
             </button>
           </div>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

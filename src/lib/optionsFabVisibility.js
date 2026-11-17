@@ -1,9 +1,10 @@
 let present = false
 let visible = true
+let helpPresent = false
 const listeners = new Set()
 
 function emit() {
-  const snapshot = { present, visible }
+  const snapshot = { present, visible, helpPresent }
   for (const listener of listeners) listener(snapshot)
 }
 
@@ -12,6 +13,13 @@ export function setOptionsFabPresent(nextPresent) {
   if (present === normalized) return
   present = normalized
   if (!present) visible = true
+  emit()
+}
+
+export function setHelpFabPresent(nextPresent) {
+  const normalized = Boolean(nextPresent)
+  if (helpPresent === normalized) return
+  helpPresent = normalized
   emit()
 }
 

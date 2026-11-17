@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { matchPath, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { fetchMarketplaceFeed } from '../api.js'
@@ -18,12 +18,39 @@ import { useSheetExitMs } from '../../motion/presets'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { useDismissibleModal } from './useOrderModalPresence'
-import { setOptionsFabPresent } from '../../lib/optionsFabVisibility'
-import AppDownloadPrompt from '../../appReleases/components/AppDownloadPrompt.jsx'
+import { setHelpFabPresent, setOptionsFabPresent } from '../../lib/optionsFabVisibility'
+import { CUSTOMER_NAV } from '../../customer/components/customerNav.jsx'
 
 export const MARKETPLACE_CATEGORY_EVENT = 'pala-jaba-marketplace-category'
 
 const HELP_MESSAGE = 'Hola tengo un problema'
+const HELP_JUMP_MS = 420
+
+function WhatsAppMark({ jumping = false, size = 20 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+      className={jumping ? 'animate-help-jump' : 'motion-safe:animate-help-ring motion-reduce:animate-none'}
+    >
+      <path
+        fill="currentColor"
+        d="M12.04 2C6.58 2 2.15 6.4 2.15 11.83c0 1.74.46 3.44 1.34 4.94L2 22l5.39-1.41a10 10 0 0 0 4.65 1.18h.01c5.46 0 9.89-4.4 9.89-9.83C21.94 6.41 17.5 2 12.04 2Zm5.76 14.15c-.24.68-1.4 1.3-1.94 1.38-.5.08-1.12.11-1.81-.11-.42-.14-.95-.31-1.64-.6-2.88-1.25-4.76-4.16-4.9-4.35-.14-.19-1.17-1.55-1.17-2.96 0-1.41.74-2.1 1-2.39.26-.28.57-.35.76-.35.19 0 .38 0 .55.01.18.01.41-.07.64.49.24.57.81 1.97.88 2.11.07.14.12.31.02.5-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.28-.12.55.16.26.7 1.16 1.51 1.88 1.04.92 1.91 1.21 2.18 1.35.26.14.42.12.58-.07.16-.19.66-.77.84-1.03.18-.26.35-.22.59-.13.24.09 1.51.71 1.77.84.26.13.43.19.5.3.06.11.06.64-.18 1.32Z"
+      />
+    </svg>
+  )
+}
+
+const FEED_ACCOUNT_LINKS = [
+  { id: 'pedidos', label: 'Pedido' },
+  { id: 'favoritos', label: 'Guardados' },
+  { id: 'direcciones', label: 'Direcciones' },
+].map((item) => {
+  const nav = CUSTOMER_NAV.find((entry) => entry.id === item.id)
+  return { ...item, path: nav.path, icon: nav.icon }
+})
 
 function barItemClass(active) {
   return `flex flex-col items-center justify-center gap-0.5 py-1.5 text-center text-[0.625rem] font-semibold touch-manipulation ${active ? 'text-brand-green' : 'text-brand-carmelita/65'}`
@@ -129,6 +156,7 @@ export default function BuyerMarketplaceNav({
   gestorUsername = null,
   storePhotoUrl = '',
   storeName = '',
+  orderAttention = false,
 }) {
   const route = useLocation()
   const navigate = useNavigate()
@@ -142,7 +170,9 @@ export default function BuyerMarketplaceNav({
   const [categoriesLoading, setCategoriesLoading] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [helpPhone, setHelpPhone] = useState('')
-  const [, refreshAuthState] = useState(0)
+  const [helpJumping, setHelpJumping] = useState(false)
+  const helpTimerRef = useRef(0)
+  const [authTick, refreshAuthState] = useState(0)
 
   useEffect(() => {
     const refresh = () => refreshAuthState((current) => current + 1)
@@ -181,6 +211,11 @@ export default function BuyerMarketplaceNav({
     setOptionsFabPresent(true)
     return () => setOptionsFabPresent(false)
   }, [])
+
+  useEffect(() => {
+    setHelpFabPresent(isCustomerAuthenticated())
+    return () => setHelpFabPresent(false)
+  }, [authTick])
 
   useEffect(() => {
     if (isCatalog || !categoryOpen || !provinceId || !municipalityId) return undefined
@@ -279,9 +314,22 @@ export default function BuyerMarketplaceNav({
     })
   }
 
+  useEffect(() => () => window.clearTimeout(helpTimerRef.current), [])
+
   function openHelp() {
+    if (helpJumping) return
     const url = buildWhatsAppUrl(helpPhone, HELP_MESSAGE)
-    if (url) openExternalUrl(url)
+    if (!url) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) {
+      openExternalUrl(url)
+      return
+    }
+    setHelpJumping(true)
+    helpTimerRef.current = window.setTimeout(() => {
+      setHelpJumping(false)
+      openExternalUrl(url)
+    }, HELP_JUMP_MS)
   }
 
   const sellerSignedIn = isSellerAuthenticated()
@@ -290,11 +338,10 @@ export default function BuyerMarketplaceNav({
   const signedInProfile = customerSignedIn ? getCustomerProfile() : sellerSignedIn ? getSellerProfile() : null
   const profileImageUrl = resolveMediaUrl(signedInProfile?.profile_photo_url)
   const activeCategoryId = isCatalog ? selectedCatalogCategoryId : selectedCategoryId
-  const categoryActive = categoryOpen || Boolean(activeCategoryId)
   const accountTo = customerSignedIn ? '/cliente' : sellerSignedIn ? '/tienda' : '/login'
   const accountLabel = sellerSignedIn && !customerSignedIn ? 'Mi tienda' : 'Cuenta'
   const accountActive = customerSignedIn
-    ? route.pathname.startsWith('/cliente')
+    ? route.pathname.startsWith('/cliente') && !FEED_ACCOUNT_LINKS.some((item) => item.path === route.pathname)
     : sellerSignedIn && route.pathname.startsWith('/tienda')
   const accountIcon = profileImageUrl ? (
     <img
@@ -317,36 +364,42 @@ export default function BuyerMarketplaceNav({
         aria-label="Secciones de compra"
       >
         <div className="mx-auto flex w-full max-w-md items-stretch px-1">
-          <AppDownloadPrompt variant="bar" />
           <BarItem
-            active={categoryActive}
-            label="Categorías"
-            onClick={() => {
-              if (!isCatalog) setCategoriesLoading(true)
-              setCategoryOpen(true)
-            }}
+            to="/comprar"
+            active={route.pathname === '/comprar'}
+            label="Inicio"
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
-                <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
-                <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
-                <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+                <path d="M4 10.5 12 4l8 6.5" />
+                <path d="M6 10v9h12v-9" />
               </svg>
             }
           />
-          <BarItem
-            label="Ayuda"
-            disabled={!helpPhone}
-            onClick={openHelp}
-            icon={
-              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  fill="currentColor"
-                  d="M12.04 2C6.58 2 2.15 6.4 2.15 11.83c0 1.74.46 3.44 1.34 4.94L2 22l5.39-1.41a10 10 0 0 0 4.65 1.18h.01c5.46 0 9.89-4.4 9.89-9.83C21.94 6.41 17.5 2 12.04 2Zm5.76 14.15c-.24.68-1.4 1.3-1.94 1.38-.5.08-1.12.11-1.81-.11-.42-.14-.95-.31-1.64-.6-2.88-1.25-4.76-4.16-4.9-4.35-.14-.19-1.17-1.55-1.17-2.96 0-1.41.74-2.1 1-2.39.26-.28.57-.35.76-.35.19 0 .38 0 .55.01.18.01.41-.07.64.49.24.57.81 1.97.88 2.11.07.14.12.31.02.5-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.28-.12.55.16.26.7 1.16 1.51 1.88 1.04.92 1.91 1.21 2.18 1.35.26.14.42.12.58-.07.16-.19.66-.77.84-1.03.18-.26.35-.22.59-.13.24.09 1.51.71 1.77.84.26.13.43.19.5.3.06.11.06.64-.18 1.32Z"
-                />
-              </svg>
-            }
-          />
+          {customerSignedIn ? FEED_ACCOUNT_LINKS.map((item) => (
+            <BarItem
+              key={item.id}
+              to={item.path}
+              active={route.pathname === item.path}
+              label={item.label}
+              icon={
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    {item.icon}
+                  </svg>
+                  {item.id === 'pedidos' && orderAttention ? (
+                    <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[0.65rem] font-extrabold leading-none text-white" aria-label="Pedidos que requieren atención">!</span>
+                  ) : null}
+                </>
+              }
+            />
+          )) : (
+            <BarItem
+              label="Ayuda"
+              disabled={!helpPhone}
+              onClick={openHelp}
+              icon={<WhatsAppMark jumping={helpJumping} />}
+            />
+          )}
           {accountSignedIn && !customerSignedIn && !sellerSignedIn ? (
             <BarItem active={false} label="Cuenta" disabled icon={accountIcon} />
           ) : (
@@ -360,6 +413,18 @@ export default function BuyerMarketplaceNav({
           )}
         </div>
       </nav>
+      {customerSignedIn ? (
+        <button
+          type="button"
+          onClick={openHelp}
+          disabled={!helpPhone}
+          aria-label="Ayuda"
+          className="fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-green text-white shadow-[0_8px_24px_rgba(89,128,44,0.28)] touch-manipulation disabled:opacity-40"
+          style={{ bottom: 'calc(4.75rem + var(--safe-bottom))' }}
+        >
+          <WhatsAppMark jumping={helpJumping} size={26} />
+        </button>
+      ) : null}
       {categoryOpen ? (
         <CategoryModal
           categories={categories}

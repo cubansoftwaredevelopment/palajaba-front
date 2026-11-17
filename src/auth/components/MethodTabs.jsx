@@ -2,14 +2,14 @@ import { motion, useReducedMotion } from 'framer-motion'
 
 const PILL_SPRING = { type: 'spring', stiffness: 420, damping: 34 }
 
-export default function MethodTabs({ options, value, onChange, ariaLabel }) {
+export default function MethodTabs({ options, value, onChange, ariaLabel, className = 'mb-4' }) {
   const reduced = useReducedMotion()
   const count = Math.max(options.length, 1)
   const index = Math.max(0, options.findIndex((option) => option.id === value))
 
   return (
     <div
-      className="relative mb-4 flex rounded-full border border-brand-green/15 bg-brand-white p-1"
+      className={`relative flex rounded-full border border-brand-green/15 bg-brand-white p-1 ${className}`}
       role="tablist"
       aria-label={ariaLabel}
     >

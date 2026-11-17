@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import SearchBar from '../../buyer/components/SearchBar'
 import { useNavigate } from 'react-router-dom'
 import { fetchStoreCustomers } from '../../auth/api'
 import { getSellerToken } from '../../lib/sellerAuth'
@@ -6,19 +7,27 @@ import { getUserFacingMessage } from '../../lib/userFacingError'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import { isoDate, rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
-import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
+import FilterModal from '../../components/filters/FilterModal'
+import LoadingState from '../../components/ui/LoadingState'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import {
   sellerModalBody,
-  sellerModalOverlay,
   sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 
 import { isCustomerPaidOrder } from '../../constants/orderStatus'
 
 const statusLabel = { pending_confirmation: 'Pendiente', completed: 'Confirmado', cancelled: 'Cancelado' }
+
+const CUSTOMER_SEARCH_HINTS = [
+  'buscar por cliente',
+  'buscar por teléfono',
+  'buscar por correo',
+  'buscar por pedido',
+  'buscar por producto',
+]
 
 function orderIdentifier(order) {
   return String(order?.id ?? '').slice(-6).toUpperCase()
@@ -32,7 +41,7 @@ function dateLabel(value) {
 }
 
 function CustomerOrdersModal({ customer, onClose, onSelectOrder, onLoadMore, loadingMore }) {
-  const { dismiss, motionClass, sheetProps } = useDismissibleModal(onClose)
+  const { dismiss, closing, sheetProps } = useSellerSheet(onClose)
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -49,20 +58,14 @@ function CustomerOrdersModal({ customer, onClose, onSelectOrder, onLoadMore, loa
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) dismiss()
-        }}
+      <SellerMotionSheet
+        onClose={dismiss}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="seller-customer-detail-title"
+        panelAs="section"
+        panelClassName={`${sellerModalSheet} max-h-[min(90dvh,46rem)] max-w-xl`}
       >
-        <section
-          {...sheetProps}
-          className={`${sellerModalSheet} max-h-[min(90dvh,46rem)] max-w-xl`}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="seller-customer-detail-title"
-        >
           <header className="flex shrink-0 items-start justify-between gap-4 border-b border-brand-green/10 px-5 py-4">
             <div className="min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-brand-carmelita/60">Detalle del cliente</p>
@@ -120,8 +123,7 @@ function CustomerOrdersModal({ customer, onClose, onSelectOrder, onLoadMore, loa
               </button>
             ) : null}
           </div>
-        </section>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }
@@ -246,42 +248,28 @@ export default function SellerCustomers() {
         <p className="mt-1 text-sm text-brand-carmelita/70">Clientes que han realizado pedidos en tu tienda.</p>
       </header>
       {error ? <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
-      {loading ? <p className="rounded-2xl bg-brand-white p-5 text-sm">Cargando clientes…</p> : !customers.length && !search && !locationFilter && !productFilters.length && !currencyFilter && !dateFilterEnabled ? <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">Aún no tienes clientes registrados por pedidos.</p> : (
+      {loading ? <LoadingState message="Cargando clientes…" /> : !customers.length && !search && !locationFilter && !productFilters.length && !currencyFilter && !dateFilterEnabled ? <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">Aún no tienes clientes registrados por pedidos.</p> : (
         <>
-        <div className="mb-4 flex">
-          <div className="relative min-w-0 flex-1">
-            <label>
-              <span className="sr-only">Buscar clientes</span>
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar por cliente, teléfono, correo, pedido o producto"
-                className="min-h-11 w-full rounded-xl border border-brand-green/15 bg-brand-white py-2 pl-11 pr-28 text-sm text-brand-carmelita placeholder:text-brand-carmelita/45 focus:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-green/15"
-              />
-            </label>
-            {search ? (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                aria-label="Limpiar búsqueda"
-                title="Limpiar búsqueda"
-                className="absolute left-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-brand-carmelita/60 transition hover:bg-brand-green/8 hover:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg>
-              </button>
-            ) : null}
-            <FilterButton
-              count={countActiveFilters({
+        <div className="mb-4">
+          <SearchBar
+            id="seller-customers-search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            onClear={() => setSearch('')}
+            label="Buscar clientes"
+            phrases={CUSTOMER_SEARCH_HINTS}
+            filter={{
+              count: countActiveFilters({
                 location: locationFilter,
                 products: productFilters,
                 currency: currencyFilter,
                 dateEnabled: dateFilterEnabled,
-              }, ['location', 'products', 'currency'])}
-              label="Filtrar clientes"
-              expanded={filtersOpen}
-              onClick={() => setFiltersOpen(true)}
-            />
-          </div>
+              }, ['location', 'products', 'currency']),
+              label: 'Filtrar clientes',
+              expanded: filtersOpen,
+              onClick: () => setFiltersOpen(true),
+            }}
+          />
         </div>
         {customers.length ? (
         <ul className="grid gap-3 md:grid-cols-2">

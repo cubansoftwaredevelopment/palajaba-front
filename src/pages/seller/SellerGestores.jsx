@@ -328,7 +328,7 @@ export default function SellerGestores() {
 
   if (loading) {
     return (
-      <section className={`animate-fade-in ${sellerPageWrap}`}>
+      <section className={`${sellerPageWrap}`}>
         <LoadingState label="Cargando gestores…" />
       </section>
     )
@@ -336,7 +336,7 @@ export default function SellerGestores() {
 
   if (error && gestores.length === 0 && products.length === 0 && !savedAccess) {
     return (
-      <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
+      <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
         <SellerPageHeader
           eyebrow="Tu red"
           title="Gestores"
@@ -354,7 +354,7 @@ export default function SellerGestores() {
   }
 
   return (
-    <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
+    <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
       <SellerPageHeader
         eyebrow="Tu red"
         title="Gestores"

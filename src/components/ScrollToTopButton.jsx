@@ -20,7 +20,7 @@ export default function ScrollToTopButton() {
   const { pathname } = useLocation()
   const allowed = isScrollToTopPath(pathname)
   const [visible, setVisible] = useState(false)
-  const [fab, setFab] = useState({ present: false, visible: true })
+  const [fab, setFab] = useState({ present: false, visible: true, helpPresent: false })
   const scrollerRef = useRef(null)
   const lastTopRef = useRef(0)
   const hideTimerRef = useRef(0)
@@ -89,7 +89,7 @@ export default function ScrollToTopButton() {
           ? 'translate-y-0 opacity-100'
           : 'pointer-events-none translate-y-3 opacity-0'
       }`}
-      style={{ bottom: fab.present ? 'calc(5rem + var(--safe-bottom))' : 'max(2rem, calc(1.65rem + var(--safe-bottom)))' }}
+      style={{ bottom: fab.present ? `calc(${fab.helpPresent ? '9.25rem' : '5rem'} + var(--safe-bottom))` : 'max(2rem, calc(1.65rem + var(--safe-bottom)))' }}
     >
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
         <path d="M18 15l-6-6-6 6" />

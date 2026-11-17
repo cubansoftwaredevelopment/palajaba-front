@@ -270,7 +270,7 @@ export const buyerJabaSyncBody = 'min-h-0 flex-1 overflow-y-auto overscroll-y-co
 export const buyerJabaSyncHero = 'text-center'
 
 export const buyerJabaSyncHeroImage =
-  'relative mx-auto mb-3 flex h-20 w-20 items-center justify-center rounded-3xl bg-brand-yellow/18 ring-1 ring-brand-yellow/30'
+  'relative mx-auto mb-3 flex h-24 w-24 items-center justify-center overflow-visible rounded-3xl bg-brand-yellow/18 p-3 ring-1 ring-brand-yellow/30'
 
 export const buyerJabaSyncCountBadge =
   'absolute -right-1 -top-1 flex h-7 min-w-7 items-center justify-center rounded-full bg-brand-carmelita px-1.5 text-[0.68rem] font-bold leading-none text-brand-white shadow-[0_4px_12px_rgba(123,76,56,0.35)]'

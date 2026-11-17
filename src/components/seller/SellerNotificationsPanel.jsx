@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { formatRelativeTime } from '../../lib/dates'
 import RenewPlanButton from './RenewPlanButton'
 import SellerModalPortal from './SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import LoadingState from '../ui/LoadingState'
 import NotificationBodyText from '../ui/NotificationBodyText'
 import {
@@ -150,7 +150,7 @@ export default function SellerNotificationsPanel({
   onMarkAllSystemRead,
   storeName = '',
 }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.read_at).length,
     [notifications],
@@ -185,21 +185,14 @@ export default function SellerNotificationsPanel({
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerNotificationsOverlay} ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose()
-        }}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="seller-notifications-title"
+        overlayClassName={sellerNotificationsOverlay}
+        panelClassName={`${sellerNotificationsPanel} h-[min(88dvh,40rem)]`}
       >
-        <div
-          {...sheetProps}
-          className={`${sellerNotificationsPanel} h-[min(88dvh,40rem)]`}
-          onMouseDown={(event) => event.stopPropagation()}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="seller-notifications-title"
-        >
           <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
             <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
             <div className="flex items-start justify-between gap-3">
@@ -282,8 +275,7 @@ export default function SellerNotificationsPanel({
               Cerrar
             </button>
           </div>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

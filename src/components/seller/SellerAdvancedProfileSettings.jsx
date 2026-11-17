@@ -63,7 +63,7 @@ function CollapsibleSection({ title, open, onToggle, children }) {
           viewBox="0 0 20 20"
           fill="currentColor"
           aria-hidden
-          className={`shrink-0 text-brand-carmelita/70 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`shrink-0 text-brand-carmelita/70 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${open ? 'rotate-180' : ''}`}
         >
           <path
             fillRule="evenodd"
@@ -72,7 +72,13 @@ function CollapsibleSection({ title, open, onToggle, children }) {
           />
         </svg>
       </button>
-      {open && children}
+      <div
+        className={`grid transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+      >
+        <div className="overflow-hidden" inert={open ? undefined : true}>
+          {children}
+        </div>
+      </div>
     </SellerSection>
   )
 }

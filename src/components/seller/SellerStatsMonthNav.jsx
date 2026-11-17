@@ -1,3 +1,5 @@
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { monthPageShift } from '../../motion/presets'
 import { sellerFocusRing } from './sellerStyles'
 
 function formatMonthLabel(year, month) {
@@ -15,12 +17,14 @@ function shiftMonth(year, month, delta) {
   return { year: date.getFullYear(), month: date.getMonth() + 1 }
 }
 
-export default function SellerStatsMonthNav({ period, year, month, onChange }) {
+export default function SellerStatsMonthNav({ period, year, month, onChange, direction = 1 }) {
   if (!period) return null
 
   const atEarliest =
     compareMonth(year, month, period.earliest_year, period.earliest_month) <= 0
   const atCurrent = compareMonth(year, month, period.current_year, period.current_month) >= 0
+  const reduced = useReducedMotion()
+  const shift = monthPageShift(direction, reduced)
 
   function goPrevious() {
     if (atEarliest) return
@@ -46,9 +50,17 @@ export default function SellerStatsMonthNav({ period, year, month, onChange }) {
         </svg>
       </button>
 
-      <p className="min-w-0 flex-1 text-center font-display text-base font-bold capitalize text-brand-green sm:text-lg">
-        {formatMonthLabel(year, month)}
-      </p>
+      <div className="relative min-h-7 min-w-0 flex-1 overflow-x-clip">
+        <AnimatePresence mode="popLayout" initial={false}>
+          <motion.p
+            key={`${year}-${month}`}
+            className={`text-center font-display text-base font-bold capitalize text-brand-green sm:text-lg ${reduced ? '' : 'screen-step'}`}
+            {...shift}
+          >
+            {formatMonthLabel(year, month)}
+          </motion.p>
+        </AnimatePresence>
+      </div>
 
       <button
         type="button"

@@ -4,7 +4,9 @@ import { getSellerToken } from '../../lib/sellerAuth'
 import { isValidQvaPayEvidenceContent } from '../../lib/qvapayEvidence.js'
 import { EMPTY_STORE_PAGE } from '../../lib/storePages'
 import { buyerProductDetailModal, buyerProductDetailOverlay } from '../../buyer/components/buyerStyles'
-import { ORDER_MODAL_EXIT_MS, orderModalMotionClass } from '../../buyer/components/useOrderModalPresence'
+import { useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet from '../../motion/SellerMotionSheet'
+import { useSheetExitMs } from '../../motion/presets'
 import SellerModalPortal from './SellerModalPortal'
 import SellerRichTextEditor from './SellerRichTextEditor'
 
@@ -29,13 +31,15 @@ export default function SellerOrderEvidenceEditor({ orderId, submitting, onSubmi
   const [content, setContent] = useState(() => readEvidenceDraft(orderId) || EMPTY_STORE_PAGE)
   const [hasDraft, setHasDraft] = useState(() => Boolean(readEvidenceDraft(orderId)))
   const [closing, setClosing] = useState(false)
-  const motionClass = orderModalMotionClass(closing)
-
+  const exitMs = useSheetExitMs()
   const closeEditor = useCallback(() => {
     if (submitting || closing) return
     setClosing(true)
-    closeTimerRef.current = window.setTimeout(() => setOpen(false), ORDER_MODAL_EXIT_MS)
-  }, [closing, submitting])
+    closeTimerRef.current = window.setTimeout(() => setOpen(false), exitMs)
+  }, [closing, exitMs, submitting])
+  const sheetProps = useSwipeDownSheet(() => {
+    if (!submitting) closeEditor()
+  }, { motion: true })
 
   useEffect(() => {
     const draft = readEvidenceDraft(orderId)
@@ -94,7 +98,7 @@ export default function SellerOrderEvidenceEditor({ orderId, submitting, onSubmi
       try { window.localStorage.removeItem(draftKey) } catch { /* el envío ya se completó */ }
       setHasDraft(false)
       setClosing(true)
-      closeTimerRef.current = window.setTimeout(() => setOpen(false), ORDER_MODAL_EXIT_MS)
+      closeTimerRef.current = window.setTimeout(() => setOpen(false), exitMs)
     } catch (cause) {
       setError(cause?.message || 'No pudimos enviar la evidencia.')
     }
@@ -132,17 +136,15 @@ export default function SellerOrderEvidenceEditor({ orderId, submitting, onSubmi
       </button>
       {open ? (
         <SellerModalPortal>
-          <div
-            className={`${sellerEvidenceModalOverlay} ${motionClass}`}
-            role="presentation"
-            onMouseDown={(event) => { if (event.target === event.currentTarget) closeEditor() }}
+          <SellerMotionSheet
+            onClose={closeEditor}
+            closing={closing}
+            sheetProps={sheetProps}
+            labelledBy="seller-evidence-title"
+            panelAs="section"
+            overlayClassName={sellerEvidenceModalOverlay}
+            panelClassName={`${buyerProductDetailModal} h-[min(92dvh,44rem)] sm:max-h-[min(92dvh,44rem)]`}
           >
-            <section
-              className={`${buyerProductDetailModal} h-[min(92dvh,44rem)] sm:max-h-[min(92dvh,44rem)]`}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="seller-evidence-title"
-            >
               <header className="shrink-0 px-5 pt-3">
                 <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
                 <div className="flex items-center justify-between gap-3 pb-3">
@@ -174,8 +176,7 @@ export default function SellerOrderEvidenceEditor({ orderId, submitting, onSubmi
                   {submitting ? 'Enviando evidencia…' : 'Enviar evidencia al cliente'}
                 </button>
               </footer>
-            </section>
-          </div>
+          </SellerMotionSheet>
         </SellerModalPortal>
       ) : null}
     </>

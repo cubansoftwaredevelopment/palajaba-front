@@ -193,7 +193,7 @@ export default function SellerCatalog() {
   const showProductForm = summary && (showCreateProduct || productToEdit)
 
   return (
-    <section className={`animate-fade-in ${sellerCatalogSection}`}>
+    <section className={sellerCatalogSection}>
       <div className={`${sellerPageWrap} ${sellerSectionGap}`}>
         <div className="flex items-start justify-between gap-3">
           <SellerPageHeader

@@ -1,4 +1,4 @@
-import { sellerChoice } from './sellerStyles'
+import MethodTabs from '../../auth/components/MethodTabs'
 
 export const CHART_GRANULARITY_OPTIONS = [
   { id: 'daily', label: 'Diario' },
@@ -15,19 +15,17 @@ export default function SellerChartGranularity({
   const visibleOptions = CHART_GRANULARITY_OPTIONS.filter(
     (option) => option.id !== 'monthly' || canShowMonthly,
   )
+  const value = visibleOptions.some((option) => option.id === granularity)
+    ? granularity
+    : visibleOptions[0].id
 
   return (
-    <div className="grid grid-cols-3 gap-2">
-      {visibleOptions.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          onClick={() => onGranularityChange(option.id)}
-          className={sellerChoice(granularity === option.id)}
-        >
-          {option.label}
-        </button>
-      ))}
-    </div>
+    <MethodTabs
+      options={visibleOptions}
+      value={value}
+      onChange={onGranularityChange}
+      ariaLabel="Temporalidad del gráfico"
+      className=""
+    />
   )
 }

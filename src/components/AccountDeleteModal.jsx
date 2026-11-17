@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { useDismissibleModal } from '../buyer/components/useOrderModalPresence'
+import { createPortal } from 'react-dom'
+import SellerMotionSheet, { useSellerSheet } from '../motion/SellerMotionSheet'
 
 export default function AccountDeleteModal({
   onClose: requestClose,
@@ -11,7 +12,7 @@ export default function AccountDeleteModal({
   confirmLabel = 'Sí, eliminar cuenta',
   cancelLabel = 'Cancelar',
 }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -25,21 +26,18 @@ export default function AccountDeleteModal({
     }
   }, [loading, onClose])
 
-  return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-brand-green/20 p-4 backdrop-blur-sm ${motionClass}`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="account-delete-title"
-      onClick={() => {
+  return createPortal(
+    <SellerMotionSheet
+      onClose={() => {
         if (!loading) onClose()
       }}
+      closing={closing}
+      sheetProps={sheetProps}
+      variant="dialog"
+      labelledBy="account-delete-title"
+      overlayClassName="fixed inset-0 z-[200] flex items-center justify-center bg-brand-green/20 p-4 backdrop-blur-sm"
+      panelClassName="relative w-full max-w-[20rem] rounded-2xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_16px_40px_rgba(89,128,44,0.18)]"
     >
-      <div
-        {...sheetProps}
-        className="relative w-full max-w-[20rem] animate-fade-in rounded-2xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_16px_40px_rgba(89,128,44,0.18)]"
-        onClick={(event) => event.stopPropagation()}
-      >
         <div className="flex flex-col items-center text-center">
           <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-700">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
@@ -79,7 +77,7 @@ export default function AccountDeleteModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </SellerMotionSheet>,
+    document.body,
   )
 }

@@ -8,6 +8,25 @@ export const stepShift = {
   transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
 }
 
+export function monthPageShift(direction, reduced) {
+  if (reduced) {
+    return {
+      initial: false,
+      animate: { opacity: 1, x: 0 },
+      exit: { opacity: 1, x: 0 },
+      transition: { duration: 0 },
+    }
+  }
+  const enter = direction < 0 ? -46 : 46
+  const leave = direction < 0 ? 54 : -54
+  return {
+    initial: { opacity: 0, x: enter },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: leave },
+    transition: stepShift.transition,
+  }
+}
+
 export const sheetSpring = { type: 'spring', stiffness: 260, damping: 29 }
 export const detailSpring = { type: 'spring', stiffness: 280, damping: 32 }
 export const dialogSpring = { type: 'spring', stiffness: 180, damping: 22 }

@@ -26,6 +26,11 @@ import {
 import { useBuyerDisplayCurrency } from '../context.js'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 
+const BUSINESS_SEARCH_HINTS = [
+  'buscar negocios en tu municipio',
+  'buscar por nombre de tienda',
+]
+
 const PAGE_SIZE = 20
 const SEARCH_DEBOUNCE_MS = 300
 
@@ -288,7 +293,7 @@ function BuyerBusinessesPageContent() {
           onQueryChange={setSearchQuery}
           onCategoryChange={setSearchCategoryId}
           searchLabel="Buscar negocios"
-          searchPlaceholder="Buscar negocios en tu municipio…"
+          phrases={BUSINESS_SEARCH_HINTS}
           categoryLabel="Filtrar negocios por categoría"
           allCategoriesLabel="Todas las categorías"
         />

@@ -75,7 +75,7 @@ function ChevronIcon({ expanded }) {
   )
 }
 
-function formatStoreSubtotal(items, displayCurrency, cupPerUnit) {
+function storeSubtotals(items, displayCurrency, cupPerUnit) {
   const subtotalByCurrency = {}
 
   for (const item of items) {
@@ -84,9 +84,60 @@ function formatStoreSubtotal(items, displayCurrency, cupPerUnit) {
     subtotalByCurrency[key] = (subtotalByCurrency[key] ?? 0) + display.amount * (item.quantity ?? 1)
   }
 
-  return Object.entries(subtotalByCurrency)
-    .map(([currency, amount]) => formatPrice(amount, currency))
-    .join(' + ')
+  return Object.entries(subtotalByCurrency).map(([currency, amount]) => ({ currency, amount }))
+}
+
+function CountingMoney({ amount, currency }) {
+  const reduced = useReducedMotion()
+  const whole = String(currency || '').toUpperCase() === 'CUP'
+  const [value, setValue] = useState(amount)
+  const valueRef = useRef(amount)
+
+  useEffect(() => {
+    const from = valueRef.current
+    const to = Number(amount)
+    if (!Number.isFinite(to)) return undefined
+    if (reduced || Math.abs(to - from) < (whole ? 0.5 : 0.005)) {
+      valueRef.current = to
+      setValue(to)
+      return undefined
+    }
+
+    const start = performance.now()
+    const span = Math.abs(to - from)
+    const duration = Math.min(1200, Math.max(520, span * (whole ? 6 : 36)))
+    let frame = 0
+
+    function tick(now) {
+      const progress = Math.min(1, (now - start) / duration)
+      const eased = 1 - (1 - progress) ** 3
+      const raw = from + (to - from) * eased
+      const next = whole ? Math.round(raw) : Math.round(raw * 100) / 100
+      valueRef.current = next
+      setValue(next)
+      if (progress < 1) {
+        frame = requestAnimationFrame(tick)
+        return
+      }
+      valueRef.current = to
+      setValue(to)
+    }
+
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [amount, reduced, whole])
+
+  return formatPrice(value, currency)
+}
+
+function MoneyTotal({ items, displayCurrency, cupPerUnit }) {
+  const parts = storeSubtotals(items, displayCurrency, cupPerUnit)
+  return parts.map((part, index) => (
+    <span key={part.currency}>
+      {index > 0 ? ' + ' : null}
+      <CountingMoney amount={part.amount} currency={part.currency} />
+    </span>
+  ))
 }
 
 function JabaQty({ qty }) {
@@ -135,7 +186,6 @@ function StoreGroup({
   onSetQuantity,
 }) {
   const panelId = useId()
-  const subtotalLabel = formatStoreSubtotal(group.items, displayCurrency, cupPerUnit)
   const storePhone = group.store_phone ?? resolveStorePhone(group.items)
   const canCheckout = Boolean(storePhone) && !syncingContacts && !checkoutSubmitting
   const deliveryAvailable = canCheckout && allItemsOfferDelivery(group.items)
@@ -167,7 +217,7 @@ function StoreGroup({
             <h3 className={buyerJabaStoreTitle}>{group.store_name}</h3>
             <p className="mt-0.5 text-xs font-medium text-brand-carmelita">
               {group.itemCount} {group.itemCount === 1 ? 'producto' : 'productos'}
-              <span className="text-brand-green"> · {subtotalLabel}</span>
+              <span className="text-brand-green"> · <MoneyTotal items={group.items} displayCurrency={displayCurrency} cupPerUnit={cupPerUnit} /></span>
             </p>
           </div>
           <ChevronIcon expanded={expanded} />
@@ -246,7 +296,7 @@ function StoreGroup({
           </ul>
 
           <p className="mt-2 text-xs font-semibold text-brand-carmelita">
-            Subtotal: <span className="text-brand-green">{subtotalLabel}</span>
+            Subtotal: <span className="text-brand-green"><MoneyTotal items={group.items} displayCurrency={displayCurrency} cupPerUnit={cupPerUnit} /></span>
           </p>
           <p className={buyerJabaShippingNote}>
             El costo de entrega se coordina directamente con la tienda

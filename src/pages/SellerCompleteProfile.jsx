@@ -143,7 +143,7 @@ export default function SellerCompleteProfile() {
 
   return (
     <>
-      <section className={`animate-fade-in ${sellerPageWrap}`}>
+      <section className={sellerPageWrap}>
         <p className={sellerEyebrow}>Configuración inicial</p>
         <h2 className={`mt-1 ${sellerTitle}`}>Cuéntanos sobre tu negocio</h2>
         <p className={sellerSubtitle}>

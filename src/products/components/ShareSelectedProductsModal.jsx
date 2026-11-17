@@ -13,7 +13,7 @@ import { getBusinessAreaFromSelection } from '../../components/seller/SellerBusi
 import SellerBusinessAreaFields from '../../components/seller/SellerBusinessAreaFields'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import { TelegramIcon, WhatsAppIcon } from '../../components/seller/ShareBrandIcons'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { buildTelegramShareUrl, buildWhatsAppShareUrl } from '../../lib/storeShare'
 import {
@@ -23,8 +23,6 @@ import {
   sellerHint,
   sellerModalBody,
   sellerModalFooter,
-  sellerModalOverlay,
-  sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
 
@@ -39,7 +37,7 @@ export default function ShareSelectedProductsModal({
   categoryName,
   onClose: requestClose,
 }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const allowedAreas = useMemo(() => storeServiceAreas(profile), [profile])
   const [provinceId, setProvinceId] = useState(profile?.business_area?.province_id || allowedAreas[0]?.province_id || '')
   const [municipalityId, setMunicipalityId] = useState(
@@ -132,14 +130,12 @@ export default function ShareSelectedProductsModal({
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="share-selected-products-title"
-        onClick={onClose}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="share-selected-products-title"
       >
-        <div {...sheetProps} className={sellerModalSheet} onClick={(event) => event.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="share-selected-products-title" className={sellerModalTitle}>
@@ -260,8 +256,7 @@ export default function ShareSelectedProductsModal({
               </div>
             )}
           </div>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

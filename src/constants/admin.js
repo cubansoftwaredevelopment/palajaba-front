@@ -32,6 +32,7 @@ export const NOTIFICATION_AUDIENCE_OPTIONS = [
   { id: 'standard_monthly', label: 'Básico · Mensual' },
   { id: 'standard_quarterly', label: 'Básico · Trimestral' },
   { id: 'standard_yearly', label: 'Básico · Anual' },
+  { id: 'customers', label: 'Clientes' },
 ]
 
 export const NOTIFICATION_AUDIENCE_LABELS = {

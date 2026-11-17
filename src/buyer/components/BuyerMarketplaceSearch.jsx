@@ -7,6 +7,12 @@ import DeadState from '../../components/ui/DeadState'
 import BuyerProductCard from './BuyerProductCard'
 import BuyerBusinessCard from './BuyerBusinessCard'
 import { buyerBusinessList, buyerProductGrid, buyerSearchInput } from './buyerStyles'
+import SearchBar from './SearchBar'
+
+const DEFAULT_SEARCH_HINTS = [
+  'buscar productos en tu municipio',
+  'buscar tiendas y ofertas',
+]
 
 function BuyerCategorySelect({
   id,
@@ -188,7 +194,7 @@ export default function BuyerMarketplaceSearch({
   onQueryChange,
   onCategoryChange,
   searchLabel = 'Buscar productos',
-  searchPlaceholder = 'Buscar productos en tu municipio…',
+  phrases = DEFAULT_SEARCH_HINTS,
   categoryLabel = 'Filtrar por categoría',
   allCategoriesLabel = 'Todas las categorías',
 }) {
@@ -197,28 +203,14 @@ export default function BuyerMarketplaceSearch({
       <label className="sr-only" htmlFor="buyer-marketplace-search">
         {searchLabel}
       </label>
-      <div className="relative">
-        <svg
-          className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-carmelita/45"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="7" />
-          <path d="M20 20l-3.5-3.5" />
-        </svg>
-        <input
-          id="buyer-marketplace-search"
-          type="search"
-          value={query}
-          onChange={(event) => onQueryChange(event.target.value)}
-          placeholder={searchPlaceholder}
-          className={`${buyerSearchInput} pl-10`}
-          autoComplete="off"
-        />
-      </div>
+      <SearchBar
+        id="buyer-marketplace-search"
+        value={query}
+        onChange={(event) => onQueryChange(event.target.value)}
+        onClear={() => onQueryChange('')}
+        label={searchLabel}
+        phrases={phrases}
+      />
 
       <BuyerCategorySelect
         id="buyer-marketplace-category"

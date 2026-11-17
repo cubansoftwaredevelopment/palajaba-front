@@ -18,7 +18,7 @@ import {
 import SubscriptionDatePicker from '../SubscriptionDatePicker'
 import { formatDateForApi, startOfDay } from '../../lib/dates'
 import SellerModalPortal from './SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import SellerSelect from './SellerSelect'
 import Checkbox from '../ui/Checkbox'
 import {
@@ -31,7 +31,6 @@ import {
   sellerModalBody,
   sellerModalFooter,
   sellerModalInput,
-  sellerModalOverlay,
   sellerModalSheet,
   sellerModalTitle,
   sellerSection,
@@ -65,7 +64,7 @@ function QuantityStepper({ value, onChange, max = 99 }) {
 
 export default function SellerManualOrderModal({ onClose: requestClose, onCreated }) {
   const navigate = useNavigate()
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const [searchLoading, setSearchLoading] = useState(true)
   const [searchError, setSearchError] = useState('')
   const [suggestions, setSuggestions] = useState([])
@@ -230,21 +229,13 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose()
-        }}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="manual-order-title"
+        panelClassName={`${sellerModalSheet} h-[min(92dvh,760px)]`}
       >
-        <div
-          {...sheetProps}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="manual-order-title"
-          className={`${sellerModalSheet} h-[min(92dvh,760px)]`}
-          onMouseDown={(event) => event.stopPropagation()}
-        >
           <div className="flex shrink-0 items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="manual-order-title" className={sellerModalTitle}>
@@ -503,8 +494,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
               </button>
             </div>
           </form>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

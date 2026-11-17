@@ -5,10 +5,7 @@ import {
   sellerFocusRing,
   sellerHeader,
   sellerHeaderInner,
-  sellerMain,
   sellerMainCatalog,
-  sellerMainWithNav,
-  sellerScrollArea,
   sellerShell,
   sellerSidebar,
   sellerSidebarLogoWrap,
@@ -85,11 +82,6 @@ export default function SellerShell({
   children,
   footer,
 }) {
-  const mainClassName = catalogLayout
-    ? sellerMainCatalog
-    : showBottomNav
-      ? sellerMainWithNav
-      : sellerMain
   const useFixedViewport = catalogLayout || showBottomNav
   const shellClassName = useFixedViewport
     ? `${sellerShell} seller-shell-viewport h-dvh max-h-dvh overflow-hidden`
@@ -155,13 +147,9 @@ export default function SellerShell({
           ) : null}
 
           {catalogLayout ? (
-            <main className={mainClassName}>{children}</main>
+            <main className={`${sellerMainCatalog} relative`}>{children}</main>
           ) : (
-            <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div className={sellerScrollArea}>
-                <div className={mainClassName}>{children}</div>
-              </div>
-            </main>
+            <main className={useFixedViewport ? 'relative min-h-0 flex-1 overflow-hidden' : 'relative min-h-0 flex-1'}>{children}</main>
           )}
 
           {footer && <div className="sm:hidden">{footer}</div>}

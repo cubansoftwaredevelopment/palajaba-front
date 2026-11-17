@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 
 import PhotoLightbox from '../../components/PhotoLightbox'
@@ -8,6 +9,7 @@ import SellerRevenueSection from '../../components/seller/SellerRevenueSection'
 import SellerSection from '../../components/seller/SellerSection'
 import SellerStatGrid from '../../components/seller/SellerStatGrid'
 import SellerStatsMonthNav from '../../components/seller/SellerStatsMonthNav'
+import { monthPageShift } from '../../motion/presets'
 import SellerStatsPremiumPreview from '../../components/seller/SellerStatsPremiumPreview'
 import SellerSubscriptionAlert from '../../components/seller/SellerSubscriptionAlert'
 import SellerTopProductsSection from '../../components/seller/SellerTopProductsSection'
@@ -50,6 +52,8 @@ export default function SellerGeneral() {
   const [topProductsLoading, setTopProductsLoading] = useState(true)
   const [topProductsError, setTopProductsError] = useState('')
   const [photoOpen, setPhotoOpen] = useState(false)
+  const [monthDirection, setMonthDirection] = useState(1)
+  const reducedMotion = useReducedMotion()
 
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
@@ -201,12 +205,17 @@ export default function SellerGeneral() {
     selectedYear && selectedMonth ? formatMonthLabel(selectedYear, selectedMonth) : null
 
   function handleMonthChange({ year, month }) {
+    const currentIndex = (selectedYear ?? year) * 12 + (selectedMonth ?? month)
+    const nextIndex = year * 12 + month
+    setMonthDirection(nextIndex >= currentIndex ? 1 : -1)
     setSelectedYear(year)
     setSelectedMonth(month)
   }
 
+  const monthShift = monthPageShift(monthDirection, reducedMotion)
+
   return (
-    <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
+    <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
       <SellerPageHeader
         eyebrow="General"
         title="Estadísticas de tu tienda"
@@ -275,47 +284,71 @@ export default function SellerGeneral() {
           />
 
           {stats?.period && selectedYear && selectedMonth ? (
-            <SellerStatsMonthNav
-              period={stats.period}
-              year={selectedYear}
-              month={selectedMonth}
-              onChange={handleMonthChange}
-            />
-          ) : null}
+            <>
+              <SellerStatsMonthNav
+                period={stats.period}
+                year={selectedYear}
+                month={selectedMonth}
+                direction={monthDirection}
+                onChange={handleMonthChange}
+              />
+              <div className="relative overflow-x-clip">
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.div
+                    key={`${selectedYear}-${selectedMonth}`}
+                    className={`${sellerSectionGap} ${reducedMotion ? '' : 'screen-step'}`}
+                    {...monthShift}
+                  >
+                    <SellerSection
+                      label={monthLabel ? `Resumen de ${monthLabel}` : 'Resumen del mes'}
+                      hint="Visitas y pedidos confirmados del mes. Productos: activos ahora mismo."
+                    >
+                      {error && (
+                        <p className={`mb-3 ${sellerAlertError}`} role="alert">
+                          {error}
+                        </p>
+                      )}
+                      <SellerStatGrid stats={stats} loading={loading} />
+                    </SellerSection>
 
-          <SellerSection
-            label={monthLabel ? `Resumen de ${monthLabel}` : 'Resumen del mes'}
-            hint="Visitas y pedidos confirmados del mes. Productos: activos ahora mismo."
-          >
-            {error && (
-              <p className={`mb-3 ${sellerAlertError}`} role="alert">
-                {error}
-              </p>
-            )}
-            <SellerStatGrid stats={stats} loading={loading} />
-          </SellerSection>
+                    <SellerRevenueSection
+                      granularity={revenueGranularity}
+                      onGranularityChange={setRevenueGranularity}
+                      monthsAvailable={
+                        stats?.period?.months_available ?? revenueChart?.months_available ?? 1
+                      }
+                      loading={revenueLoading}
+                      error={revenueError}
+                      chart={revenueChart}
+                    />
 
-          <SellerRevenueSection
-            granularity={revenueGranularity}
-            onGranularityChange={setRevenueGranularity}
-            monthsAvailable={
-              stats?.period?.months_available ?? revenueChart?.months_available ?? 1
-            }
-            loading={revenueLoading}
-            error={revenueError}
-            chart={revenueChart}
-          />
-
-          <SellerProductsSoldSection
-            granularity={productsSoldGranularity}
-            onGranularityChange={setProductsSoldGranularity}
-            monthsAvailable={
-              stats?.period?.months_available ?? productsSoldChart?.months_available ?? 1
-            }
-            loading={productsSoldLoading}
-            error={productsSoldError}
-            chart={productsSoldChart}
-          />
+                    <SellerProductsSoldSection
+                      granularity={productsSoldGranularity}
+                      onGranularityChange={setProductsSoldGranularity}
+                      monthsAvailable={
+                        stats?.period?.months_available ?? productsSoldChart?.months_available ?? 1
+                      }
+                      loading={productsSoldLoading}
+                      error={productsSoldError}
+                      chart={productsSoldChart}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </>
+          ) : (
+            <SellerSection
+              label="Resumen del mes"
+              hint="Visitas y pedidos confirmados del mes. Productos: activos ahora mismo."
+            >
+              {error && (
+                <p className={`mb-3 ${sellerAlertError}`} role="alert">
+                  {error}
+                </p>
+              )}
+              <SellerStatGrid stats={stats} loading={loading} />
+            </SellerSection>
+          )}
         </>
       ) : null}
 

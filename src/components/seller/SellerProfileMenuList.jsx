@@ -128,7 +128,7 @@ function Chevron() {
 
 export default function SellerProfileMenuList({ sections, onSelect }) {
   return (
-    <div className="flex flex-col gap-5 animate-fade-in">
+    <div className="flex flex-col gap-5">
       {sections.map((section) => (
         <section
           key={section.id}

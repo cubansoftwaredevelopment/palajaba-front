@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
+import SearchBar from '../../buyer/components/SearchBar'
+import { monthPageShift } from '../../motion/presets'
 import SellerEmptyState from '../../components/seller/SellerEmptyState'
 import SellerManualOrderModal from '../../components/seller/SellerManualOrderModal'
 import SellerOrderDetailModal from '../../components/seller/SellerOrderDetailModal'
@@ -24,10 +27,17 @@ import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 import { acceptSellerQvaPayOrder, refundSellerQvaPayOrder, rejectSellerQvaPayOrder, submitSellerOrderEvidence } from '../../auth/api.js'
-import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
+import FilterModal from '../../components/filters/FilterModal'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 
 const SELLER_ORDERS_PAGE_SIZE = 15
+
+const ORDER_SEARCH_HINTS = [
+  'buscar por cliente',
+  'buscar por teléfono',
+  'buscar por correo',
+  'buscar por pedido',
+]
 
 function orderFilterDate(order, tab) {
   const value = tab === 'completed'
@@ -97,6 +107,9 @@ export default function SellerOrders() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('pending')
+  const [tabDirection, setTabDirection] = useState(1)
+  const [tabMotion, setTabMotion] = useState(false)
+  const reducedMotion = useReducedMotion()
   const [tabInitialized, setTabInitialized] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -333,7 +346,7 @@ export default function SellerOrders() {
       }
 
       if (updated.status === 'completed') {
-        setActiveTab('completed')
+        selectTab('completed')
       }
     } catch (err) {
       setSaveError(getUserFacingMessage(err, 'No pudimos actualizar el pedido. Inténtalo de nuevo.'))
@@ -349,7 +362,7 @@ export default function SellerOrders() {
       setOrders((current) => [created, ...current])
       loadedOrdersCount.current += 1
       setOrderStatusCounts((current) => ({ ...current, pending: current.pending + 1 }))
-      setActiveTab('pending')
+      selectTab('pending')
       setSelectedOrder(created)
     } catch (err) {
       throw new Error(getUserFacingMessage(err, 'No pudimos registrar el pedido.'))
@@ -405,8 +418,17 @@ export default function SellerOrders() {
     } finally { setSaving(false) }
   }
 
+  function selectTab(next) {
+    if (next === activeTab) return
+    setTabDirection(next === 'pending' ? -1 : 1)
+    setTabMotion(true)
+    setActiveTab(next)
+  }
+
+  const tabShift = monthPageShift(tabDirection, reducedMotion || !tabMotion)
+
   return (
-    <section className={`animate-fade-in ${sellerPageWrap} ${sellerSectionGap}`}>
+    <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
       <SellerPageHeader
         eyebrow="Pedidos"
         title="Bandeja de pedidos"
@@ -450,51 +472,38 @@ export default function SellerOrders() {
         <>
           <SellerOrdersTabs
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={selectTab}
             pendingCount={orderStatusCounts.pending}
             completedCount={orderStatusCounts.completed}
           />
 
-          <div className="mb-3 flex">
-            <div className="relative min-w-0 flex-1">
-              <label>
-                <span className="sr-only">Buscar pedidos</span>
-                <input
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar por cliente, teléfono, correo o pedido"
-                  className="min-h-11 w-full rounded-xl border border-brand-green/15 bg-brand-white py-2 pl-11 pr-24 text-sm text-brand-carmelita placeholder:text-brand-carmelita/45 focus:border-brand-green/40 focus:outline-none focus:ring-2 focus:ring-brand-green/15"
-                />
-              </label>
-              {search ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearch('')
-                    if (searchParams.has('search')) {
-                      const nextParams = new URLSearchParams(searchParams)
-                      nextParams.delete('search')
-                      setSearchParams(nextParams, { replace: true })
-                    }
-                  }}
-                  aria-label="Limpiar búsqueda"
-                  title="Limpiar búsqueda"
-                  className="absolute left-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-lg text-brand-carmelita/60 transition hover:bg-brand-green/8 hover:text-brand-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                    <path d="m6 6 12 12M18 6 6 18" />
-                  </svg>
-                </button>
-              ) : null}
-              <FilterButton
-                count={countActiveFilters(orderFilterValues, ['client', 'products', 'currency', 'delivery'])}
-                label="Filtrar pedidos"
-                expanded={filtersOpen}
-                onClick={() => setFiltersOpen(true)}
-              />
-            </div>
+          <div className="mb-3">
+            <SearchBar
+              id="seller-orders-search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              onClear={() => {
+                setSearch('')
+                if (searchParams.has('search')) {
+                  const nextParams = new URLSearchParams(searchParams)
+                  nextParams.delete('search')
+                  setSearchParams(nextParams, { replace: true })
+                }
+              }}
+              label="Buscar pedidos"
+              phrases={ORDER_SEARCH_HINTS}
+              filter={{
+                count: countActiveFilters(orderFilterValues, ['client', 'products', 'currency', 'delivery']),
+                label: 'Filtrar pedidos',
+                expanded: filtersOpen,
+                onClick: () => setFiltersOpen(true),
+              }}
+            />
           </div>
 
+          <div className="relative overflow-x-clip">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div key={activeTab} className={tabMotion && !reducedMotion ? 'screen-step' : ''} {...tabShift}>
           {activeTab === 'completed' ? (
             <div className="mb-3 flex flex-wrap gap-2" role="group" aria-label="Filtrar pedidos realizados">
               {[
@@ -514,25 +523,6 @@ export default function SellerOrders() {
               ))}
             </div>
           ) : null}
-
-          <FilterModal
-            open={filtersOpen}
-            onClose={() => setFiltersOpen(false)}
-            title="Filtrar pedidos"
-            description="Combina los criterios que quieras aplicar."
-            titleId="seller-order-filters-title"
-            applyLabel="Ver pedidos"
-            fields={[
-              { key: 'client', label: 'Cliente', placeholder: 'Todos los clientes', options: filterOptions.clients },
-              { key: 'products', label: 'Productos · selección múltiple', placeholder: 'Todos los productos', options: filterOptions.products, multiple: true },
-              { key: 'currency', label: 'Moneda', placeholder: 'Todas las monedas', options: filterOptions.currencies },
-              { key: 'delivery', label: 'Domicilio', placeholder: 'Todos', options: [{ value: 'yes', label: 'Sí' }, { value: 'no', label: 'No' }] },
-            ]}
-            values={orderFilterValues}
-            onValuesChange={updateOrderFilters}
-            dateLabel="Fecha del pedido"
-            emptyValues={emptyOrderFilters}
-          />
 
           <SellerOrdersGroup
             tone={activeTab === 'pending' ? 'pending' : 'completed'}
@@ -573,6 +563,28 @@ export default function SellerOrders() {
               </button>
             </div>
           ) : null}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          <FilterModal
+            open={filtersOpen}
+            onClose={() => setFiltersOpen(false)}
+            title="Filtrar pedidos"
+            description="Combina los criterios que quieras aplicar."
+            titleId="seller-order-filters-title"
+            applyLabel="Ver pedidos"
+            fields={[
+              { key: 'client', label: 'Cliente', placeholder: 'Todos los clientes', options: filterOptions.clients },
+              { key: 'products', label: 'Productos · selección múltiple', placeholder: 'Todos los productos', options: filterOptions.products, multiple: true },
+              { key: 'currency', label: 'Moneda', placeholder: 'Todas las monedas', options: filterOptions.currencies },
+              { key: 'delivery', label: 'Domicilio', placeholder: 'Todos', options: [{ value: 'yes', label: 'Sí' }, { value: 'no', label: 'No' }] },
+            ]}
+            values={orderFilterValues}
+            onValuesChange={updateOrderFilters}
+            dateLabel="Fecha del pedido"
+            emptyValues={emptyOrderFilters}
+          />
         </>
       ) : null}
 

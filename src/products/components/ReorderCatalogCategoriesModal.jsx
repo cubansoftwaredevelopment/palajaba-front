@@ -5,7 +5,7 @@ import { reorderCatalogCategories } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import {
   sellerAlertError,
   sellerBtnPrimary,
@@ -13,8 +13,6 @@ import {
   sellerFocusRing,
   sellerHint,
   sellerIconBtn,
-  sellerModalOverlay,
-  sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
 
@@ -31,7 +29,7 @@ function moveItem(list, fromIndex, toIndex) {
 }
 
 export default function ReorderCatalogCategoriesModal({ categories, onClose: requestClose, onSaved }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const [items, setItems] = useState(categories)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -90,14 +88,12 @@ export default function ReorderCatalogCategoriesModal({ categories, onClose: req
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="reorder-categories-title"
-        onClick={onClose}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="reorder-categories-title"
       >
-        <div {...sheetProps} className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="reorder-categories-title" className={sellerModalTitle}>
@@ -226,8 +222,7 @@ export default function ReorderCatalogCategoriesModal({ categories, onClose: req
               Cancelar
             </button>
           </div>
-        </div>
-      </div>
+      </SellerMotionSheet>
     </SellerModalPortal>
   )
 }

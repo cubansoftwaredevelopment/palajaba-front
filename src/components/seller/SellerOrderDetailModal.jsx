@@ -12,7 +12,10 @@ import OrderDocumentDownloads from '../../buyer/components/OrderDocumentDownload
 import OrderPlatformTerms from '../../buyer/components/OrderPlatformTerms'
 import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
-import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
+import { useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
+import { useSheetExitMs } from '../../motion/presets'
 import SellerSelect from './SellerSelect'
 import SellerOrderEvidenceEditor from './SellerOrderEvidenceEditor'
 import SellerEvidenceCountdown from './SellerEvidenceCountdown'
@@ -36,7 +39,6 @@ import {
   sellerIconBtnDanger,
   sellerInput,
   sellerLabel,
-  sellerModalOverlay,
   sellerModalSheet,
   sellerModalTitle,
 } from './sellerStyles'
@@ -101,7 +103,8 @@ export default function SellerOrderDetailModal({
   onSubmitEvidence,
 }) {
   const readOnly = useSellerReadOnly()
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const exitMs = useSheetExitMs()
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const [editableItems, setEditableItems] = useState(order.items)
   const [deliveryPrice, setDeliveryPrice] = useState(
     order.delivery_price != null ? String(Math.round(order.delivery_price)) : '',
@@ -120,9 +123,12 @@ export default function SellerOrderDetailModal({
   const [refundImages, setRefundImages] = useState([])
   const [supportReportedOrderId, setSupportReportedOrderId] = useState('')
   const [documentDownload, setDocumentDownload] = useState(null)
-  const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
-  const mapMotionClass = orderModalMotionClass(mapClosing)
-  const mapSheetProps = useSwipeDownSheet(() => setMapOpen(false))
+  const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen, exitMs)
+  const mapSheetProps = useSwipeDownSheet(() => setMapOpen(false), { motion: true })
+  const { present: cancelPresent, closing: cancelClosing } = useOrderModalPresence(confirmCancel, exitMs)
+  const cancelSheetProps = useSwipeDownSheet(() => {
+    if (!cancelling) setConfirmCancel(false)
+  }, { motion: true })
   const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
 
   useEffect(() => {
@@ -433,19 +439,12 @@ export default function SellerOrderDetailModal({
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose()
-        }}
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        panelClassName={`${sellerModalSheet} h-[min(92dvh,760px)]`}
       >
-        <div
-          {...sheetProps}
-          role="dialog"
-          aria-modal="true"
-          className={`${sellerModalSheet} h-[min(92dvh,760px)]`}
-        >
         <div className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
           <div>
             <h2 className={sellerModalTitle}>Pedido #{order.id.slice(-6).toUpperCase()}</h2>
@@ -936,21 +935,15 @@ export default function SellerOrderDetailModal({
           )}
         </div>
 
-        {confirmCancel ? (
-          <div
-            className="absolute inset-0 z-10 flex items-end justify-center bg-brand-green/25 p-4 backdrop-blur-[3px] sm:items-center"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget && !cancelling) setConfirmCancel(false)
-            }}
+        {cancelPresent ? (
+          <BuyerMotionFrame
+            variant="dialog"
+            closing={cancelClosing}
+            sheetProps={cancelSheetProps}
+            overlayClassName="absolute inset-0 z-10 flex items-end justify-center bg-brand-green/25 p-4 backdrop-blur-[3px] sm:items-center"
+            panelClassName="w-full max-w-sm rounded-3xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_20px_50px_rgba(89,128,44,0.22)]"
+            panelProps={{ role: 'alertdialog', 'aria-modal': true, 'aria-labelledby': 'cancel-order-title' }}
           >
-            <div
-              role="alertdialog"
-              aria-modal="true"
-              aria-labelledby="cancel-order-title"
-              className="w-full max-w-sm animate-fade-in rounded-3xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_20px_50px_rgba(89,128,44,0.22)]"
-              onMouseDown={(event) => event.stopPropagation()}
-            >
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-yellow/25 text-brand-carmelita">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
                   <path d="M3 6h18" />
@@ -990,18 +983,18 @@ export default function SellerOrderDetailModal({
                   {cancelling ? 'Eliminando…' : 'Eliminar'}
                 </button>
               </div>
-            </div>
-          </div>
+          </BuyerMotionFrame>
         ) : null}
-        </div>
-      </div>
+      </SellerMotionSheet>
       {mapPresent && deliveryMapUrl ? (
-        <div
-          {...mapSheetProps}
-          className={`fixed inset-0 z-[210] flex flex-col bg-brand-white ${mapMotionClass}`}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Ubicación del pedido"
+        <BuyerMotionFrame
+          variant="detail"
+          closing={mapClosing}
+          sheetProps={mapSheetProps}
+          split
+          overlayClassName="fixed inset-0 z-[209] bg-brand-green/20"
+          panelClassName="fixed inset-0 z-[210] flex flex-col bg-brand-white"
+          panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-label': 'Ubicación del pedido' }}
         >
           <div className="flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/8 px-4 py-3 pt-[max(0.75rem,var(--safe-top))]">
             <p className="font-display text-base font-bold text-brand-green">Ubicación del pedido</p>
@@ -1024,7 +1017,7 @@ export default function SellerOrderDetailModal({
               mapClassName="h-full min-h-0 w-full"
             />
           </div>
-        </div>
+        </BuyerMotionFrame>
       ) : null}
       <DisputeSupportModal
         open={supportOpen}

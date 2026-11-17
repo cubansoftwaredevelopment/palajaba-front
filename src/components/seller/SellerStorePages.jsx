@@ -5,12 +5,12 @@ import RichDocContent from '../../buyer/components/RichDocContent'
 import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
 import { EMPTY_STORE_PAGE, STORE_PAGES } from '../../lib/storePages'
 import { getUserFacingMessage } from '../../lib/userFacingError'
-import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerHint, sellerModalBody, sellerModalOverlay, sellerModalSheet, sellerModalTitle } from './sellerStyles'
-import { useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
+import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerHint, sellerModalBody, sellerModalSheet, sellerModalTitle } from './sellerStyles'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import SellerRichTextEditor from './SellerRichTextEditor'
 
-function PagePreview({ title, content, onClose }) {
-  const sheetProps = useSwipeDownSheet(onClose)
+function PagePreview({ title, content, onClose: requestClose }) {
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   useEffect(() => {
     function onKey(event) {
       if (event.key === 'Escape') onClose()
@@ -20,15 +20,13 @@ function PagePreview({ title, content, onClose }) {
   }, [onClose])
 
   return createPortal(
-    <div className={sellerModalOverlay} onClick={onClose}>
-      <div
-        {...sheetProps}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="store-page-preview-title"
-        className={`${sellerModalSheet} max-w-2xl`}
-        onClick={(event) => event.stopPropagation()}
-      >
+    <SellerMotionSheet
+      onClose={onClose}
+      closing={closing}
+      sheetProps={sheetProps}
+      labelledBy="store-page-preview-title"
+      panelClassName={`${sellerModalSheet} max-w-2xl`}
+    >
         <div className="flex items-center justify-between gap-3 border-b border-brand-green/10 px-5 py-4">
           <div className="min-w-0">
             <p className="text-[0.65rem] font-bold uppercase tracking-[0.08em] text-brand-carmelita/70">Vista previa</p>
@@ -53,8 +51,7 @@ function PagePreview({ title, content, onClose }) {
             </div>
           </article>
         </div>
-      </div>
-    </div>,
+    </SellerMotionSheet>,
     document.body,
   )
 }

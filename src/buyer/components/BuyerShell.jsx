@@ -2,7 +2,7 @@ import { useContext } from 'react'
 import { Link } from 'react-router-dom'
 import { BuyerDisplayCurrencyContext } from '../context.js'
 import BuyerCurrencyTag from './BuyerCurrencyTag'
-import BuyerJabaButton from './BuyerJabaButton'
+import BuyerHeaderTools from './BuyerHeaderTools'
 import BuyerJabaPanel from './BuyerJabaPanel'
 import { buyerMarketplaceScrollPadding } from './buyerStyles'
 import {
@@ -97,7 +97,7 @@ export default function BuyerShell({
             <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
               {headerEnd}
               {!isSellerPreview ? <BuyerSellerReturnHeaderLink /> : null}
-              {!isSellerPreview ? <BuyerJabaButton /> : null}
+              {!isSellerPreview ? <BuyerHeaderTools /> : null}
             </div>
           </div>
           {stacked && headerMeta ? headerMeta : null}
