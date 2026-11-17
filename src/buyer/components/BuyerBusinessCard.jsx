@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom'
+import { motion, useReducedMotion } from 'framer-motion'
+import { offerEnterTransition, offerPop } from '../../motion/presets'
 import { resolveMediaUrl } from '../../lib/media'
 import { getBusinessPickupDisplay } from '../../lib/marketplaceBusiness'
 import { storePublicPath } from '../../lib/storeSlug'
@@ -24,16 +26,27 @@ function formatPublishedProducts(count) {
   return `${count} productos publicados`
 }
 
-export default function BuyerBusinessCard({ business }) {
+export default function BuyerBusinessCard({ business, enterIndex = null }) {
   const store = business.store
   const photoSrc = resolveMediaUrl(store.profile_photo_url)
   const initials = store.store_name?.trim().slice(0, 2).toUpperCase() || '?'
   const area = business.business_area
   const catalogPath = storePublicPath(store.store_slug)
   const pickup = getBusinessPickupDisplay(business)
+  const reduced = useReducedMotion()
+  const entering = Number.isInteger(enterIndex)
+  const Card = entering ? motion.article : 'article'
+  const enterProps = entering
+    ? {
+        variants: offerPop,
+        initial: reduced ? false : 'hidden',
+        animate: 'show',
+        transition: offerEnterTransition(enterIndex, reduced),
+      }
+    : {}
 
   return (
-    <article className={buyerBusinessCard}>
+    <Card className={buyerBusinessCard} {...enterProps}>
       <div className={buyerBusinessCardImageWrap}>
         {photoSrc ? (
           <img src={photoSrc} alt="" className={buyerBusinessCardImage} loading="lazy" decoding="async" />
@@ -84,6 +97,6 @@ export default function BuyerBusinessCard({ business }) {
           Ver catálogo
         </Link>
       </div>
-    </article>
+    </Card>
   )
 }

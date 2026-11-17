@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthCard from '../components/AuthCard'
 import AuthHeader from '../components/AuthHeader'
 import AuthShell from '../components/AuthShell'
@@ -17,6 +17,8 @@ const METHODS = [
 
 export default function ForgotPassword() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const canGoBack = location.key !== 'default'
   const [method, setMethod] = useState('phone')
   const [phoneDigits, setPhoneDigits] = useState('')
   const [storeName, setStoreName] = useState('')
@@ -70,7 +72,14 @@ export default function ForgotPassword() {
   }
 
   return (
-    <AuthShell backTo="/login" backLabel="Iniciar sesión" contentWidth="narrow">
+    <AuthShell
+      onBack={() => {
+        if (canGoBack) navigate(-1)
+        else navigate('/')
+      }}
+      backLabel={canGoBack ? 'Volver' : 'Inicio'}
+      contentWidth="narrow"
+    >
       <section className="animate-fade-in lg:mx-auto lg:max-w-md" aria-labelledby="forgot-title">
         <AuthHeader
           eyebrow="Recuperar acceso"

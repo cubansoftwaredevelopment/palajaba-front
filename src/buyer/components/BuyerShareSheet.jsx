@@ -5,6 +5,8 @@ import { openExternalUrl } from '../../lib/nativeApp'
 import { TelegramIcon, WhatsAppIcon } from '../../components/seller/ShareBrandIcons'
 import BuyerModalPortal from './BuyerModalPortal'
 import { useDismissibleModal } from './useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 
 function ShareIcon() {
   return (
@@ -32,7 +34,8 @@ function shareWasCancelled(error) {
 }
 
 export default function BuyerShareSheet({ title, message, url, onClose: requestClose }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const exitMs = useSheetExitMs()
+  const { dismiss: onClose, closing, sheetProps } = useDismissibleModal(requestClose, exitMs, { motion: true })
   const [copyStatus, setCopyStatus] = useState('')
   const [destinationsOpen, setDestinationsOpen] = useState(false)
 
@@ -81,20 +84,20 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
 
   return (
     <BuyerModalPortal>
-      <div
-        className={`fixed inset-0 z-[110] flex items-end justify-center bg-brand-green/25 p-3 sm:items-center ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose()
+      <BuyerMotionFrame
+        variant="dialog"
+        closing={closing}
+        sheetProps={sheetProps}
+        overlayClassName="fixed inset-0 z-[110] flex items-end justify-center bg-brand-green/25 p-3 sm:items-center"
+        panelClassName="w-full max-w-md rounded-3xl border border-brand-green/10 bg-brand-white p-5 shadow-[0_16px_48px_rgba(89,128,44,0.2)]"
+        overlayProps={{
+          role: 'presentation',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onClose()
+          },
         }}
+        panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'buyer-share-title' }}
       >
-        <div
-          {...sheetProps}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="buyer-share-title"
-          className="w-full max-w-md rounded-3xl border border-brand-green/10 bg-brand-white p-5 shadow-[0_16px_48px_rgba(89,128,44,0.2)]"
-        >
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 id="buyer-share-title" className="font-display text-lg font-bold text-brand-green">
@@ -156,8 +159,7 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
             </div>
           )}
           {copyStatus ? <p className="mt-3 text-sm text-brand-carmelita">{copyStatus}</p> : null}
-        </div>
-      </div>
+      </BuyerMotionFrame>
     </BuyerModalPortal>
   )
 }

@@ -219,7 +219,7 @@ export const buyerJabaStoreChip =
   'inline-flex h-11 shrink-0 items-center rounded-full border border-brand-green/25 bg-brand-green/[0.04] px-3.5 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/25 lg:hover:bg-brand-green/[0.08]'
 
 export const buyerJabaPanelBody =
-  'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4'
+  'min-h-0 overflow-y-auto overscroll-y-contain px-5 py-4'
 
 export const buyerJabaStoreSection =
   'overflow-hidden rounded-2xl border border-brand-green/10 bg-brand-green/[0.02]'
@@ -237,7 +237,7 @@ export const buyerJabaItemImage =
   'h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-brand-green/[0.06] object-cover'
 
 export const buyerJabaQtyBtn =
-  'flex h-11 w-11 items-center justify-center rounded-full border border-brand-green/25 text-base font-bold text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/25 lg:hover:bg-brand-green/[0.08]'
+  'jaba-qty-btn flex h-11 w-11 items-center justify-center rounded-full border border-brand-green/25 text-base font-bold text-brand-green transition-colors touch-manipulation lg:hover:bg-brand-green/[0.08]'
 
 export const buyerJabaIconBtn =
   'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-brand-green transition-colors touch-manipulation active:bg-brand-yellow/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 lg:hover:bg-brand-green/[0.08]'

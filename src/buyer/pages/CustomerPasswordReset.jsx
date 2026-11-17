@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthCard from '../../auth/components/AuthCard'
 import AuthHeader from '../../auth/components/AuthHeader'
 import AuthShell from '../../auth/components/AuthShell'
@@ -23,6 +23,8 @@ const TITLES = {
 
 export default function CustomerPasswordReset() {
   const navigate = useNavigate()
+  const location = useLocation()
+  const canGoBack = location.key !== 'default'
   const [step, setStep] = useState('phone')
   const [phone, setPhone] = useState('')
   const [challenge, setChallenge] = useState(null)
@@ -115,7 +117,14 @@ export default function CustomerPasswordReset() {
   }
 
   return (
-    <AuthShell backTo="/login" backLabel="Iniciar sesión" contentWidth="narrow">
+    <AuthShell
+      onBack={() => {
+        if (canGoBack) navigate(-1)
+        else navigate('/')
+      }}
+      backLabel={canGoBack ? 'Volver' : 'Inicio'}
+      contentWidth="narrow"
+    >
       <section className="animate-fade-in lg:mx-auto lg:max-w-md" aria-labelledby="customer-reset-title">
         <AuthHeader eyebrow="Clientes" title={TITLES[step][0]} description={TITLES[step][1]} />
         <AuthCard>

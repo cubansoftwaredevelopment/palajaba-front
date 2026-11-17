@@ -9,6 +9,8 @@ import {
   buyerProductDetailStickyBar,
 } from '../../buyer/components/buyerStyles'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import { APP_LOGO } from '../constants.js'
 import { rememberDownloadPromptDismissed } from '../lib/prompt.js'
 import {
@@ -65,7 +67,8 @@ function PlatformDownloadButton({ label, version, bouncing, onClick, icon, ariaL
 
 export function DownloadModal({ onClose, mains, bouncePlatform, onDownload }) {
   const titleId = useId()
-  const { dismiss, motionClass, sheetProps } = useDismissibleModal(onClose)
+  const exitMs = useSheetExitMs()
+  const { dismiss, closing, sheetProps } = useDismissibleModal(onClose, exitMs, { motion: true })
 
   const android = mains?.android || null
   const ios = mains?.ios || null
@@ -93,20 +96,19 @@ export function DownloadModal({ onClose, mains, bouncePlatform, onDownload }) {
 
   return (
     <BuyerModalPortal>
-      <div
-        className={`${buyerProductDetailOverlay} z-[110] ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) dismiss()
+      <BuyerMotionFrame
+        closing={closing}
+        sheetProps={sheetProps}
+        overlayClassName={`${buyerProductDetailOverlay} z-[110]`}
+        panelClassName={`${buyerProductDetailModal} max-h-[min(92dvh,32rem)]`}
+        overlayProps={{
+          role: 'presentation',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) dismiss()
+          },
         }}
+        panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId }}
       >
-        <div
-          {...sheetProps}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          className={`${buyerProductDetailModal} max-h-[min(92dvh,32rem)]`}
-        >
           <div className="shrink-0 px-5 pt-3">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
             <div className="flex items-center justify-between gap-3">
@@ -186,8 +188,7 @@ export function DownloadModal({ onClose, mains, bouncePlatform, onDownload }) {
               </div>
             </div>
           ) : null}
-        </div>
-      </div>
+      </BuyerMotionFrame>
     </BuyerModalPortal>
   )
 }

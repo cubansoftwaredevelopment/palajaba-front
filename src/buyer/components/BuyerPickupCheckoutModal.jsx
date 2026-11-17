@@ -20,7 +20,9 @@ import {
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
 import CheckoutStoreAgreements from './CheckoutStoreAgreements'
-import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
+import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 
 function WhatsAppIcon() {
   return (
@@ -42,12 +44,9 @@ export default function BuyerPickupCheckoutModal({
   const shownCheckoutRef = useRef(checkout)
   if (checkout) shownCheckoutRef.current = checkout
   const shownCheckout = checkout ?? shownCheckoutRef.current
-  const { present, closing } = useOrderModalPresence(open)
-  const sheetProps = useSwipeDownSheet(onClose)
-  const motionClass = orderModalMotionClass(closing)
-  const sheetMotionClass = closing
-    ? 'pointer-events-none motion-safe:animate-address-sheet-out'
-    : 'motion-safe:animate-address-sheet-in'
+  const exitMs = useSheetExitMs()
+  const { present, closing } = useOrderModalPresence(open, exitMs)
+  const sheetProps = useSwipeDownSheet(onClose, { motion: true })
   const [form, setForm] = useState(() => {
     const defaults = getBuyerDeliveryDefaults()
     return {
@@ -128,15 +127,16 @@ export default function BuyerPickupCheckoutModal({
   }
 
   return (
-    <>
-      <button
-        type="button"
-        className={`${buyerDeliveryOverlay} ${motionClass}`}
-        aria-label="Cerrar formulario de recogida"
-        onClick={onClose}
-      />
-
-      <div {...sheetProps} role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} ${sheetMotionClass}`}>
+    <BuyerMotionFrame
+      split
+      overlayAs="button"
+      closing={closing}
+      sheetProps={sheetProps}
+      overlayClassName={buyerDeliveryOverlay}
+      panelClassName={buyerDeliveryModal}
+      overlayProps={{ type: 'button', 'aria-label': 'Cerrar formulario de recogida', onClick: onClose }}
+      panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId }}
+    >
         <div className={buyerDeliveryModalHeader}>
           <h2 id={titleId} className="font-display text-lg font-bold text-brand-green">
             Recoger en la tienda
@@ -208,7 +208,6 @@ export default function BuyerPickupCheckoutModal({
             </button>
           </div>
         </form>
-      </div>
-    </>
+    </BuyerMotionFrame>
   )
 }

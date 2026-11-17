@@ -1,4 +1,5 @@
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router-dom'
+import RouteMotion, { isBuyerMotionPath } from './motion/RouteMotion'
 import ScrollToTopButton from './components/ScrollToTopButton'
 import AdminAuthenticatedLayout from './components/admin/AdminAuthenticatedLayout'
 import RouteError from './components/RouteError'
@@ -73,10 +74,13 @@ if (typeof window !== 'undefined' && new URLSearchParams(window.location.search)
 }
 
 function RootLayout() {
+  const location = useLocation()
+  const motionPath = isBuyerMotionPath(location.pathname)
+
   return (
     <>
       <NativeDeepLinkBridge />
-      <Outlet />
+      {motionPath ? <RouteMotion /> : <Outlet />}
       <AppReleasePromptGate />
       <ScrollToTopButton />
     </>

@@ -1,34 +1,42 @@
 import { useEffect, useState } from 'react'
-import { buyerJabaToastEnter, buyerJabaToastLeave, buyerJabaToastShell } from './buyerStyles'
+import { motion, useReducedMotion } from 'framer-motion'
+import { buyerJabaToastCard, buyerJabaToastShell } from './buyerStyles'
 
 const VISIBLE_MS = 1800
-const EXIT_MS = 260
+const EXIT_MS = 320
 
 export default function BuyerJabaToast({ toast, onDone }) {
+  const reduced = useReducedMotion()
   const [leaving, setLeaving] = useState(false)
 
   useEffect(() => {
     if (!toast) return undefined
 
     setLeaving(false)
-    const hideTimer = window.setTimeout(() => setLeaving(true), VISIBLE_MS)
+    const hideTimer = window.setTimeout(() => setLeaving(true), reduced ? 0 : VISIBLE_MS)
     return () => window.clearTimeout(hideTimer)
-  }, [toast])
+  }, [reduced, toast])
 
   useEffect(() => {
     if (!toast || !leaving) return undefined
 
-    const doneTimer = window.setTimeout(() => onDone?.(toast.id), EXIT_MS)
+    const doneTimer = window.setTimeout(() => onDone?.(toast.id), reduced ? 0 : EXIT_MS)
     return () => window.clearTimeout(doneTimer)
-  }, [leaving, onDone, toast])
+  }, [leaving, onDone, reduced, toast])
 
   if (!toast) return null
 
   return (
     <div className={buyerJabaToastShell} aria-live="polite" aria-atomic="true">
-      <div role="status" className={leaving ? buyerJabaToastLeave : buyerJabaToastEnter}>
+      <motion.div
+        role="status"
+        className={buyerJabaToastCard}
+        initial={reduced ? false : { opacity: 0, y: 18, scale: 0.9 }}
+        animate={leaving ? { opacity: 0, y: 12, scale: 0.92 } : { opacity: 1, y: 0, scale: 1 }}
+        transition={reduced ? { duration: 0 } : undefined}
+      >
         {toast.message}
-      </div>
+      </motion.div>
     </div>
   )
 }

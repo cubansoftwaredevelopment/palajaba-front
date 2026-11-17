@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { PresenceContext, motion, useReducedMotion } from "framer-motion";
+import { offerEnterTransition, offerPop } from "../../motion/presets";
 import BuyerProductDetailModal from "./BuyerProductDetailModal";
 import { DEAD_MASCOT } from "../../constants/branding";
 import { fetchMarketplaceBusinesses, fetchMarketplaceSearch } from "../api.js";
@@ -197,6 +199,7 @@ export default function BuyerHeaderSearch({
   showGo = false,
 }) {
   const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
   const { isInJaba, addProduct, buyProduct } = useBuyerJaba();
   const { currencies } = useBuyerDisplayCurrency();
   const [open, setOpen] = useState(false);
@@ -425,6 +428,7 @@ export default function BuyerHeaderSearch({
               }}
             >
               {query.trim().length >= 2 ? (
+                <PresenceContext.Provider value={null}>
                 <ul className="max-h-[min(60dvh,24rem)] overflow-y-auto rounded-2xl border border-brand-green/12 bg-brand-white py-1 shadow-[0_12px_32px_rgba(89,128,44,0.16)]">
                   {loading ? (
                     <li className="px-4 py-3 text-sm text-brand-carmelita">
@@ -445,8 +449,14 @@ export default function BuyerHeaderSearch({
                       </p>
                     </li>
                   ) : null}
-                  {suggestions.stores.map((business) => (
-                    <li key={`store-${business.store.id}`}>
+                  {suggestions.stores.map((business, index) => (
+                    <motion.li
+                      key={`store-${business.store.id}`}
+                      variants={offerPop}
+                      initial={reducedMotion ? false : "hidden"}
+                      animate="show"
+                      transition={offerEnterTransition(index, reducedMotion)}
+                    >
                       <button
                         type="button"
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-left touch-manipulation active:bg-brand-yellow/15"
@@ -470,10 +480,16 @@ export default function BuyerHeaderSearch({
                           ) : null}
                         </span>
                       </button>
-                    </li>
+                    </motion.li>
                   ))}
-                  {suggestions.products.map((product) => (
-                    <li key={`product-${product.id}`}>
+                  {suggestions.products.map((product, index) => (
+                    <motion.li
+                      key={`product-${product.id}`}
+                      variants={offerPop}
+                      initial={reducedMotion ? false : "hidden"}
+                      animate="show"
+                      transition={offerEnterTransition(suggestions.stores.length + index, reducedMotion)}
+                    >
                       <button
                         type="button"
                         className="flex w-full items-center gap-3 px-4 py-2.5 text-left touch-manipulation active:bg-brand-yellow/15"
@@ -497,9 +513,10 @@ export default function BuyerHeaderSearch({
                           ) : null}
                         </span>
                       </button>
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
+                </PresenceContext.Provider>
               ) : null}
             </div>
           </div>,

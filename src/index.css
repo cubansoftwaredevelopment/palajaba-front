@@ -804,3 +804,43 @@
 .store-banner-range:focus-visible::-moz-range-thumb {
   border-color: #a8a29e;
 }
+
+@keyframes step-focus {
+  from {
+    filter: blur(8px);
+  }
+  to {
+    filter: blur(0);
+  }
+}
+
+.screen-step {
+  animation: step-focus 0.38s ease;
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+button.jaba-qty-btn:active:not(:disabled) {
+  transform: scale(0.86);
+  background: #e5e9dd;
+}
+
+button.jaba-remove-btn:active:not(:disabled) {
+  transform: scale(0.88);
+  background: #f0d9d1;
+  color: #a34f3e;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .screen-step {
+    animation: none;
+  }
+
+  button:active:not(:disabled),
+  button.jaba-qty-btn:active:not(:disabled),
+  button.jaba-remove-btn:active:not(:disabled) {
+    transform: none;
+  }
+}

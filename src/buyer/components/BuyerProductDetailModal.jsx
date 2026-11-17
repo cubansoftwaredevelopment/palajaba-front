@@ -17,6 +17,9 @@ import { isProductPurchasable, isProductSoldOut, getProductPickupDisplay } from 
 import { recordProductPopularity } from '../../lib/productPopularity'
 
 import BuyerModalPortal from './BuyerModalPortal'
+import JabaAddButton from './JabaAddButton'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import { useDismissibleModal } from './useOrderModalPresence'
 import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
@@ -169,7 +172,8 @@ export default function BuyerProductDetailModal({
   onAddToJaba,
 
 }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const exitMs = useSheetExitMs()
+  const { dismiss: onClose, closing, sheetProps } = useDismissibleModal(requestClose, exitMs, { motion: true })
 
   const { currencies: displayCurrencies, cupPerUnit } = useBuyerDisplayCurrency()
   const location = useDisplayedLocation()
@@ -231,33 +235,24 @@ export default function BuyerProductDetailModal({
 
     <BuyerModalPortal>
 
-      <div
-
-        className={`${buyerProductDetailOverlay} ${motionClass}`}
-
-        role="presentation"
-
-        onMouseDown={(event) => {
-
-          if (event.target === event.currentTarget) onClose()
-
+      <BuyerMotionFrame
+        variant="detail"
+        closing={closing}
+        sheetProps={sheetProps}
+        overlayClassName={buyerProductDetailOverlay}
+        panelClassName={`${buyerProductDetailModal} h-[min(92dvh,44rem)]`}
+        overlayProps={{
+          role: 'presentation',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onClose()
+          },
         }}
-
+        panelProps={{
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-labelledby': 'buyer-product-detail-title',
+        }}
       >
-
-        <div
-
-          {...sheetProps}
-
-          role="dialog"
-
-          aria-modal="true"
-
-          aria-labelledby="buyer-product-detail-title"
-
-          className={`${buyerProductDetailModal} h-[min(92dvh,44rem)]`}
-
-        >
 
           <div className="shrink-0 px-5 pt-3">
 
@@ -487,19 +482,12 @@ export default function BuyerProductDetailModal({
 
                 </button>
 
-                <button
-
-                  type="button"
-
+                <JabaAddButton
                   onClick={onAddToJaba}
-
                   className={`${inJaba ? buyerProductBtnJabaActive : buyerProductBtnJaba} !min-h-11 !text-sm`}
-
                 >
-
                   <span>Pa&apos; La Jaba</span>
-
-                </button>
+                </JabaAddButton>
 
               </div>
 
@@ -531,9 +519,7 @@ export default function BuyerProductDetailModal({
 
           )}
 
-        </div>
-
-      </div>
+      </BuyerMotionFrame>
 
       {shareOpen && location?.province?.id ? (
         <BuyerShareSheet

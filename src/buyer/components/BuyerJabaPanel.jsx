@@ -1,8 +1,11 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { jabaItemMotion, jabaStoreMotion, qtyTick, useSheetExitMs } from '../../motion/presets'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useDisplayedLocation } from '../context.js'
 import { buildJabaShareMessage, buildJabaShareUrl } from '../../lib/buyerShare'
 import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
-import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
+import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
 import { useBuyerDisplayCurrency } from '../context.js'
 import { useBuyerJaba } from '../context.js'
 import LoadingState from '../../components/ui/LoadingState'
@@ -86,11 +89,41 @@ function formatStoreSubtotal(items, displayCurrency, cupPerUnit) {
     .join(' + ')
 }
 
+function JabaQty({ qty }) {
+  const reduced = useReducedMotion()
+  const prevQty = useRef(qty)
+  const dir = qty >= prevQty.current ? 1 : -1
+
+  useEffect(() => {
+    prevQty.current = qty
+  }, [qty])
+
+  if (reduced) {
+    return <span className="min-w-6 text-center text-sm font-bold text-brand-green">{qty}</span>
+  }
+
+  return (
+    <span className="inline-grid min-w-6 overflow-hidden text-center">
+      <AnimatePresence mode="popLayout" initial={false}>
+        <motion.span
+          key={qty}
+          className="col-start-1 row-start-1 text-sm font-bold text-brand-green"
+          initial={{ y: dir > 0 ? 14 : -14, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: dir > 0 ? -14 : 14, opacity: 0 }}
+          transition={qtyTick}
+        >
+          {qty}
+        </motion.span>
+      </AnimatePresence>
+    </span>
+  )
+}
+
 function StoreGroup({
   group,
   expanded,
   onToggle,
-  sectionRef,
   displayCurrency,
   cupPerUnit,
   syncingContacts,
@@ -115,12 +148,13 @@ function StoreGroup({
     if (confirmed) onClearStore(group.store_id)
   }
 
+  const reduced = useReducedMotion()
+  const lineMotion = reduced
+    ? { initial: false, animate: { opacity: 1 }, exit: { opacity: 0, transition: { duration: 0 } } }
+    : jabaItemMotion
+
   return (
-    <section
-      ref={sectionRef}
-      id={`jaba-store-${group.store_id}`}
-      className={buyerJabaStoreSection}
-    >
+    <div>
       <div className="flex items-stretch gap-0.5">
         <button
           type="button"
@@ -152,13 +186,14 @@ function StoreGroup({
       {expanded ? (
         <div id={panelId} className="border-t border-brand-green/8 px-3.5 pb-3.5">
           <ul className="mt-1">
+            <AnimatePresence mode="popLayout" initial={false}>
             {group.items.map((item) => {
               const imageSrc = resolveMediaUrl(item.image_url)
               const display = resolveDisplayPrice(item, displayCurrency, cupPerUnit)
               const qty = item.quantity ?? 1
 
               return (
-                <li key={item.id} className={buyerJabaItemRow}>
+                <motion.li layout key={item.id} className={buyerJabaItemRow} {...lineMotion}>
                   {imageSrc ? (
                     <img src={imageSrc} alt="" className={buyerJabaItemImage} loading="lazy" />
                   ) : (
@@ -184,7 +219,7 @@ function StoreGroup({
                       >
                         −
                       </button>
-                      <span className="min-w-6 text-center text-sm font-bold text-brand-green">{qty}</span>
+                      <JabaQty qty={qty} />
                       <button
                         type="button"
                         onClick={() => onSetQuantity(item.id, qty + 1)}
@@ -196,7 +231,7 @@ function StoreGroup({
                       <button
                         type="button"
                         onClick={() => onRemove(item.id)}
-                        className={`${buyerJabaIconBtn} ml-auto`}
+                        className={`${buyerJabaIconBtn} jaba-remove-btn ml-auto`}
                         aria-label={`Quitar ${item.name} de la jaba`}
                         title="Quitar producto"
                       >
@@ -204,9 +239,10 @@ function StoreGroup({
                       </button>
                     </div>
                   </div>
-                </li>
+                </motion.li>
               )
             })}
+            </AnimatePresence>
           </ul>
 
           <p className="mt-2 text-xs font-semibold text-brand-carmelita">
@@ -264,7 +300,7 @@ function StoreGroup({
           ) : null}
         </div>
       ) : null}
-    </section>
+    </div>
   )
 }
 
@@ -289,9 +325,13 @@ export default function BuyerJabaPanel() {
   const location = useDisplayedLocation()
   const [shareOpen, setShareOpen] = useState(false)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
-  const { present, closing } = useOrderModalPresence(open)
-  const motionClass = orderModalMotionClass(closing)
-  const sheetProps = useSwipeDownSheet(closePanel)
+  const exitMs = useSheetExitMs()
+  const reduced = useReducedMotion()
+  const { present, closing } = useOrderModalPresence(open, exitMs)
+  const sheetProps = useSwipeDownSheet(closePanel, { motion: true })
+  const storeMotion = reduced
+    ? { initial: false, animate: { opacity: 1 }, exit: { opacity: 0, transition: { duration: 0 } } }
+    : jabaStoreMotion
 
   const storeIdsKey = groups.map((group) => group.store_id).join('|')
   const showStoreChips = groups.length >= 3
@@ -357,9 +397,16 @@ export default function BuyerJabaPanel() {
 
   return (
     <>
-      <button type="button" className={`${buyerJabaOverlay} ${motionClass}`} aria-label="Cerrar tu jaba" onClick={closePanel} />
-
-      <div {...sheetProps} role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerJabaPanel} ${motionClass}`}>
+    <BuyerMotionFrame
+      split
+      overlayAs="button"
+      closing={closing}
+      sheetProps={sheetProps}
+      overlayClassName={buyerJabaOverlay}
+      panelClassName={buyerJabaPanel}
+      overlayProps={{ type: 'button', 'aria-label': 'Cerrar tu jaba', onClick: closePanel }}
+      panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId }}
+    >
         <div className={buyerJabaPanelHeader}>
           <div className="min-w-0 flex-1 pr-2">
             <h2 id={titleId} className={buyerJabaPanelTitle}>
@@ -415,15 +462,22 @@ export default function BuyerJabaPanel() {
             </div>
           ) : (
             <div className="flex flex-col gap-3">
+              <AnimatePresence mode="popLayout" initial={false}>
               {groups.map((group) => (
-                <StoreGroup
+                <motion.section
+                  layout
                   key={group.store_id}
+                  id={`jaba-store-${group.store_id}`}
+                  className={buyerJabaStoreSection}
+                  ref={(node) => {
+                    sectionRefs.current[group.store_id] = node
+                  }}
+                  {...storeMotion}
+                >
+                <StoreGroup
                   group={group}
                   expanded={expandedIds.has(group.store_id)}
                   onToggle={() => toggleStore(group.store_id)}
-                  sectionRef={(node) => {
-                    sectionRefs.current[group.store_id] = node
-                  }}
                   displayCurrency={displayCurrency}
                   cupPerUnit={cupPerUnit}
                   syncingContacts={syncingContacts}
@@ -434,12 +488,14 @@ export default function BuyerJabaPanel() {
                   onRemove={removeProduct}
                   onSetQuantity={setQuantity}
                 />
+                </motion.section>
               ))}
+              </AnimatePresence>
             </div>
           )}
         </div>
-      </div>
-      {shareOpen && location?.province?.id ? (
+    </BuyerMotionFrame>
+    {shareOpen && location?.province?.id ? (
         <BuyerShareSheet
           title="Compartir tu jaba"
           message={buildJabaShareMessage(items, location)}

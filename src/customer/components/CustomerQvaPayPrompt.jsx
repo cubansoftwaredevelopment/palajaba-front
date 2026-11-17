@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Checkbox from '../../components/ui/Checkbox'
 import BuyerModalPortal from '../../buyer/components/BuyerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import { buyerDeliveryModal, buyerDeliveryModalFooter, buyerDeliveryModalHeader, buyerDeliveryOverlay } from '../../buyer/components/buyerStyles'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 
 export default function CustomerQvaPayPrompt({
   open,
@@ -12,14 +14,33 @@ export default function CustomerQvaPayPrompt({
   description = 'Agrega y verifica tu usuario de QvaPay en el perfil para poder pagar y recibir devoluciones.',
   addLabel = 'Agregar usuario',
 }) {
-  const { dismiss, motionClass, sheetProps } = useDismissibleModal(() => onDone(false))
+  const hideOnCloseRef = useRef(false)
+  const exitMs = useSheetExitMs()
+  const { dismiss, closing, sheetProps } = useDismissibleModal(() => {
+    const hide = hideOnCloseRef.current
+    hideOnCloseRef.current = false
+    onDone(hide)
+  }, exitMs, { motion: true })
   const [hideNextTime, setHideNextTime] = useState(false)
   if (!open) return null
 
+  function accept() {
+    hideOnCloseRef.current = hideNextTime
+    dismiss()
+  }
+
   return (
     <BuyerModalPortal>
-      <button type="button" className={`${buyerDeliveryOverlay} ${motionClass}`} aria-label="Cerrar aviso" onClick={dismiss} />
-      <div {...sheetProps} role="dialog" aria-modal="true" aria-labelledby="qvapay-prompt-title" className={`${buyerDeliveryModal} ${motionClass}`}>
+      <BuyerMotionFrame
+        split
+        overlayAs="button"
+        closing={closing}
+        sheetProps={sheetProps}
+        overlayClassName={buyerDeliveryOverlay}
+        panelClassName={buyerDeliveryModal}
+        overlayProps={{ type: 'button', 'aria-label': 'Cerrar aviso', onClick: dismiss }}
+        panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'qvapay-prompt-title' }}
+      >
         <div className={buyerDeliveryModalHeader}>
           <h2 id="qvapay-prompt-title" className="text-lg font-bold text-brand-green">{title}</h2>
         </div>
@@ -38,11 +59,11 @@ export default function CustomerQvaPayPrompt({
           <button type="button" className="min-h-11 rounded-xl border border-brand-green/20 px-3 font-bold text-brand-green" onClick={onAddUser}>
             {addLabel}
           </button>
-          <button type="button" className="min-h-11 rounded-xl bg-brand-green px-3 font-bold text-white" onClick={() => onDone(hideNextTime)}>
+          <button type="button" className="min-h-11 rounded-xl bg-brand-green px-3 font-bold text-white" onClick={accept}>
             Listo
           </button>
         </div>
-      </div>
+      </BuyerMotionFrame>
     </BuyerModalPortal>
   )
 }

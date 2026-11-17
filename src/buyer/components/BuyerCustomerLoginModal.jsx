@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import { useDismissibleModal } from './useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import { Link } from 'react-router-dom'
 import { customerLogin } from '../api.js'
 import { requestAppReleasePromptOnLogin } from '../../appReleases/lib/prompt.js'
@@ -14,6 +17,8 @@ export default function BuyerCustomerLoginModal({ onClose, onLogin }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const exitMs = useSheetExitMs()
+  const { dismiss, closing, sheetProps } = useDismissibleModal(onClose, exitMs, { motion: true })
 
   async function submit(event) {
     event.preventDefault()
@@ -32,8 +37,21 @@ export default function BuyerCustomerLoginModal({ onClose, onLogin }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-brand-carmelita/55 p-4" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="buyer-login-title" className={`${authLoginContainer} rounded-3xl bg-brand-white p-5 shadow-2xl sm:p-7`}>
+    <BuyerMotionFrame
+      variant="dialog"
+      closing={closing}
+      sheetProps={sheetProps}
+      panelAs="section"
+      overlayClassName="fixed inset-0 z-[120] flex items-center justify-center bg-brand-carmelita/55 p-4"
+      panelClassName={`${authLoginContainer} rounded-3xl bg-brand-white p-5 shadow-2xl sm:p-7`}
+      overlayProps={{
+        role: 'presentation',
+        onMouseDown: (event) => {
+          if (event.target === event.currentTarget) dismiss()
+        },
+      }}
+      panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'buyer-login-title' }}
+    >
         <div className="mb-5 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-brand-green">Cuenta de cliente</p>
@@ -44,7 +62,7 @@ export default function BuyerCustomerLoginModal({ onClose, onLogin }) {
                 : 'Tu pedido quedará guardado en tu historial.'}
             </p>
           </div>
-          <button type="button" onClick={onClose} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-xl text-brand-carmelita/70 hover:bg-brand-green/8" aria-label="Cerrar">×</button>
+          <button type="button" onClick={dismiss} className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-xl text-brand-carmelita/70 hover:bg-brand-green/8" aria-label="Cerrar">×</button>
         </div>
         <form onSubmit={submit} className="flex flex-col gap-4" noValidate>
           <div>
@@ -58,7 +76,6 @@ export default function BuyerCustomerLoginModal({ onClose, onLogin }) {
         <p className="mt-4 text-center text-sm text-brand-carmelita/80">¿Aún no tienes cuenta?{' '}
           <Link to="/crear-cuenta" state={{ backTo: `${window.location.pathname}${window.location.search}${window.location.hash}` }} className="font-bold text-brand-green underline">Crear cuenta</Link>
         </p>
-      </section>
-    </div>
+    </BuyerMotionFrame>
   )
 }

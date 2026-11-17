@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import BuyerModalPortal from '../../buyer/components/BuyerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import { decideCustomerOrderEvidence, openCustomerOrderDispute, uploadCustomerDisputeImage } from '../api.js'
 import DisputeSupportModal from '../../buyer/components/DisputeSupportModal'
 import { formatDate, getBuyerOrderStatusLabel, getEvidenceSupportWhatsAppUrl } from '../constants.js'
@@ -17,7 +19,8 @@ import OrderPlatformTerms from '../../buyer/components/OrderPlatformTerms'
 import QvaPayReleaseCountdown from './QvaPayReleaseCountdown.jsx'
 
 export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
-  const { dismiss, motionClass, sheetProps } = useDismissibleModal(onClose)
+  const exitMs = useSheetExitMs()
+  const { dismiss, closing, sheetProps } = useDismissibleModal(onClose, exitMs, { motion: true })
   const [decisionLoading, setDecisionLoading] = useState(false)
   const [decisionError, setDecisionError] = useState('')
   const [trackedOrderId, setTrackedOrderId] = useState(order.id)
@@ -101,19 +104,19 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
 
   return (
     <BuyerModalPortal>
-      <div
-        className={`fixed inset-0 z-[120] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4 ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) dismiss()
+      <BuyerMotionFrame
+        closing={closing}
+        sheetProps={sheetProps}
+        panelAs="section"
+        overlayClassName="fixed inset-0 z-[120] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4"
+        panelClassName="relative flex max-h-[min(92dvh,44rem)] min-h-0 w-full max-w-2xl flex-col overflow-y-auto rounded-t-3xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:rounded-3xl sm:p-6"
+        overlayProps={{
+          role: 'presentation',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) dismiss()
+          },
         }}
-      >
-      <section
-        {...sheetProps}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="customer-order-detail-title"
-        className="relative flex max-h-[min(92dvh,44rem)] min-h-0 w-full max-w-2xl animate-fade-in flex-col overflow-y-auto rounded-t-3xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:rounded-3xl sm:p-6"
+        panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'customer-order-detail-title' }}
       >
         <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
         <div className="flex items-start justify-between gap-4">
@@ -211,14 +214,13 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
         <OrderPlatformTerms terms={order.platform_terms} />
         {documentError ? <p role="alert" className="mt-2 text-sm font-semibold text-red-700">{documentError}</p> : null}
         {order.completed_at ? <p className="mt-4 text-xs text-brand-carmelita/65">Completado: {formatDate(order.completed_at)}</p> : null}
-      </section>
+      </BuyerMotionFrame>
       <DisputeSupportModal
         open={supportOpen}
         onClose={() => setSupportOpen(false)}
         onSubmit={submitSupportReport}
         whatsappUrl={supportUrl}
       />
-      </div>
     </BuyerModalPortal>
   )
 }

@@ -26,7 +26,7 @@ function getScrollStep(container) {
   return firstItem.offsetWidth + (Number.isFinite(gap) ? gap : 12)
 }
 
-export default function BuyerCategoryProductRow({ section, loadMore, href, storePhotoUrl = '', storeName = '' }) {
+export default function BuyerCategoryProductRow({ section, loadMore, href, storePhotoUrl = '', storeName = '', enterFrom = null }) {
   const scrollRef = useRef(null)
   const sentinelRef = useRef(null)
   const loadingRef = useRef(false)
@@ -216,9 +216,13 @@ export default function BuyerCategoryProductRow({ section, loadMore, href, store
           ref={scrollRef}
           className={`${buyerProductRow} ${showScrollLeft ? 'lg:pl-12' : ''} ${showScrollRight ? 'pr-12' : ''}`}
         >
-          {visibleProducts.map((product) => (
+          {visibleProducts.map((product, index) => (
             <div key={product.id} data-product-item className={buyerProductRowItem}>
-              <BuyerProductCard product={product} compact />
+              <BuyerProductCard
+                product={product}
+                compact
+                enterIndex={enterFrom == null ? null : enterFrom + index}
+              />
             </div>
           ))}
 

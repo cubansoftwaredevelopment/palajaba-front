@@ -104,6 +104,16 @@ function BackToHubButton({ onClick }) {
   )
 }
 
+function releaseSellerScroll(scroller) {
+  let node = scroller
+  while (node) {
+    const overflowY = getComputedStyle(node).overflowY
+    if ((overflowY === 'hidden' || overflowY === 'clip') && node.scrollTop) node.scrollTop = 0
+    node = node.parentElement
+  }
+  scroller?.scrollTo({ top: 0 })
+}
+
 export default function SellerProfile() {
   const navigate = useNavigate()
   const routeLocation = useLocation()
@@ -538,6 +548,10 @@ export default function SellerProfile() {
         onAddUser={() => {
           setQvapayPromptHeld(true)
           setActivePanel(openProfilePanel(null, PROFILE_PANEL_IDS.payments))
+          window.requestAnimationFrame(() => {
+            const scroller = document.querySelector('.seller-scroll')
+            releaseSellerScroll(scroller)
+          })
         }}
         onDone={(dismissForever) => { void finishQvaPayPrompt(dismissForever) }}
       />

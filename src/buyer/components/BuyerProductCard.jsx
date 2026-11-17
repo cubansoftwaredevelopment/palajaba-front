@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { offerEnterTransition, offerPop } from '../../motion/presets'
 import { Link } from 'react-router-dom'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useBuyerJaba } from '../context.js'
@@ -18,6 +20,7 @@ import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerS
 import BuyerProductImage from './BuyerProductImage'
 import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
+import JabaAddButton from './JabaAddButton'
 import { isCustomerAuthenticated, getCustomerProfile, getCustomerToken, updateCustomerProfile, CUSTOMER_AUTH_CHANGE_EVENT } from '../../lib/customerAuth'
 import { addCustomerFavorite, removeCustomerFavorite } from '../api.js'
 import {
@@ -54,7 +57,7 @@ function JabaBagIcon() {
   )
 }
 
-export default function BuyerProductCard({ product, compact = false, onFavoriteChange, buyWarning = '', allowBuyAfterWarning = false }) {
+export default function BuyerProductCard({ product, compact = false, onFavoriteChange, buyWarning = '', allowBuyAfterWarning = false, enterIndex = null }) {
   const navigate = useNavigate()
   const route = useLocation()
   const { currencies: displayCurrencies, cupPerUnit } = useBuyerDisplayCurrency()
@@ -64,7 +67,6 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
   const displayPrices = resolveDisplayPrices(product, displayCurrencies, cupPerUnit)
   const discountPercent = productDiscountPercent(product)
   const [buyPulse, setBuyPulse] = useState(false)
-  const [jabaPulse, setJabaPulse] = useState(false)
   const [detailOpen, setDetailOpen] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [buyWarningOpen, setBuyWarningOpen] = useState(false)
@@ -134,14 +136,14 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
     if (buyWarning && !acknowledged) {
       setWarningAction('add')
       setBuyWarningOpen(true)
-      return
+      return false
     }
     const jabaProduct = acknowledged && product.pickup_required
       ? { ...product, offers_delivery: false }
       : product
     addProduct(jabaProduct)
     setInJaba(true)
-    pulse(setJabaPulse)
+    return true
   }
 
   function openDetail() {
@@ -151,10 +153,21 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
   const canPurchase = isProductPurchasable(product)
   const soldOut = isProductSoldOut(product)
   const jabaBtnClass = inJaba ? buyerProductBtnJabaActive : buyerProductBtnJaba
+  const reduced = useReducedMotion()
+  const entering = Number.isInteger(enterIndex)
+  const Card = entering ? motion.article : 'article'
+  const enterProps = entering
+    ? {
+        variants: offerPop,
+        initial: reduced ? false : 'hidden',
+        animate: 'show',
+        transition: offerEnterTransition(enterIndex, reduced),
+      }
+    : {}
 
   return (
     <>
-      <article className={compact ? buyerProductCardCompact : buyerProductCard}>
+      <Card className={compact ? buyerProductCardCompact : buyerProductCard} {...enterProps}>
         {location?.province?.id && location?.municipality?.id ? (
           <BuyerShareButton
             iconOnly
@@ -223,22 +236,21 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
               >
                 Comprar
               </button>
-              <button
-                type="button"
+              <JabaAddButton
                 onClick={handleAddToJaba}
                 data-action={BUYER_PRODUCT_CARD_ACTIONS.secondary}
-                className={`${jabaBtnClass} ${jabaPulse ? 'animate-[pulse_0.45s_ease-out]' : ''}`}
+                className={jabaBtnClass}
                 aria-label={inJaba ? `${product.name} en tu jaba` : `Agregar ${product.name} a la jaba`}
               >
                 <JabaBagIcon />
                 <span>Pa&apos; La Jaba</span>
-              </button>
+              </JabaAddButton>
             </div>
           ) : null}
         </div>
 
         {soldOut ? <BuyerProductSoldOutOverlay fullCard /> : null}
-      </article>
+      </Card>
 
       {detailOpen ? (
         <BuyerProductDetailModal

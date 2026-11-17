@@ -8,7 +8,7 @@ export function orderModalMotionClass(closing) {
     : 'motion-safe:animate-order-modal-in'
 }
 
-export function useOrderModalPresence(open) {
+export function useOrderModalPresence(open, exitMs = ORDER_MODAL_EXIT_MS) {
   const presentRef = useRef(open)
   const [present, setPresent] = useState(open)
   const [closing, setClosing] = useState(false)
@@ -28,10 +28,10 @@ export function useOrderModalPresence(open) {
       presentRef.current = false
       setPresent(false)
       setClosing(false)
-    }, ORDER_MODAL_EXIT_MS)
+    }, exitMs)
 
     return () => window.clearTimeout(timer)
-  }, [open])
+  }, [open, exitMs])
 
   return { present, closing }
 }
@@ -73,7 +73,8 @@ function withDrag(base, dy) {
 }
 
 /** Arrastre hacia abajo para cerrar la hoja en móvil y tablet. */
-export function useSwipeDownSheet(onDismiss) {
+export function useSwipeDownSheet(onDismiss, options = {}) {
+  const motion = options.motion === true
   const onDismissRef = useRef(onDismiss)
   onDismissRef.current = onDismiss
   const dragRef = useRef(null)
@@ -167,13 +168,18 @@ export function useSwipeDownSheet(onDismiss) {
 
   const translate = offset > 0 || settling ? withDrag(baseTranslateRef.current, offset) : undefined
   const moving = offset > 0 || dragging || settling
-
-  return {
+  const pointer = {
     ref,
     onPointerDown,
     onPointerMove,
     onPointerUp,
     onPointerCancel: onPointerUp,
+  }
+
+  if (motion) return { ...pointer, offset, dragging }
+
+  return {
+    ...pointer,
     style: {
       translate,
       transition: !moving ? undefined : dragging ? 'none' : 'translate 200ms ease',
@@ -181,8 +187,8 @@ export function useSwipeDownSheet(onDismiss) {
   }
 }
 
-/** Mantiene el modal montado el tiempo del fade-out antes de avisar al padre. */
-export function useDismissibleModal(onClose) {
+/** Mantiene el modal montado el tiempo de la salida antes de avisar al padre. */
+export function useDismissibleModal(onClose, exitMs = ORDER_MODAL_EXIT_MS, options = {}) {
   const [closing, setClosing] = useState(false)
   const onCloseRef = useRef(onClose)
   const closingRef = useRef(false)
@@ -192,10 +198,10 @@ export function useDismissibleModal(onClose) {
     if (closingRef.current) return
     closingRef.current = true
     setClosing(true)
-    window.setTimeout(() => onCloseRef.current?.(), ORDER_MODAL_EXIT_MS)
-  }, [])
+    window.setTimeout(() => onCloseRef.current?.(), exitMs)
+  }, [exitMs])
 
-  const sheetProps = useSwipeDownSheet(dismiss)
+  const sheetProps = useSwipeDownSheet(dismiss, { motion: options.motion === true })
 
   return { dismiss, motionClass: orderModalMotionClass(closing), closing, sheetProps }
 }

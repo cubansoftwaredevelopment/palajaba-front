@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { AnimatePresence, PresenceContext, motion, useReducedMotion } from 'framer-motion'
+import { stepShift } from '../../motion/presets'
 import AuthCard from '../../auth/components/AuthCard'
 import AuthHeader from '../../auth/components/AuthHeader'
 import AuthShell from '../../auth/components/AuthShell'
@@ -24,6 +26,19 @@ export default function CustomerRegister() {
   const [loading, setLoading] = useState(false)
   const [info, setInfo] = useState('')
   const backTo = location.state?.backTo || '/cliente'
+  const reduced = useReducedMotion()
+  const canGoBack = location.key !== 'default'
+
+  function goBack() {
+    if (challenge) {
+      setChallenge(null)
+      setError('')
+      setInfo('')
+      return
+    }
+    if (canGoBack) navigate(-1)
+    else navigate('/')
+  }
 
   function change(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
@@ -96,9 +111,20 @@ export default function CustomerRegister() {
     } catch (cause) { setError(getUserFacingMessage(cause, 'No pudimos reenviar el código.')) }
   }
 
+  const stepShiftMotion = reduced
+    ? { initial: false, animate: { opacity: 1, x: 0 }, exit: { opacity: 1, x: 0 }, transition: { duration: 0 } }
+    : stepShift
+
   return (
-    <AuthShell backTo="/crear-cuenta" backLabel="Tipo de cuenta" contentWidth="narrow">
-      <section className="animate-fade-in lg:mx-auto lg:max-w-md">
+    <AuthShell
+      onBack={goBack}
+      backLabel={challenge || canGoBack ? 'Volver' : 'Inicio'}
+      contentWidth="narrow"
+    >
+      <section className="lg:mx-auto lg:max-w-md">
+        <PresenceContext.Provider value={null}>
+        <AnimatePresence mode="wait" initial={false}>
+        <motion.div key={challenge ? 'verify' : 'form'} {...stepShiftMotion}>
         <AuthHeader eyebrow="Clientes" title={challenge ? 'Verifica tu cuenta' : 'Crea tu cuenta'} description={challenge ? `Enviamos códigos a ${form.email} y +53 ${form.phone}.` : 'Verifica tu correo y teléfono para guardar tus pedidos, favoritos y direcciones.'} />
         <AuthCard>
           {info ? <p className="mb-4 rounded-xl border border-brand-green/15 bg-brand-green/5 px-3 py-2 text-sm text-brand-green">{info}</p> : null}
@@ -123,6 +149,9 @@ export default function CustomerRegister() {
           )}
         </AuthCard>
         <p className="mt-5 text-center text-sm text-brand-carmelita/80">¿Ya tienes cuenta? <Link to="/login" state={{ accountType: 'customer', backTo }} className="font-semibold text-brand-green underline">Inicia sesión</Link></p>
+        </motion.div>
+        </AnimatePresence>
+        </PresenceContext.Provider>
       </section>
     </AuthShell>
   )

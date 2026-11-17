@@ -4,6 +4,8 @@ import { useBuyerJaba } from '../context.js'
 import Button from '../../components/Button'
 import BuyerModalPortal from './BuyerModalPortal'
 import { useDismissibleModal } from './useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import { reasonMeta, ReasonIcon } from './buyerJabaSyncReason'
 import {
   buyerJabaSyncBody,
@@ -26,7 +28,8 @@ import {
 } from './buyerStyles'
 
 export default function BuyerJabaSyncAlert({ removed, onClose: requestClose }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const exitMs = useSheetExitMs()
+  const { dismiss: onClose, closing, sheetProps } = useDismissibleModal(requestClose, exitMs, { motion: true })
   const { count, openPanel } = useBuyerJaba()
 
   useEffect(() => {
@@ -57,21 +60,24 @@ export default function BuyerJabaSyncAlert({ removed, onClose: requestClose }) {
 
   return (
     <BuyerModalPortal>
-      <div
-        className={`${buyerJabaSyncOverlay} ${motionClass}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose()
+      <BuyerMotionFrame
+        closing={closing}
+        sheetProps={sheetProps}
+        overlayClassName={buyerJabaSyncOverlay}
+        panelClassName={buyerJabaSyncModal}
+        overlayProps={{
+          role: 'presentation',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onClose()
+          },
+        }}
+        panelProps={{
+          role: 'dialog',
+          'aria-modal': true,
+          'aria-labelledby': 'buyer-jaba-sync-title',
+          'aria-describedby': 'buyer-jaba-sync-desc',
         }}
       >
-        <div
-          {...sheetProps}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="buyer-jaba-sync-title"
-          aria-describedby="buyer-jaba-sync-desc"
-          className={buyerJabaSyncModal}
-        >
           <div
             className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-brand-yellow/25 blur-2xl"
             aria-hidden="true"
@@ -151,8 +157,7 @@ export default function BuyerJabaSyncAlert({ removed, onClose: requestClose }) {
               </Button>
             ) : null}
           </div>
-        </div>
-      </div>
+      </BuyerMotionFrame>
     </BuyerModalPortal>
   )
 }

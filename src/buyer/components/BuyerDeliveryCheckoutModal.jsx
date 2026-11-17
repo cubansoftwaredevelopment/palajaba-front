@@ -17,7 +17,9 @@ import SellerSelect from '../../components/seller/SellerSelect'
 import { getCustomerProfile } from '../../lib/customerAuth'
 import { customerHasQvaPayUsername } from '../../customer/api.js'
 import CheckoutStoreAgreements from './CheckoutStoreAgreements'
-import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
+import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import {
   buyerDeliveryFieldLabel,
   buyerDeliveryInput,
@@ -71,12 +73,9 @@ export default function BuyerDeliveryCheckoutModal({
   const shownCheckoutRef = useRef(checkout)
   if (checkout) shownCheckoutRef.current = checkout
   const shownCheckout = checkout ?? shownCheckoutRef.current
-  const { present, closing } = useOrderModalPresence(open)
-  const sheetProps = useSwipeDownSheet(onClose)
-  const motionClass = orderModalMotionClass(closing)
-  const sheetMotionClass = closing
-    ? 'pointer-events-none motion-safe:animate-address-sheet-out'
-    : 'motion-safe:animate-address-sheet-in'
+  const exitMs = useSheetExitMs()
+  const { present, closing } = useOrderModalPresence(open, exitMs)
+  const sheetProps = useSwipeDownSheet(onClose, { motion: true })
   const [wasOpen, setWasOpen] = useState(open)
   if (open !== wasOpen) {
     setWasOpen(open)
@@ -238,21 +237,16 @@ export default function BuyerDeliveryCheckoutModal({
   const secondaryPhone = formatContact(form.phone_secondary)
 
   return (
-    <>
-      <button
-        type="button"
-        className={`${buyerDeliveryOverlay} ${motionClass}`}
-        aria-label="Cerrar formulario de domicilio"
-        onClick={onClose}
-      />
-
-      <div
-        {...sheetProps}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        className={`${buyerDeliveryModal} ${sheetMotionClass} ${step === 2 ? '!h-[min(92dvh,52rem)] !max-h-[min(92dvh,52rem)]' : ''}`}
-      >
+    <BuyerMotionFrame
+      split
+      overlayAs="button"
+      closing={closing}
+      sheetProps={sheetProps}
+      overlayClassName={buyerDeliveryOverlay}
+      panelClassName={`${buyerDeliveryModal} ${step === 2 ? '!h-[min(92dvh,52rem)] !max-h-[min(92dvh,52rem)]' : ''}`}
+      overlayProps={{ type: 'button', 'aria-label': 'Cerrar formulario de domicilio', onClick: onClose }}
+      panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId }}
+    >
         <div className={buyerDeliveryModalHeader}>
           <div className="flex items-start gap-1">
             {step > 1 ? (
@@ -475,7 +469,6 @@ export default function BuyerDeliveryCheckoutModal({
 
           </div>
         </form>
-      </div>
-    </>
+    </BuyerMotionFrame>
   )
 }

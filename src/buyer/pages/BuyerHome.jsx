@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PresenceContext } from "framer-motion";
 import { Navigate } from "react-router-dom";
 import BuyerAssortmentHints from "../components/BuyerAssortmentHints";
 import BuyerBannerCarousel from "../components/BuyerBannerCarousel";
@@ -270,6 +271,12 @@ function BuyerHomeContent({ preview = null }) {
 
   const sections = feed?.sections ?? [];
   const visibleSections = sections.filter((section) => section.products?.length);
+  const sectionEnterFrom = [];
+  let offerCursor = 0;
+  for (const section of visibleSections) {
+    sectionEnterFrom.push(offerCursor);
+    offerCursor += Math.min(section.products.length, 5);
+  }
   const hasProducts = (feed?.total_products ?? 0) > 0;
   const hasMoreSections = Boolean(feed?.has_more);
   const searchEmpty =
@@ -435,10 +442,12 @@ function BuyerHomeContent({ preview = null }) {
         ) : null}
 
         {!showSearchGrid && !loading && !loadError && hasProducts ? (
+          <PresenceContext.Provider value={null}>
           <div className={buyerHomeSections}>
-            {visibleSections.map((section) => (
+            {visibleSections.map((section, sectionIndex) => (
                 <BuyerCategoryProductRow
                   key={section.category_id}
+                  enterFrom={sectionEnterFrom[sectionIndex] ?? 0}
                   section={section}
                   href={marketplaceCategoryPath(section)}
                   loadMore={(offset) =>
@@ -476,6 +485,7 @@ function BuyerHomeContent({ preview = null }) {
               </div>
             ) : null}
           </div>
+          </PresenceContext.Provider>
         ) : null}
       </BuyerShell>
     </BuyerDisplayedLocationProvider>

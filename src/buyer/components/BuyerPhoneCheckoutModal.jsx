@@ -7,7 +7,9 @@ import {
   buyerDeliveryOverlay,
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
-import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
+import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 
 export default function BuyerPhoneCheckoutModal({
   picker,
@@ -20,9 +22,9 @@ export default function BuyerPhoneCheckoutModal({
   const shownPickerRef = useRef(picker)
   if (picker) shownPickerRef.current = picker
   const shownPicker = picker ?? shownPickerRef.current
-  const { present, closing } = useOrderModalPresence(open)
-  const motionClass = orderModalMotionClass(closing)
-  const sheetProps = useSwipeDownSheet(onClose)
+  const exitMs = useSheetExitMs()
+  const { present, closing } = useOrderModalPresence(open, exitMs)
+  const sheetProps = useSwipeDownSheet(onClose, { motion: true })
   const phones = shownPicker?.phones ?? []
   const [selectedKey, setSelectedKey] = useState(() => phones[0]?.key ?? '')
 
@@ -49,15 +51,19 @@ export default function BuyerPhoneCheckoutModal({
   }
 
   return (
-    <div className={`${buyerDeliveryOverlay} ${motionClass}`} role="presentation" onClick={onClose}>
-      <div
-        {...sheetProps}
-        className={buyerDeliveryModal}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        onClick={(event) => event.stopPropagation()}
-      >
+    <BuyerMotionFrame
+      closing={closing}
+      sheetProps={sheetProps}
+      overlayClassName={buyerDeliveryOverlay}
+      panelClassName={buyerDeliveryModal}
+      overlayProps={{ role: 'presentation', onClick: onClose }}
+      panelProps={{
+        role: 'dialog',
+        'aria-modal': true,
+        'aria-labelledby': titleId,
+        onClick: (event) => event.stopPropagation(),
+      }}
+    >
         <div className={buyerDeliveryModalHeader}>
           <h2 id={titleId} className="font-display text-lg font-bold text-brand-green">
             ¿Con quién coordinas?
@@ -116,7 +122,6 @@ export default function BuyerPhoneCheckoutModal({
             {checkoutSubmitting ? 'Enviando…' : 'Continuar por WhatsApp'}
           </button>
         </div>
-      </div>
-    </div>
+    </BuyerMotionFrame>
   )
 }

@@ -13,6 +13,8 @@ import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerProfile, isCustomerAuthenticated
 import { resolveMediaUrl } from '../../lib/media'
 import StoreMark from './StoreMark'
 import { buyerProductDetailBody, buyerProductDetailModal, buyerProductDetailOverlay } from './buyerStyles'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { useDismissibleModal } from './useOrderModalPresence'
@@ -53,22 +55,22 @@ function BarItem({ active, label, icon, to, state, disabled, onClick }) {
 }
 
 function CategoryModal({ categories, loading, selectedId, onClose: requestClose, onSelect, emptyMessage, storePhotoUrl = '', storeName = '' }) {
-  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
+  const exitMs = useSheetExitMs()
+  const { dismiss: onClose, closing, sheetProps } = useDismissibleModal(requestClose, exitMs, { motion: true })
   return (
-    <div
-      className={`${buyerProductDetailOverlay} z-[85] ${motionClass}`}
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose()
+    <BuyerMotionFrame
+      closing={closing}
+      sheetProps={sheetProps}
+      overlayClassName={`${buyerProductDetailOverlay} z-[85]`}
+      panelClassName={`${buyerProductDetailModal} max-h-[min(92dvh,44rem)]`}
+      overlayProps={{
+        role: 'presentation',
+        onMouseDown: (event) => {
+          if (event.target === event.currentTarget) onClose()
+        },
       }}
+      panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'buyer-category-modal-title' }}
     >
-      <div
-        {...sheetProps}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="buyer-category-modal-title"
-        className={`${buyerProductDetailModal} max-h-[min(92dvh,44rem)]`}
-      >
         <div className="shrink-0 px-5 pt-3">
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
           <div className="flex items-center justify-between gap-3 pb-3">
@@ -115,8 +117,7 @@ function CategoryModal({ categories, loading, selectedId, onClose: requestClose,
             })
           )}
         </ul>
-      </div>
-    </div>
+    </BuyerMotionFrame>
   )
 }
 

@@ -6,7 +6,9 @@ import { resolveMediaUrl } from '../../lib/media'
 import { buildWhatsAppContactUrl } from '../../lib/whatsappOrder'
 import PhotoLightbox from '../../components/PhotoLightbox'
 import BuyerModalPortal from './BuyerModalPortal'
-import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
+import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import BuyerStoreBio from './BuyerStoreBio'
 import BuyerStoreBannerCover, { storeBannerAspectClass } from './BuyerStoreBannerCover'
 import { socialLinkLabel, socialLinkUrl, socialLinksFromProfile } from '../../lib/socialLinks'
@@ -95,8 +97,13 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
   const { coords, requestLocation } = useLiveLocation()
   const [showMyLocation, setShowMyLocation] = useState(false)
   const viewer = showMyLocation && coords ? coords : null
-  const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
-  const mapMotionClass = orderModalMotionClass(mapClosing)
+  const mapExitMs = useSheetExitMs()
+  const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen, mapExitMs)
+  function closeMap() {
+    setShowMyLocation(false)
+    setMapOpen(false)
+  }
+  const mapSheetProps = useSwipeDownSheet(closeMap, { motion: true })
   const [shareOpen, setShareOpen] = useState(false)
   const canShare = Boolean(location?.province?.id && location?.municipality?.id && store.store_slug)
   const shareUrl = canShare
@@ -115,7 +122,7 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
     if (!mapPresent) return undefined
 
     function onKeyDown(event) {
-      if (event.key === 'Escape') setMapOpen(false)
+      if (event.key === 'Escape') closeMap()
     }
 
     document.addEventListener('keydown', onKeyDown)
@@ -237,19 +244,23 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
 
       {mapPresent && catalog.business_location ? (
         <BuyerModalPortal>
-          <div
-            className={`${buyerStoreMapOverlay} ${mapMotionClass}`}
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setMapOpen(false)
+          <BuyerMotionFrame
+            closing={mapClosing}
+            sheetProps={mapSheetProps}
+            overlayClassName={buyerStoreMapOverlay}
+            panelClassName={buyerStoreMapModal}
+            overlayProps={{
+              role: 'presentation',
+              onMouseDown: (event) => {
+                if (event.target === event.currentTarget) closeMap()
+              },
+            }}
+            panelProps={{
+              role: 'dialog',
+              'aria-modal': true,
+              'aria-labelledby': 'buyer-store-map-title',
             }}
           >
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="buyer-store-map-title"
-              className={buyerStoreMapModal}
-            >
               <div className="mx-auto mb-1 mt-3 h-1 w-10 shrink-0 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
               <div className={buyerStoreMapModalHeader}>
                 <h2 id="buyer-store-map-title" className="min-w-0 font-display text-base font-bold text-brand-green">
@@ -257,10 +268,7 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
                 </h2>
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowMyLocation(false)
-                    setMapOpen(false)
-                  }}
+                  onClick={closeMap}
                   className="flex h-10 w-10 items-center justify-center rounded-full text-brand-carmelita touch-manipulation active:bg-brand-green/8"
                   aria-label="Cerrar mapa"
                 >
@@ -291,8 +299,7 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
                   </svg>
                 </button>
               </div>
-            </div>
-          </div>
+          </BuyerMotionFrame>
         </BuyerModalPortal>
       ) : null}
       {photoOpen && photoSrc ? (

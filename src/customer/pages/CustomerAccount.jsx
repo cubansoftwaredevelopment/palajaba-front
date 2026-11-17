@@ -20,7 +20,9 @@ import Logo from '../../components/Logo'
 import NotificationBodyText from '../../components/ui/NotificationBodyText'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
 import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
-import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
+import { useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import {
   connectCustomerEvents,
@@ -32,6 +34,31 @@ import FilterModal, { FilterButton } from '../../components/filters/FilterModal'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 
+function releaseClippedScroll(from) {
+  let node = from?.parentElement || null
+  while (node) {
+    const overflowY = getComputedStyle(node).overflowY
+    if ((overflowY === 'hidden' || overflowY === 'clip') && node.scrollTop) node.scrollTop = 0
+    node = node.parentElement
+  }
+}
+
+function revealAccountSection(id) {
+  window.requestAnimationFrame(() => {
+    const target = document.getElementById(id)
+    if (!target) return
+    releaseClippedScroll(target)
+    let scroller = target.parentElement
+    while (scroller && scroller !== document.documentElement) {
+      const overflowY = getComputedStyle(scroller).overflowY
+      if (overflowY === 'auto' || overflowY === 'scroll') break
+      scroller = scroller.parentElement
+    }
+    if (!scroller || scroller === document.documentElement) return
+    const top = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 16
+    scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+  })
+}
 
 export default function CustomerAccount() {
   const navigate = useNavigate()
@@ -71,9 +98,9 @@ export default function CustomerAccount() {
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
   const [addressOpen, setAddressOpen] = useState(false)
-  const { present: addressPresent, closing: addressClosing } = useOrderModalPresence(addressOpen)
-  const addressMotionClass = orderModalMotionClass(addressClosing)
-  const addressSheetProps = useSwipeDownSheet(() => setAddressOpen(false))
+  const addressExitMs = useSheetExitMs()
+  const { present: addressPresent, closing: addressClosing } = useOrderModalPresence(addressOpen, addressExitMs)
+  const addressSheetProps = useSwipeDownSheet(() => setAddressOpen(false), { motion: true })
   const [editingAddress, setEditingAddress] = useState(null)
   const [addressText, setAddressText] = useState('')
   const [point, setPoint] = useState(null)
@@ -412,7 +439,7 @@ export default function CustomerAccount() {
 
   useEffect(() => {
     if (section !== 'perfil' || !location.state?.focusQvaPay) return undefined
-    document.getElementById('cuenta-qvapay')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    revealAccountSection('cuenta-qvapay')
     return undefined
   }, [section, location.state])
 
@@ -443,16 +470,16 @@ export default function CustomerAccount() {
   }
 
   return (
-    <div className="min-h-dvh bg-brand-green/[0.035] text-brand-carmelita lg:flex">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-brand-green/[0.035] text-brand-carmelita lg:flex-row">
       <CustomerQvaPayPrompt
         open={showQvaPayPrompt}
         onAddUser={() => {
           setQvaPayPromptHeld(true)
-          document.getElementById('cuenta-qvapay')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          revealAccountSection('cuenta-qvapay')
         }}
         onDone={(dismissForever) => { void finishQvaPayPrompt(dismissForever) }}
       />
-      <aside className="hidden w-60 shrink-0 border-r border-brand-green/10 bg-brand-white/70 px-3 py-6 lg:block">
+      <aside className="hidden w-60 shrink-0 overflow-y-auto border-r border-brand-green/10 bg-brand-white/70 px-3 py-6 lg:block lg:min-h-0">
         <Link
           to="/comprar"
           className="mb-8 block px-3 text-sm font-bold text-brand-green"
@@ -461,7 +488,7 @@ export default function CustomerAccount() {
         </Link>
         <CustomerNavigation hasOrderWarning={hasOrderWarning} />
       </aside>
-      <main className="min-w-0 flex-1 pb-[calc(5.5rem+var(--safe-bottom))] lg:pb-8">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain pb-[calc(5.5rem+var(--safe-bottom))] lg:pb-8">
         <header className="z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 pt-[max(0.75rem,var(--safe-top))] pb-3 backdrop-blur-md sm:px-5 lg:px-8 lg:pt-[max(1rem,var(--safe-top))] lg:pb-4">
           <div className="mx-auto flex w-full max-w-md items-center gap-2.5 sm:gap-3 lg:max-w-none">
             <Logo className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
@@ -1118,19 +1145,20 @@ export default function CustomerAccount() {
       />
 
       {addressPresent ? (
-        <div
-          className={`fixed inset-0 z-[110] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-3 ${addressMotionClass}`}
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setAddressOpen(false);
+        <BuyerMotionFrame
+          closing={addressClosing}
+          sheetProps={addressSheetProps}
+          panelAs="section"
+          overlayClassName="fixed inset-0 z-[110] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-3"
+          panelClassName="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-y-auto rounded-t-3xl bg-brand-white p-5 shadow-xl sm:rounded-3xl sm:p-6"
+          overlayProps={{
+            role: 'presentation',
+            onMouseDown: (event) => {
+              if (event.target === event.currentTarget) setAddressOpen(false)
+            },
           }}
+          panelProps={{ role: 'dialog', 'aria-modal': true }}
         >
-          <section
-            {...addressSheetProps}
-            role="dialog"
-            aria-modal="true"
-            className={`flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-y-auto rounded-t-3xl bg-brand-white p-5 shadow-xl sm:rounded-3xl sm:p-6 ${addressClosing ? 'motion-safe:animate-address-sheet-out' : 'motion-safe:animate-address-sheet-in'}`}
-          >
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold">
                 {editingAddress ? "Editar dirección" : "Nueva dirección"}
@@ -1172,8 +1200,7 @@ export default function CustomerAccount() {
                     : "Guardar dirección"}
               </button>
             </form>
-          </section>
-        </div>
+        </BuyerMotionFrame>
       ) : null}
     </div>
   );

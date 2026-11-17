@@ -1,10 +1,12 @@
+import { motion, useReducedMotion } from 'framer-motion'
 import { JABA_BAG } from '../../constants/branding'
+import { badgeSpring } from '../../motion/presets'
 import { useBuyerJaba } from '../context.js'
-import { buyerJabaBadge, buyerJabaBadgePulse, buyerJabaTrigger } from './buyerStyles'
+import { buyerJabaBadge, buyerJabaTrigger } from './buyerStyles'
 
 export default function BuyerJabaButton() {
-  const { count, togglePanel, open, badgePulseId } = useBuyerJaba()
-  const badgeClass = badgePulseId > 0 ? buyerJabaBadgePulse : buyerJabaBadge
+  const reduced = useReducedMotion()
+  const { count, togglePanel, open } = useBuyerJaba()
 
   return (
     <button
@@ -24,9 +26,16 @@ export default function BuyerJabaButton() {
         decoding="async"
       />
       {count > 0 ? (
-        <span key={badgePulseId} className={badgeClass} aria-hidden="true">
+        <motion.span
+          key={count}
+          className={buyerJabaBadge}
+          aria-hidden="true"
+          initial={reduced ? false : { scale: 0.4, rotate: -16 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={reduced ? { duration: 0 } : badgeSpring}
+        >
           {count > 99 ? '99+' : count}
-        </span>
+        </motion.span>
       ) : null}
     </button>
   )

@@ -3,7 +3,9 @@ import AdminDateRangeControls from '../admin/AdminDateRangeControls'
 import SellerFilterDropdown from '../seller/SellerFilterDropdown'
 import SellerModalPortal from '../seller/SellerModalPortal'
 import { sellerModalOverlay, sellerModalSheet } from '../seller/sellerStyles'
-import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
+import { useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
+import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { useSheetExitMs } from '../../motion/presets'
 import { clearedDateFilter } from './filterState.js'
 
 export function FilterButton({ count, label, expanded, onClick }) {
@@ -38,8 +40,9 @@ export default function FilterModal({
   columns = 2,
 }) {
   const deferred = typeof onApply === 'function'
-  const { present, closing } = useOrderModalPresence(open)
-  const sheetProps = useSwipeDownSheet(onClose)
+  const exitMs = useSheetExitMs()
+  const { present, closing } = useOrderModalPresence(open, exitMs)
+  const sheetProps = useSwipeDownSheet(onClose, { motion: true })
   const [draft, setDraft] = useState(values)
   const [syncedOpen, setSyncedOpen] = useState(open)
   const onCloseRef = useRef(onClose)
@@ -94,20 +97,20 @@ export default function FilterModal({
 
   return (
     <SellerModalPortal>
-      <div
-        className={`${sellerModalOverlay} ${orderModalMotionClass(closing)}`}
-        role="presentation"
-        onMouseDown={(event) => {
-          if (event.target === event.currentTarget) onClose()
+      <BuyerMotionFrame
+        closing={closing}
+        sheetProps={sheetProps}
+        panelAs="section"
+        overlayClassName={sellerModalOverlay}
+        panelClassName={`${sellerModalSheet} h-auto max-h-[80dvh] overflow-visible ${columns === 2 ? 'max-w-2xl' : 'max-w-xl'}`}
+        overlayProps={{
+          role: 'presentation',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) onClose()
+          },
         }}
+        panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId }}
       >
-        <section
-          {...sheetProps}
-          className={`${sellerModalSheet} h-auto max-h-[80dvh] overflow-visible ${columns === 2 ? 'max-w-2xl' : 'max-w-xl'}`}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-        >
           <header className="flex items-center justify-between border-b border-brand-green/10 px-5 py-4">
             <div>
               <h2 id={titleId} className="font-display text-lg font-bold text-brand-green">{title}</h2>
@@ -151,8 +154,7 @@ export default function FilterModal({
             <button type="button" onClick={clear} className="min-h-10 rounded-xl border border-brand-green/15 px-4 text-sm font-semibold text-brand-green">Limpiar filtros</button>
             <button type="button" onClick={apply} className="min-h-10 rounded-xl bg-brand-green px-5 text-sm font-semibold text-white">{applyLabel}</button>
           </footer>
-        </section>
-      </div>
+      </BuyerMotionFrame>
     </SellerModalPortal>
   )
 }

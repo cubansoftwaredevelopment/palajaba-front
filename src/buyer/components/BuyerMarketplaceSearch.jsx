@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { PresenceContext } from 'framer-motion'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import DeadState from '../../components/ui/DeadState'
@@ -289,11 +290,13 @@ export function BuyerSearchResults({
         {results.total_products} producto{results.total_products === 1 ? '' : 's'} encontrado
         {results.total_products === 1 ? '' : 's'}
       </p>
-      <div className={buyerProductGrid}>
-        {products.map((product) => (
-          <BuyerProductCard key={product.id} product={product} />
-        ))}
-      </div>
+      <PresenceContext.Provider value={null}>
+        <div className={buyerProductGrid}>
+          {products.map((product, index) => (
+            <BuyerProductCard key={product.id} product={product} enterIndex={index} />
+          ))}
+        </div>
+      </PresenceContext.Provider>
       {hasMore ? (
         <button
           type="button"
@@ -350,11 +353,13 @@ export function BuyerBusinessSearchResults({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className={buyerBusinessList}>
-        {businesses.map((business) => (
-          <BuyerBusinessCard key={business.store.id} business={business} />
-        ))}
-      </div>
+      <PresenceContext.Provider value={null}>
+        <div className={buyerBusinessList}>
+          {businesses.map((business, index) => (
+            <BuyerBusinessCard key={business.store.id} business={business} enterIndex={index} />
+          ))}
+        </div>
+      </PresenceContext.Provider>
       {hasMore ? (
         <button
           type="button"
