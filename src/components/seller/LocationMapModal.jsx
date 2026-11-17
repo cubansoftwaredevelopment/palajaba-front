@@ -16,7 +16,7 @@ const mapControlButton =
   'grid h-8 w-8 place-items-center rounded-full border border-brand-green/15 bg-white text-brand-green shadow-sm touch-manipulation active:bg-brand-green/8 disabled:opacity-50'
 
 export default function LocationMapModal({ initialLocation, onConfirm, onClose: requestClose }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
   const markerRef = useRef(null)
@@ -131,6 +131,7 @@ export default function LocationMapModal({ initialLocation, onConfirm, onClose: 
         onClick={onClose}
       >
         <div
+          {...sheetProps}
           className={`flex w-full min-w-0 flex-col overflow-hidden bg-brand-white ${expanded ? 'h-dvh max-h-dvh rounded-none' : 'h-[min(88dvh,760px)] max-w-5xl rounded-t-2xl border border-brand-green/12 shadow-xl sm:rounded-2xl'}`}
           onClick={(event) => event.stopPropagation()}
         >

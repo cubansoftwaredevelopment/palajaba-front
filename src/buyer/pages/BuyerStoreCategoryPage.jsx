@@ -16,7 +16,7 @@ import LoadingState from '../../components/ui/LoadingState'
 import StatePanel from '../../components/ui/StatePanel'
 import { BuyerDisplayedLocationProvider } from '../context.js'
 import { useBuyerDisplayCurrency } from '../context.js'
-import { DEAD_MASCOT, LOADING_MASCOT, MARKETPLACE_LABEL } from '../../constants/branding'
+import { DEAD_MASCOT, LOADING_MASCOT } from '../../constants/branding'
 import {
   fetchMarketplaceGestorStoreCatalog,
   fetchMarketplaceGestorStoreCategoryProducts,
@@ -42,7 +42,7 @@ export default function BuyerStoreCategoryPage({
   if (resolvingLocation) {
     return (
       <>
-        <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL}>
+        <BuyerShell backTo="/comprar" backLabel="">
           <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
         </BuyerShell>
         <BuyerMarketplaceNav

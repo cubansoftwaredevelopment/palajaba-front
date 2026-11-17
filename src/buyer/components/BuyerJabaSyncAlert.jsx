@@ -26,7 +26,7 @@ import {
 } from './buyerStyles'
 
 export default function BuyerJabaSyncAlert({ removed, onClose: requestClose }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const { count, openPanel } = useBuyerJaba()
 
   useEffect(() => {
@@ -65,6 +65,7 @@ export default function BuyerJabaSyncAlert({ removed, onClose: requestClose }) {
         }}
       >
         <div
+          {...sheetProps}
           role="dialog"
           aria-modal="true"
           aria-labelledby="buyer-jaba-sync-title"

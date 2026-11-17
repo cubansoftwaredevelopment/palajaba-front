@@ -63,7 +63,7 @@ export default function BuyerStorePage() {
   if (resolvingLocation) {
     return (
       <>
-        <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL}>
+        <BuyerShell backTo="/comprar" backLabel="">
           <LoadingState
             message="Cargando tienda…"
             className="lg:items-start lg:text-left"
@@ -228,7 +228,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
   const backTo = isGestorCatalog ? storePublicPath(storeSlug) : "/comprar";
   const backLabel = isGestorCatalog
     ? catalog?.store?.store_name || "Tienda"
-    : MARKETPLACE_LABEL;
+    : "";
 
   return (
     <CatalogThemeScope theme={catalogTheme} palette={catalogPalette} className="flex min-h-dvh flex-col">

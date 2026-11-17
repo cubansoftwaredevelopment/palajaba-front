@@ -1,14 +1,22 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthCard from '../components/AuthCard'
 import AuthHeader from '../components/AuthHeader'
 import AuthShell from '../components/AuthShell'
 
 export default function CreateAccount() {
   const location = useLocation()
-  const backTo = location.state?.backTo || '/login'
+  const navigate = useNavigate()
+  const canGoBack = location.key !== 'default'
 
   return (
-    <AuthShell backTo={backTo} backLabel="Volver" contentWidth="narrow">
+    <AuthShell
+      onBack={() => {
+        if (canGoBack) navigate(-1)
+        else navigate('/')
+      }}
+      backLabel={canGoBack ? 'Volver' : 'Inicio'}
+      contentWidth="narrow"
+    >
       <section className="animate-fade-in lg:mx-auto lg:max-w-xl" aria-label="Crear cuenta">
         <AuthHeader
           eyebrow="Crear cuenta"

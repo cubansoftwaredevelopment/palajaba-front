@@ -6,9 +6,11 @@ import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
 import { EMPTY_STORE_PAGE, STORE_PAGES } from '../../lib/storePages'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerHint, sellerModalBody, sellerModalOverlay, sellerModalSheet, sellerModalTitle } from './sellerStyles'
+import { useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import SellerRichTextEditor from './SellerRichTextEditor'
 
 function PagePreview({ title, content, onClose }) {
+  const sheetProps = useSwipeDownSheet(onClose)
   useEffect(() => {
     function onKey(event) {
       if (event.key === 'Escape') onClose()
@@ -20,6 +22,7 @@ function PagePreview({ title, content, onClose }) {
   return createPortal(
     <div className={sellerModalOverlay} onClick={onClose}>
       <div
+        {...sheetProps}
         role="dialog"
         aria-modal="true"
         aria-labelledby="store-page-preview-title"

@@ -65,7 +65,7 @@ function QuantityStepper({ value, onChange, max = 99 }) {
 
 export default function SellerManualOrderModal({ onClose: requestClose, onCreated }) {
   const navigate = useNavigate()
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const [searchLoading, setSearchLoading] = useState(true)
   const [searchError, setSearchError] = useState('')
   const [suggestions, setSuggestions] = useState([])
@@ -238,6 +238,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
         }}
       >
         <div
+          {...sheetProps}
           role="dialog"
           aria-modal="true"
           aria-labelledby="manual-order-title"

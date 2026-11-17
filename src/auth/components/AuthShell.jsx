@@ -11,6 +11,7 @@ const CONTENT_WIDTH = {
 export default function AuthShell({
   backTo = '/',
   backLabel = 'Volver',
+  onBack,
   children,
   wide = false,
   centered = false,
@@ -20,6 +21,15 @@ export default function AuthShell({
 }) {
   const widthKey = contentWidth ?? (wide ? 'wide' : centered ? 'narrow' : 'default')
   const widthClass = CONTENT_WIDTH[widthKey] ?? CONTENT_WIDTH.default
+  const backClass = 'inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8'
+  const backContent = (
+    <>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      {backLabel}
+    </>
+  )
 
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
@@ -39,15 +49,15 @@ export default function AuthShell({
               hideLogo ? 'justify-start' : 'justify-between'
             }`}
           >
-            <Link
-              to={backTo}
-              className="inline-flex min-h-10 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <path d="M15 18l-6-6 6-6" />
-              </svg>
-              {backLabel}
-            </Link>
+            {onBack ? (
+              <button type="button" onClick={onBack} className={backClass}>
+                {backContent}
+              </button>
+            ) : (
+              <Link to={backTo} className={backClass}>
+                {backContent}
+              </Link>
+            )}
             {!hideLogo ? <Logo className="h-9 w-9 lg:h-10 lg:w-10" /> : null}
           </div>
         </header>

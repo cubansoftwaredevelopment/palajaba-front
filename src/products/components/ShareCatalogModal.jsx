@@ -51,7 +51,7 @@ function ShareOption({ icon, label, hint, onClick, iconWrapClassName, disabled =
 }
 
 export default function ShareCatalogModal({ profile, onClose: requestClose }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const [view, setView] = useState('options')
   const [copyStatus, setCopyStatus] = useState('')
   const [shareError, setShareError] = useState('')
@@ -161,7 +161,7 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
         aria-labelledby="share-catalog-title"
         onClick={onClose}
       >
-        <div className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
+        <div {...sheetProps} className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="share-catalog-title" className={sellerModalTitle}>

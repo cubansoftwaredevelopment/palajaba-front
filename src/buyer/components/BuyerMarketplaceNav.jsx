@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { matchPath, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { fetchMarketplaceFeed } from '../api.js'
@@ -12,133 +12,82 @@ import { getSellerProfile, isSellerAuthenticated, SELLER_AUTH_CHANGE_EVENT } fro
 import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerProfile, isCustomerAuthenticated } from '../../lib/customerAuth'
 import { resolveMediaUrl } from '../../lib/media'
 import StoreMark from './StoreMark'
+import { buyerProductDetailBody, buyerProductDetailModal, buyerProductDetailOverlay } from './buyerStyles'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { useDismissibleModal } from './useOrderModalPresence'
-import { setOptionsFabPresent, setOptionsFabVisible } from '../../lib/optionsFabVisibility'
+import { setOptionsFabPresent } from '../../lib/optionsFabVisibility'
+import AppDownloadPrompt from '../../appReleases/components/AppDownloadPrompt.jsx'
 
 export const MARKETPLACE_CATEGORY_EVENT = 'pala-jaba-marketplace-category'
 
 const HELP_MESSAGE = 'Hola tengo un problema'
 
-const optionClass =
-  'relative inline-flex text-brand-carmelita touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/35 disabled:cursor-not-allowed disabled:opacity-40'
-
-const MAIN_RADIUS = 118
-
-function arcPoint(index, count, radius) {
-  const start = Math.PI
-  const end = Math.PI / 2
-  const t = count <= 1 ? 0.5 : index / (count - 1)
-  const angle = start + (end - start) * t
-  return {
-    x: Math.cos(angle) * radius,
-    y: -Math.sin(angle) * radius,
-  }
+function barItemClass(active) {
+  return `flex flex-col items-center justify-center gap-0.5 py-1.5 text-center text-[0.625rem] font-semibold touch-manipulation ${active ? 'text-brand-green' : 'text-brand-carmelita/65'}`
 }
 
-const MAIN_POINTS = [0, 1, 2].map((index) => arcPoint(index, 3, MAIN_RADIUS))
-const ORIGIN = { x: 0, y: 0 }
-
-const optionIconClass =
-  'flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-white shadow-[0_8px_18px_rgba(89,128,44,0.18)]'
-
-const LIVES = [
-  { icon: ['ghost-drift-a', '3.8s', '-0.6s'], label: ['ghost-drift-b', '5.4s', '-2.2s'], fade: ['4.3s', '-1.1s'] },
-  { icon: ['ghost-drift-c', '2.9s', '-1.5s'], label: ['ghost-drift-a', '4.7s', '-0.2s'], fade: ['3.2s', '-2.6s'] },
-  { icon: ['ghost-drift-b', '4.6s', '-3.1s'], label: ['ghost-drift-c', '3.3s', '-1.8s'], fade: ['5.7s', '-0.4s'] },
-]
-
-function lifeFor(index) {
-  const base = LIVES[index % LIVES.length]
-  return {
-    icon: [base.icon[0], base.icon[1], `-${(index * 0.67).toFixed(2)}s`],
-    label: [base.label[0], base.label[1], `-${(index * 1.13).toFixed(2)}s`],
-    fade: [base.fade[0], `-${(index * 0.41).toFixed(2)}s`],
-  }
+function barIconClass(active) {
+  return `relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl ${active ? 'bg-brand-green text-white' : ''}`
 }
 
-function driftStyle(open, spec, fade) {
-  if (!open) return { animation: 'none' }
-  if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    return { animation: 'none' }
-  }
-  const [name, duration, delay] = spec
-  const fadePart = fade ? `, ghost-fade ${fade[0]} ease-in-out ${fade[1]} infinite` : ''
-  return { animation: `${name} ${duration} ease-in-out ${delay} infinite${fadePart}` }
-}
-
-function ArcOption({ open, from, to, index, children }) {
-  const reduceMotion = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const place = open ? to : from
-  return (
-    <div
-      className="absolute top-1/2 left-1/2 z-0"
-      inert={open ? undefined : true}
-      aria-hidden={open ? undefined : true}
-      style={{
-        opacity: open ? 1 : 0,
-        filter: reduceMotion || open ? 'blur(0px)' : 'blur(6px)',
-        transform: `translate(calc(-50% + ${place.x}px), calc(-50% + ${place.y}px))`,
-        transition: reduceMotion ? 'none' : 'transform 220ms linear, opacity 160ms ease, filter 160ms ease',
-        transitionDelay: open && !reduceMotion ? `${index * 16}ms` : '0ms',
-        pointerEvents: open ? 'auto' : 'none',
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function OptionLabel({ open, life, children }) {
-  return (
-    <span className="absolute bottom-[calc(100%+0.3rem)] left-1/2 w-max -translate-x-1/2">
-      <span
-        className="inline-block whitespace-nowrap rounded-full bg-brand-white/95 px-2.5 py-1 text-xs font-semibold text-brand-green shadow-[0_4px_12px_rgba(89,128,44,0.12)] motion-reduce:animate-none"
-        style={driftStyle(open, life.label, life.fade)}
-      >
-        {children}
-      </span>
+function BarItem({ active, label, icon, to, state, disabled, onClick }) {
+  const body = (
+    <span className={barItemClass(active)}>
+      <span className={barIconClass(active)}>{icon}</span>
+      <span className="w-full truncate px-0.5">{label}</span>
     </span>
   )
-}
-
-function OptionIcon({ open, life, className, children }) {
+  if (to) {
+    return (
+      <NavLink to={to} state={state} end className="min-w-0 flex-1" onClick={onClick}>
+        {body}
+      </NavLink>
+    )
+  }
   return (
-    <span className={`${className} motion-reduce:animate-none`} style={driftStyle(open, life.icon)}>
-      {children}
-    </span>
+    <button type="button" className="min-w-0 flex-1 disabled:opacity-40" disabled={disabled} onClick={onClick}>
+      {body}
+    </button>
   )
 }
 
 function CategoryModal({ categories, loading, selectedId, onClose: requestClose, onSelect, emptyMessage, storePhotoUrl = '', storeName = '' }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   return (
     <div
-      className={`fixed inset-0 z-[60] flex items-end justify-center bg-brand-green/25 p-3 backdrop-blur-sm sm:items-center ${motionClass}`}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="buyer-category-modal-title"
-      onClick={onClose}
+      className={`${buyerProductDetailOverlay} z-[85] ${motionClass}`}
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}
     >
       <div
-        className="flex max-h-[min(70dvh,32rem)] w-full max-w-md flex-col overflow-hidden rounded-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.22)]"
-        onClick={(event) => event.stopPropagation()}
+        {...sheetProps}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="buyer-category-modal-title"
+        className={`${buyerProductDetailModal} max-h-[min(92dvh,44rem)]`}
       >
-        <div className="flex items-center justify-between gap-3 border-b border-brand-green/10 px-5 py-4">
-          <h2 id="buyer-category-modal-title" className="font-display text-lg font-bold text-brand-green">
-            Categorías
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full px-2 text-lg text-brand-carmelita"
-            aria-label="Cerrar"
-          >
-            ×
-          </button>
+        <div className="shrink-0 px-5 pt-3">
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
+          <div className="flex items-center justify-between gap-3 pb-3">
+            <h2 id="buyer-category-modal-title" className="font-display text-lg font-bold text-brand-green">
+              Categorías
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-brand-carmelita touch-manipulation active:bg-brand-green/8"
+              aria-label="Cerrar"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
-        <ul className="min-h-0 flex-1 overflow-y-auto py-2">
+        <ul className={`${buyerProductDetailBody} pb-4`}>
           {loading ? (
             <li className="px-5 py-4 text-sm text-brand-carmelita">Cargando categorías…</li>
           ) : categories.length === 0 ? (
@@ -191,10 +140,7 @@ export default function BuyerMarketplaceNav({
   const [categories, setCategories] = useState([])
   const [categoriesLoading, setCategoriesLoading] = useState(false)
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
-  const [fabVisible, setFabVisible] = useState(true)
-  const hideTimerRef = useRef(null)
   const [helpPhone, setHelpPhone] = useState('')
-  const [menuOpen, setMenuOpen] = useState(false)
   const [, refreshAuthState] = useState(0)
 
   useEffect(() => {
@@ -236,28 +182,6 @@ export default function BuyerMarketplaceNav({
   }, [])
 
   useEffect(() => {
-    setOptionsFabVisible(fabVisible)
-  }, [fabVisible])
-
-  useEffect(() => {
-    const scroller = document.querySelector('.buyer-scroll')
-    if (!scroller) return undefined
-
-    function onScroll() {
-      setFabVisible(false)
-      setMenuOpen(false)
-      window.clearTimeout(hideTimerRef.current)
-      hideTimerRef.current = window.setTimeout(() => setFabVisible(true), 1000)
-    }
-
-    scroller.addEventListener('scroll', onScroll, { passive: true })
-    return () => {
-      scroller.removeEventListener('scroll', onScroll)
-      window.clearTimeout(hideTimerRef.current)
-    }
-  }, [route.pathname])
-
-  useEffect(() => {
     if (isCatalog || !categoryOpen || !provinceId || !municipalityId) return undefined
     let cancelled = false
     setCategoriesLoading(true)
@@ -292,16 +216,11 @@ export default function BuyerMarketplaceNav({
     function onKeyDown(event) {
       if (event.key !== 'Escape') return
       if (categoryOpen) setCategoryOpen(false)
-      else setMenuOpen(false)
     }
-    if (!categoryOpen && !menuOpen) return undefined
+    if (!categoryOpen) return undefined
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [categoryOpen, menuOpen])
-
-  useEffect(() => {
-    setMenuOpen(false)
-  }, [route.pathname])
+  }, [categoryOpen])
 
   useEffect(() => {
     if (isCatalog) return
@@ -317,7 +236,6 @@ export default function BuyerMarketplaceNav({
 
   function chooseCategory(categoryId) {
     setCategoryOpen(false)
-    setMenuOpen(false)
 
     const category = categories.find((item) => item.id === categoryId)
     const categoryName = category?.name
@@ -369,133 +287,77 @@ export default function BuyerMarketplaceNav({
   const accountSignedIn = sellerSignedIn || isAdminAuthenticated()
   const customerSignedIn = isCustomerAuthenticated()
   const signedInProfile = customerSignedIn ? getCustomerProfile() : sellerSignedIn ? getSellerProfile() : null
-  const profileName = signedInProfile?.full_name || signedInProfile?.store_name || signedInProfile?.username || ''
-  const profileInitial = Array.from(profileName.trim())[0]?.toUpperCase() || 'C'
   const profileImageUrl = resolveMediaUrl(signedInProfile?.profile_photo_url)
   const activeCategoryId = isCatalog ? selectedCatalogCategoryId : selectedCategoryId
   const categoryActive = categoryOpen || Boolean(activeCategoryId)
-  const accountIcon = (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-      <circle cx="12" cy="8" r="3.2" />
-      <path d="M5.5 19.2c1.4-2.6 3.6-3.7 6.5-3.7s5.1 1.1 6.5 3.7" />
+  const accountTo = customerSignedIn ? '/cliente' : sellerSignedIn ? '/tienda' : '/login'
+  const accountLabel = sellerSignedIn && !customerSignedIn ? 'Mi tienda' : 'Cuenta'
+  const accountActive = customerSignedIn
+    ? route.pathname.startsWith('/cliente')
+    : sellerSignedIn && route.pathname.startsWith('/tienda')
+  const accountIcon = profileImageUrl ? (
+    <img
+      src={profileImageUrl}
+      alt=""
+      className="absolute inset-0 h-full w-full object-cover"
+      onError={(event) => { event.currentTarget.style.display = 'none' }}
+    />
+  ) : (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
     </svg>
   )
   const menu = (
     <>
-      {menuOpen ? (
-        <button
-          type="button"
-          className="fixed inset-0 z-20 bg-brand-green/10"
-          aria-label="Cerrar navegación"
-          onClick={() => setMenuOpen(false)}
-        />
-      ) : null}
       <nav
-        className={`fixed right-4 bottom-[max(2rem,calc(1.65rem+var(--safe-bottom)))] z-30 h-14 w-14 transition-[opacity,transform] duration-200 sm:right-[3.25rem] motion-reduce:transition-none ${
-          fabVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'
-        }`}
+        className="fixed bottom-0 left-0 right-0 z-30 border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md"
+        style={{ paddingBottom: 'max(0.375rem, var(--safe-bottom))' }}
         aria-label="Secciones de compra"
-        aria-hidden={fabVisible ? undefined : true}
       >
-        <ArcOption open={menuOpen} from={ORIGIN} to={MAIN_POINTS[0]} index={0}>
-          <button
-            type="button"
-            className={`${optionClass} ${categoryActive ? 'text-brand-green' : ''}`}
-            aria-label="Categorías"
+        <div className="mx-auto flex w-full max-w-md items-stretch px-1">
+          <AppDownloadPrompt variant="bar" />
+          <BarItem
+            active={categoryActive}
+            label="Categorías"
             onClick={() => {
-              setMenuOpen(false)
               if (!isCatalog) setCategoriesLoading(true)
               setCategoryOpen(true)
             }}
-          >
-            <OptionLabel open={menuOpen} life={lifeFor(0)}>Categorías</OptionLabel>
-            <OptionIcon open={menuOpen} life={lifeFor(0)} className={optionIconClass}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            icon={
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" />
                 <rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
                 <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" />
                 <rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
               </svg>
-            </OptionIcon>
-          </button>
-        </ArcOption>
-        <ArcOption open={menuOpen} from={ORIGIN} to={MAIN_POINTS[1]} index={1}>
-          <button
-            type="button"
-            className={`${optionClass} text-brand-green`}
-            aria-label="Ayuda"
+            }
+          />
+          <BarItem
+            label="Ayuda"
             disabled={!helpPhone}
-            onClick={() => {
-              setMenuOpen(false)
-              openHelp()
-            }}
-          >
-            <OptionLabel open={menuOpen} life={lifeFor(1)}>Ayuda</OptionLabel>
-            <OptionIcon open={menuOpen} life={lifeFor(1)} className={optionIconClass}>
-              <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+            onClick={openHelp}
+            icon={
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
                 <path
                   fill="currentColor"
                   d="M12.04 2C6.58 2 2.15 6.4 2.15 11.83c0 1.74.46 3.44 1.34 4.94L2 22l5.39-1.41a10 10 0 0 0 4.65 1.18h.01c5.46 0 9.89-4.4 9.89-9.83C21.94 6.41 17.5 2 12.04 2Zm5.76 14.15c-.24.68-1.4 1.3-1.94 1.38-.5.08-1.12.11-1.81-.11-.42-.14-.95-.31-1.64-.6-2.88-1.25-4.76-4.16-4.9-4.35-.14-.19-1.17-1.55-1.17-2.96 0-1.41.74-2.1 1-2.39.26-.28.57-.35.76-.35.19 0 .38 0 .55.01.18.01.41-.07.64.49.24.57.81 1.97.88 2.11.07.14.12.31.02.5-.09.19-.14.31-.28.48-.14.17-.29.37-.42.5-.14.14-.28.28-.12.55.16.26.7 1.16 1.51 1.88 1.04.92 1.91 1.21 2.18 1.35.26.14.42.12.58-.07.16-.19.66-.77.84-1.03.18-.26.35-.22.59-.13.24.09 1.51.71 1.77.84.26.13.43.19.5.3.06.11.06.64-.18 1.32Z"
                 />
               </svg>
-            </OptionIcon>
-          </button>
-        </ArcOption>
-        <ArcOption open={menuOpen} from={ORIGIN} to={MAIN_POINTS[2]} index={2}>
-          {customerSignedIn ? (
-            <NavLink to="/cliente" className={optionClass} aria-label="Mi cuenta de cliente" onClick={() => setMenuOpen(false)}>
-              <OptionLabel open={menuOpen} life={lifeFor(2)}>Mi cuenta</OptionLabel>
-              <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
-            </NavLink>
-          ) : sellerSignedIn ? (
-            <NavLink
-              to="/tienda"
-              className={optionClass}
-              aria-label="Ir a mi tienda"
-              onClick={() => setMenuOpen(false)}
-            >
-              <OptionLabel open={menuOpen} life={lifeFor(2)}>Mi tienda</OptionLabel>
-              <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
-            </NavLink>
-          ) : accountSignedIn ? (
-            <button type="button" className={optionClass} aria-label="Cuenta" disabled>
-              <OptionLabel open={menuOpen} life={lifeFor(2)}>Cuenta</OptionLabel>
-              <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
-            </button>
+            }
+          />
+          {accountSignedIn && !customerSignedIn && !sellerSignedIn ? (
+            <BarItem active={false} label="Cuenta" disabled icon={accountIcon} />
           ) : (
-            <NavLink
-              to="/login"
-              state={{ backTo: '/comprar/provincia', accountType: 'customer' }}
-              className={optionClass}
-              aria-label="Iniciar sesión"
-              onClick={() => setMenuOpen(false)}
-            >
-              <OptionLabel open={menuOpen} life={lifeFor(2)}>Cuenta</OptionLabel>
-              <OptionIcon open={menuOpen} life={lifeFor(2)} className={optionIconClass}>{accountIcon}</OptionIcon>
-            </NavLink>
+            <BarItem
+              to={accountTo}
+              state={customerSignedIn || sellerSignedIn ? undefined : { accountType: 'customer' }}
+              active={accountActive}
+              label={accountLabel}
+              icon={accountIcon}
+            />
           )}
-        </ArcOption>
-        <span className="relative z-10 flex h-14 w-14 items-center justify-center">
-          {signedInProfile && profileImageUrl ? (
-            <span className="pointer-events-none absolute -inset-1 rounded-full border-2 border-brand-yellow/75 motion-safe:animate-avatar-halo" aria-hidden="true" />
-          ) : null}
-          <button
-            type="button"
-            className="relative z-10 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-brand-yellow shadow-[0_14px_28px_rgba(28,33,24,0.28)] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40"
-            aria-label={menuOpen ? 'Cerrar navegación' : 'Abrir navegación'}
-            aria-expanded={menuOpen}
-            onClick={() => setMenuOpen((open) => !open)}
-          >
-            {signedInProfile ? (
-              <>
-                <span className="grid h-full w-full place-items-center bg-brand-yellow font-display text-xl font-bold leading-none text-center text-brand-green" aria-hidden="true">{profileInitial}</span>
-                {profileImageUrl ? <img src={profileImageUrl} alt="" className="absolute inset-0 h-full w-full rounded-full object-cover" onError={(event) => { event.currentTarget.style.display = 'none' }} /> : null}
-              </>
-            ) : (
-              <img src="/images/welcome/lali.png" alt="" className="h-12 w-12 object-contain" />
-            )}
-          </button>
-        </span>
+        </div>
       </nav>
       {categoryOpen ? (
         <CategoryModal

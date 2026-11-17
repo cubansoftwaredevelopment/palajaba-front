@@ -16,7 +16,7 @@ import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 
 export default function DeleteCatalogCategoryModal({ category, onClose: requestClose, onDeleted }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const productCount = category.product_count ?? category.products?.length ?? 0
@@ -57,7 +57,7 @@ export default function DeleteCatalogCategoryModal({ category, onClose: requestC
         aria-labelledby="delete-category-title"
         onClick={onClose}
       >
-        <div className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
+        <div {...sheetProps} className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
           <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
             <h2 id="delete-category-title" className={sellerModalTitle}>
               ¿Eliminar categoría?

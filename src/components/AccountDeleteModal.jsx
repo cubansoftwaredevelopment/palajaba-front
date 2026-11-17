@@ -11,7 +11,7 @@ export default function AccountDeleteModal({
   confirmLabel = 'Sí, eliminar cuenta',
   cancelLabel = 'Cancelar',
 }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -36,6 +36,7 @@ export default function AccountDeleteModal({
       }}
     >
       <div
+        {...sheetProps}
         className="relative w-full max-w-[20rem] animate-fade-in rounded-2xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_16px_40px_rgba(89,128,44,0.18)]"
         onClick={(event) => event.stopPropagation()}
       >

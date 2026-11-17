@@ -14,7 +14,7 @@ export default function ConfirmModal({
   onConfirm,
   onClose: requestClose,
 }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -36,6 +36,7 @@ export default function ConfirmModal({
       onClick={onClose}
     >
       <div
+        {...sheetProps}
         className="relative w-full max-w-sm animate-fade-in overflow-hidden rounded-3xl border border-brand-green/15 bg-brand-white p-6 shadow-[0_24px_60px_rgba(89,128,44,0.22)]"
         onClick={(e) => e.stopPropagation()}
       >

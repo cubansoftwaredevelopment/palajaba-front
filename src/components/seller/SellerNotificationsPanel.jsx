@@ -150,7 +150,7 @@ export default function SellerNotificationsPanel({
   onMarkAllSystemRead,
   storeName = '',
 }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.read_at).length,
     [notifications],
@@ -193,6 +193,7 @@ export default function SellerNotificationsPanel({
         }}
       >
         <div
+          {...sheetProps}
           className={`${sellerNotificationsPanel} h-[min(88dvh,40rem)]`}
           onMouseDown={(event) => event.stopPropagation()}
           role="dialog"

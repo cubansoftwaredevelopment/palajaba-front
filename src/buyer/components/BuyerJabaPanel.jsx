@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { useDisplayedLocation } from '../context.js'
 import { buildJabaShareMessage, buildJabaShareUrl } from '../../lib/buyerShare'
 import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
-import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
+import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
 import { useBuyerDisplayCurrency } from '../context.js'
 import { useBuyerJaba } from '../context.js'
 import LoadingState from '../../components/ui/LoadingState'
@@ -291,6 +291,7 @@ export default function BuyerJabaPanel() {
   const [expandedIds, setExpandedIds] = useState(() => new Set())
   const { present, closing } = useOrderModalPresence(open)
   const motionClass = orderModalMotionClass(closing)
+  const sheetProps = useSwipeDownSheet(closePanel)
 
   const storeIdsKey = groups.map((group) => group.store_id).join('|')
   const showStoreChips = groups.length >= 3
@@ -358,7 +359,7 @@ export default function BuyerJabaPanel() {
     <>
       <button type="button" className={`${buyerJabaOverlay} ${motionClass}`} aria-label="Cerrar tu jaba" onClick={closePanel} />
 
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerJabaPanel} ${motionClass}`}>
+      <div {...sheetProps} role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerJabaPanel} ${motionClass}`}>
         <div className={buyerJabaPanelHeader}>
           <div className="min-w-0 flex-1 pr-2">
             <h2 id={titleId} className={buyerJabaPanelTitle}>

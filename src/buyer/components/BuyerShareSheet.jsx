@@ -32,7 +32,7 @@ function shareWasCancelled(error) {
 }
 
 export default function BuyerShareSheet({ title, message, url, onClose: requestClose }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const [copyStatus, setCopyStatus] = useState('')
   const [destinationsOpen, setDestinationsOpen] = useState(false)
 
@@ -89,6 +89,7 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
         }}
       >
         <div
+          {...sheetProps}
           role="dialog"
           aria-modal="true"
           aria-labelledby="buyer-share-title"

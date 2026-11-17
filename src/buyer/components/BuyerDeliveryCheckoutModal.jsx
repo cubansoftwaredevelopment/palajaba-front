@@ -17,7 +17,7 @@ import SellerSelect from '../../components/seller/SellerSelect'
 import { getCustomerProfile } from '../../lib/customerAuth'
 import { customerHasQvaPayUsername } from '../../customer/api.js'
 import CheckoutStoreAgreements from './CheckoutStoreAgreements'
-import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
+import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
 import {
   buyerDeliveryFieldLabel,
   buyerDeliveryInput,
@@ -72,6 +72,7 @@ export default function BuyerDeliveryCheckoutModal({
   if (checkout) shownCheckoutRef.current = checkout
   const shownCheckout = checkout ?? shownCheckoutRef.current
   const { present, closing } = useOrderModalPresence(open)
+  const sheetProps = useSwipeDownSheet(onClose)
   const motionClass = orderModalMotionClass(closing)
   const sheetMotionClass = closing
     ? 'pointer-events-none motion-safe:animate-address-sheet-out'
@@ -246,6 +247,7 @@ export default function BuyerDeliveryCheckoutModal({
       />
 
       <div
+        {...sheetProps}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}

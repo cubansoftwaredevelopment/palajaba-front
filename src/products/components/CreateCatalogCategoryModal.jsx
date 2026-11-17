@@ -21,7 +21,7 @@ import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 
 export default function CreateCatalogCategoryModal({ initialName = '', onClose: requestClose, onCreated }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const [name, setName] = useState(initialName)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -69,7 +69,7 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
         aria-labelledby="create-catalog-category-title"
         onClick={onClose}
       >
-        <div className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
+        <div {...sheetProps} className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
           <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
             <h2 id="create-catalog-category-title" className={sellerModalTitle}>
               Nueva categoría

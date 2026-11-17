@@ -3,7 +3,7 @@ import AdminDateRangeControls from '../admin/AdminDateRangeControls'
 import SellerFilterDropdown from '../seller/SellerFilterDropdown'
 import SellerModalPortal from '../seller/SellerModalPortal'
 import { sellerModalOverlay, sellerModalSheet } from '../seller/sellerStyles'
-import { orderModalMotionClass, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
+import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import { clearedDateFilter } from './filterState.js'
 
 export function FilterButton({ count, label, expanded, onClick }) {
@@ -39,6 +39,7 @@ export default function FilterModal({
 }) {
   const deferred = typeof onApply === 'function'
   const { present, closing } = useOrderModalPresence(open)
+  const sheetProps = useSwipeDownSheet(onClose)
   const [draft, setDraft] = useState(values)
   const [syncedOpen, setSyncedOpen] = useState(open)
   const onCloseRef = useRef(onClose)
@@ -101,6 +102,7 @@ export default function FilterModal({
         }}
       >
         <section
+          {...sheetProps}
           className={`${sellerModalSheet} h-auto max-h-[80dvh] overflow-visible ${columns === 2 ? 'max-w-2xl' : 'max-w-xl'}`}
           role="dialog"
           aria-modal="true"

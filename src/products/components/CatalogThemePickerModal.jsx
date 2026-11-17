@@ -86,7 +86,7 @@ export default function CatalogThemePickerModal({
   onPaletteChange,
   onPaletteCommit,
 }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const themes = listCatalogThemes()
   const currentTheme = normalizeCatalogTheme(selectedTheme)
   const currentPalette = normalizeCatalogPalette(palette, currentTheme)
@@ -101,7 +101,7 @@ export default function CatalogThemePickerModal({
         aria-labelledby="catalog-theme-title"
         onClick={onClose}
       >
-        <div className={sellerModalSheet} onClick={(event) => event.stopPropagation()}>
+        <div {...sheetProps} className={sellerModalSheet} onClick={(event) => event.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="catalog-theme-title" className={sellerModalTitle}>

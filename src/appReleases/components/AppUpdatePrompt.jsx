@@ -28,7 +28,7 @@ function AppleIcon() {
 
 export function UpdateModal({ onClose, nativeVersion, mainRelease, platform, busy, onUpdate }) {
   const titleId = useId()
-  const { dismiss, motionClass } = useDismissibleModal(onClose)
+  const { dismiss, motionClass, sheetProps } = useDismissibleModal(onClose)
   const label = platformLabel(platform || mainRelease?.platform)
   const isApple = (platform || mainRelease?.platform) === 'ios'
 
@@ -54,6 +54,7 @@ export function UpdateModal({ onClose, nativeVersion, mainRelease, platform, bus
         }}
       >
         <div
+          {...sheetProps}
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}

@@ -169,7 +169,7 @@ export default function BuyerProductDetailModal({
   onAddToJaba,
 
 }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
 
   const { currencies: displayCurrencies, cupPerUnit } = useBuyerDisplayCurrency()
   const location = useDisplayedLocation()
@@ -246,6 +246,8 @@ export default function BuyerProductDetailModal({
       >
 
         <div
+
+          {...sheetProps}
 
           role="dialog"
 

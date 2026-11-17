@@ -56,10 +56,6 @@ export default function ScrollToTopButton() {
       }
 
       setVisible(true)
-      if (fab.present) {
-        window.clearTimeout(hideTimerRef.current)
-        return
-      }
       scheduleHide()
     }
 
@@ -69,13 +65,7 @@ export default function ScrollToTopButton() {
       window.clearTimeout(hideTimerRef.current)
       cancelScrollRef.current?.()
     }
-  }, [allowed, fab.present, fab.visible])
-
-  useEffect(() => {
-    if (!fab.present || !fab.visible) return
-    setVisible(false)
-    window.clearTimeout(hideTimerRef.current)
-  }, [fab.present, fab.visible])
+  }, [allowed])
 
   function scrollToTop() {
     const scroller = scrollerRef.current || document.querySelector(PAGE_SCROLL_SELECTOR)
@@ -99,7 +89,7 @@ export default function ScrollToTopButton() {
           ? 'translate-y-0 opacity-100'
           : 'pointer-events-none translate-y-3 opacity-0'
       }`}
-      style={{ bottom: 'max(2rem, calc(1.65rem + var(--safe-bottom)))' }}
+      style={{ bottom: fab.present ? 'calc(5rem + var(--safe-bottom))' : 'max(2rem, calc(1.65rem + var(--safe-bottom)))' }}
     >
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden="true">
         <path d="M18 15l-6-6-6 6" />

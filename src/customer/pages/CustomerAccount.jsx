@@ -20,7 +20,7 @@ import Logo from '../../components/Logo'
 import NotificationBodyText from '../../components/ui/NotificationBodyText'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
 import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
-import { orderModalMotionClass, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
+import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import {
   connectCustomerEvents,
@@ -73,6 +73,7 @@ export default function CustomerAccount() {
   const [addressOpen, setAddressOpen] = useState(false)
   const { present: addressPresent, closing: addressClosing } = useOrderModalPresence(addressOpen)
   const addressMotionClass = orderModalMotionClass(addressClosing)
+  const addressSheetProps = useSwipeDownSheet(() => setAddressOpen(false))
   const [editingAddress, setEditingAddress] = useState(null)
   const [addressText, setAddressText] = useState('')
   const [point, setPoint] = useState(null)
@@ -1125,6 +1126,7 @@ export default function CustomerAccount() {
           }}
         >
           <section
+            {...addressSheetProps}
             role="dialog"
             aria-modal="true"
             className={`flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-y-auto rounded-t-3xl bg-brand-white p-5 shadow-xl sm:rounded-3xl sm:p-6 ${addressClosing ? 'motion-safe:animate-address-sheet-out' : 'motion-safe:animate-address-sheet-in'}`}

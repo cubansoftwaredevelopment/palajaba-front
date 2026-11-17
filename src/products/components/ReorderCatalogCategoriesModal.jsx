@@ -31,7 +31,7 @@ function moveItem(list, fromIndex, toIndex) {
 }
 
 export default function ReorderCatalogCategoriesModal({ categories, onClose: requestClose, onSaved }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const [items, setItems] = useState(categories)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -97,7 +97,7 @@ export default function ReorderCatalogCategoriesModal({ categories, onClose: req
         aria-labelledby="reorder-categories-title"
         onClick={onClose}
       >
-        <div className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
+        <div {...sheetProps} className={sellerModalSheet} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="reorder-categories-title" className={sellerModalTitle}>

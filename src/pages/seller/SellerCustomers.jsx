@@ -32,7 +32,7 @@ function dateLabel(value) {
 }
 
 function CustomerOrdersModal({ customer, onClose, onSelectOrder, onLoadMore, loadingMore }) {
-  const { dismiss, motionClass } = useDismissibleModal(onClose)
+  const { dismiss, motionClass, sheetProps } = useDismissibleModal(onClose)
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -57,6 +57,7 @@ function CustomerOrdersModal({ customer, onClose, onSelectOrder, onLoadMore, loa
         }}
       >
         <section
+          {...sheetProps}
           className={`${sellerModalSheet} max-h-[min(90dvh,46rem)] max-w-xl`}
           role="dialog"
           aria-modal="true"

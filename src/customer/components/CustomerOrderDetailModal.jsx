@@ -17,7 +17,7 @@ import OrderPlatformTerms from '../../buyer/components/OrderPlatformTerms'
 import QvaPayReleaseCountdown from './QvaPayReleaseCountdown.jsx'
 
 export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
-  const { dismiss, motionClass } = useDismissibleModal(onClose)
+  const { dismiss, motionClass, sheetProps } = useDismissibleModal(onClose)
   const [decisionLoading, setDecisionLoading] = useState(false)
   const [decisionError, setDecisionError] = useState('')
   const [trackedOrderId, setTrackedOrderId] = useState(order.id)
@@ -109,6 +109,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
         }}
       >
       <section
+        {...sheetProps}
         role="dialog"
         aria-modal="true"
         aria-labelledby="customer-order-detail-title"

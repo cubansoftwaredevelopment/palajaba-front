@@ -3,7 +3,7 @@ import { useDismissibleModal } from '../../buyer/components/useOrderModalPresenc
 import { sellerBtnPrimary, sellerBtnSecondary, sellerFocusRing, sellerModalTitle } from './sellerStyles'
 
 export default function SellerLogoutModal({ onClose: requestClose, onConfirm }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -25,6 +25,7 @@ export default function SellerLogoutModal({ onClose: requestClose, onConfirm }) 
       onClick={onClose}
     >
       <div
+        {...sheetProps}
         className="relative w-full max-w-[18rem] animate-fade-in rounded-2xl border border-brand-green/12 bg-brand-white p-5 shadow-[0_16px_40px_rgba(89,128,44,0.18)]"
         onClick={(e) => e.stopPropagation()}
       >

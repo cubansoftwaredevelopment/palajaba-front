@@ -23,23 +23,10 @@ const ACCOUNT_TYPES = [
   { id: 'customer', label: 'Cliente' },
 ]
 
-function loginBackTarget(state) {
-  const backTo = state?.backTo
-  if (
-    typeof backTo !== 'string' ||
-    !backTo.startsWith('/') ||
-    backTo.startsWith('//') ||
-    backTo.startsWith('/login')
-  ) {
-    return { backTo: '/', backLabel: 'Inicio' }
-  }
-  return { backTo, backLabel: 'Volver' }
-}
-
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
-  const { backTo, backLabel } = loginBackTarget(location.state)
+  const canGoBack = location.key !== 'default'
   const [accountType, setAccountType] = useState(location.state?.accountType === 'customer' ? 'customer' : 'store')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -100,7 +87,14 @@ export default function Login() {
   }
 
   return (
-    <AuthShell backTo={backTo} backLabel={backLabel} contentWidth="narrow">
+    <AuthShell
+      onBack={() => {
+        if (canGoBack) navigate(-1)
+        else navigate('/')
+      }}
+      backLabel={canGoBack ? 'Volver' : 'Inicio'}
+      contentWidth="narrow"
+    >
       <section className={`animate-fade-in lg:mx-auto ${authLoginContainer}`} aria-labelledby="login-title">
         <AuthHeader
           eyebrow={accountType === 'customer' ? 'Clientes' : 'Pa’ La Jaba · cuentas'}

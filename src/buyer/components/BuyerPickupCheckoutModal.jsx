@@ -20,7 +20,7 @@ import {
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
 import CheckoutStoreAgreements from './CheckoutStoreAgreements'
-import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
+import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
 
 function WhatsAppIcon() {
   return (
@@ -43,6 +43,7 @@ export default function BuyerPickupCheckoutModal({
   if (checkout) shownCheckoutRef.current = checkout
   const shownCheckout = checkout ?? shownCheckoutRef.current
   const { present, closing } = useOrderModalPresence(open)
+  const sheetProps = useSwipeDownSheet(onClose)
   const motionClass = orderModalMotionClass(closing)
   const sheetMotionClass = closing
     ? 'pointer-events-none motion-safe:animate-address-sheet-out'
@@ -135,7 +136,7 @@ export default function BuyerPickupCheckoutModal({
         onClick={onClose}
       />
 
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} ${sheetMotionClass}`}>
+      <div {...sheetProps} role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} ${sheetMotionClass}`}>
         <div className={buyerDeliveryModalHeader}>
           <h2 id={titleId} className="font-display text-lg font-bold text-brand-green">
             Recoger en la tienda

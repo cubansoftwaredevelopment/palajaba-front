@@ -29,7 +29,7 @@ export default function CatalogProductDetailModal({
   onEdit,
   onDelete,
 }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') onClose()
@@ -56,6 +56,7 @@ export default function CatalogProductDetailModal({
       onClick={onClose}
     >
       <div
+        {...sheetProps}
         className="flex h-[min(85dvh,640px)] w-full max-w-md min-h-0 animate-fade-in flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.2)] sm:rounded-3xl"
         onClick={(event) => event.stopPropagation()}
       >

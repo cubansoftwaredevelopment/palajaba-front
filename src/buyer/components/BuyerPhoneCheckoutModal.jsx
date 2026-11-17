@@ -7,7 +7,7 @@ import {
   buyerDeliveryOverlay,
   buyerJabaWhatsAppBtn,
 } from './buyerStyles'
-import { orderModalMotionClass, useOrderModalPresence } from './useOrderModalPresence'
+import { orderModalMotionClass, useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
 
 export default function BuyerPhoneCheckoutModal({
   picker,
@@ -22,6 +22,7 @@ export default function BuyerPhoneCheckoutModal({
   const shownPicker = picker ?? shownPickerRef.current
   const { present, closing } = useOrderModalPresence(open)
   const motionClass = orderModalMotionClass(closing)
+  const sheetProps = useSwipeDownSheet(onClose)
   const phones = shownPicker?.phones ?? []
   const [selectedKey, setSelectedKey] = useState(() => phones[0]?.key ?? '')
 
@@ -50,6 +51,7 @@ export default function BuyerPhoneCheckoutModal({
   return (
     <div className={`${buyerDeliveryOverlay} ${motionClass}`} role="presentation" onClick={onClose}>
       <div
+        {...sheetProps}
         className={buyerDeliveryModal}
         role="dialog"
         aria-modal="true"

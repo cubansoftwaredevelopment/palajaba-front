@@ -143,7 +143,7 @@ export default function CreateCatalogProductModal({
   onPersist,
 
 }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
 
   const isEditing = Boolean(product)
 
@@ -636,6 +636,8 @@ export default function CreateCatalogProductModal({
       >
 
         <div
+
+          {...sheetProps}
 
           className={sellerModalSheet}
 

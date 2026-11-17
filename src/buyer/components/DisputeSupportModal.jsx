@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react'
 import BuyerModalPortal from './BuyerModalPortal'
 import { buyerDeliveryModal, buyerDeliveryModalBody, buyerDeliveryModalFooter, buyerDeliveryModalHeader, buyerDeliveryOverlay } from './buyerStyles'
+import { useSwipeDownSheet } from './useOrderModalPresence'
 import { openExternalUrl } from '../../lib/nativeApp'
 
 const MAX_IMAGES = 6
@@ -13,6 +14,9 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [ready, setReady] = useState(false)
+  const sheetProps = useSwipeDownSheet(() => {
+    if (!submitting) onClose()
+  })
 
   useEffect(() => {
     if (!open) return undefined
@@ -82,7 +86,7 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
   return (
     <BuyerModalPortal>
       <button type="button" className={`${buyerDeliveryOverlay} !z-[260]`} aria-label="Cerrar motivo" onClick={close} />
-      <div role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} !z-[270]`}>
+      <div {...sheetProps} role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} !z-[270]`}>
         <div className={buyerDeliveryModalHeader}>
           <h2 id={titleId} className="text-lg font-bold text-brand-green">Motivo de la disputa</h2>
         </div>

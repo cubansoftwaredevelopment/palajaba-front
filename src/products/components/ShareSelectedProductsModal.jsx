@@ -39,7 +39,7 @@ export default function ShareSelectedProductsModal({
   categoryName,
   onClose: requestClose,
 }) {
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const allowedAreas = useMemo(() => storeServiceAreas(profile), [profile])
   const [provinceId, setProvinceId] = useState(profile?.business_area?.province_id || allowedAreas[0]?.province_id || '')
   const [municipalityId, setMunicipalityId] = useState(
@@ -139,7 +139,7 @@ export default function ShareSelectedProductsModal({
         aria-labelledby="share-selected-products-title"
         onClick={onClose}
       >
-        <div className={sellerModalSheet} onClick={(event) => event.stopPropagation()}>
+        <div {...sheetProps} className={sellerModalSheet} onClick={(event) => event.stopPropagation()}>
           <div className="flex items-start justify-between gap-3 border-b border-brand-green/8 px-5 py-4">
             <div className="min-w-0">
               <h2 id="share-selected-products-title" className={sellerModalTitle}>

@@ -4,7 +4,6 @@ import { Navigate, useLocation, useParams } from 'react-router-dom'
 import BuyerMarketplaceNav from './BuyerMarketplaceNav'
 import BuyerShell from './BuyerShell'
 import LoadingState from '../../components/ui/LoadingState'
-import { MARKETPLACE_LABEL } from '../../constants/branding'
 import { fetchMarketplaceStoreCatalog } from '../../products/api.js'
 import { useBuyerDisplayCurrency } from '../context.js'
 import { resolveMarketplaceCategory } from '../../lib/marketplaceCategory'
@@ -100,7 +99,7 @@ function StoreSecondSegment({ storeSlug, segment }) {
   if (resolvingLocation || kind === 'pending') {
     return (
       <>
-        <BuyerShell backTo="/comprar" backLabel={MARKETPLACE_LABEL}>
+        <BuyerShell backTo="/comprar" backLabel="">
           <LoadingState message="Cargando tienda…" className="lg:items-start lg:text-left" />
         </BuyerShell>
         <BuyerMarketplaceNav catalogCategories={[]} catalogCategoriesLoading storeSlug={storeSlug} />

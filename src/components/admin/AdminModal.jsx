@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import { useDismissibleModal, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import { adminFocusRing } from './adminStyles'
 import { readAdminTheme } from './adminTheme'
 
@@ -18,6 +18,7 @@ export default function AdminModal({
     else owned.dismiss()
   }, [presenceClass, onClose, owned.dismiss])
   const motionClass = presenceClass ?? owned.motionClass
+  const sheetProps = useSwipeDownSheet(close)
   useEffect(() => {
     function onKeyDown(e) {
       if (e.key === 'Escape') close()
@@ -40,6 +41,7 @@ export default function AdminModal({
       onClick={close}
     >
       <div
+        {...sheetProps}
         className={`relative max-h-[90dvh] w-full animate-fade-in overflow-y-auto rounded-2xl border border-brand-green/15 bg-gradient-to-b from-zinc-900 to-zinc-950 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.45)] ${panelClassName} ${centered ? 'text-center' : ''}`}
         onClick={(e) => e.stopPropagation()}
       >

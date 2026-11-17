@@ -1,6 +1,5 @@
 import { useContext } from 'react'
 import { Link } from 'react-router-dom'
-import AppDownloadPrompt from '../../appReleases/components/AppDownloadPrompt.jsx'
 import { BuyerDisplayCurrencyContext } from '../context.js'
 import BuyerCurrencyTag from './BuyerCurrencyTag'
 import BuyerJabaButton from './BuyerJabaButton'
@@ -31,13 +30,15 @@ export default function BuyerShell({
   const showCurrencyTag = marketplaceHub && !isSellerPreview && Boolean(currencyContext)
   const sellerBrowsing = isSellerBrowsingMarketplace() && !isSellerPreview
   const pageFooter = Boolean(footer)
-  const scrollPaddingClass = flushBottom || pageFooter
+  const scrollPaddingClass = pageFooter
     ? ''
     : marketplaceHub
       ? sellerBrowsing
         ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'
         : buyerMarketplaceScrollPadding
-      : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
+      : flushBottom
+        ? ''
+        : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
   const footerPaddingClass = marketplaceHub
     ? sellerBrowsing
       ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'
@@ -62,12 +63,13 @@ export default function BuyerShell({
           ) : showBackLink ? (
             <Link
               to={backTo}
-              className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8 ${headerSearch ? 'min-w-0 max-w-[38%] shrink' : ''}`}
+              aria-label={backLabel ? undefined : 'Volver'}
+              className={`inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold text-brand-green transition-colors touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 sm:hover:bg-brand-green/8 ${headerSearch && backLabel ? 'min-w-0 max-w-[38%] shrink' : 'shrink-0'}`}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M15 18l-6-6 6-6" />
               </svg>
-              <span className={headerSearch ? 'truncate' : ''}>{backLabel}</span>
+              {backLabel ? <span className={headerSearch ? 'truncate' : ''}>{backLabel}</span> : null}
             </Link>
           ) : (
             <span className="w-10 shrink-0" aria-hidden="true" />
@@ -75,7 +77,6 @@ export default function BuyerShell({
           {headerSearch ? <div className="min-w-0 flex-1">{headerSearch}</div> : headerStart ? null : <div className="flex-1" />}
           <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
             {headerEnd}
-            {marketplaceHub && !isSellerPreview ? <AppDownloadPrompt /> : null}
             {!isSellerPreview ? <BuyerSellerReturnHeaderLink /> : null}
             {!isSellerPreview ? <BuyerJabaButton /> : null}
           </div>

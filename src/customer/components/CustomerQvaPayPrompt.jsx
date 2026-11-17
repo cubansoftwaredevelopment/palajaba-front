@@ -12,14 +12,14 @@ export default function CustomerQvaPayPrompt({
   description = 'Agrega y verifica tu usuario de QvaPay en el perfil para poder pagar y recibir devoluciones.',
   addLabel = 'Agregar usuario',
 }) {
-  const { dismiss, motionClass } = useDismissibleModal(() => onDone(false))
+  const { dismiss, motionClass, sheetProps } = useDismissibleModal(() => onDone(false))
   const [hideNextTime, setHideNextTime] = useState(false)
   if (!open) return null
 
   return (
     <BuyerModalPortal>
       <button type="button" className={`${buyerDeliveryOverlay} ${motionClass}`} aria-label="Cerrar aviso" onClick={dismiss} />
-      <div role="dialog" aria-modal="true" aria-labelledby="qvapay-prompt-title" className={`${buyerDeliveryModal} ${motionClass}`}>
+      <div {...sheetProps} role="dialog" aria-modal="true" aria-labelledby="qvapay-prompt-title" className={`${buyerDeliveryModal} ${motionClass}`}>
         <div className={buyerDeliveryModalHeader}>
           <h2 id="qvapay-prompt-title" className="text-lg font-bold text-brand-green">{title}</h2>
         </div>

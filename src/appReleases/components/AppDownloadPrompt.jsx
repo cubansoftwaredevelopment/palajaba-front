@@ -65,7 +65,7 @@ function PlatformDownloadButton({ label, version, bouncing, onClick, icon, ariaL
 
 export function DownloadModal({ onClose, mains, bouncePlatform, onDownload }) {
   const titleId = useId()
-  const { dismiss, motionClass } = useDismissibleModal(onClose)
+  const { dismiss, motionClass, sheetProps } = useDismissibleModal(onClose)
 
   const android = mains?.android || null
   const ios = mains?.ios || null
@@ -101,6 +101,7 @@ export function DownloadModal({ onClose, mains, bouncePlatform, onDownload }) {
         }}
       >
         <div
+          {...sheetProps}
           role="dialog"
           aria-modal="true"
           aria-labelledby={titleId}
@@ -191,7 +192,7 @@ export function DownloadModal({ onClose, mains, bouncePlatform, onDownload }) {
   )
 }
 
-export default function AppDownloadPrompt() {
+export default function AppDownloadPrompt({ variant = 'header' }) {
   const [open, setOpen] = useState(false)
   const [mains, setMains] = useState(null)
   const [bouncePlatform, setBouncePlatform] = useState('')
@@ -234,6 +235,69 @@ export default function AppDownloadPrompt() {
     if (fallbackHref) window.location.assign(fallbackHref)
   }
 
+  const marks = (
+    <>
+      {showAndroid ? (
+        <svg
+          width={variant === 'bar' ? 18 : 24}
+          height={variant === 'bar' ? 18 : 24}
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden
+          className={variant === 'bar' ? undefined : `lg:h-7 lg:w-7 ${bouncePlatform === 'android' ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
+        >
+          <path d="M17.6 9.48 19.1 6.9a.5.5 0 0 0-.86-.5l-1.55 2.68A8.2 8.2 0 0 0 12 8c-1.7 0-3.27.5-4.69 1.35L5.76 6.4a.5.5 0 1 0-.86.5l1.5 2.58A8 8 0 0 0 4 15.5V16a1 1 0 0 0 1 1h1v2.5a1.5 1.5 0 0 0 3 0V17h6v2.5a1.5 1.5 0 0 0 3 0V17h1a1 1 0 0 0 1-1v-.5a8 8 0 0 0-2.4-5.52ZM9.25 13.25a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5.5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
+        </svg>
+      ) : null}
+      {showIos ? (
+        <svg
+          width={variant === 'bar' ? 16 : 22}
+          height={variant === 'bar' ? 16 : 22}
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden
+          className={variant === 'bar' ? undefined : `lg:h-6 lg:w-6 ${bouncePlatform === 'ios' ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
+        >
+          <path d="M16.7 12.2c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.7-1.7-3.3-1.7-1.4-.1-2.7.8-3.4.8s-1.8-.8-3-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.2-2.5 1.2-2.6-.1 0-2.4-.9-2.5-3.7Zm-2.4-7c.6-.8 1.1-1.8.9-2.9-1 0-2.1.6-2.7 1.4-.5.7-1.1 1.8-.9 2.8 1.1.1 2.1-.5 2.7-1.3Z" />
+        </svg>
+      ) : null}
+    </>
+  )
+
+  const modal = open ? (
+    <DownloadModal
+      onClose={handleClose}
+      mains={mains}
+      bouncePlatform={bouncePlatform}
+      onDownload={handleDownload}
+    />
+  ) : null
+
+  if (variant === 'bar') {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="min-w-0 flex-1"
+          aria-label="Descargar la app"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+        >
+          <span className="flex flex-col items-center justify-center gap-0.5 py-1.5 text-center text-[0.625rem] font-semibold text-brand-carmelita/65 touch-manipulation">
+            <span
+              className={`flex h-9 w-9 items-center justify-center gap-px ${bouncePlatform ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
+            >
+              {marks}
+            </span>
+            <span className="w-full truncate px-0.5">App</span>
+          </span>
+        </button>
+        {modal}
+      </>
+    )
+  }
+
   return (
     <>
       <button
@@ -245,39 +309,9 @@ export default function AppDownloadPrompt() {
         aria-expanded={open}
         title="Descargar la app"
       >
-        {showAndroid ? (
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden
-            className={`lg:h-7 lg:w-7 ${bouncePlatform === 'android' ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
-          >
-            <path d="M17.6 9.48 19.1 6.9a.5.5 0 0 0-.86-.5l-1.55 2.68A8.2 8.2 0 0 0 12 8c-1.7 0-3.27.5-4.69 1.35L5.76 6.4a.5.5 0 1 0-.86.5l1.5 2.58A8 8 0 0 0 4 15.5V16a1 1 0 0 0 1 1h1v2.5a1.5 1.5 0 0 0 3 0V17h6v2.5a1.5 1.5 0 0 0 3 0V17h1a1 1 0 0 0 1-1v-.5a8 8 0 0 0-2.4-5.52ZM9.25 13.25a1 1 0 1 1 0-2 1 1 0 0 1 0 2Zm5.5 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z" />
-          </svg>
-        ) : null}
-        {showIos ? (
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            aria-hidden
-            className={`lg:h-6 lg:w-6 ${bouncePlatform === 'ios' ? 'text-brand-green motion-safe:animate-app-download-bounce' : ''}`}
-          >
-            <path d="M16.7 12.2c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.7-1.7-3.3-1.7-1.4-.1-2.7.8-3.4.8s-1.8-.8-3-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.8 1.1 9 .8 1.1 1.7 2.3 2.9 2.3 1.1 0 1.6-.7 3-.7s1.8.7 3 .7c1.2 0 2-1.1 2.8-2.2.9-1.3 1.2-2.5 1.2-2.6-.1 0-2.4-.9-2.5-3.7Zm-2.4-7c.6-.8 1.1-1.8.9-2.9-1 0-2.1.6-2.7 1.4-.5.7-1.1 1.8-.9 2.8 1.1.1 2.1-.5 2.7-1.3Z" />
-          </svg>
-        ) : null}
+        {marks}
       </button>
-      {open ? (
-        <DownloadModal
-          onClose={handleClose}
-          mains={mains}
-          bouncePlatform={bouncePlatform}
-          onDownload={handleDownload}
-        />
-      ) : null}
+      {modal}
     </>
   )
 }

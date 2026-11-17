@@ -12,7 +12,7 @@ import OrderDocumentDownloads from '../../buyer/components/OrderDocumentDownload
 import OrderPlatformTerms from '../../buyer/components/OrderPlatformTerms'
 import SellerLocationPreview from './SellerLocationPreview'
 import SellerModalPortal from './SellerModalPortal'
-import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence } from '../../buyer/components/useOrderModalPresence'
+import { orderModalMotionClass, useDismissibleModal, useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import SellerSelect from './SellerSelect'
 import SellerOrderEvidenceEditor from './SellerOrderEvidenceEditor'
 import SellerEvidenceCountdown from './SellerEvidenceCountdown'
@@ -101,7 +101,7 @@ export default function SellerOrderDetailModal({
   onSubmitEvidence,
 }) {
   const readOnly = useSellerReadOnly()
-  const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
+  const { dismiss: onClose, motionClass, sheetProps } = useDismissibleModal(requestClose)
   const [editableItems, setEditableItems] = useState(order.items)
   const [deliveryPrice, setDeliveryPrice] = useState(
     order.delivery_price != null ? String(Math.round(order.delivery_price)) : '',
@@ -122,6 +122,7 @@ export default function SellerOrderDetailModal({
   const [documentDownload, setDocumentDownload] = useState(null)
   const { present: mapPresent, closing: mapClosing } = useOrderModalPresence(mapOpen)
   const mapMotionClass = orderModalMotionClass(mapClosing)
+  const mapSheetProps = useSwipeDownSheet(() => setMapOpen(false))
   const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
 
   useEffect(() => {
@@ -440,6 +441,7 @@ export default function SellerOrderDetailModal({
         }}
       >
         <div
+          {...sheetProps}
           role="dialog"
           aria-modal="true"
           className={`${sellerModalSheet} h-[min(92dvh,760px)]`}
@@ -995,6 +997,7 @@ export default function SellerOrderDetailModal({
       </div>
       {mapPresent && deliveryMapUrl ? (
         <div
+          {...mapSheetProps}
           className={`fixed inset-0 z-[210] flex flex-col bg-brand-white ${mapMotionClass}`}
           role="dialog"
           aria-modal="true"
