@@ -2,9 +2,19 @@ import { DayPicker } from 'react-day-picker'
 import { es } from 'date-fns/locale'
 import { formatDateLabel } from '../lib/dates'
 
-export default function SubscriptionDatePicker({ value, onChange, minDate }) {
+export default function SubscriptionDatePicker({
+  value,
+  onChange,
+  minDate,
+  maxDate,
+  caption = 'Fin de suscripción',
+}) {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
+  const disabled = {
+    ...(minDate ? { before: minDate } : maxDate ? {} : { before: today }),
+    ...(maxDate ? { after: maxDate } : {}),
+  }
 
   return (
     <div className="subscription-picker rounded-2xl border-2 border-brand-green/15 bg-brand-white p-3">
@@ -13,8 +23,8 @@ export default function SubscriptionDatePicker({ value, onChange, minDate }) {
         selected={value}
         onSelect={onChange}
         locale={es}
-        disabled={{ before: minDate ?? today }}
-        defaultMonth={value ?? minDate ?? today}
+        disabled={disabled}
+        defaultMonth={value ?? maxDate ?? minDate ?? today}
         classNames={{
           root: 'w-full',
           months: 'flex flex-col',
@@ -40,12 +50,12 @@ export default function SubscriptionDatePicker({ value, onChange, minDate }) {
           disabled: '[&>button]:cursor-not-allowed [&>button]:text-brand-carmelita/30 [&>button]:hover:bg-transparent',
         }}
       />
-      {value && (
+      {caption && value ? (
         <p className="mt-2 border-t border-brand-green/10 pt-2 text-center text-sm text-brand-carmelita/90">
-          Fin de suscripción:{' '}
+          {caption}:{' '}
           <strong className="text-brand-green">{formatDateLabel(value)}</strong>
         </p>
-      )}
+      ) : null}
     </div>
   )
 }

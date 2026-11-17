@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { createCatalogProduct, fetchCatalogCurrencies, fetchCategories, updateCatalogProduct } from '../api.js'
+import { fetchCatalogCurrencies, fetchCategories } from '../api.js'
 import ProductSalesZonesField from './ProductSalesZonesField'
 import { areaKey, productServiceAreas, selectedProductSalesAreas } from '../../lib/businessArea'
-import { getUserFacingMessage } from '../../lib/userFacingError'
 import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../lib/imageUpload'
 
 import { resolveMediaUrl } from '../../lib/media'
@@ -141,7 +140,7 @@ export default function CreateCatalogProductModal({
 
   onClose: requestClose,
 
-  onSaved,
+  onPersist,
 
 }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
@@ -204,8 +203,6 @@ export default function CreateCatalogProductModal({
   const [currencies, setCurrencies] = useState([])
 
   const [businessCategories, setBusinessCategories] = useState([])
-
-  const [loading, setLoading] = useState(false)
 
   const [error, setError] = useState('')
 
@@ -484,7 +481,7 @@ export default function CreateCatalogProductModal({
 
 
 
-  async function handleSubmit(event) {
+  function handleSubmit(event) {
 
     event.preventDefault()
 
@@ -610,29 +607,11 @@ export default function CreateCatalogProductModal({
 
 
 
-    setLoading(true)
-
-    try {
-
-      const token = getSellerToken()
-
-      const saved = isEditing
-
-        ? await updateCatalogProduct(token, product.id, formData)
-
-        : await createCatalogProduct(token, formData)
-
-      onSaved(saved)
-
-    } catch (err) {
-
-      setError(getUserFacingMessage(err, `No se pudo ${isEditing ? 'actualizar' : 'crear'} el producto.`))
-
-    } finally {
-
-      setLoading(false)
-
-    }
+    onPersist({
+      isEditing,
+      productId: product?.id,
+      formData,
+    })
 
   }
 
@@ -1183,7 +1162,7 @@ export default function CreateCatalogProductModal({
 
           <div className={`${sellerModalFooter} grid grid-cols-2 gap-2`}>
 
-            <button type="button" onClick={onClose} disabled={loading} className={sellerBtnSecondary}>
+            <button type="button" onClick={onClose} className={sellerBtnSecondary}>
 
               Cancelar
 
@@ -1193,13 +1172,13 @@ export default function CreateCatalogProductModal({
 
               type="submit"
 
-              disabled={loading || (isEditing && !hasChanges)}
+              disabled={isEditing && !hasChanges}
 
               className={sellerBtnPrimary}
 
             >
 
-              {loading ? 'Guardando…' : isEditing ? 'Guardar cambios' : 'Crear producto'}
+              {isEditing ? 'Guardar cambios' : 'Crear producto'}
 
             </button>
 

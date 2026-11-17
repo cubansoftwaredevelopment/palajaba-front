@@ -69,6 +69,7 @@ export function buildManualOrderPayload({
   lineItems,
   paymentCurrency = null,
   delivery = null,
+  soldAt = null,
 }) {
   const items = (lineItems ?? []).map((item) => ({
     product_id: item.product_id,
@@ -84,6 +85,9 @@ export function buildManualOrderPayload({
   }
   if (delivery) {
     payload.delivery = delivery
+  }
+  if (soldAt) {
+    payload.sold_at = soldAt
   }
   return payload
 }
