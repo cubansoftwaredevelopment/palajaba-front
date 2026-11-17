@@ -52,6 +52,24 @@ export function fetchStoreCustomers(token, options = {}) {
   return request(`/api/customers/store/customers${query ? `?${query}` : ''}`, { headers: customerHeaders(token) })
 }
 
+export function suggestStoreCustomers(token, query) {
+  const params = new URLSearchParams({ q: query, limit: '8' })
+  return request(`/api/customers/store/customers/suggestions?${params}`, { headers: customerHeaders(token) })
+}
+
+export function fetchStoreCustomerNotices(token, { offset = 0, limit = 10 } = {}) {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) })
+  return request(`/api/customers/store/notices?${params}`, { headers: customerHeaders(token) })
+}
+
+export function sendStoreCustomerNotice(token, payload) {
+  return request('/api/customers/store/notices', {
+    method: 'POST',
+    headers: customerHeaders(token),
+    body: JSON.stringify(payload),
+  })
+}
+
 export function adminLogin(username, password) {
   return request('/api/admin/login', {
     method: 'POST',

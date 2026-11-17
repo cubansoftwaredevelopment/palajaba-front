@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import RouteMotion, { isBuyerMotionPath } from './motion/RouteMotion'
 import ScrollToTopButton from './components/ScrollToTopButton'
+import CustomerNoticeToasts from './buyer/components/CustomerNoticeToasts'
 import AdminAuthenticatedLayout from './components/admin/AdminAuthenticatedLayout'
 import RouteError from './components/RouteError'
 import SellerRoute from './components/SellerRoute'
@@ -82,6 +83,7 @@ function RootLayout() {
       <NativeDeepLinkBridge />
       {motionPath ? <RouteMotion /> : <Outlet />}
       <AppReleasePromptGate />
+      <CustomerNoticeToasts />
       <ScrollToTopButton />
     </>
   )

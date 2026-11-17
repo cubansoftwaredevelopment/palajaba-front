@@ -10,6 +10,7 @@ import SellerShell from './SellerShell'
 import StatePanel from '../ui/StatePanel'
 import { fetchSellerNotifications, fetchSellerOrders, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
 import { fetchSellerProfile } from '../../auth/api.js'
+import { BRAND_NAME } from '../../constants/branding'
 import {
   clearSellerSession,
   getSellerToken,
@@ -29,6 +30,19 @@ import {
   stopSellerPush,
 } from '../../live/utils'
 import { isSessionError, resolveUserFacingError } from '../../lib/userFacingError'
+
+function sellerNoticeToast(notification) {
+  const fromAdmin = Boolean(notification.from_admin)
+  return {
+    id: notification.id,
+    title: notification.title,
+    content: String(notification.content ?? '').replace(/\s+/g, ' ').trim(),
+    fromAdmin,
+    senderName: fromAdmin ? BRAND_NAME : '',
+    senderLogo: '',
+    senderMascot: fromAdmin,
+  }
+}
 
 export default function SellerLayout() {
   const navigate = useNavigate()
@@ -230,11 +244,7 @@ export default function SellerLayout() {
           setLiveToasts((current) => (
             current.some((item) => item.id === notification.id)
               ? current
-              : [{
-                id: notification.id,
-                title: notification.title,
-                content: String(notification.content ?? '').replace(/\s+/g, ' ').trim(),
-              }, ...current]
+              : [sellerNoticeToast(notification), ...current]
           ))
         }, (event) => {
           if (Number.isFinite(Number(event.pending_order_count))) {
@@ -254,10 +264,7 @@ export default function SellerLayout() {
   }, [profile?.profile_completed, refreshPendingOrderCount, refreshProfile, refreshUnreadCount])
 
   useEffect(() => {
-    if (location.pathname !== '/tienda/perfil') {
-      profileNoticesToastedRef.current = false
-      return undefined
-    }
+    if (location.pathname === '/tienda/perfil') return undefined
     if (!profile?.profile_completed || profileNoticesToastedRef.current) return undefined
     profileNoticesToastedRef.current = true
     const token = getSellerToken()
@@ -272,11 +279,7 @@ export default function SellerLayout() {
           const seen = new Set(current.map((item) => item.id))
           const incoming = unread
             .filter((item) => !seen.has(item.id))
-            .map((item) => ({
-              id: item.id,
-              title: item.title,
-              content: String(item.content ?? '').replace(/\s+/g, ' ').trim(),
-            }))
+            .map((item) => sellerNoticeToast(item))
           return incoming.length ? [...incoming, ...current] : current
         })
       })

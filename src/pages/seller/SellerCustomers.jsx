@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import SearchBar from '../../buyer/components/SearchBar'
 import { useNavigate } from 'react-router-dom'
-import { fetchStoreCustomers } from '../../auth/api'
+import { fetchStoreCustomerNotices, fetchStoreCustomers, sendStoreCustomerNotice, suggestStoreCustomers } from '../../auth/api'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
@@ -9,6 +10,7 @@ import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import { isoDate, rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 import FilterModal from '../../components/filters/FilterModal'
 import LoadingState from '../../components/ui/LoadingState'
+import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import {
   sellerModalBody,
@@ -16,10 +18,30 @@ import {
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
+import { monthPageShift } from '../../motion/presets'
+import MethodTabs from '../../auth/components/MethodTabs'
 
 import { isCustomerPaidOrder } from '../../constants/orderStatus'
 
 const statusLabel = { pending_confirmation: 'Pendiente', completed: 'Confirmado', cancelled: 'Cancelado' }
+const NOTICE_PAGE = 10
+const CUSTOMER_TABS = [
+  { id: 'customers', label: 'Clientes' },
+  { id: 'notices', label: 'Avisos' },
+]
+
+function recipientLabel(notice) {
+  if (notice.all_customers) return `Todos los clientes · ${notice.recipient_count}`
+  const names = (notice.recipients ?? []).map((item) => item.full_name).filter(Boolean)
+  const extra = Math.max(0, (notice.recipient_count ?? 0) - names.length)
+  if (!names.length) return `${notice.recipient_count ?? 0} clientes`
+  return extra ? `${names.join(', ')} y ${extra} más` : names.join(', ')
+}
+
+const NOTICE_CUSTOMER_HINTS = [
+  'buscar por nombre',
+  'buscar por cliente',
+]
 
 const CUSTOMER_SEARCH_HINTS = [
   'buscar por cliente',
@@ -128,8 +150,195 @@ function CustomerOrdersModal({ customer, onClose, onSelectOrder, onLoadMore, loa
   )
 }
 
+function CustomerNoticeModal({ onClose, onSent }) {
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [allCustomers, setAllCustomers] = useState(true)
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [searching, setSearching] = useState(false)
+  const [selected, setSelected] = useState([])
+  const [sending, setSending] = useState(false)
+  const [formError, setFormError] = useState('')
+  const { dismiss, closing, sheetProps } = useSellerSheet(onClose)
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key === 'Escape') dismiss()
+    }
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', onKeyDown)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', onKeyDown)
+    }
+  }, [dismiss])
+
+  useEffect(() => {
+    const text = query.trim()
+    if (allCustomers || text.length < 2) {
+      setResults([])
+      setSearching(false)
+      return undefined
+    }
+    let cancelled = false
+    setSearching(true)
+    const timer = window.setTimeout(async () => {
+      try {
+        const data = await suggestStoreCustomers(getSellerToken(), text)
+        if (!cancelled) setResults(data.items ?? [])
+      } catch (cause) {
+        if (!cancelled) setFormError(getUserFacingMessage(cause, 'No se pudo buscar clientes.'))
+      } finally {
+        if (!cancelled) setSearching(false)
+      }
+    }, 250)
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [allCustomers, query])
+
+  function toggleCustomer(customer) {
+    setSelected((current) => (
+      current.some((item) => item.id === customer.id)
+        ? current.filter((item) => item.id !== customer.id)
+        : [...current, { id: customer.id, full_name: customer.full_name, phone: customer.phone }]
+    ))
+  }
+
+  async function submit(event) {
+    event.preventDefault()
+    if (sending) return
+    setSending(true)
+    setFormError('')
+    try {
+      const result = await sendStoreCustomerNotice(getSellerToken(), {
+        title: title.trim(),
+        content: content.trim(),
+        all_customers: allCustomers,
+        customer_ids: allCustomers ? [] : selected.map((item) => item.id),
+      })
+      onSent(result.sent_count ?? 0)
+      dismiss()
+    } catch (cause) {
+      setFormError(getUserFacingMessage(cause, 'No se pudo enviar el aviso.'))
+    } finally {
+      setSending(false)
+    }
+  }
+
+  const canSend = title.trim().length >= 2 && content.trim().length >= 2 && (allCustomers || selected.length > 0)
+
+  return (
+    <SellerModalPortal>
+      <SellerMotionSheet
+        onClose={dismiss}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="seller-customer-notice-title"
+        panelAs="section"
+        panelClassName={`${sellerModalSheet} max-h-[min(92dvh,44rem)] max-w-xl`}
+      >
+        <header className="flex shrink-0 items-start justify-between gap-4 border-b border-brand-green/10 px-5 py-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-carmelita/60">Avisos</p>
+            <h2 id="seller-customer-notice-title" className={`${sellerModalTitle} mt-1`}>Enviar aviso</h2>
+          </div>
+          <button type="button" onClick={dismiss} aria-label="Cerrar aviso" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-2xl leading-none text-brand-carmelita/65 hover:bg-brand-green/8">×</button>
+        </header>
+        <div className={sellerModalBody}>
+          <MethodTabs
+            ariaLabel="Destinatarios del aviso"
+            value={allCustomers ? 'all' : 'selected'}
+            onChange={(next) => setAllCustomers(next === 'all')}
+            options={[
+              { id: 'all', label: 'Todos' },
+              { id: 'selected', label: 'Ciertos clientes' },
+            ]}
+          />
+          {allCustomers ? (
+            <p className="mb-4 text-sm text-brand-carmelita/70">El aviso llegará a todos los clientes que han pedido en tu tienda.</p>
+          ) : (
+            <div className="relative mb-4">
+              <SearchBar
+                id="seller-notice-customer-search"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                onClear={() => { setQuery(''); setResults([]) }}
+                label="Buscar clientes"
+                phrases={NOTICE_CUSTOMER_HINTS}
+              />
+              {selected.length ? (
+                <ul className="mt-3 flex flex-wrap gap-2">
+                  {selected.map((customer) => (
+                    <li key={customer.id}>
+                      <button type="button" onClick={() => toggleCustomer(customer)} className="inline-flex min-h-8 items-center gap-1 rounded-full bg-brand-green/10 px-3 text-xs font-semibold text-brand-green">
+                        {customer.full_name}
+                        <span aria-hidden="true">×</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+              {query.trim().length >= 2 ? (
+                <ul className="mt-2 max-h-52 overflow-y-auto rounded-2xl border border-brand-green/12 bg-brand-white py-1 shadow-[0_12px_32px_rgba(89,128,44,0.16)]" aria-label="Sugerencias de clientes">
+                  {searching ? <li className="px-4 py-3 text-sm text-brand-carmelita">Buscando…</li> : null}
+                  {!searching && !results.length ? <li className="px-4 py-3 text-sm text-brand-carmelita">Sin coincidencias.</li> : null}
+                  {results.map((customer) => {
+                    const checked = selected.some((item) => item.id === customer.id)
+                    return (
+                      <li key={customer.id}>
+                        <button
+                          type="button"
+                          onClick={() => toggleCustomer(customer)}
+                          className={`flex w-full items-center gap-3 px-4 py-2.5 text-left touch-manipulation active:bg-brand-yellow/15 ${checked ? 'bg-brand-green/[0.05]' : ''}`}
+                        >
+                          <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border text-[0.7rem] font-bold ${checked ? 'border-brand-green bg-brand-green text-brand-white' : 'border-brand-green/25 text-transparent'}`} aria-hidden="true">✓</span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold text-brand-green">{customer.full_name}</span>
+                            <span className="block truncate text-xs text-brand-carmelita">{customer.phone || customer.email || 'Sin contacto'}</span>
+                          </span>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+              ) : null}
+            </div>
+          )}
+          <label className="block text-sm font-semibold text-brand-carmelita">
+            Título
+            <input value={title} maxLength={80} onChange={(event) => setTitle(event.target.value)} className="mt-1 min-h-11 w-full rounded-xl border border-brand-green/15 bg-white px-3 py-2 font-normal" />
+          </label>
+          <label className="mt-3 block text-sm font-semibold text-brand-carmelita">
+            Mensaje
+            <textarea value={content} maxLength={500} rows={4} onChange={(event) => setContent(event.target.value)} className="mt-1 w-full rounded-xl border border-brand-green/15 bg-white px-3 py-2 font-normal" />
+          </label>
+          {formError ? <p role="alert" className="mt-3 text-sm text-red-700">{formError}</p> : null}
+          <button type="button" onClick={submit} disabled={!canSend || sending} className="mt-5 min-h-11 w-full rounded-xl bg-brand-green px-4 font-bold text-brand-white disabled:opacity-50">
+            {sending ? 'Enviando…' : 'Enviar aviso'}
+          </button>
+        </div>
+      </SellerMotionSheet>
+    </SellerModalPortal>
+  )
+}
+
 export default function SellerCustomers() {
   const navigate = useNavigate()
+  const readOnly = useSellerReadOnly()
+  const reducedMotion = useReducedMotion()
+  const [sectionTab, setSectionTab] = useState('customers')
+  const [tabDirection, setTabDirection] = useState(1)
+  const [tabMotion, setTabMotion] = useState(false)
+  const [noticeOpen, setNoticeOpen] = useState(false)
+  const [notices, setNotices] = useState([])
+  const [noticesLoading, setNoticesLoading] = useState(false)
+  const [noticesHasMore, setNoticesHasMore] = useState(false)
+  const [loadingMoreNotices, setLoadingMoreNotices] = useState(false)
+  const [noticesRefresh, setNoticesRefresh] = useState(0)
   const [customers, setCustomers] = useState([])
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -237,9 +446,55 @@ export default function SellerCustomers() {
     }
   }
 
+  useEffect(() => {
+    if (sectionTab !== 'notices') return undefined
+    let cancelled = false
+    setNoticesLoading(true)
+    ;(async () => {
+      try {
+        const data = await fetchStoreCustomerNotices(getSellerToken(), { offset: 0, limit: NOTICE_PAGE })
+        if (cancelled) return
+        setNotices(data.items ?? [])
+        setNoticesHasMore(Boolean(data.has_more))
+        setError('')
+      } catch (cause) {
+        if (!cancelled) setError(getUserFacingMessage(cause, 'No se pudieron cargar los avisos enviados.'))
+      } finally {
+        if (!cancelled) setNoticesLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [sectionTab, noticesRefresh])
+
+  async function loadMoreNotices() {
+    if (loadingMoreNotices || !noticesHasMore) return
+    setLoadingMoreNotices(true)
+    try {
+      const data = await fetchStoreCustomerNotices(getSellerToken(), { offset: notices.length, limit: NOTICE_PAGE })
+      setNotices((current) => [...current, ...(data.items ?? [])])
+      setNoticesHasMore(Boolean(data.has_more))
+    } catch (cause) {
+      setError(getUserFacingMessage(cause, 'No se pudieron cargar más avisos.'))
+    } finally {
+      setLoadingMoreNotices(false)
+    }
+  }
+
+  function selectSection(next) {
+    if (next === sectionTab) return
+    setTabDirection(next === 'notices' ? 1 : -1)
+    setTabMotion(true)
+    setSectionTab(next)
+  }
+
   function openOrder(order) {
     navigate(`/tienda/pedidos?search=${encodeURIComponent(orderIdentifier(order))}`)
   }
+
+  const tabShift = monthPageShift(tabDirection, reducedMotion || !tabMotion)
+  const customersEmpty = !customers.length && !search && !locationFilter && !productFilters.length && !currencyFilter && !dateFilterEnabled
+
+  const showCustomerSearch = sectionTab === 'customers' && !loading && !customersEmpty
 
   return (
     <main className="mx-auto w-full max-w-6xl p-4 sm:p-6">
@@ -247,9 +502,13 @@ export default function SellerCustomers() {
         <h1 className="mt-1 font-display text-2xl font-bold text-brand-carmelita sm:text-3xl">Clientes</h1>
         <p className="mt-1 text-sm text-brand-carmelita/70">Clientes que han realizado pedidos en tu tienda.</p>
       </header>
-      {error ? <p role="alert" className="rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
-      {loading ? <LoadingState message="Cargando clientes…" /> : !customers.length && !search && !locationFilter && !productFilters.length && !currencyFilter && !dateFilterEnabled ? <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">Aún no tienes clientes registrados por pedidos.</p> : (
-        <>
+      <MethodTabs
+        ariaLabel="Sección de clientes"
+        value={sectionTab}
+        onChange={selectSection}
+        options={CUSTOMER_TABS}
+      />
+      {showCustomerSearch ? (
         <div className="mb-4">
           <SearchBar
             id="seller-customers-search"
@@ -271,6 +530,50 @@ export default function SellerCustomers() {
             }}
           />
         </div>
+      ) : null}
+      {error ? <p role="alert" className="mb-4 rounded-xl bg-red-50 p-4 text-sm text-red-700">{error}</p> : null}
+      <motion.div key={sectionTab} className={tabMotion && !reducedMotion ? 'screen-step' : ''} {...tabShift}>
+      {sectionTab === 'notices' ? (
+        <>
+        <div className="mb-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => setNoticeOpen(true)}
+            disabled={readOnly}
+            className="shrink-0 rounded-xl bg-brand-green px-4 py-2 text-sm font-bold text-brand-white disabled:opacity-50"
+          >
+            Enviar aviso
+          </button>
+        </div>
+        {noticesLoading && !notices.length ? <LoadingState message="Cargando avisos…" /> : notices.length ? (
+          <>
+            <ul className="grid gap-3">
+              {notices.map((notice) => (
+                <li key={notice.id} className="rounded-2xl border border-brand-green/10 bg-brand-white p-4 shadow-sm lg:p-6">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <h2 className="font-bold text-brand-carmelita lg:text-lg">{notice.title}</h2>
+                    <span className="text-xs text-brand-carmelita/60">{dateLabel(notice.created_at)}</span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap text-sm text-brand-carmelita/80">{notice.content}</p>
+                  <p className="mt-3 text-sm font-semibold text-brand-green">{recipientLabel(notice)}</p>
+                  <p className="mt-1 text-xs text-brand-carmelita/60">Leído por {notice.read_count} de {notice.recipient_count}</p>
+                </li>
+              ))}
+            </ul>
+            {noticesHasMore ? (
+              <div className="mt-4 flex justify-center">
+                <button type="button" onClick={loadMoreNotices} disabled={loadingMoreNotices} className="min-h-11 rounded-xl border border-brand-green/20 bg-brand-white px-5 text-sm font-semibold text-brand-green disabled:opacity-60">
+                  {loadingMoreNotices ? 'Cargando…' : 'Cargar más avisos'}
+                </button>
+              </div>
+            ) : null}
+          </>
+        ) : (
+          <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">Aún no has enviado avisos a tus clientes.</p>
+        )}
+        </>
+      ) : loading ? <LoadingState message="Cargando clientes…" /> : customersEmpty ? <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">Aún no tienes clientes registrados por pedidos.</p> : (
+        <>
         {customers.length ? (
         <ul className="grid gap-3 md:grid-cols-2">
           {customers.map((customer) => (
@@ -304,6 +607,7 @@ export default function SellerCustomers() {
         ) : null}
         </>
       )}
+      </motion.div>
       <FilterModal
         open={filtersOpen}
         onClose={() => setFiltersOpen(false)}
@@ -341,6 +645,17 @@ export default function SellerCustomers() {
           setDateFilterEnabled(next.dateEnabled)
         }}
       />
+      {noticeOpen ? (
+        <CustomerNoticeModal
+          onClose={() => setNoticeOpen(false)}
+          onSent={() => {
+            setTabDirection(1)
+            setTabMotion(true)
+            setSectionTab('notices')
+            setNoticesRefresh((current) => current + 1)
+          }}
+        />
+      ) : null}
       {selectedCustomer ? (
         <CustomerOrdersModal
           customer={selectedCustomer}

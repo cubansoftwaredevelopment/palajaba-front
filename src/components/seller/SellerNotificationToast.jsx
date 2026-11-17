@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { LOADING_MASCOT } from '../../constants/branding'
+import { resolveMediaUrl } from '../../lib/media'
 import {
   sellerNoticeToastEnter,
   sellerNoticeToastLeave,
@@ -25,6 +27,9 @@ function NoticeToastCard({ toast, onDone, onOpen }) {
     return () => window.clearTimeout(doneTimer)
   }, [leaving, onDone, toast.id])
 
+  const logo = toast.senderMascot ? '' : resolveMediaUrl(toast.senderLogo)
+  const initials = Array.from(String(toast.senderName || '').trim()).slice(0, 2).join('').toUpperCase()
+
   return (
     <button
       type="button"
@@ -36,16 +41,30 @@ function NoticeToastCard({ toast, onDone, onOpen }) {
         else setLeaving(true)
       }}
     >
-      <p
-        className={`font-display text-sm font-bold leading-snug ${
-          isError ? 'text-brand-carmelita' : 'text-brand-green'
-        }`}
-      >
-        {toast.title}
-      </p>
-      {toast.content ? (
-        <p className="mt-1 text-xs leading-relaxed text-brand-carmelita/90">{toast.content}</p>
-      ) : null}
+      <span className="flex items-start gap-3">
+        {toast.senderMascot ? (
+          <img src={LOADING_MASCOT.src} alt="" className="h-11 w-11 shrink-0 object-contain" />
+        ) : logo ? (
+          <img src={logo} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
+        ) : initials ? (
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand-green/10 text-xs font-bold text-brand-green">{initials}</span>
+        ) : null}
+        <span className="min-w-0 flex-1">
+          {toast.senderName ? (
+            <span className="block text-[0.65rem] font-semibold uppercase tracking-wide text-brand-carmelita/70">{toast.senderName}</span>
+          ) : null}
+          <span
+            className={`block font-display text-sm font-bold leading-snug ${
+              isError ? 'text-brand-carmelita' : 'text-brand-green'
+            }`}
+          >
+            {toast.title}
+          </span>
+          {toast.content ? (
+            <span className="mt-1 block text-xs leading-relaxed text-brand-carmelita/90">{toast.content}</span>
+          ) : null}
+        </span>
+      </span>
     </button>
   )
 }

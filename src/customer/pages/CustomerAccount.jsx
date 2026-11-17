@@ -24,7 +24,6 @@ import LoadingState from '../../components/ui/LoadingState'
 import SellerLocationPreview from '../../components/seller/SellerLocationPreview'
 import NotificationBodyText from '../../components/ui/NotificationBodyText'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
-import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
 import { useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useSheetExitMs } from '../../motion/presets'
@@ -39,6 +38,8 @@ import SearchBar from '../../buyer/components/SearchBar'
 import FilterModal from '../../components/filters/FilterModal'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
+
+const CUSTOMER_ORDER_PAGE = 10
 
 const CUSTOMER_ORDER_HINTS = [
   'buscar por tienda',
@@ -87,9 +88,12 @@ export default function CustomerAccount() {
     setQvaPayPromptHeld(section === 'perfil' && Boolean(location.state?.focusQvaPay))
   }
   const [orders, setOrders] = useState([])
+  const [ordersHasMore, setOrdersHasMore] = useState(false)
+  const [ordersAttention, setOrdersAttention] = useState(false)
+  const [loadingMoreOrders, setLoadingMoreOrders] = useState(false)
+  const ordersLengthRef = useRef(0)
+  ordersLengthRef.current = orders.length
   const [paymentNotifications, setPaymentNotifications] = useState([])
-  const [liveNotificationToasts, setLiveNotificationToasts] = useState([])
-  const profileNoticesToastedRef = useRef(false)
   const [notificationsLoading, setNotificationsLoading] = useState(true)
   const [notificationsError, setNotificationsError] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -139,30 +143,39 @@ export default function CustomerAccount() {
     }
   }, [token])
 
+  const applyCustomerOrders = useCallback((page, { append = false } = {}) => {
+    const items = Array.isArray(page?.items) ? page.items : []
+    setOrders((current) => append ? [...current, ...items] : items)
+    setOrdersHasMore(Boolean(page?.has_more))
+    setOrdersAttention(Boolean(page?.has_attention))
+    if (!append) {
+      setSelectedOrder((current) => current ? items.find((order) => order.id === current.id) ?? current : current)
+    }
+  }, [])
+
   const refreshCustomerOrders = useCallback(async () => {
     try {
-      const customerOrders = await fetchCustomerOrders(token)
-      setOrders(customerOrders)
-      setSelectedOrder((current) => current
-        ? customerOrders.find((order) => order.id === current.id) ?? current
-        : current)
+      const page = await fetchCustomerOrders(token, {
+        offset: 0,
+        limit: Math.max(CUSTOMER_ORDER_PAGE, ordersLengthRef.current),
+      })
+      applyCustomerOrders(page)
     } catch {
       /* El siguiente evento o la actualización manual volverá a sincronizar los pedidos. */
     }
-  }, [token])
+  }, [applyCustomerOrders, token])
 
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
     try {
       const [customer, customerOrders] = await Promise.all([
-        fetchCustomerProfile(token), fetchCustomerOrders(token),
+        fetchCustomerProfile(token), fetchCustomerOrders(token, { offset: 0, limit: CUSTOMER_ORDER_PAGE }),
       ])
       setProfile(customer)
       setContactDraft({ email: customer.email || '', phone: customer.phone || '', identity_card: customer.identity_card || '' })
       updateCustomerProfile(customer)
-      setOrders(customerOrders)
-      setSelectedOrder((current) => current ? customerOrders.find((order) => order.id === current.id) ?? current : current)
+      applyCustomerOrders(customerOrders)
       void loadPaymentNotifications()
       const location = getBuyerLocation()
       const ids = customer.favorite_product_ids ?? []
@@ -183,7 +196,7 @@ export default function CustomerAccount() {
     } catch (cause) {
       setError(getUserFacingMessage(cause, 'No pudimos cargar tu cuenta.'))
     } finally { setLoading(false) }
-  }, [loadPaymentNotifications, token])
+  }, [applyCustomerOrders, loadPaymentNotifications, token])
 
   useEffect(() => {
     queueMicrotask(() => { void load() })
@@ -210,35 +223,12 @@ export default function CustomerAccount() {
       setPaymentNotifications((current) => current.some((item) => item.id === notification.id)
         ? current
         : [notification, ...current])
-      setLiveNotificationToasts((current) => (
-        current.some((item) => item.id === notification.id)
-          ? current
-          : [{ id: notification.id, title: notification.title, content: notification.content }, ...current]
-      ))
       void refreshCustomerOrders()
     }, () => {
       void refreshCustomerOrders()
       void loadPaymentNotifications()
     })
   }, [loadPaymentNotifications, refreshCustomerOrders, token])
-
-  useEffect(() => {
-    if (section !== 'perfil') {
-      profileNoticesToastedRef.current = false
-      return
-    }
-    if (notificationsLoading || notificationsError || profileNoticesToastedRef.current) return
-    profileNoticesToastedRef.current = true
-    const unread = paymentNotifications.filter((item) => !item.read_at)
-    if (!unread.length) return
-    setLiveNotificationToasts((current) => {
-      const seen = new Set(current.map((item) => item.id))
-      const incoming = unread
-        .filter((item) => !seen.has(item.id))
-        .map((item) => ({ id: item.id, title: item.title, content: item.content }))
-      return incoming.length ? [...incoming, ...current] : current
-    })
-  }, [notificationsError, notificationsLoading, paymentNotifications, section])
 
   async function markPaymentNotificationRead(notification) {
     if (!notification || notification.read_at) return notification
@@ -425,7 +415,20 @@ export default function CustomerAccount() {
   useEffect(() => {
     window.dispatchEvent(new Event(CUSTOMER_NOTICES_EVENT))
   }, [paymentNotifications])
-  const hasOrderWarning = orders.some(needsBuyerOrderAttention)
+  const hasOrderWarning = ordersAttention || orders.some(needsBuyerOrderAttention)
+
+  async function loadMoreOrders() {
+    if (loadingMoreOrders || !ordersHasMore) return
+    setLoadingMoreOrders(true)
+    try {
+      const page = await fetchCustomerOrders(token, { offset: orders.length, limit: CUSTOMER_ORDER_PAGE })
+      applyCustomerOrders(page, { append: true })
+    } catch (cause) {
+      setError(getUserFacingMessage(cause, 'No pudimos cargar más pedidos.'))
+    } finally {
+      setLoadingMoreOrders(false)
+    }
+  }
   const orderFilterOptions = useMemo(() => ({
     stores: [...new Set(orders.map((order) => order.store_name).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es')),
     products: [...new Set(orders.flatMap((order) => (order.items || []).map((item) => item.name).filter(Boolean)))].sort((a, b) => a.localeCompare(b, 'es')),
@@ -989,6 +992,13 @@ export default function CustomerAccount() {
                       ) : (
                         <p className="rounded-2xl border border-brand-green/10 bg-brand-white p-4 text-sm text-brand-carmelita/70">No hay pedidos que coincidan con la búsqueda o los filtros.</p>
                       )}
+                      {ordersHasMore ? (
+                        <div className="flex justify-center">
+                          <button type="button" onClick={loadMoreOrders} disabled={loadingMoreOrders} className="min-h-11 rounded-xl border border-brand-green/20 bg-brand-white px-5 text-sm font-semibold text-brand-green disabled:opacity-60">
+                            {loadingMoreOrders ? 'Cargando…' : 'Cargar más pedidos'}
+                          </button>
+                        </div>
+                      ) : null}
                     </>
                   ) : (
                     <p className="text-sm text-brand-carmelita/70">
@@ -1024,7 +1034,10 @@ export default function CustomerAccount() {
                       className={`w-full rounded-2xl border p-4 text-left ${notification.read_at ? 'border-brand-green/10 bg-brand-white' : 'border-brand-green/25 bg-brand-green/[0.04]'}`}
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <strong className="text-brand-green">{notification.title}</strong>
+                        <span className="min-w-0">
+                          {notification.store_name ? <span className="block text-xs font-semibold text-brand-carmelita/70">{notification.store_name}</span> : null}
+                          <strong className="text-brand-green">{notification.title}</strong>
+                        </span>
                         {!notification.read_at ? <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-brand-green" aria-label="Sin leer" /> : null}
                       </div>
                       <NotificationBodyText text={notification.content} className="mt-1 whitespace-pre-line text-sm text-brand-carmelita" />
@@ -1143,13 +1156,6 @@ export default function CustomerAccount() {
           description="Se borrarán tu perfil, direcciones, favoritos y datos de acceso de forma permanente. Los pedidos ya registrados se conservan como historial para las tiendas."
         />
       ) : null}
-      <SellerNotificationToast
-        toasts={liveNotificationToasts}
-        aboveNav
-        onDone={(id) => setLiveNotificationToasts((current) => current.filter((item) => item.id !== id))}
-        onOpen={() => { setLiveNotificationToasts([]); navigate('/cliente/avisos') }}
-      />
-
       {addressPresent ? (
         <BuyerMotionFrame
           closing={addressClosing}

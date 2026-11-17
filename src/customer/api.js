@@ -53,8 +53,9 @@ export function updateCustomerIdentityCard(token, identityCard) {
   return request('/api/customers/me/identity-card', { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify({ identity_card: identityCard }) })
 }
 
-export function fetchCustomerOrders(token) {
-  return request('/api/customers/me/orders', { headers: authHeaders(token) })
+export function fetchCustomerOrders(token, { offset = 0, limit = 10 } = {}) {
+  const params = new URLSearchParams({ offset: String(offset), limit: String(limit) })
+  return request(`/api/customers/me/orders?${params}`, { headers: authHeaders(token) })
 }
 
 export function addCustomerAddress(token, address) {
