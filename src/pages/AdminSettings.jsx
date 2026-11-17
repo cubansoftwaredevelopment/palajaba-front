@@ -12,7 +12,7 @@ import {
   adminSection,
   adminSubtle,
 } from '../components/admin/adminStyles'
-import { fetchAdminSettings, updateAdminSettings } from '../lib/api'
+import { fetchAdminSettings, sendAdminSmtpTest, updateAdminSettings } from '../lib/api'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { PHONE_PREFIX, formatPhoneDigits, getPhoneDigits } from '../lib/phone'
@@ -156,6 +156,8 @@ export default function AdminSettings() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [smtpTestEmail, setSmtpTestEmail] = useState('')
+  const [smtpTesting, setSmtpTesting] = useState(false)
 
   const loadSettings = useCallback(async () => {
     setError('')
@@ -310,6 +312,30 @@ export default function AdminSettings() {
     }
   }
 
+  async function handleSmtpTest() {
+    const email = smtpTestEmail.trim()
+    if (!email || !email.includes('@')) {
+      setError('Escribe un correo para la prueba.')
+      return
+    }
+    setError('')
+    setSuccess('')
+    setSmtpTesting(true)
+    try {
+      await sendAdminSmtpTest(getAdminToken(), email)
+      setSuccess(`Correo de prueba enviado a ${email}.`)
+    } catch (err) {
+      if (isSessionError(err)) {
+        clearAdminToken()
+        navigate('/admin', { replace: true })
+        return
+      }
+      setError(getUserFacingMessage(err, 'No pudimos enviar el correo de prueba.'))
+    } finally {
+      setSmtpTesting(false)
+    }
+  }
+
   return (
     <div className={adminSection}>
       {success && (
@@ -454,6 +480,7 @@ export default function AdminSettings() {
             </section>
             </div>
 
+            <div className="flex flex-col gap-4">
             <section className={adminCard}>
               <h2 className="text-sm font-semibold text-zinc-100">Administradores</h2>
               <p className={`mt-1.5 mb-4 text-sm leading-relaxed ${adminSubtle}`}>
@@ -552,6 +579,56 @@ export default function AdminSettings() {
                 Añadir administrador
               </AdminButton>
             </section>
+
+            <section className={adminCard}>
+              <h2 className="text-sm font-semibold text-zinc-100">Prueba de correo</h2>
+              <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                Envía un mensaje a la dirección que escribas para comprobar que el SMTP funciona.
+              </p>
+              <label htmlFor="smtp-test-email" className={`${adminLabel} mt-4`}>
+                Correo
+              </label>
+              <input
+                id="smtp-test-email"
+                type="email"
+                value={smtpTestEmail}
+                onChange={(event) => setSmtpTestEmail(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    handleSmtpTest()
+                  }
+                }}
+                className={`${adminInput} min-h-12`}
+                placeholder="correo@ejemplo.com"
+                autoComplete="email"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {admins.map((admin, index) =>
+                  admin.email.trim() ? (
+                    <AdminButton
+                      key={admin.key}
+                      type="button"
+                      variant="secondary"
+                      size="xs"
+                      onClick={() => setSmtpTestEmail(admin.email.trim())}
+                    >
+                      Administrador {index + 1}
+                    </AdminButton>
+                  ) : null,
+                )}
+              </div>
+              <AdminButton
+                type="button"
+                size="sm"
+                className="mt-3"
+                disabled={smtpTesting || !smtpTestEmail.trim()}
+                onClick={handleSmtpTest}
+              >
+                {smtpTesting ? 'Enviando…' : 'Probar'}
+              </AdminButton>
+            </section>
+            </div>
           </div>
 
           <section className={adminCard}>

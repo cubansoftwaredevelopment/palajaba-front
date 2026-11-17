@@ -4,7 +4,7 @@ import { getUserFacingMessage } from "./userFacingError";
 /** En dev usa rutas relativas → proxy de Vite. En prod usa VITE_API_URL. */
 function getApiBase() {
   if (import.meta.env.DEV) return "";
-  return import.meta.env.VITE_API_URL ?? "https://palajaba-api.onrender.com";
+  return import.meta.env.VITE_API_URL ?? "http://127.0.0.1:8081";
 }
 
 export const NETWORK_ERROR_CODE = "network_error";
@@ -273,6 +273,16 @@ export function fetchAdminSettings(token) {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+  });
+}
+
+export function sendAdminSmtpTest(token, email) {
+  return request("/api/admin/settings/smtp-test", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ email }),
   });
 }
 
