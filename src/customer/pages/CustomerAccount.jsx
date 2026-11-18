@@ -954,44 +954,59 @@ export default function CustomerAccount() {
                         }}
                       />
                       {visibleCustomerOrders.length ? (
-                        <ul className="grid gap-3 md:grid-cols-2">
+                        <ul className="flex flex-col divide-y divide-neutral-300">
                       {visibleCustomerOrders.map((order) => {
                         const evidenceStatus = order.payment_method === 'qvapay' ? order.qvapay?.evidence?.status : null
                         const highlighted = needsBuyerOrderAttention(order)
+                        const statusTone = order.status === 'completed'
+                          ? 'bg-brand-green'
+                          : order.status === 'cancelled'
+                            ? 'bg-red-600'
+                            : 'bg-brand-yellow'
+                        const statusLabel = getBuyerOrderStatusLabel(order)
+                        const statusText = order.status === 'completed'
+                          ? 'text-brand-green'
+                          : order.status === 'cancelled'
+                            ? 'text-red-700'
+                            : statusLabel === 'Por procesar'
+                              ? 'text-yellow-600'
+                              : 'text-amber-800'
                         return (
                         <li key={order.id}>
                           <button
                             type="button"
                             onClick={() => setSelectedOrder(order)}
                             aria-label={`Ver detalle del pedido de ${order.store_name}`}
-                            className={`relative w-full overflow-hidden rounded-xl border p-4 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40 ${highlighted ? evidenceStatus === 'rejected' ? 'border-red-300 bg-red-50/75 shadow-[0_4px_18px_rgba(185,28,28,0.09)] hover:border-red-400' : 'border-amber-300 bg-amber-50/75 shadow-[0_4px_18px_rgba(180,83,9,0.09)] hover:border-amber-400' : 'border-brand-green/10 bg-brand-white hover:border-brand-green/40 hover:bg-brand-green/5'}`}
+                            className="flex w-full items-stretch text-left transition active:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40"
                           >
-                          {highlighted ? <span className={`absolute inset-y-0 left-0 w-1 ${evidenceStatus === 'rejected' ? 'bg-red-600' : 'bg-amber-500'}`} aria-hidden="true" /> : null}
-                          <div className="flex justify-between gap-3 pl-1">
+                          <span className={`my-3.5 w-1 shrink-0 rounded-full ${statusTone}`} aria-hidden="true" />
+                          <span className="min-w-0 flex-1 py-3.5 pl-3">
+                          <div className="flex justify-between gap-3">
                             <strong>{order.store_name}</strong>
-                            <span className={`inline-flex shrink-0 items-center gap-1 text-right text-xs font-bold ${evidenceStatus === 'rejected' ? 'text-red-800' : evidenceStatus === 'pending' ? 'text-amber-900' : 'text-brand-green'}`}>
+                            <span className={`inline-flex shrink-0 items-center gap-1 text-right text-xs font-bold ${statusText}`}>
                               {highlighted ? <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.65rem] font-extrabold leading-none text-white ${evidenceStatus === 'rejected' ? 'bg-red-700' : 'bg-amber-700'}`} aria-hidden="true">!</span> : null}
-                              {getBuyerOrderStatusLabel(order)}
+                              {statusLabel}
                             </span>
                           </div>
-                          <p className="mt-1 pl-1 text-xs text-brand-carmelita/60">
+                          <p className="mt-1 text-xs text-brand-carmelita/60">
                             {formatDate(order.created_at)}
                           </p>
                           {evidenceStatus === 'pending' ? (
                             <QvaPayReleaseCountdown deadline={order.qvapay?.evidence?.deadline} compact />
                           ) : null}
-                          <p className="mt-2 pl-1 text-sm">
+                          <p className="mt-2 text-sm">
                             {order.items
                               ?.map((item) => `${item.quantity} × ${item.name}`)
                               .join(", ")}
                           </p>
-                          <p className="mt-2 pl-1 text-xs text-brand-carmelita/70">
+                          <p className="mt-2 text-xs text-brand-carmelita/70">
                             {order.subtotals
                               ?.map((entry) =>
                                 formatPrice(entry.amount, entry.currency),
                               )
                               .join(" · ")}
                           </p>
+                          </span>
                           </button>
                         </li>
                       )})}
