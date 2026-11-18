@@ -431,8 +431,6 @@ export default function SellerOrders() {
     <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
       <SellerPageHeader
         eyebrow="Pedidos"
-        title="Bandeja de pedidos"
-        subtitle="Usa las pestañas para alternar entre pendientes y ventas ya cerradas."
         action={readOnly ? null : (
           <button
             type="button"
@@ -525,7 +523,6 @@ export default function SellerOrders() {
           ) : null}
 
           <SellerOrdersGroup
-            tone={activeTab === 'pending' ? 'pending' : 'completed'}
             count={visibleOrders.length}
             emptyIcon={activeTab === 'pending' ? PendingIcon : CompletedIcon}
             emptyTitle={

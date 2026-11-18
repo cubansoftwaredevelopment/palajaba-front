@@ -9,7 +9,7 @@ export default function AuthHeader({ eyebrow, title, description, layout = 'cent
           {eyebrow}
         </p>
       )}
-      <h1 className="font-display text-2xl font-bold leading-tight text-brand-green sm:text-[1.65rem] lg:text-3xl">
+      <h1 className="font-script text-5xl leading-[1.15] text-brand-carmelita sm:text-6xl">
         {title}
       </h1>
       {description && (

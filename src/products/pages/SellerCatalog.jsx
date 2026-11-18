@@ -10,7 +10,6 @@ import OrganizeCatalogProductsModal from '../components/OrganizeCatalogProductsM
 import ReorderCatalogCategoriesModal from '../components/ReorderCatalogCategoriesModal'
 import SellerCatalogEmpty from '../components/SellerCatalogEmpty'
 import SellerCatalogActionsMenu from '../components/SellerCatalogActionsMenu'
-import SellerCatalogFab from '../components/SellerCatalogFab'
 import SellerCatalogView from '../components/SellerCatalogView'
 import SellerPageHeader from '../../components/seller/SellerPageHeader'
 import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
@@ -188,36 +187,22 @@ export default function SellerCatalog() {
   const canReorderCategories = !readOnly && (summary?.categories?.length ?? 0) >= 2
   const canShareCatalog = Boolean(profile?.store_name)
   const canChangeTheme = !readOnly && Boolean(resolveStoreSlug(profile))
+  const canCreate = !readOnly && hasLocalCategories
   const showCatalogActionsMenu =
-    !loading && (canReorderCategories || canShareCatalog || canChangeTheme)
+    !loading && (canCreate || canReorderCategories || canShareCatalog || canChangeTheme)
   const showProductForm = summary && (showCreateProduct || productToEdit)
 
   return (
     <section className={sellerCatalogSection}>
       <div className={`${sellerPageWrap} ${sellerSectionGap}`}>
-        <div className="flex items-start justify-between gap-3">
-          <SellerPageHeader
-            eyebrow="Catálogo"
-            title="Tu catálogo"
-            tone="dark"
-            subtitle={
-              !loading && !hasLocalCategories
-                ? 'Crea categorías locales para organizar tu tienda y luego agrega productos.'
-                : undefined
-            }
-          />
-
-          {showCatalogActionsMenu ? (
-            <SellerCatalogActionsMenu
-              canReorderCategories={canReorderCategories}
-              canShareCatalog={canShareCatalog}
-              canChangeTheme={canChangeTheme}
-              onReorderCategories={() => setShowReorderCategories(true)}
-              onShareCatalog={() => setShowShareCatalog(true)}
-              onChangeTheme={() => navigate('/tienda/catalogo/vista-previa')}
-            />
-          ) : null}
-        </div>
+        <SellerPageHeader
+          eyebrow="Catálogo"
+          subtitle={
+            !loading && !hasLocalCategories
+              ? 'Crea categorías locales para organizar tu tienda y luego agrega productos.'
+              : undefined
+          }
+        />
 
         <SellerSuccessAlert message={successMessage} onDismiss={() => setSuccessMessage('')} />
 
@@ -261,12 +246,6 @@ export default function SellerCatalog() {
               onDeleteCategory={readOnly ? undefined : setCategoryToDelete}
               onOrganizeProducts={readOnly ? undefined : setCategoryToOrganize}
             />
-            {readOnly ? null : (
-              <SellerCatalogFab
-                onAddCategory={() => setShowCreateCategory(true)}
-                onAddProduct={() => openCreateProduct()}
-              />
-            )}
           </>
         )}
 
@@ -348,6 +327,18 @@ export default function SellerCatalog() {
           />
         ) : null}
       </div>
+      {showCatalogActionsMenu ? (
+        <SellerCatalogActionsMenu
+          onAddCategory={canCreate ? () => setShowCreateCategory(true) : undefined}
+          onAddProduct={canCreate ? () => openCreateProduct() : undefined}
+          canReorderCategories={canReorderCategories}
+          canShareCatalog={canShareCatalog}
+          canChangeTheme={canChangeTheme}
+          onReorderCategories={() => setShowReorderCategories(true)}
+          onShareCatalog={() => setShowShareCatalog(true)}
+          onChangeTheme={() => navigate('/tienda/catalogo/vista-previa')}
+        />
+      ) : null}
     </section>
   )
 }

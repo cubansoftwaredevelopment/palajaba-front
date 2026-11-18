@@ -28,9 +28,9 @@ export const sellerMain =
 export const sellerMainWithNav =
   'mx-auto w-full max-w-md px-4 pb-[calc(4.75rem+var(--safe-bottom))] pt-4 sm:px-5 lg:mx-0 lg:max-w-none lg:px-8 lg:py-8 lg:pb-8'
 
-/** Main del catálogo: fondo verde a altura del área visible; el scroll va en sellerCatalogSection */
+/** Main del catálogo: mismo fondo crema que el inicio; el scroll va en sellerCatalogSection */
 export const sellerMainCatalog =
-  'mx-auto flex w-full max-w-md min-h-0 flex-1 flex-col overflow-hidden bg-brand-green p-0 lg:mx-0 lg:max-w-none'
+  'mx-auto flex w-full max-w-md min-h-0 flex-1 flex-col overflow-hidden bg-transparent p-0 lg:mx-0 lg:max-w-none'
 
 export const sellerPageWrap = 'mx-auto w-full lg:max-w-3xl xl:max-w-4xl'
 
@@ -42,6 +42,12 @@ export const sellerFormActions = 'pt-1 lg:col-span-2'
 
 export const sellerEyebrow =
   'text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-brand-carmelita sm:text-xs'
+
+export const sellerSectionScript =
+  'font-script text-7xl leading-[1.05] text-center text-brand-carmelita sm:text-8xl'
+
+export const sellerSectionScriptOnDark =
+  'font-script text-7xl leading-[1.05] text-center text-brand-white sm:text-8xl'
 
 export const sellerTitle =
   'font-display text-xl font-bold leading-snug text-brand-green sm:text-2xl lg:text-3xl'
@@ -57,9 +63,9 @@ export const sellerTitleOnDark =
 export const sellerSubtitleOnDark =
   'mt-1 text-xs leading-relaxed text-brand-white/75 sm:text-sm'
 
-/** Contenido scrolleable del catálogo (el verde lo pone sellerMainCatalog) */
+/** Contenido scrolleable del catálogo */
 export const sellerCatalogSection =
-  'page-scroll seller-catalog-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain touch-pan-y px-4 pt-4 pb-[calc(4.75rem+var(--safe-bottom))] sm:px-5 lg:overflow-y-auto lg:px-8 lg:pb-8 lg:pt-8'
+  'page-scroll seller-catalog-scroll flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain touch-pan-y px-4 pt-4 pb-[calc(9.5rem+var(--safe-bottom))] sm:px-5 lg:overflow-y-auto lg:px-8 lg:pb-32 lg:pt-8'
 
 export const sellerSection =
   'rounded-2xl border border-brand-green/12 bg-brand-white p-3.5 shadow-[0_2px_12px_rgba(89,128,44,0.06)] sm:p-4'
@@ -191,7 +197,7 @@ export const sellerCatalogFab =
   `flex h-14 w-14 items-center justify-center rounded-full bg-brand-yellow text-brand-green shadow-[0_6px_24px_rgba(0,0,0,0.28)] transition-transform duration-200 touch-manipulation active:scale-95 ${sellerFocusRing}`
 
 export const sellerCatalogMenuTrigger =
-  `flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-white/25 bg-brand-white/10 text-brand-white shadow-[0_2px_10px_rgba(0,0,0,0.12)] transition-all duration-200 touch-manipulation active:border-brand-white/40 active:bg-brand-white/18 ${sellerFocusRing}`
+  `flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-green/15 bg-brand-white text-brand-green shadow-[0_2px_10px_rgba(89,128,44,0.08)] transition-all duration-200 touch-manipulation active:border-brand-green/30 active:bg-brand-yellow/20 ${sellerFocusRing}`
 
 export const sellerCatalogMenuAction =
   `flex items-center gap-1.5 rounded-full border border-brand-white/20 bg-brand-white px-3 py-1.5 text-xs font-semibold text-brand-green shadow-[0_4px_14px_rgba(0,0,0,0.14)] transition-colors touch-manipulation active:bg-brand-yellow/20 sm:gap-2 sm:px-3.5 sm:py-2 sm:text-sm ${sellerFocusRing}`

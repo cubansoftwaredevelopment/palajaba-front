@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import RouteMotion, { isBuyerMotionPath } from './motion/RouteMotion'
+import BootSplash from './components/BootSplash'
 import ScrollToTopButton from './components/ScrollToTopButton'
 import CustomerNoticeToasts from './buyer/components/CustomerNoticeToasts'
 import AdminAuthenticatedLayout from './components/admin/AdminAuthenticatedLayout'
@@ -68,6 +70,7 @@ import AppReleasePromptGate from './appReleases/components/AppReleasePromptGate'
 import AppDevicePresence from './lib/appDevicePresence'
 import { NativeDeepLinkBridge } from './lib/nativeDeepLinks'
 import { disableBuyerLocationPersistence } from './lib/buyerLocation'
+import { markFrontendReady } from './lib/frontendReady'
 import { startAnonymousNativePush } from './live/utils'
 
 if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vista') === 'preview') {
@@ -79,8 +82,19 @@ function RootLayout() {
   const location = useLocation()
   const motionPath = isBuyerMotionPath(location.pathname)
 
+  useEffect(() => {
+    const waitsForOffers =
+      location.pathname === '/' ||
+      location.pathname === '/comprar' ||
+      location.pathname === '/comprar/provincia' ||
+      location.pathname === '/comprar/municipio'
+    if (waitsForOffers) return
+    markFrontendReady()
+  }, [location.pathname])
+
   return (
     <>
+      <BootSplash />
       <NativeDeepLinkBridge />
       {motionPath ? <RouteMotion /> : <Outlet />}
       <AppReleasePromptGate />

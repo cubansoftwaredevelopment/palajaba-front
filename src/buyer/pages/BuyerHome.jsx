@@ -42,6 +42,7 @@ import {
   LOADING_MASCOT,
   MARKETPLACE_LABEL,
 } from "../../constants/branding";
+import { markFrontendReady } from "../../lib/frontendReady";
 
 const ROW_PAGE_SIZE = 5;
 const SEARCH_PAGE_SIZE = 20;
@@ -162,6 +163,7 @@ function BuyerHomeContent({ preview = null }) {
             ],
           };
         });
+        if (!append) markFrontendReady();
       } catch (err) {
         if (!append) {
           setLoadError(
@@ -189,6 +191,13 @@ function BuyerHomeContent({ preview = null }) {
     loadFeed();
   }, [loadFeed]);
 
+  useEffect(() => {
+    if (!loadError) return undefined;
+    const timer = window.setTimeout(() => {
+      loadFeed();
+    }, 3000);
+    return () => window.clearTimeout(timer);
+  }, [loadError, loadFeed]);
   const runSearch = useCallback(
     async ({ offset = 0, append = false } = {}) => {
       const isActive = Boolean(searchCategoryId);

@@ -139,18 +139,18 @@ export default function SellerProfileMenuList({ sections, onSelect }) {
           {section.title ? (
             <h3
               id={`profile-menu-${section.id}`}
-              className="mb-2 px-1 text-xs font-semibold uppercase tracking-[0.12em] text-brand-carmelita/75"
+              className="mb-2 px-1 font-script text-4xl leading-[1.15] text-brand-carmelita"
             >
               {section.title}
             </h3>
           ) : null}
-          <ul className="flex flex-col gap-2">
+          <ul className="flex flex-col divide-y divide-neutral-300">
             {section.items.map((item) => (
               <li key={item.id}>
                 <button
                   type="button"
                   onClick={() => onSelect(item.id)}
-                  className={`flex w-full min-h-14 items-center gap-3 rounded-2xl border border-brand-green/10 bg-brand-white px-3.5 py-3 text-left shadow-[0_2px_12px_rgba(89,128,44,0.06)] transition-colors touch-manipulation active:bg-brand-yellow/10 ${sellerFocusRing}`}
+                  className={`flex w-full min-h-14 items-center gap-3 py-3.5 text-left transition-colors touch-manipulation active:bg-black/[0.03] ${sellerFocusRing}`}
                 >
                   <MenuIcon name={item.icon} />
                   <span className="min-w-0 flex-1">

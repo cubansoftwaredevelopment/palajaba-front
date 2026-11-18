@@ -49,7 +49,7 @@ export default function BuyerShell({
     : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
 
   return (
-    <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
+    <main className={`relative flex flex-col overflow-hidden bg-brand-white ${isSellerPreview ? 'h-full min-h-0' : 'h-dvh'}`}>
       <div
         className="pointer-events-none absolute -right-16 top-0 h-56 w-56 rounded-full bg-brand-yellow/20 blur-3xl lg:h-72 lg:w-72"
         aria-hidden="true"

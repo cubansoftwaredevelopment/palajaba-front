@@ -84,7 +84,7 @@ export default function BuyerStoreServiceFooter({
         {line ? <p className="mt-3 text-center text-sm text-brand-carmelita/80">{line}</p> : null}
         <div className="mt-6 grid w-full grid-cols-2 gap-x-8">
           <div>
-            <h2 className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-brand-carmelita">
+            <h2 className="font-script text-3xl leading-[1.15] text-brand-carmelita">
               Servicio al cliente
             </h2>
             <ul className="mt-3">
@@ -121,7 +121,7 @@ export default function BuyerStoreServiceFooter({
             </ul>
           </div>
           <div>
-            <h2 className="text-[0.72rem] font-bold uppercase tracking-[0.14em] text-brand-carmelita">Otros</h2>
+            <h2 className="font-script text-3xl leading-[1.15] text-brand-carmelita">Otros</h2>
             <ul className="mt-3">
               <li>
                 <FooterLink to={home}>Inicio</FooterLink>

@@ -18,12 +18,12 @@ export default function BuyerSelectProvince() {
     ? '/comprar'
     : sellerBrowsing
       ? getSellerReturnPath()
-      : '/'
+      : undefined
   const backLabel = isChangingLocation
     ? MARKETPLACE_LABEL
     : sellerBrowsing
       ? 'Mi tienda'
-      : 'Inicio'
+      : undefined
 
   function handleSelect(province) {
     setBuyerProvince({

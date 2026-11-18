@@ -541,16 +541,20 @@ export default function CustomerAccount() {
             </div>
           </div>
         </header>
-        <div className="mx-auto w-full max-w-5xl px-4 pt-6 sm:px-6 lg:px-8">
+        <div className={`mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 ${section === 'perfil' ? 'pt-3' : 'pt-6'}`}>
+          {section === 'perfil' ? null : (
           <header className="mb-6">
             <div>
-              <h1 className="font-display text-3xl font-bold">
+              <h1 className={section === 'pedidos' || section === 'favoritos' || section === 'direcciones' || section === 'avisos'
+                ? 'font-script text-4xl leading-[1.15] text-brand-carmelita'
+                : 'font-display text-3xl font-bold'}>
                 {section === 'avisos'
                   ? 'Avisos'
                   : CUSTOMER_NAV.find((item) => item.id === section)?.label || 'Mi cuenta'}
               </h1>
             </div>
           </header>
+          )}
           {profile?.purchase_revoked ? (
             <p role="status" className="mb-4 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
               {CUSTOMER_PURCHASE_REVOKED_MESSAGE}
@@ -582,7 +586,7 @@ export default function CustomerAccount() {
                       aria-hidden="true"
                     />
                     <div className="relative z-10">
-                      <h2 className="mb-4 text-lg font-bold">Mi perfil</h2>
+                      <h2 className="mb-4 font-script text-3xl leading-[1.15] text-brand-carmelita">Mi perfil</h2>
                       <div className="flex items-center gap-4">
                         <div className="flex shrink-0 flex-col items-center gap-1.5">
                           <label
@@ -659,7 +663,7 @@ export default function CustomerAccount() {
                   ) : null}
 
                   <section className={sectionClass}>
-                    <h2 className="mb-4 text-lg font-bold">
+                    <h2 className="mb-4 font-script text-3xl leading-[1.15] text-brand-carmelita">
                       Datos de contacto
                     </h2>
                     <form
@@ -802,7 +806,7 @@ export default function CustomerAccount() {
                   </section>
 
                   <section className={sectionClass}>
-                    <h2 className="mb-4 text-lg font-bold">
+                    <h2 className="mb-4 font-script text-3xl leading-[1.15] text-brand-carmelita">
                       Carnet de identidad
                     </h2>
                     <form
@@ -837,36 +841,25 @@ export default function CustomerAccount() {
                     </form>
                   </section>
 
-                  <section className={sectionClass}>
-                    <h2 className="mb-2 text-lg font-bold text-brand-green">Cerrar sesión</h2>
-                    <p className="text-sm leading-relaxed text-brand-carmelita">
-                      Sales de esta cuenta en este dispositivo. Tus datos se conservan.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setLogoutOpen(true)}
-                      className="mt-4 min-h-11 rounded-xl border border-brand-green/20 bg-brand-white px-4 font-bold text-brand-green"
-                    >
-                      Cerrar sesión
-                    </button>
-                  </section>
-
-                  <section className={sectionClass}>
-                    <h2 className="mb-2 text-lg font-bold text-red-700">Eliminar cuenta</h2>
-                    <p className="text-sm leading-relaxed text-brand-carmelita">
-                      Se borrarán tu perfil, direcciones, favoritos y datos de acceso. Los pedidos ya hechos se conservan para las tiendas.
-                    </p>
+                  <div className="flex flex-row flex-wrap items-center gap-3">
                     <button
                       type="button"
                       onClick={() => {
                         setDeleteError('')
                         setDeleteOpen(true)
                       }}
-                      className="mt-4 min-h-11 rounded-xl bg-red-700 px-4 font-bold text-white"
+                      className="min-h-11 rounded-xl bg-red-700 px-4 font-bold text-white"
                     >
                       Eliminar cuenta
                     </button>
-                  </section>
+                    <button
+                      type="button"
+                      onClick={() => setLogoutOpen(true)}
+                      className="min-h-11 rounded-xl border border-brand-green/20 bg-brand-white px-4 font-bold text-brand-green"
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
                 </>
               ) : null}
 

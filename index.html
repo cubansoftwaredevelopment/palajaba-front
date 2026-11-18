@@ -11,6 +11,28 @@
     <script>document.documentElement.classList.add('js')</script>
     <style>
       html.js .seo-prerender { display: none !important; }
+      #boot-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 200;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fdfbf2;
+        padding: 1.5rem;
+        animation: boot-fade 0.45s ease-out both;
+      }
+      #boot-splash img {
+        width: min(9rem, 36vw);
+        height: auto;
+      }
+      @keyframes boot-fade {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-splash { animation: none; }
+      }
     </style>
 
     <title>Pa' La Jaba — Pa La Jaba | Marketplace cubano en Cuba</title>
@@ -64,6 +86,9 @@
     </script>
   </head>
   <body>
+    <div id="boot-splash" role="status" aria-label="Pa' La Jaba">
+      <img src="/logo.png" alt="" />
+    </div>
     <div id="root">
       <main class="seo-prerender seo-home-page">
         <h1>Pa' La Jaba — Pa La Jaba</h1>

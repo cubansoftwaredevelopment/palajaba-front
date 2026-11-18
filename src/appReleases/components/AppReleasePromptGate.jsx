@@ -35,8 +35,8 @@ function isPreviewPath() {
 
 export default function AppReleasePromptGate() {
   const location = useLocation()
-  const comprarHome = useMatch({ path: '/comprar', end: true })
-  const sellerHome = useMatch({ path: '/tienda', end: true })
+  const onComprarHome = Boolean(useMatch({ path: '/comprar', end: true }))
+  const onSellerHome = Boolean(useMatch({ path: '/tienda', end: true }))
   const [downloadOpen, setDownloadOpen] = useState(false)
   const [updateOpen, setUpdateOpen] = useState(false)
   const [mains, setMains] = useState(null)
@@ -80,7 +80,7 @@ export default function AppReleasePromptGate() {
 
     ;(async () => {
       const pending = peekAppReleasePromptPending()
-      const consider = Boolean(pending || comprarHome || sellerHome || forceUpdateCheck)
+      const consider = Boolean(pending || onComprarHome || onSellerHome || forceUpdateCheck)
       if (!consider) return
 
       const inNative = isInNativeApp()
@@ -171,7 +171,7 @@ export default function AppReleasePromptGate() {
     return () => {
       cancelled = true
     }
-  }, [location.pathname, location.search, comprarHome, sellerHome, promptTick, forceUpdateCheck])
+  }, [location.pathname, location.search, onComprarHome, onSellerHome, promptTick, forceUpdateCheck])
 
   useEffect(() => {
     if (!bouncePlatform) return undefined

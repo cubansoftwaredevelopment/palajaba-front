@@ -69,7 +69,6 @@ function LogoutButton({ onClick }) {
 }
 
 export default function SellerShell({
-  storeName,
   planName,
   subscriptionActive = true,
   onLogout,
@@ -78,7 +77,9 @@ export default function SellerShell({
   pendingOrderCount = 0,
   showBottomNav = false,
   catalogLayout = false,
+  hideChrome = false,
   navItems,
+  profilePhotoUrl = '',
   children,
   footer,
 }) {
@@ -92,55 +93,51 @@ export default function SellerShell({
   return (
     <>
       <div className={shellClassName}>
-        {!catalogLayout && (
-          <>
-            <div
-              className="pointer-events-none absolute -right-20 top-0 h-48 w-48 rounded-full bg-brand-yellow/12 blur-3xl"
-              aria-hidden="true"
-            />
-            <div
-              className="pointer-events-none absolute -left-24 bottom-32 h-56 w-56 rounded-full bg-brand-green/8 blur-3xl lg:bottom-12 lg:left-64"
-              aria-hidden="true"
-            />
-          </>
-        )}
+        <div
+          className="pointer-events-none absolute -right-20 top-0 h-48 w-48 rounded-full bg-brand-yellow/12 blur-3xl"
+          aria-hidden="true"
+        />
+        <div
+          className="pointer-events-none absolute -left-24 bottom-32 h-56 w-56 rounded-full bg-brand-green/8 blur-3xl lg:bottom-12 lg:left-64"
+          aria-hidden="true"
+        />
 
         {showBottomNav && (
           <aside className={sellerSidebar}>
             <div className={sellerSidebarLogoWrap}>
               <Logo className="h-20 w-20 shrink-0 xl:h-24 xl:w-24" priority />
             </div>
-            <SellerSidebarNav items={navItems} pendingOrderCount={pendingOrderCount} />
+            <SellerSidebarNav items={navItems} pendingOrderCount={pendingOrderCount} profilePhotoUrl={profilePhotoUrl} />
           </aside>
         )}
 
         <div className={contentClassName}>
+          {hideChrome ? null : (
           <header className={`${sellerHeader} shrink-0 shadow-[0_1px_0_rgba(89,128,44,0.06)]`}>
-            <div className={sellerHeaderInner}>
+            <div className={`${sellerHeaderInner} relative`}>
               <Logo
                 className={`h-9 w-9 shrink-0 sm:h-10 sm:w-10 ${showBottomNav ? 'lg:hidden' : ''}`}
                 priority
               />
-              <p className="min-w-0 flex-1 truncate font-display text-sm font-bold text-brand-green sm:text-base lg:text-lg">
-                Bienvenido{' '}
-                <span className="text-brand-carmelita">{storeName}</span>
-              </p>
-              <div className="mr-1 flex shrink-0 flex-col items-center gap-0.5 sm:mr-2">
-                <span className={`rounded-full px-2 py-1 text-[0.55rem] font-extrabold uppercase tracking-wide sm:px-2.5 sm:text-[0.65rem] ${subscriptionActive ? 'bg-brand-green/10 text-brand-green' : 'bg-amber-100 text-amber-800'}`} role="status">
-                  {subscriptionActive ? 'Activa' : 'Inactiva'}
-                </span>
-                <span className="whitespace-nowrap text-[0.55rem] font-semibold leading-tight text-brand-carmelita/85 sm:text-[0.62rem]">
-                  Plan {planName}
-                </span>
+              <div className="pointer-events-none absolute inset-x-0 flex justify-center">
+                <div className="pointer-events-auto flex flex-col items-center gap-0.5">
+                  <span className={`rounded-full px-2 py-1 text-[0.55rem] font-extrabold uppercase tracking-wide sm:px-2.5 sm:text-[0.65rem] ${subscriptionActive ? 'bg-brand-green/10 text-brand-green' : 'bg-amber-100 text-amber-800'}`} role="status">
+                    {subscriptionActive ? 'Activa' : 'Inactiva'}
+                  </span>
+                  <span className="whitespace-nowrap text-[0.55rem] font-semibold leading-tight text-brand-carmelita/85 sm:text-[0.62rem]">
+                    Plan {planName}
+                  </span>
+                </div>
               </div>
-              <div className="flex shrink-0 items-center">
+              <div className="ml-auto flex shrink-0 items-center">
                 <NotificationsButton onClick={onNotifications} unreadCount={notificationCount} />
                 {onLogout && <LogoutButton onClick={onLogout} />}
               </div>
             </div>
           </header>
+          )}
 
-          {!subscriptionActive ? (
+          {!hideChrome && !subscriptionActive ? (
             <p className="shrink-0 border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm font-semibold text-amber-900" role="status">
               Tu suscripción está inactiva. Puedes ver la cuenta y pedir un plan. El resto está en solo lectura.
             </p>
@@ -156,7 +153,7 @@ export default function SellerShell({
         </div>
       </div>
 
-      {showBottomNav && <SellerBottomNav items={navItems} pendingOrderCount={pendingOrderCount} />}
+      {showBottomNav && <SellerBottomNav items={navItems} pendingOrderCount={pendingOrderCount} profilePhotoUrl={profilePhotoUrl} />}
     </>
   )
 }

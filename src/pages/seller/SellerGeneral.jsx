@@ -216,11 +216,7 @@ export default function SellerGeneral() {
 
   return (
     <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
-      <SellerPageHeader
-        eyebrow="General"
-        title="Estadísticas de tu tienda"
-        subtitle="Resumen de visitas, ventas e ingresos de tu perfil."
-      />
+      <SellerPageHeader eyebrow="General" />
 
       <SellerSubscriptionAlert profile={seller} />
 

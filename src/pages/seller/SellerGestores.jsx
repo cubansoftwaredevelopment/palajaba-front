@@ -357,7 +357,6 @@ export default function SellerGestores() {
     <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
       <SellerPageHeader
         eyebrow="Tu red"
-        title="Gestores"
         subtitle="Crea usuarios para tu red de venta y elige qué productos pueden ofrecer."
       />
 

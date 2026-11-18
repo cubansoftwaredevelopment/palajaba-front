@@ -627,8 +627,8 @@ export default function SellerProfile() {
                 className="pointer-events-none absolute -left-12 bottom-0 h-28 w-28 rounded-full bg-brand-white/10 blur-2xl"
                 aria-hidden
               />
-              <div className="relative mx-auto w-full max-w-md lg:max-w-3xl xl:max-w-4xl">
-                <h2 className="font-display text-2xl font-bold text-brand-white sm:text-3xl">
+              <div className="relative mx-auto w-full max-w-md text-center lg:max-w-3xl xl:max-w-4xl">
+                <h2 className="font-script text-7xl leading-[1.05] text-brand-white sm:text-8xl">
                   Mi cuenta
                 </h2>
                 <p className="mt-1 text-sm text-brand-white/80">
@@ -668,8 +668,8 @@ export default function SellerProfile() {
           <motion.div key={activePanel} className={`${sellerSectionGap} ${stepClass}`} {...shift}>
             <div className="flex flex-col gap-2">
               <BackToHubButton onClick={goToHub} />
-              <div>
-                <h2 className="font-display text-xl font-bold text-brand-green sm:text-2xl">
+              <div className="text-center">
+                <h2 className="font-script text-7xl leading-[1.05] text-brand-carmelita sm:text-8xl">
                   {panelMeta?.label}
                 </h2>
                 {panelMeta?.description ? (

@@ -40,7 +40,7 @@ export const buyerHeaderLocationImage =
   'h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-brand-green/12 lg:h-12 lg:w-12'
 
 export const buyerHeaderLocationTitle =
-  'truncate font-display text-base font-bold leading-tight text-brand-green lg:text-lg'
+  'truncate font-script text-3xl leading-[1.15] text-brand-carmelita lg:text-4xl'
 
 export const buyerHeaderLocationProvince =
   'truncate text-xs font-semibold text-brand-carmelita/80 lg:text-sm'
@@ -204,7 +204,7 @@ export const buyerJabaPanelHeader =
   'flex shrink-0 items-center justify-between gap-3 border-b border-brand-green/10 px-5 py-4'
 
 export const buyerJabaPanelTitle =
-  'font-display text-lg font-bold text-brand-green'
+  'font-script text-4xl leading-[1.15] text-brand-carmelita sm:text-5xl'
 
 export const buyerJabaStickySummary =
   'shrink-0 border-b border-brand-green/10 bg-brand-white px-5 py-2.5'

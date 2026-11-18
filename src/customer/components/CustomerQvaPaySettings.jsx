@@ -70,7 +70,7 @@ export default function CustomerQvaPaySettings({ onUpdated }) {
 
   return (
     <section id="cuenta-qvapay" className={sectionClass}>
-      <h2 className="text-lg font-bold">Cuenta QvaPay</h2>
+      <h2 className="font-script text-3xl leading-[1.15] text-brand-carmelita">Cuenta QvaPay</h2>
       <p className="mt-1 text-sm text-brand-carmelita/80">Verificaremos que el usuario exista antes de habilitar los pagos y las devoluciones.</p>
       <form onSubmit={save} className="mt-4 flex flex-col gap-3">
         <label htmlFor="customer-qvapay-username" className="text-sm font-semibold">Usuario QvaPay

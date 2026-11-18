@@ -251,7 +251,7 @@ function SellerCatalogPreviewContent() {
   )
 
   const previewShell = (children, { header = headerEnd } = {}) => (
-    <CatalogThemeScope theme={catalogTheme} palette={catalogPalette} className="flex min-h-dvh flex-col">
+    <CatalogThemeScope theme={catalogTheme} palette={catalogPalette} className="flex h-full min-h-0 flex-1 flex-col">
       <BuyerShell
         flushBottom
         mode="seller-preview"

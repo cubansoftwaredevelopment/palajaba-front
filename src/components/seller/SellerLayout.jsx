@@ -10,6 +10,7 @@ import SellerShell from './SellerShell'
 import StatePanel from '../ui/StatePanel'
 import { fetchSellerNotifications, fetchSellerOrders, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
 import { fetchSellerProfile } from '../../auth/api.js'
+import { resolveMediaUrl } from '../../lib/media'
 import { BRAND_NAME } from '../../constants/branding'
 import {
   clearSellerSession,
@@ -331,33 +332,7 @@ export default function SellerLayout() {
   const sellerNavItems = getSellerNavItems(profile)
   const readOnly = profile?.subscription_active === false
 
-  if (isCatalogPreview) {
-    return (
-      <SellerReadOnlyContext.Provider value={readOnly}>
-      <>
-        <SellerPageMotion context={{ profile, refreshProfile }} />
-        <SellerNotificationToast
-          toasts={liveToasts}
-          onDone={(id) => setLiveToasts((current) => current.filter((item) => item.id !== id))}
-          onOpen={() => {
-            setLiveToasts([])
-            openNotifications()
-          }}
-        />
-        {showNotifications && (
-          <SellerNotificationsPanel
-            notifications={notifications}
-            loading={notificationsLoading}
-            onClose={closeNotifications}
-            onMarkRead={handleMarkNotificationRead}
-            onMarkAllSystemRead={handleMarkAllSystemNotificationsRead}
-            storeName={profile?.store_name}
-          />
-        )}
-      </>
-      </SellerReadOnlyContext.Provider>
-    )
-  }
+  const fillPage = isCatalogPage || isCatalogPreview
 
   return (
     <SellerReadOnlyContext.Provider value={readOnly}>
@@ -370,14 +345,16 @@ export default function SellerLayout() {
         notificationCount={notificationCount}
         pendingOrderCount={pendingOrderCount}
         showBottomNav={showBottomNav}
-        catalogLayout={isCatalogPage}
+        catalogLayout={fillPage}
+        hideChrome={isCatalogPreview}
         navItems={sellerNavItems}
+        profilePhotoUrl={resolveMediaUrl(profile.profile_photo_url) || ''}
       >
         <SellerPageMotion
           context={{ profile, refreshProfile }}
-          fill={isCatalogPage}
-          scroll={showBottomNav && !isCatalogPage}
-          contentClassName={isCatalogPage ? '' : (showBottomNav ? sellerMainWithNav : sellerMain)}
+          fill={fillPage}
+          scroll={showBottomNav && !fillPage}
+          contentClassName={fillPage ? '' : (showBottomNav ? sellerMainWithNav : sellerMain)}
         />
       </SellerShell>
 

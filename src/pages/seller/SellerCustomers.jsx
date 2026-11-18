@@ -498,8 +498,8 @@ export default function SellerCustomers() {
 
   return (
     <main className="mx-auto w-full max-w-6xl p-4 sm:p-6">
-      <header className="mb-5">
-        <h1 className="mt-1 font-display text-2xl font-bold text-brand-carmelita sm:text-3xl">Clientes</h1>
+      <header className="mb-5 text-center">
+        <h1 className="font-script text-7xl leading-[1.05] text-brand-carmelita sm:text-8xl">Clientes</h1>
         <p className="mt-1 text-sm text-brand-carmelita/70">Clientes que han realizado pedidos en tu tienda.</p>
       </header>
       <MethodTabs
@@ -575,13 +575,13 @@ export default function SellerCustomers() {
       ) : loading ? <LoadingState message="Cargando clientes…" /> : customersEmpty ? <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">Aún no tienes clientes registrados por pedidos.</p> : (
         <>
         {customers.length ? (
-        <ul className="grid gap-3 md:grid-cols-2">
+        <ul className="flex flex-col divide-y divide-neutral-300">
           {customers.map((customer) => (
             <li key={customer.id}>
               <button
                 type="button"
                 onClick={() => setSelectedCustomer(customer)}
-                className="w-full rounded-2xl border border-brand-green/10 bg-brand-white p-4 text-left shadow-sm transition hover:border-brand-green/25 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 lg:p-6"
+                className="w-full py-3.5 text-left transition active:bg-black/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
                 aria-label={`Ver cliente ${customer.full_name} y sus pedidos`}
               >
                 <span className="flex items-start justify-between gap-3">

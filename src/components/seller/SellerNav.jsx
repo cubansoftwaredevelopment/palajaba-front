@@ -65,7 +65,14 @@ function PendingOrderMark() {
   return <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[0.65rem] font-extrabold leading-none text-white ring-2 ring-brand-white" aria-label="Pedidos que requieren atención" title="Pedidos que requieren atención">!</span>
 }
 
-export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0 }) {
+function NavGlyph({ id, profilePhotoUrl }) {
+  if (id === 'perfil' && profilePhotoUrl) {
+    return <img src={profilePhotoUrl} alt="" className="h-full w-full object-cover" />
+  }
+  return SELLER_NAV_ICONS[id]
+}
+
+export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0, profilePhotoUrl = '' }) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 w-full max-w-[100dvw] border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md lg:hidden"
@@ -75,19 +82,24 @@ export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0 }) {
       <div className="mx-auto flex w-full min-w-0 max-w-md items-stretch px-0.5 sm:px-1">
         {items.map((item) => (
           <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => bottomLinkClass(isActive)}>
-            {({ isActive }) => (
+            {({ isActive }) => {
+              const showStorePhoto = item.id === 'perfil' && Boolean(profilePhotoUrl)
+              return (
               <>
                 <span
-                  className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors sm:h-9 sm:w-9 sm:rounded-xl ${
-                    isActive ? 'bg-brand-green text-brand-white' : 'text-current'
+                  className={`relative flex h-8 w-8 shrink-0 items-center justify-center transition-colors sm:h-9 sm:w-9 ${
+                    showStorePhoto
+                      ? `overflow-hidden rounded-full ${isActive ? 'ring-2 ring-brand-green' : 'ring-1 ring-brand-green/25'}`
+                      : `rounded-lg sm:rounded-xl ${isActive ? 'bg-brand-green text-brand-white' : 'text-current'}`
                   }`}
                 >
-                  {SELLER_NAV_ICONS[item.id]}
+                  <NavGlyph id={item.id} profilePhotoUrl={profilePhotoUrl} />
                   {item.id === 'pedidos' && pendingOrderCount > 0 ? <PendingOrderMark /> : null}
                 </span>
                 <span className="w-full truncate px-0.5 text-center">{item.label}</span>
               </>
-            )}
+              )
+            }}
           </NavLink>
         ))}
       </div>
@@ -95,18 +107,21 @@ export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0 }) {
   )
 }
 
-export function SellerSidebarNav({ items = SELLER_NAV, pendingOrderCount = 0 }) {
+export function SellerSidebarNav({ items = SELLER_NAV, pendingOrderCount = 0, profilePhotoUrl = '' }) {
   return (
     <nav className="hidden lg:flex lg:flex-col lg:gap-1" aria-label="Secciones de tu tienda">
-      {items.map((item) => (
+      {items.map((item) => {
+        const showStorePhoto = item.id === 'perfil' && Boolean(profilePhotoUrl)
+        return (
         <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => sideLinkClass(isActive)}>
-          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-current/10">
-            {SELLER_NAV_ICONS[item.id]}
+          <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center ${showStorePhoto ? 'overflow-hidden rounded-full ring-2 ring-brand-white/80' : 'rounded-lg bg-current/10'}`}>
+            <NavGlyph id={item.id} profilePhotoUrl={profilePhotoUrl} />
             {item.id === 'pedidos' && pendingOrderCount > 0 ? <PendingOrderMark /> : null}
           </span>
           {item.label}
         </NavLink>
-      ))}
+        )
+      })}
     </nav>
   )
 }

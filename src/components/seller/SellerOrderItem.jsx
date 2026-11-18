@@ -53,18 +53,9 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
       tabIndex={0}
       onClick={handleActivate}
       onKeyDown={handleKeyDown}
-      className={`group flex w-full cursor-pointer items-stretch gap-0 overflow-hidden rounded-2xl border text-left shadow-[0_2px_12px_rgba(89,128,44,0.05)] transition-colors [touch-action:pan-y] active:scale-[0.995] lg:hover:shadow-[0_4px_18px_rgba(89,128,44,0.08)] ${
-        isPending
-          ? 'border-brand-yellow/25 bg-brand-white active:bg-brand-yellow/10 lg:hover:border-brand-yellow/35'
-          : 'border-brand-green/10 bg-brand-white active:bg-brand-green/[0.03] lg:hover:border-brand-green/18'
-      } ${sellerFocusRing}`}
+      className={`group flex w-full cursor-pointer text-left transition-colors [touch-action:pan-y] active:bg-black/[0.03] ${sellerFocusRing}`}
     >
-      <span
-        className={`w-1 shrink-0 ${isPending ? 'bg-brand-yellow' : 'bg-brand-green/35'}`}
-        aria-hidden
-      />
-
-      <span className="flex min-w-0 flex-1 flex-col gap-2.5 px-4 py-3.5">
+      <span className="flex min-w-0 flex-1 flex-col py-3.5">
         <span className="flex items-start justify-between gap-3">
           <span className="min-w-0">
             <span className="flex flex-wrap items-center gap-2">
@@ -127,7 +118,7 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
           </span>
         </span>
 
-        <span className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
           <span className="rounded-lg bg-brand-green/[0.06] px-2 py-1 font-medium text-brand-carmelita/90">
             {itemCount} {itemCount === 1 ? 'producto' : 'productos'}
           </span>

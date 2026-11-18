@@ -11,15 +11,16 @@ import {
 const VISIBLE_MS = 4200
 const EXIT_MS = 260
 
-function NoticeToastCard({ toast, onDone, onOpen }) {
+function NoticeToastCard({ toast, onDone, onOpen, paused, onPress }) {
   const [leaving, setLeaving] = useState(false)
   const isError = toast?.tone === 'error'
 
   useEffect(() => {
+    if (paused) return undefined
     setLeaving(false)
     const hideTimer = window.setTimeout(() => setLeaving(true), VISIBLE_MS)
     return () => window.clearTimeout(hideTimer)
-  }, [toast.id])
+  }, [toast.id, paused])
 
   useEffect(() => {
     if (!leaving) return undefined
@@ -37,6 +38,7 @@ function NoticeToastCard({ toast, onDone, onOpen }) {
         isError ? 'border-brand-carmelita/25' : ''
       }`}
       onClick={() => {
+        if (onPress?.()) return
         if (onOpen) onOpen()
         else setLeaving(true)
       }}
@@ -71,19 +73,48 @@ function NoticeToastCard({ toast, onDone, onOpen }) {
 
 export default function SellerNotificationToast({ toast, toasts, aboveNav = false, onDone, onOpen }) {
   const items = toasts ?? (toast ? [toast] : [])
+  const [open, setOpen] = useState(false)
   if (!items.length) return null
 
   const isError = items.some((item) => item.tone === 'error')
+  const stacked = items.length > 1 && !open
 
   return (
     <div
-      className={`${aboveNav ? sellerNoticeToastShellNav : sellerNoticeToastShellPage} flex-col items-center gap-2`}
+      className={`${aboveNav ? sellerNoticeToastShellNav : sellerNoticeToastShellPage} flex-col items-center`}
       aria-live={isError ? 'assertive' : 'polite'}
       aria-atomic="true"
     >
-      <div className="pointer-events-auto flex max-h-[min(70dvh,32rem)] w-[min(22rem,calc(100vw-2rem))] flex-col gap-2 overflow-y-auto">
-        {items.map((item) => (
-          <NoticeToastCard key={item.id} toast={item} onDone={onDone} onOpen={onOpen} />
+      <div
+        className={`pointer-events-auto w-[min(22rem,calc(100vw-2rem))] ${open ? 'flex flex-col gap-2' : 'grid'}`}
+        onMouseEnter={() => {
+          if (items.length > 1) setOpen(true)
+        }}
+        onMouseLeave={() => setOpen(false)}
+      >
+        {items.map((item, index) => (
+          <div
+            key={item.id}
+            className={`w-full origin-bottom transition-transform duration-200 ease-out ${stacked ? 'col-start-1 row-start-1' : ''}`}
+            style={stacked ? {
+              zIndex: items.length - index,
+              transform: `translateY(${-Math.min(index, 3) * 8}px) scale(${1 - Math.min(index, 3) * 0.04})`,
+            } : undefined}
+          >
+            <NoticeToastCard
+              toast={item}
+              onDone={onDone}
+              onOpen={onOpen}
+              paused={open}
+              onPress={() => {
+                if (items.length > 1 && !open) {
+                  setOpen(true)
+                  return true
+                }
+                return false
+              }}
+            />
+          </div>
         ))}
       </div>
     </div>
