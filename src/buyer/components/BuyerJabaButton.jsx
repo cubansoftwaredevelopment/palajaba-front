@@ -1,3 +1,4 @@
+import { Link, useLocation } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { JABA_BAG } from '../../constants/branding'
 import { badgeSpring } from '../../motion/presets'
@@ -6,16 +7,16 @@ import { buyerJabaBadge, buyerJabaTrigger } from './buyerStyles'
 
 export default function BuyerJabaButton() {
   const reduced = useReducedMotion()
-  const { count, togglePanel, open } = useBuyerJaba()
+  const { count } = useBuyerJaba()
+  const location = useLocation()
+  const onCart = location.pathname === '/cart'
 
   return (
-    <button
-      type="button"
-      onClick={togglePanel}
+    <Link
+      to="/cart"
       className={buyerJabaTrigger}
       aria-label={count > 0 ? `Tu jaba, ${count} productos` : 'Abrir tu jaba'}
-      aria-expanded={open}
-      aria-haspopup="dialog"
+      aria-current={onCart ? 'page' : undefined}
     >
       <img
         src={JABA_BAG.src}
@@ -37,6 +38,6 @@ export default function BuyerJabaButton() {
           {count > 99 ? '99+' : count}
         </motion.span>
       ) : null}
-    </button>
+    </Link>
   )
 }

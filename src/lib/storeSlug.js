@@ -1,5 +1,6 @@
 const RESERVED_STORE_SLUGS = new Set([
   'admin',
+  'cart',
   'comprar',
   'login',
   'registro',

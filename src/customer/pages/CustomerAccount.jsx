@@ -6,7 +6,6 @@ import { clearCustomerSession, CUSTOMER_PURCHASE_REVOKED_MESSAGE, getCustomerTok
 import AccountDeleteModal from '../../components/AccountDeleteModal'
 import { fetchMarketplaceProduct } from '../../buyer/api.js'
 import BuyerHeaderTools, { CUSTOMER_NOTICES_EVENT } from '../../buyer/components/BuyerHeaderTools'
-import BuyerJabaPanel from '../../buyer/components/BuyerJabaPanel'
 import BuyerMarketplaceNav from '../../buyer/components/BuyerMarketplaceNav'
 import CustomerQvaPayPrompt from '../components/CustomerQvaPayPrompt.jsx'
 import CustomerQvaPaySettings from '../components/CustomerQvaPaySettings.jsx'
@@ -1120,7 +1119,6 @@ export default function CustomerAccount() {
           ) : null}
         </div>
       </main>
-      <BuyerJabaPanel />
       <BuyerMarketplaceNav orderAttention={hasOrderWarning} />
 
       <FilterModal

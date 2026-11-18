@@ -44,6 +44,7 @@ import AdminSettings from './pages/AdminSettings'
 import AdminFinance from './pages/AdminFinance'
 import RejectSellerMarketplace from './buyer/components/RejectSellerMarketplace'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
+import BuyerCartPage from './buyer/components/BuyerJabaPanel'
 import { BuyerDisplayCurrencyProvider, BuyerJabaProvider } from './buyer/context.js'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './buyer/pages/BuyerHome'
@@ -127,6 +128,11 @@ const router = createBrowserRouter([
             ],
           },
         ],
+      },
+      {
+        path: 'cart',
+        element: <BuyerJabaLayout />,
+        children: [{ index: true, element: <BuyerCartPage /> }],
       },
       { path: 'login', element: <Login /> },
       { path: 'cliente/registro', element: <CustomerRegister /> },

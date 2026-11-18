@@ -1,13 +1,18 @@
 import { useEffect, useId, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { AnimatePresence, motion, PresenceContext, useReducedMotion } from 'framer-motion'
+import Logo from '../../components/Logo'
 import { jabaItemMotion, jabaStoreMotion, qtyTick, useSheetExitMs } from '../../motion/presets'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import BuyerModalPortal from './BuyerModalPortal'
+import { useDismissibleModal } from './useOrderModalPresence'
 import { useDisplayedLocation } from '../context.js'
 import { buildJabaShareMessage, buildJabaShareUrl } from '../../lib/buyerShare'
 import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
-import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence'
 import { useBuyerDisplayCurrency } from '../context.js'
 import { useBuyerJaba } from '../context.js'
+import BuyerShell from './BuyerShell'
+import BuyerMarketplaceNav from './BuyerMarketplaceNav'
 import LoadingState from '../../components/ui/LoadingState'
 import { allItemsOfferDelivery, resolveStorePhone } from '../../lib/buyerJaba'
 import { resolveDisplayPrice } from '../../lib/displayPrice'
@@ -15,11 +20,12 @@ import { formatPrice } from '../../lib/money'
 import { resolveMediaUrl } from '../../lib/media'
 import {
   buyerJabaCheckoutActions,
+  buyerProductDetailModal,
+  buyerProductDetailOverlay,
+  buyerProductDetailStickyBar,
   buyerJabaIconBtn,
   buyerJabaItemImage,
   buyerJabaItemRow,
-  buyerJabaOverlay,
-  buyerJabaPanel,
   buyerJabaPanelBody,
   buyerJabaPanelHeader,
   buyerJabaPanelTitle,
@@ -171,6 +177,73 @@ function JabaQty({ qty }) {
   )
 }
 
+function ClearStoreModal({ title, message, confirmLabel, onClose: requestClose, onConfirm }) {
+  const exitMs = useSheetExitMs()
+  const { dismiss, closing, sheetProps } = useDismissibleModal(requestClose, exitMs, { motion: true })
+
+  useEffect(() => {
+    function onKeyDown(event) {
+      if (event.key === 'Escape') dismiss()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [dismiss])
+
+  return (
+    <BuyerModalPortal>
+      <BuyerMotionFrame
+        variant="detail"
+        closing={closing}
+        sheetProps={sheetProps}
+        overlayClassName={`${buyerProductDetailOverlay} !z-[140]`}
+        panelClassName={buyerProductDetailModal}
+        overlayProps={{
+          role: 'presentation',
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) dismiss()
+          },
+        }}
+        panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'clear-store-title' }}
+      >
+        <div className="shrink-0 px-5 pt-3">
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="clear-store-title" className="font-display text-lg font-bold text-brand-green">{title}</h2>
+            <button
+              type="button"
+              onClick={dismiss}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-brand-carmelita touch-manipulation active:bg-brand-green/8"
+              aria-label="Cerrar"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <path d="M18 6 6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div className="px-5 pb-4 pt-3">
+          <p className="text-sm leading-relaxed text-brand-carmelita">{message}</p>
+        </div>
+        <div className={buyerProductDetailStickyBar}>
+          <div className="grid grid-cols-2 gap-2">
+            <button type="button" onClick={dismiss} className={buyerJabaSecondaryBtn}>
+              Cancelar
+            </button>
+            <button type="button" onClick={onConfirm} className={buyerJabaPrimaryBtn}>
+              {confirmLabel}
+            </button>
+          </div>
+        </div>
+      </BuyerMotionFrame>
+    </BuyerModalPortal>
+  )
+}
+
 function StoreGroup({
   group,
   expanded,
@@ -181,8 +254,8 @@ function StoreGroup({
   checkoutSubmitting,
   onRequestPickup,
   onRequestDelivery,
-  onClearStore,
-  onRemove,
+  onAskClearStore,
+  onAskRemove,
   onSetQuantity,
 }) {
   const panelId = useId()
@@ -191,11 +264,9 @@ function StoreGroup({
   const deliveryAvailable = canCheckout && allItemsOfferDelivery(group.items)
 
   function handleClearStore(event) {
+    event.preventDefault()
     event.stopPropagation()
-    const confirmed = window.confirm(
-      `¿Vaciar los productos de ${group.store_name}? Esta acción no se puede deshacer.`,
-    )
-    if (confirmed) onClearStore(group.store_id)
+    onAskClearStore(group)
   }
 
   const reduced = useReducedMotion()
@@ -263,7 +334,10 @@ function StoreGroup({
                     <div className="mt-2 flex items-center gap-1">
                       <button
                         type="button"
-                        onClick={() => onSetQuantity(item.id, qty - 1)}
+                        onClick={() => {
+                          if (qty <= 1) onAskRemove(item)
+                          else onSetQuantity(item.id, qty - 1)
+                        }}
                         className={buyerJabaQtyBtn}
                         aria-label={`Quitar uno de ${item.name}`}
                       >
@@ -280,7 +354,11 @@ function StoreGroup({
                       </button>
                       <button
                         type="button"
-                        onClick={() => onRemove(item.id)}
+                        onClick={(event) => {
+                          event.preventDefault()
+                          event.stopPropagation()
+                          onAskRemove(item)
+                        }}
                         className={`${buyerJabaIconBtn} jaba-remove-btn ml-auto`}
                         aria-label={`Quitar ${item.name} de la jaba`}
                         title="Quitar producto"
@@ -354,12 +432,12 @@ function StoreGroup({
   )
 }
 
-export default function BuyerJabaPanel() {
+export default function BuyerCartPage() {
   const titleId = useId()
+  const navigate = useNavigate()
+  const routeLocation = useLocation()
   const sectionRefs = useRef({})
   const {
-    open,
-    closePanel,
     items,
     groups,
     count,
@@ -374,11 +452,11 @@ export default function BuyerJabaPanel() {
   const { currency: displayCurrency, cupPerUnit } = useBuyerDisplayCurrency()
   const location = useDisplayedLocation()
   const [shareOpen, setShareOpen] = useState(false)
+  const [pendingRemoval, setPendingRemoval] = useState(null)
   const [expandedIds, setExpandedIds] = useState(() => new Set())
-  const exitMs = useSheetExitMs()
+  const hadItemsRef = useRef(count > 0)
+  const justEmptied = hadItemsRef.current && count === 0
   const reduced = useReducedMotion()
-  const { present, closing } = useOrderModalPresence(open, exitMs)
-  const sheetProps = useSwipeDownSheet(closePanel, { motion: true })
   const storeMotion = reduced
     ? { initial: false, animate: { opacity: 1 }, exit: { opacity: 0, transition: { duration: 0 } } }
     : jabaStoreMotion
@@ -387,11 +465,6 @@ export default function BuyerJabaPanel() {
   const showStoreChips = groups.length >= 3
 
   useEffect(() => {
-    if (!open) {
-      setExpandedIds(new Set())
-      return
-    }
-
     const ids = storeIdsKey ? storeIdsKey.split('|') : []
     setExpandedIds((prev) => {
       if (!prev.size) {
@@ -405,24 +478,16 @@ export default function BuyerJabaPanel() {
       if (!next.size && ids[0]) next.add(ids[0])
       return next
     })
-  }, [open, storeIdsKey])
+  }, [storeIdsKey])
 
   useEffect(() => {
-    if (!open) return undefined
+    hadItemsRef.current = count > 0
+  }, [count])
 
-    function handleKeyDown(event) {
-      if (event.key === 'Escape') closePanel()
-    }
-
-    document.body.style.overflow = 'hidden'
-    document.addEventListener('keydown', handleKeyDown)
-    return () => {
-      document.body.style.overflow = ''
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [open, closePanel])
-
-  if (!present) return null
+  function goBack() {
+    if (routeLocation.key === 'default') navigate('/comprar')
+    else navigate(-1)
+  }
 
   function toggleStore(storeId) {
     setExpandedIds((current) => {
@@ -447,21 +512,28 @@ export default function BuyerJabaPanel() {
 
   return (
     <>
-    <BuyerMotionFrame
-      split
-      overlayAs="button"
-      closing={closing}
-      sheetProps={sheetProps}
-      overlayClassName={buyerJabaOverlay}
-      panelClassName={buyerJabaPanel}
-      overlayProps={{ type: 'button', 'aria-label': 'Cerrar tu jaba', onClick: closePanel }}
-      panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': titleId }}
+    <BuyerShell
+      headerStart={(
+        <div className="flex min-w-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={goBack}
+            aria-label="Volver"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-brand-green touch-manipulation active:bg-brand-green/8 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
+          <Logo className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" />
+        </div>
+      )}
     >
-        <div className={buyerJabaPanelHeader}>
+        <div className={`${buyerJabaPanelHeader} !px-0`}>
           <div className="min-w-0 flex-1 pr-2">
-            <h2 id={titleId} className={buyerJabaPanelTitle}>
+            <h1 id={titleId} className={buyerJabaPanelTitle}>
               Tu Jaba
-            </h2>
+            </h1>
           </div>
           {items.length > 0 && location?.province?.id && location?.municipality?.id ? (
             <BuyerShareButton
@@ -471,19 +543,9 @@ export default function BuyerJabaPanel() {
               className={buyerJabaIconBtn}
             />
           ) : null}
-          <button
-            type="button"
-            onClick={closePanel}
-            className={buyerJabaIconBtn}
-            aria-label="Cerrar"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
         </div>
 
-        <div className={buyerJabaStickySummary}>
+        <div className={`${buyerJabaStickySummary} !px-0`}>
           <p className={buyerJabaStickySummaryText}>{summaryLabel}</p>
           {showStoreChips ? (
             <div className={`${buyerJabaStoreChips} mt-2`} role="navigation" aria-label="Ir a tienda">
@@ -501,17 +563,41 @@ export default function BuyerJabaPanel() {
           ) : null}
         </div>
 
-        <div className={buyerJabaPanelBody}>
+        <div className={`${buyerJabaPanelBody} !px-0 !pb-[calc(5.5rem+var(--safe-bottom))]`}>
+          <PresenceContext.Provider value={null}>
+          <AnimatePresence mode="wait" initial={false}>
           {groups.length === 0 ? (
-            <div className="rounded-2xl border border-brand-yellow/25 bg-brand-yellow/10 px-4 py-8 text-center">
-              <p className="font-display text-base font-bold text-brand-green">Tu jaba está vacía</p>
-              <p className="mt-2 text-sm leading-relaxed text-brand-carmelita">
-                Toca <span className="font-semibold text-brand-green">Pa&apos; La Jaba</span> en un producto para
-                guardarlo aquí. Cada tienda se pide por separado por WhatsApp.
-              </p>
-            </div>
+              <motion.div
+                key="jaba-empty"
+                className="rounded-2xl border border-brand-yellow/25 bg-brand-yellow/10 px-4 py-8 text-center"
+                initial={justEmptied && !reduced ? { opacity: 0, y: 36, scale: 0.92 } : false}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 280, damping: 22 }}
+              >
+                <motion.img
+                  src="/images/welcome/jabi.png"
+                  alt="Jabi"
+                  className="mx-auto h-36 w-36 object-contain"
+                  initial={justEmptied && !reduced ? { opacity: 0, scale: 0.4, rotate: -12 } : false}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 320, damping: 16, delay: 0.05 }}
+                />
+                <p className="mt-3 font-display text-base font-bold text-brand-green">Tu jaba está vacía</p>
+                <p className="mt-2 text-sm leading-relaxed text-brand-carmelita">
+                  Toca <span className="font-semibold text-brand-green">Pa&apos; La Jaba</span> en un producto para
+                  guardarlo aquí. Cada tienda se pide por separado por WhatsApp.
+                </p>
+                <Link to="/comprar" className={`${buyerJabaPrimaryBtn} mt-5`}>
+                  Seguir comprando
+                </Link>
+              </motion.div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <motion.div
+              key="jaba-list"
+              className="flex flex-col gap-3"
+              exit={reduced ? { opacity: 1 } : { opacity: 0, y: -16, scale: 0.98 }}
+              transition={reduced ? { duration: 0 } : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            >
               <AnimatePresence mode="popLayout" initial={false}>
               {groups.map((group) => (
                 <motion.section
@@ -534,17 +620,46 @@ export default function BuyerJabaPanel() {
                   checkoutSubmitting={checkoutSubmittingStoreId === group.store_id}
                   onRequestPickup={requestPickupCheckout}
                   onRequestDelivery={requestDeliveryCheckout}
-                  onClearStore={clearStore}
-                  onRemove={removeProduct}
+                  onAskClearStore={(store) => setPendingRemoval({
+                    kind: 'store',
+                    id: store.store_id,
+                    title: 'Vaciar tienda',
+                    message: `Se quitarán los productos de ${store.store_name}. Esta acción no se puede deshacer.`,
+                    confirmLabel: 'Vaciar',
+                  })}
+                  onAskRemove={(item) => setPendingRemoval({
+                    kind: 'product',
+                    id: item.id,
+                    title: 'Quitar producto',
+                    message: `Se quitará ${item.name} de tu jaba. Esta acción no se puede deshacer.`,
+                    confirmLabel: 'Quitar',
+                  })}
                   onSetQuantity={setQuantity}
                 />
                 </motion.section>
               ))}
               </AnimatePresence>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
+          </PresenceContext.Provider>
         </div>
-    </BuyerMotionFrame>
+    </BuyerShell>
+    <BuyerMarketplaceNav />
+    {pendingRemoval ? (
+      <ClearStoreModal
+        title={pendingRemoval.title}
+        message={pendingRemoval.message}
+        confirmLabel={pendingRemoval.confirmLabel}
+        onClose={() => setPendingRemoval(null)}
+        onConfirm={() => {
+          const current = pendingRemoval
+          setPendingRemoval(null)
+          if (current.kind === 'store') clearStore(current.id)
+          else removeProduct(current.id)
+        }}
+      />
+    ) : null}
     {shareOpen && location?.province?.id ? (
         <BuyerShareSheet
           title="Compartir tu jaba"

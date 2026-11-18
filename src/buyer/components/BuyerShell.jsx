@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { BuyerDisplayCurrencyContext } from '../context.js'
 import BuyerCurrencyTag from './BuyerCurrencyTag'
 import BuyerHeaderTools from './BuyerHeaderTools'
-import BuyerJabaPanel from './BuyerJabaPanel'
 import { buyerMarketplaceScrollPadding } from './buyerStyles'
 import {
   BuyerSellerReturnFooter,
@@ -115,8 +114,6 @@ export default function BuyerShell({
       </div>
 
       {!isSellerPreview ? <BuyerSellerReturnFooter /> : null}
-
-      {!isSellerPreview ? <BuyerJabaPanel /> : null}
     </main>
   )
 }

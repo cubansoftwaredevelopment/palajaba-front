@@ -79,7 +79,7 @@ export default function BuyerSharedEntry({ location }) {
         if (!cancelled) setNotice('No se pudo abrir lo que te compartieron.')
       })
 
-    navigate('/comprar', { replace: true })
+    navigate(jaba ? '/cart' : '/comprar', { replace: true })
     return () => {
       cancelled = true
     }

@@ -1,5 +1,5 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import {
   BUYER_DISPLAY_CURRENCY_EVENT,
   getBuyerDisplayCurrencies,
@@ -184,6 +184,7 @@ export function BuyerJabaProvider({ children }) {
   const [customerLoginOpen, setCustomerLoginOpen] = useState(false)
   const [qvaPayPromptOpen, setQvaPayPromptOpen] = useState(false)
   const navigate = useNavigate()
+  const routeLocation = useLocation()
   const [pendingCustomerCheckout, setPendingCustomerCheckout] = useState(null)
 
   const continueCheckout = useCallback(async (type, payload) => {
@@ -260,7 +261,7 @@ export function BuyerJabaProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    if (!open) return undefined
+    if (!open && routeLocation.pathname !== '/cart') return undefined
 
     let cancelled = false
 
@@ -297,7 +298,7 @@ export function BuyerJabaProvider({ children }) {
     return () => {
       cancelled = true
     }
-  }, [open])
+  }, [open, routeLocation.pathname])
 
   const count = useMemo(() => items.reduce((total, item) => total + (item.quantity ?? 1), 0), [items])
   const groups = useMemo(() => groupJabaByStore(items), [items])
@@ -421,7 +422,6 @@ export function BuyerJabaProvider({ children }) {
       if (!isInJaba(product.id)) addToJaba(product)
       setJabaItemQuantity(product.id, quantity)
     }
-    setOpen(true)
     return skipped
   }, [])
 
@@ -596,9 +596,9 @@ export function BuyerJabaProvider({ children }) {
       closePickupCheckout,
       confirmDeliveryCheckout,
       confirmPickupCheckout,
-      openPanel: () => setOpen(true),
+      openPanel: () => navigate('/cart'),
       closePanel: () => setOpen(false),
-      togglePanel: () => setOpen((current) => !current),
+      togglePanel: () => navigate('/cart'),
     }),
     [
       items,
