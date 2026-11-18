@@ -20,6 +20,7 @@ import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerS
 import BuyerProductImage from './BuyerProductImage'
 import BuyerProductPrices from './BuyerProductPrices'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
+import FavoriteBookmarkButton from './FavoriteBookmarkButton'
 import JabaAddButton from './JabaAddButton'
 import { isCustomerAuthenticated, getCustomerProfile, getCustomerToken, updateCustomerProfile, CUSTOMER_AUTH_CHANGE_EVENT } from '../../lib/customerAuth'
 import { addCustomerFavorite, removeCustomerFavorite } from '../api.js'
@@ -62,7 +63,7 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
   const route = useLocation()
   const { currencies: displayCurrencies, cupPerUnit } = useBuyerDisplayCurrency()
   const location = useDisplayedLocation()
-  const { isInJaba: checkInJaba, addProduct, buyProduct } = useBuyerJaba()
+  const { isInJaba: checkInJaba, addProduct, buyProduct, showNotice } = useBuyerJaba()
   const imageSrc = resolveMediaUrl(product.image_url, { width: 400 })
   const displayPrices = resolveDisplayPrices(product, displayCurrencies, cupPerUnit)
   const discountPercent = productDiscountPercent(product)
@@ -96,7 +97,7 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
     if (!isCustomerAuthenticated()) {
       try { sessionStorage.setItem('pala_jaba_pending_favorite', product.id) } catch { /* ignore */ }
       navigate('/login', { state: { accountType: 'customer', backTo: `${route.pathname}${route.search}${route.hash}` } })
-      return
+      return false
     }
     try {
       const result = favorite
@@ -105,8 +106,10 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
       updateCustomerProfile(result)
       setFavorite(!favorite)
       onFavoriteChange?.(!favorite, result)
+      return favorite ? 'removed' : 'saved'
     } catch {
-      window.alert('No pudimos actualizar tus favoritos. Inténtalo de nuevo.')
+      showNotice('No pudimos actualizar tus favoritos. Inténtalo de nuevo.')
+      return false
     }
   }
 
@@ -193,9 +196,11 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
                 <span className={buyerProductDiscountBadge}>-{discountPercent}%</span>
               ) : null}
             </button>
-            <button type="button" onClick={handleFavorite} className="absolute bottom-2 right-2 z-10 grid h-9 w-9 place-items-center rounded-full bg-brand-white/95 text-brand-carmelita shadow-[0_2px_8px_rgba(28,33,24,0.2)]" aria-label={favorite ? 'Quitar de guardados' : 'Guardar oferta'} title={favorite ? 'Quitar de guardados' : 'Guardar oferta'}>
-              <svg width="19" height="19" viewBox="0 0 24 24" fill={favorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 4.75A1.75 1.75 0 0 1 7.75 3h8.5A1.75 1.75 0 0 1 18 4.75V21l-6-4-6 4V4.75Z" /></svg>
-            </button>
+            <FavoriteBookmarkButton
+              saved={favorite}
+              onClick={handleFavorite}
+              className="absolute bottom-2 right-2 z-10 grid h-9 w-9 place-items-center rounded-full bg-brand-white/95 text-brand-carmelita shadow-[0_2px_8px_rgba(28,33,24,0.2)]"
+            />
           </div>
 
           <button type="button" onClick={openDetail} className={`${buyerProductBody} w-full text-left touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/25`} aria-label={`Ver detalles de ${product.name}${soldOut ? ' (agotado)' : ''}`}>

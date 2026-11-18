@@ -12,10 +12,7 @@ import { storeServiceAreas } from '../../lib/businessArea'
 import { getBusinessAreaFromSelection } from '../../components/seller/SellerBusinessAreaFields'
 import SellerBusinessAreaFields from '../../components/seller/SellerBusinessAreaFields'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import { TelegramIcon, WhatsAppIcon } from '../../components/seller/ShareBrandIcons'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
-import { openExternalUrl } from '../../lib/nativeApp'
-import { buildTelegramShareUrl, buildWhatsAppShareUrl } from '../../lib/storeShare'
 import {
   sellerAlertError,
   sellerAlertSuccess,
@@ -45,7 +42,6 @@ export default function ShareSelectedProductsModal({
   )
   const [copyStatus, setCopyStatus] = useState('')
   const [copyError, setCopyError] = useState('')
-  const [destinationsOpen, setDestinationsOpen] = useState(false)
 
   const items = useMemo(
     () => (products ?? []).filter((product) => product?.id).map((product) => ({ id: product.id, quantity: 1 })),
@@ -74,13 +70,7 @@ export default function ShareSelectedProductsModal({
 
   useEffect(() => {
     function onKeyDown(event) {
-      if (event.key === 'Escape') {
-        if (destinationsOpen) {
-          setDestinationsOpen(false)
-          return
-        }
-        onClose()
-      }
+      if (event.key === 'Escape') onClose()
     }
     document.addEventListener('keydown', onKeyDown)
     document.body.style.overflow = 'hidden'
@@ -88,12 +78,11 @@ export default function ShareSelectedProductsModal({
       document.removeEventListener('keydown', onKeyDown)
       document.body.style.overflow = ''
     }
-  }, [destinationsOpen, onClose])
+  }, [onClose])
 
   useEffect(() => {
     setCopyStatus('')
     setCopyError('')
-    setDestinationsOpen(false)
   }, [provinceId, municipalityId])
 
   async function handleCopyLink() {
@@ -112,20 +101,21 @@ export default function ShareSelectedProductsModal({
     if (!checkoutReady) return
     setCopyStatus('')
     setCopyError('')
-    if (canUseSystemShare()) {
-      try {
-        await shareWithSystem({
-          title: `Productos de ${profile?.store_name?.trim() || BRAND_NAME}`,
-          text: shareMessage,
-          url: checkoutUrl,
-        })
-        onClose()
-        return
-      } catch (error) {
-        if (shareWasCancelled(error)) return
-      }
+    if (!canUseSystemShare()) {
+      setCopyError('Tu dispositivo no tiene disponible el panel para compartir.')
+      return
     }
-    setDestinationsOpen(true)
+    try {
+      await shareWithSystem({
+        title: `Productos de ${profile?.store_name?.trim() || BRAND_NAME}`,
+        text: shareMessage,
+        url: checkoutUrl,
+      })
+      onClose()
+    } catch (error) {
+      if (shareWasCancelled(error)) return
+      setCopyError('No se pudo abrir el panel para compartir.')
+    }
   }
 
   return (
@@ -190,71 +180,29 @@ export default function ShareSelectedProductsModal({
           </div>
 
           <div className={sellerModalFooter}>
-            {destinationsOpen ? (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-brand-carmelita/90">Enviar por…</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => openExternalUrl(buildWhatsAppShareUrl(shareMessage))}
-                    className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#25D366] px-3 text-sm font-bold text-white touch-manipulation active:scale-[0.99]"
-                  >
-                    <span aria-hidden className="flex">
-                      <WhatsAppIcon className="h-5 w-5" />
-                    </span>
-                    WhatsApp
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openExternalUrl(
-                        buildTelegramShareUrl(
-                          checkoutUrl,
-                          `Te compartí productos de ${profile?.store_name?.trim() || 'mi tienda'} en ${BRAND_NAME}`,
-                        ),
-                      )
-                    }
-                    className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#229ED9] px-3 text-sm font-bold text-white touch-manipulation active:scale-[0.99]"
-                  >
-                    <span aria-hidden className="flex">
-                      <TelegramIcon className="h-5 w-5" />
-                    </span>
-                    Telegram
-                  </button>
-                </div>
+            <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  onClick={() => setDestinationsOpen(false)}
-                  className="min-h-10 rounded-full px-4 text-sm font-semibold text-brand-carmelita touch-manipulation active:bg-brand-green/8"
+                  onClick={handleCopyLink}
+                  disabled={!checkoutReady}
+                  className="min-h-11 rounded-full border border-brand-green/20 px-3 text-sm font-bold text-brand-green touch-manipulation active:bg-brand-green/8 disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Volver
+                  Copiar enlace
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendVia}
+                  disabled={!checkoutReady}
+                  className="min-h-11 rounded-full bg-brand-green px-3 text-sm font-bold text-brand-white touch-manipulation active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Enviar por…
                 </button>
               </div>
-            ) : (
-              <div className="flex flex-col gap-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCopyLink}
-                    disabled={!checkoutReady}
-                    className="min-h-11 rounded-full border border-brand-green/20 px-3 text-sm font-bold text-brand-green touch-manipulation active:bg-brand-green/8 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Copiar enlace
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSendVia}
-                    disabled={!checkoutReady}
-                    className="min-h-11 rounded-full bg-brand-green px-3 text-sm font-bold text-brand-white touch-manipulation active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Enviar por…
-                  </button>
-                </div>
-                {!checkoutReady && allowedAreas.length > 0 ? (
-                  <p className={sellerHint}>Elige provincia y municipio para copiar o enviar el enlace.</p>
-                ) : null}
-              </div>
-            )}
+              {!checkoutReady && allowedAreas.length > 0 ? (
+                <p className={sellerHint}>Elige provincia y municipio para copiar o enviar el enlace.</p>
+              ) : null}
+            </div>
           </div>
       </SellerMotionSheet>
     </SellerModalPortal>

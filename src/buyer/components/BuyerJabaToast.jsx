@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
-import { buyerJabaToastCard, buyerJabaToastShell } from './buyerStyles'
+import { buyerJabaToastCard, buyerJabaToastCardWarning, buyerJabaToastShell } from './buyerStyles'
 
 const VISIBLE_MS = 1800
 const EXIT_MS = 320
@@ -29,8 +29,8 @@ export default function BuyerJabaToast({ toast, onDone }) {
   return (
     <div className={buyerJabaToastShell} aria-live="polite" aria-atomic="true">
       <motion.div
-        role="status"
-        className={buyerJabaToastCard}
+        role={toast.tone === 'warning' ? 'alert' : 'status'}
+        className={toast.tone === 'warning' ? buyerJabaToastCardWarning : buyerJabaToastCard}
         initial={reduced ? false : { opacity: 0, y: 18, scale: 0.9 }}
         animate={leaving ? { opacity: 0, y: 12, scale: 0.92 } : { opacity: 1, y: 0, scale: 1 }}
         transition={reduced ? { duration: 0 } : undefined}

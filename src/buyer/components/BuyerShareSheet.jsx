@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react'
 import { canUseSystemShare, shareWithSystem } from '../../lib/buyerShare'
-import { buildTelegramShareUrl, buildWhatsAppShareUrl } from '../../lib/storeShare'
-import { openExternalUrl } from '../../lib/nativeApp'
-import { TelegramIcon, WhatsAppIcon } from '../../components/seller/ShareBrandIcons'
 import BuyerModalPortal from './BuyerModalPortal'
+import { buyerProductDetailModal } from './buyerStyles'
 import { useDismissibleModal } from './useOrderModalPresence'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useSheetExitMs } from '../../motion/presets'
@@ -37,7 +35,6 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
   const exitMs = useSheetExitMs()
   const { dismiss: onClose, closing, sheetProps } = useDismissibleModal(requestClose, exitMs, { motion: true })
   const [copyStatus, setCopyStatus] = useState('')
-  const [destinationsOpen, setDestinationsOpen] = useState(false)
 
   useEffect(() => {
     function onKeyDown(event) {
@@ -61,35 +58,27 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
 
   async function sendVia() {
     setCopyStatus('')
-    if (canUseSystemShare()) {
-      try {
-        await shareWithSystem({ title, text: message, url })
-        onClose()
-        return
-      } catch (error) {
-        if (shareWasCancelled(error)) return
-      }
+    if (!canUseSystemShare()) {
+      setCopyStatus('Tu dispositivo no tiene disponible el panel para compartir.')
+      return
     }
-    setDestinationsOpen(true)
-  }
-
-  function sendWhatsApp() {
-    openExternalUrl(buildWhatsAppShareUrl(message))
-  }
-
-  function sendTelegram() {
-    const text = message.replace(url, '').replace(/:\s*$/, '').trim()
-    openExternalUrl(buildTelegramShareUrl(url, text || title))
+    try {
+      await shareWithSystem({ title, text: message, url })
+      onClose()
+    } catch (error) {
+      if (shareWasCancelled(error)) return
+      setCopyStatus('No se pudo abrir el panel para compartir.')
+    }
   }
 
   return (
     <BuyerModalPortal>
       <BuyerMotionFrame
-        variant="dialog"
+        variant="detail"
         closing={closing}
         sheetProps={sheetProps}
-        overlayClassName="fixed inset-0 z-[110] flex items-end justify-center bg-brand-green/25 p-3 sm:items-center"
-        panelClassName="w-full max-w-md rounded-3xl border border-brand-green/10 bg-brand-white p-5 shadow-[0_16px_48px_rgba(89,128,44,0.2)]"
+        overlayClassName="fixed inset-0 z-[110] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4"
+        panelClassName={`${buyerProductDetailModal} h-auto`}
         overlayProps={{
           role: 'presentation',
           onMouseDown: (event) => {
@@ -98,49 +87,26 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
         }}
         panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'buyer-share-title' }}
       >
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 id="buyer-share-title" className="font-display text-lg font-bold text-brand-green">
-                {title}
-              </h2>
-              <p className="mt-1 text-sm text-brand-carmelita/90">El enlace incluye la zona en la que lo estás viendo.</p>
-            </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-full text-brand-carmelita touch-manipulation active:bg-brand-green/8"
-              aria-label="Cerrar"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-          {destinationsOpen ? (
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <p className="col-span-2 text-sm text-brand-carmelita/90">Enviar por…</p>
+          <div className="px-5 pt-3 pb-[max(1.25rem,var(--safe-bottom))] sm:pb-5">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 id="buyer-share-title" className="font-display text-lg font-bold text-brand-green">
+                  {title}
+                </h2>
+                <p className="mt-1 text-sm text-brand-carmelita/90">El enlace incluye la zona en la que lo estás viendo.</p>
+              </div>
               <button
                 type="button"
-                onClick={sendWhatsApp}
-                className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#25D366] px-4 text-sm font-bold text-white touch-manipulation active:scale-[0.99]"
+                onClick={onClose}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-brand-carmelita touch-manipulation active:bg-brand-green/8"
+                aria-label="Cerrar"
               >
-                <span aria-hidden="true" className="flex">
-                  <WhatsAppIcon className="h-5 w-5" />
-                </span>
-                WhatsApp
-              </button>
-              <button
-                type="button"
-                onClick={sendTelegram}
-                className="flex min-h-11 items-center justify-center gap-2 rounded-full bg-[#229ED9] px-4 text-sm font-bold text-white touch-manipulation active:scale-[0.99]"
-              >
-                <span aria-hidden="true" className="flex">
-                  <TelegramIcon className="h-5 w-5" />
-                </span>
-                Telegram
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
               </button>
             </div>
-          ) : (
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -157,8 +123,8 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
                 Enviar por…
               </button>
             </div>
-          )}
-          {copyStatus ? <p className="mt-3 text-sm text-brand-carmelita">{copyStatus}</p> : null}
+            {copyStatus ? <p className="mt-3 text-sm text-brand-carmelita">{copyStatus}</p> : null}
+          </div>
       </BuyerMotionFrame>
     </BuyerModalPortal>
   )

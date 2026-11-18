@@ -402,6 +402,12 @@ export function BuyerJabaProvider({ children }) {
     setJabaToast((current) => (current?.id === toastId ? null : current))
   }, [])
 
+  const showNotice = useCallback((message, tone = 'warning') => {
+    const text = String(message ?? '').trim()
+    if (!text) return
+    setJabaToast({ id: Date.now(), message: text, tone })
+  }, [])
+
   const removeProduct = useCallback((productId) => {
     removeFromJaba(productId)
   }, [])
@@ -592,6 +598,7 @@ export function BuyerJabaProvider({ children }) {
       requestPickupCheckout,
       requestCheckout,
       buyProduct,
+      showNotice,
       closeDeliveryCheckout,
       closePickupCheckout,
       confirmDeliveryCheckout,
@@ -621,6 +628,7 @@ export function BuyerJabaProvider({ children }) {
       requestPickupCheckout,
       requestCheckout,
       buyProduct,
+      showNotice,
       closeDeliveryCheckout,
       closePickupCheckout,
       confirmDeliveryCheckout,

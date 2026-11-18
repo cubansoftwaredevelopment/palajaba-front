@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { PresenceContext } from 'framer-motion'
+import { AnimatePresence, motion, PresenceContext, useReducedMotion } from 'framer-motion'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, markAllCustomerPaymentNotificationsRead, dismissCustomerQvaPayPrompt, deleteCustomerAccount } from '../api.js'
 import { clearCustomerSession, CUSTOMER_PURCHASE_REVOKED_MESSAGE, getCustomerToken, updateCustomerProfile } from '../../lib/customerAuth'
@@ -75,6 +75,7 @@ function revealAccountSection(id) {
 export default function CustomerAccount() {
   const navigate = useNavigate()
   const location = useLocation()
+  const reducedMotion = useReducedMotion()
   const section = location.pathname === '/cliente/avisos'
     ? 'avisos'
     : CUSTOMER_NAV.find((item) => item.path === location.pathname)?.id || 'perfil'
@@ -1104,9 +1105,16 @@ export default function CustomerAccount() {
                   {favoriteProducts.length ? (
                     <PresenceContext.Provider value={null}>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                      <AnimatePresence mode="popLayout">
                       {favoriteProducts.map((product, index) => (
-                        <BuyerProductCard
+                        <motion.div
                           key={product.id}
+                          layout
+                          className="min-w-0"
+                          exit={reducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.78, y: 16 }}
+                          transition={{ duration: reducedMotion ? 0 : 0.32, ease: [0.22, 1, 0.36, 1] }}
+                        >
+                        <BuyerProductCard
                           product={product}
                           enterIndex={index}
                           allowBuyAfterWarning={Boolean(
@@ -1122,15 +1130,17 @@ export default function CustomerAccount() {
                                   : ""
                           }
                           onFavoriteChange={(isFavorite) => {
-                            if (!isFavorite)
+                            if (isFavorite) return
+                            window.setTimeout(() => {
                               setFavoriteProducts((current) =>
-                                current.filter(
-                                  (item) => item.id !== product.id,
-                                ),
-                              );
+                                current.filter((item) => item.id !== product.id),
+                              )
+                            }, reducedMotion ? 0 : 700)
                           }}
                         />
+                        </motion.div>
                       ))}
+                      </AnimatePresence>
                     </div>
                     </PresenceContext.Provider>
                   ) : (
