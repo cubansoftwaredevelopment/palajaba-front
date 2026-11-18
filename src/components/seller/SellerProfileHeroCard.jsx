@@ -82,11 +82,6 @@ export default function SellerProfileHeroCard({
         </button>
       </div>
 
-      {photoUploading && (
-        <p className="mt-2 text-center text-[0.65rem] text-brand-carmelita/75" role="status">
-          Subiendo foto…
-        </p>
-      )}
       {photoOpen && photoUrl ? (
         <PhotoLightbox
           images={[{ id: 'profile', image_url: photoUrl }]}

@@ -127,6 +127,7 @@ export default function CustomerAccount() {
   const [contactLoading, setContactLoading] = useState(false)
   const [profileMessage, setProfileMessage] = useState('')
   const [profileError, setProfileError] = useState('')
+  const [photoUploading, setPhotoUploading] = useState(false)
 
   const loadPaymentNotifications = useCallback(async () => {
     setNotificationsLoading(true)
@@ -323,13 +324,19 @@ export default function CustomerAccount() {
 
   async function uploadPhoto(event) {
     const file = event.target.files?.[0]
-    if (!file) return
+    event.target.value = ''
+    if (!file || photoUploading) return
+    setPhotoUploading(true)
+    setError('')
     try {
       const next = await uploadCustomerPhoto(token, file)
       setProfile(next)
       updateCustomerProfile(next)
-    } catch (cause) { setError(getUserFacingMessage(cause, 'No pudimos actualizar la foto.')) }
-    event.target.value = ''
+    } catch (cause) {
+      setError(getUserFacingMessage(cause, 'No pudimos actualizar la foto.'))
+    } finally {
+      setPhotoUploading(false)
+    }
   }
 
   async function startContactChange(kind) {
@@ -577,41 +584,49 @@ export default function CustomerAccount() {
                     <div className="relative z-10">
                       <h2 className="mb-4 text-lg font-bold">Mi perfil</h2>
                       <div className="flex items-center gap-4">
-                        <label
-                          className="group relative block h-20 w-20 shrink-0 cursor-pointer rounded-full"
-                          aria-label="Cambiar foto de perfil"
-                        >
-                          {profile.profile_photo_url ? (
-                            <img
-                              src={resolveMediaUrl(profile.profile_photo_url)}
-                              alt="Foto de perfil"
-                              className="h-20 w-20 rounded-full object-cover ring-2 ring-white shadow-lg"
-                            />
-                          ) : (
-                            <span className="grid h-20 w-20 place-items-center rounded-full bg-brand-yellow/35 text-2xl font-bold text-brand-green ring-2 ring-white shadow-lg">
-                              {profile.full_name?.[0]}
+                        <div className="flex shrink-0 flex-col items-center gap-1.5">
+                          <label
+                            className={`group relative block h-20 w-20 shrink-0 rounded-full ${photoUploading ? 'cursor-wait' : 'cursor-pointer'}`}
+                            aria-label="Cambiar foto de perfil"
+                          >
+                            {profile.profile_photo_url ? (
+                              <img
+                                src={resolveMediaUrl(profile.profile_photo_url)}
+                                alt="Foto de perfil"
+                                className="h-20 w-20 rounded-full object-cover ring-2 ring-white shadow-lg"
+                              />
+                            ) : (
+                              <span className="grid h-20 w-20 place-items-center rounded-full bg-brand-yellow/35 text-2xl font-bold text-brand-green ring-2 ring-white shadow-lg">
+                                {profile.full_name?.[0]}
+                              </span>
+                            )}
+                            <span className="absolute bottom-0 right-0 grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-brand-green text-white shadow-md transition group-hover:bg-brand-carmelita">
+                              <svg
+                                viewBox="0 0 24 24"
+                                className="h-4 w-4"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                aria-hidden="true"
+                              >
+                                <path d="M4 7h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" />
+                                <circle cx="12" cy="13" r="3" />
+                              </svg>
                             </span>
-                          )}
-                          <span className="absolute bottom-0 right-0 grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-brand-green text-white shadow-md transition group-hover:bg-brand-carmelita">
-                            <svg
-                              viewBox="0 0 24 24"
-                              className="h-4 w-4"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              aria-hidden="true"
-                            >
-                              <path d="M4 7h3l2-2h6l2 2h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z" />
-                              <circle cx="12" cy="13" r="3" />
-                            </svg>
-                          </span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="sr-only"
-                            onChange={uploadPhoto}
-                          />
-                        </label>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="sr-only"
+                              disabled={photoUploading}
+                              onChange={uploadPhoto}
+                            />
+                          </label>
+                          {photoUploading ? (
+                            <p role="status" className="text-center text-xs font-semibold text-brand-carmelita/80">
+                              Subiendo...
+                            </p>
+                          ) : null}
+                        </div>
                         <p className="text-sm text-brand-carmelita/75">
                           Toca tu foto para cambiarla.
                         </p>

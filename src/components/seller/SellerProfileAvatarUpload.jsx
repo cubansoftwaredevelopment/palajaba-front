@@ -56,12 +56,8 @@ export default function SellerProfileAvatarUpload({
     </button>
   )
 
-  if (size === 'account') {
-    return avatarButton
-  }
-
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="flex shrink-0 flex-col items-center gap-1.5">
       {avatarButton}
 
       {size === 'compact' && (
@@ -71,13 +67,15 @@ export default function SellerProfileAvatarUpload({
           onClick={onSelectClick}
           className={sellerBtnSecondary}
         >
-          {uploading ? 'Subiendo…' : previewSrc ? 'Cambiar foto' : 'Subir foto'}
+          {uploading ? 'Subiendo...' : previewSrc ? 'Cambiar foto' : 'Subir foto'}
         </button>
       )}
 
-      {size === 'hero' && uploading && (
-        <p className="text-center text-[0.65rem] text-brand-carmelita/75">Subiendo foto…</p>
-      )}
+      {size !== 'compact' && uploading ? (
+        <p role="status" className="text-center text-xs font-semibold text-brand-carmelita/80">
+          Subiendo...
+        </p>
+      ) : null}
     </div>
   )
 }
