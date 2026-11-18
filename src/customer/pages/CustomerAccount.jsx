@@ -543,11 +543,13 @@ export default function CustomerAccount() {
         </header>
         <div className={`mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 ${section === 'perfil' ? 'pt-3' : 'pt-6'}`}>
           {section === 'perfil' ? null : (
-          <header className="mb-6">
+          <header className={`mb-6 ${section === 'pedidos' || section === 'favoritos' || section === 'direcciones' ? 'text-center' : ''}`}>
             <div>
-              <h1 className={section === 'pedidos' || section === 'favoritos' || section === 'direcciones' || section === 'avisos'
-                ? 'font-script text-4xl leading-[1.15] text-brand-carmelita'
-                : 'font-display text-3xl font-bold'}>
+              <h1 className={section === 'pedidos' || section === 'favoritos' || section === 'direcciones'
+                ? 'font-script text-7xl leading-[1.05] text-brand-carmelita sm:text-8xl'
+                : section === 'avisos'
+                  ? 'font-script text-4xl leading-[1.15] text-brand-carmelita'
+                  : 'font-display text-3xl font-bold'}>
                 {section === 'avisos'
                   ? 'Avisos'
                   : CUSTOMER_NAV.find((item) => item.id === section)?.label || 'Mi cuenta'}
@@ -864,7 +866,7 @@ export default function CustomerAccount() {
               ) : null}
 
               {section === "direcciones" ? (
-                <section className={sectionClass}>
+                <section>
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <h2 className="text-lg font-bold">Direcciones guardadas</h2>
                     <button
@@ -880,13 +882,13 @@ export default function CustomerAccount() {
                     </button>
                   </div>
                   {profile.addresses?.length ? (
-                    <ul className="space-y-3">
+                    <ul className="flex flex-col divide-y divide-neutral-300">
                       {profile.addresses.map((address) => {
                         const hasPoint = address.latitude != null && address.longitude != null
                         return (
                         <li
                           key={address.id}
-                          className="relative min-h-40 overflow-hidden rounded-2xl border border-brand-green/10"
+                          className="relative min-h-40 overflow-hidden py-4 first:pt-0 last:pb-0"
                         >
                           {hasPoint ? (
                             <SellerLocationPreview
