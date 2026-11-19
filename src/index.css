@@ -1,15 +1,30 @@
 @import 'tailwindcss';
 @import 'react-day-picker/style.css';
 
+@font-face {
+  font-family: 'Shree Devanagari 714';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Shree Devanagari 714'), local('Shree714'), local('Shree-Devanagari-714');
+}
+
+@font-face {
+  font-family: 'Shree Devanagari 714';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Shree Devanagari 714'), local('Shree714'), local('Shree-Devanagari-714');
+}
+
 :root {
   --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
   --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
 }
 
 @theme {
-  /* Libre Baskerville (Google Fonts): serif similar to Utopia, self-hosted for fast load */
-  --font-sans: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
-  --font-display: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Shree Devanagari 714', Georgia, 'Times New Roman', serif;
+  --font-display: 'Shree Devanagari 714', Georgia, 'Times New Roman', serif;
   --font-script: 'Great Vibes', cursive;
 
   --color-brand-green: #59802c;
@@ -375,6 +390,7 @@
   body {
     @apply m-0 min-h-dvh min-w-0 overflow-x-hidden bg-brand-white font-sans text-brand-green antialiased;
     letter-spacing: 0.01em;
+    font-synthesis: none;
   }
 
   .buyer-preview-static a,
@@ -391,6 +407,7 @@
     --admin-canvas: #0b0e0a;
     --admin-header: #000000;
     font-family: system-ui, -apple-system, sans-serif;
+    font-synthesis: weight style;
     letter-spacing: normal;
     color-scheme: dark;
   }
@@ -533,6 +550,31 @@
 @layer utilities {
   .font-display {
     font-family: var(--font-display);
+  }
+
+  /* Borde fino en letra que no es cursiva: 1px en tamaño medio o cambio de color, 2px si es muy grande. */
+  :is(.text-lg, .text-xl):not(.font-script),
+  .font-display.font-bold:is(.text-base):not(.font-script) {
+    paint-order: stroke fill;
+    -webkit-text-stroke: 1px var(--color-brand-white);
+  }
+
+  :is(.text-2xl, .text-3xl, .text-4xl, .text-5xl, .text-6xl):not(.font-script) {
+    paint-order: stroke fill;
+    -webkit-text-stroke: 2px var(--color-brand-white);
+  }
+
+  :is(.text-brand-carmelita, .text-brand-yellow):is(.text-base, .text-lg, .text-xl):not(.font-script) {
+    paint-order: stroke fill;
+    -webkit-text-stroke: 1px var(--color-brand-green);
+  }
+
+  .bg-brand-green :is(.text-lg, .text-xl, .text-2xl, .text-3xl):not(.font-script) {
+    -webkit-text-stroke-color: var(--color-brand-green);
+  }
+
+  .admin-theme :is(.text-base, .text-lg, .text-xl, .text-2xl, .text-3xl, .text-4xl, .text-5xl, .text-6xl) {
+    -webkit-text-stroke: 0;
   }
 
   .animate-success-pop {

@@ -12,6 +12,7 @@ import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
 import { useBuyerDisplayCurrency } from '../context.js'
 import { useBuyerJaba } from '../context.js'
 import BuyerShell from './BuyerShell'
+import BuyerJabaSuggestions from './BuyerJabaSuggestions'
 import BuyerMarketplaceNav from './BuyerMarketplaceNav'
 import LoadingState from '../../components/ui/LoadingState'
 import { allItemsOfferDelivery, resolveStorePhone } from '../../lib/buyerJaba'
@@ -563,7 +564,7 @@ export default function BuyerCartPage() {
           ) : null}
         </div>
 
-        <div className={`${buyerJabaPanelBody} !px-0 !pb-[calc(5.5rem+var(--safe-bottom))]`}>
+        <div className={`${buyerJabaPanelBody} !overflow-visible !px-0 !pb-[calc(5.5rem+var(--safe-bottom))]`}>
           <PresenceContext.Provider value={null}>
           <AnimatePresence mode="wait" initial={false}>
           {groups.length === 0 ? (
@@ -643,6 +644,7 @@ export default function BuyerCartPage() {
           )}
           </AnimatePresence>
           </PresenceContext.Provider>
+          <BuyerJabaSuggestions />
         </div>
     </BuyerShell>
     <BuyerMarketplaceNav />
