@@ -30,6 +30,7 @@ import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { resolveStoreSlug } from '../../lib/storeShare'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { BACKGROUND_UPLOAD_EVENT, consumeUploadResults, forgetUploadResult, startBackgroundFormUpload } from '../../lib/backgroundUpload'
 
 export default function SellerCatalog() {
   const { profile } = useOutletContext()
@@ -76,6 +77,27 @@ export default function SellerCatalog() {
     return () => window.removeEventListener(SELLER_PRODUCTS_REFRESH_EVENT, loadCatalog)
   }, [loadCatalog])
 
+  useEffect(() => {
+    function handleResult(detail) {
+      if (!detail || detail.kind !== 'catalog_product') return
+      forgetUploadResult(detail.id)
+      if (!detail.ok) {
+        setSuccessMessage('')
+        setError(detail.error || 'No se pudo crear el producto.')
+        return
+      }
+      setError('')
+      setSuccessMessage('Producto guardado.')
+      loadCatalog()
+    }
+    consumeUploadResults('catalog_product').forEach(handleResult)
+    function onUpload(event) {
+      handleResult(event.detail)
+    }
+    window.addEventListener(BACKGROUND_UPLOAD_EVENT, onUpload)
+    return () => window.removeEventListener(BACKGROUND_UPLOAD_EVENT, onUpload)
+  }, [loadCatalog])
+
   function openCreateProduct(localCategoryId = '') {
     if ((summary?.categories?.length ?? 0) === 0) {
       setError('Crea primero una categoría local para organizar tu catálogo.')
@@ -111,19 +133,41 @@ export default function SellerCatalog() {
     setError('')
     closeProductForm()
     const token = getSellerToken()
-    const request = isEditing
-      ? updateCatalogProduct(token, productId, formData)
-      : createCatalogProduct(token, formData)
-    request
-      .then((saved) => handleProductSaved(saved, { created: !isEditing }))
+    if (!isEditing) {
+      const fields = {}
+      const files = []
+      for (const [key, value] of formData.entries()) {
+        if (value instanceof Blob) files.push({ file: value, fieldName: key })
+        else fields[key] = String(value)
+      }
+      startBackgroundFormUpload({
+        token,
+        path: '/api/auth/me/catalog/products',
+        files,
+        fields,
+        notificationTitle: 'Subiendo producto',
+        kind: 'catalog_product',
+      })
+        .then((started) => {
+          if (started) {
+            setSuccessMessage('El producto se está subiendo. Puedes salir; te avisamos cuando quede guardado.')
+            return
+          }
+          return createCatalogProduct(token, formData).then((saved) =>
+            handleProductSaved(saved, { created: true }),
+          )
+        })
+        .catch((err) => {
+          setSuccessMessage('')
+          setError(getUserFacingMessage(err, 'No se pudo crear el producto.'))
+        })
+      return
+    }
+    updateCatalogProduct(token, productId, formData)
+      .then((saved) => handleProductSaved(saved, { created: false }))
       .catch((err) => {
         setSuccessMessage('')
-        setError(
-          getUserFacingMessage(
-            err,
-            `No se pudo ${isEditing ? 'actualizar' : 'crear'} el producto.`,
-          ),
-        )
+        setError(getUserFacingMessage(err, 'No se pudo actualizar el producto.'))
       })
   }
 

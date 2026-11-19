@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerHint, sellerLabel } from './sellerStyles'
 import { deleteSellerStoreBanner, updateSellerStoreBanner, uploadSellerStoreBanner } from '../../lib/api'
+import { BACKGROUND_UPLOAD_EVENT, consumeUploadResults, forgetUploadResult, startBackgroundFormUpload } from '../../lib/backgroundUpload'
+import { fetchSellerProfile } from '../../auth/api'
 import { validateImageFile, IMAGE_UPLOAD_HINT } from '../../lib/imageUpload'
 import { resolveMediaUrl } from '../../lib/media'
 import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
@@ -15,6 +17,7 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
   const fileInputRef = useRef(null)
   const [banners, setBanners] = useState(profile?.store_banners ?? [])
   const [uploading, setUploading] = useState(false)
+  const [notice, setNotice] = useState('')
   const [deletingId, setDeletingId] = useState('')
   const [togglingId, setTogglingId] = useState('')
   const [error, setError] = useState('')
@@ -24,6 +27,34 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
     updateSellerProfileCache(updated)
     onUpdated?.(updated)
   }
+
+  useEffect(() => {
+    function handleResult(detail) {
+      if (!detail || detail.kind !== 'store_banner') return
+      forgetUploadResult(detail.id)
+      if (!detail.ok) {
+        setNotice('')
+        setError(detail.error || 'No pudimos subir el banner.')
+        return
+      }
+      const token = getSellerToken()
+      if (!token) return
+      fetchSellerProfile(token)
+        .then((updated) => {
+          applyProfile(updated)
+          setNotice('El banner ya está en tu tienda.')
+        })
+        .catch((err) => {
+          setError(getUserFacingMessage(err, 'El banner se guardó, pero no pudimos refrescar la lista.'))
+        })
+    }
+    consumeUploadResults('store_banner').forEach(handleResult)
+    function onUpload(event) {
+      handleResult(event.detail)
+    }
+    window.addEventListener(BACKGROUND_UPLOAD_EVENT, onUpload)
+    return () => window.removeEventListener(BACKGROUND_UPLOAD_EVENT, onUpload)
+  }, [])
 
   async function handleFileChange(event) {
     const file = event.target.files?.[0]
@@ -37,8 +68,20 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
     }
 
     setError('')
+    setNotice('')
     setUploading(true)
     try {
+      const started = await startBackgroundFormUpload({
+        token: getSellerToken(),
+        path: '/api/auth/me/store-banners',
+        files: [{ file, fieldName: 'photo' }],
+        notificationTitle: 'Subiendo banner',
+        kind: 'store_banner',
+      })
+      if (started) {
+        setNotice('El banner se está subiendo. Puedes salir de esta pantalla.')
+        return
+      }
       const updated = await uploadSellerStoreBanner(getSellerToken(), file)
       applyProfile(updated)
     } catch (err) {
@@ -112,6 +155,12 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
               {uploading ? 'Subiendo…' : 'Agregar banner'}
             </button>
           </div>
+
+          {notice ? (
+            <p className={sellerHint} role="status">
+              {notice}
+            </p>
+          ) : null}
 
           {error ? (
             <p className={sellerAlertError} role="alert">
