@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { addSellerMapTiles, buyerMapMarkerIcon, sellerMapMarkerIcon, SELLER_MAP_LOCATION_ZOOM, SELLER_MAP_PREVIEW_ZOOM } from '../../lib/sellerMap'
+import { addSellerMapTiles, bounceMapPin, buyerMapMarkerIcon, sellerMapMarkerIcon, SELLER_MAP_LOCATION_ZOOM, SELLER_MAP_PREVIEW_ZOOM } from '../../lib/sellerMap'
 
 export default function SellerLocationPreview({
   location,
@@ -11,6 +11,7 @@ export default function SellerLocationPreview({
   mapClassName = '',
   viewer = null,
   mapControl = null,
+  footer = null,
 }) {
   const mapRef = useRef(null)
   const mapInstanceRef = useRef(null)
@@ -40,14 +41,16 @@ export default function SellerLocationPreview({
     )
 
     addSellerMapTiles(map)
-    L.marker(center, { icon: sellerMapMarkerIcon }).addTo(map)
+    const storeMarker = L.marker(center, { icon: sellerMapMarkerIcon }).addTo(map)
+    bounceMapPin(storeMarker)
 
     const viewerLat = Number(viewer?.lat)
     const viewerLng = Number(viewer?.lng)
     const hasViewer = Number.isFinite(viewerLat) && Number.isFinite(viewerLng)
     const bounds = hasViewer ? L.latLngBounds([center, [viewerLat, viewerLng]]) : null
     if (hasViewer) {
-      L.marker([viewerLat, viewerLng], { icon: buyerMapMarkerIcon, title: 'Tu ubicación' }).addTo(map)
+      const viewerMarker = L.marker([viewerLat, viewerLng], { icon: buyerMapMarkerIcon, title: 'Tu ubicación' }).addTo(map)
+      bounceMapPin(viewerMarker)
     }
 
     const fitMap = (shouldFrame) => {
@@ -111,7 +114,7 @@ export default function SellerLocationPreview({
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-16 bg-gradient-to-t from-brand-white/90 to-transparent" />
         ) : null}
       </div>
-      <div className="relative z-10 flex items-center gap-2 border-t border-brand-green/8 bg-brand-white/80 px-3 py-2.5 backdrop-blur-sm">
+      <div className="relative z-10 flex flex-col gap-2 border-t border-brand-green/8 bg-brand-white px-3 py-2.5">
         {viewOnly ? (
           <span className="shrink-0 text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70">
             Solo lectura
@@ -121,6 +124,7 @@ export default function SellerLocationPreview({
             Arrastra · Zoom
           </span>
         ) : null}
+        {footer}
       </div>
     </div>
   )

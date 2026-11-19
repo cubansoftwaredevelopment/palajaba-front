@@ -23,9 +23,7 @@ import SellerSocialLinksEditor from '../../components/seller/SellerSocialLinksEd
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
 import {
   sellerAlertError,
-  sellerBtnGhost,
   sellerBtnPrimary,
-  sellerBtnSecondary,
   sellerCharCounter,
   sellerChoice,
   sellerFocusRing,
@@ -396,6 +394,64 @@ export default function SellerProfile() {
     </div>
   )
 
+  const locationIconButton =
+    `grid h-10 w-10 shrink-0 place-items-center rounded-full border border-brand-green/20 bg-brand-white text-brand-green touch-manipulation active:bg-brand-yellow/15 disabled:opacity-50 ${sellerFocusRing}`
+  const locationSaveButton =
+    `grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand-green text-brand-white touch-manipulation active:scale-95 disabled:opacity-50 ${sellerFocusRing}`
+
+  const locationActions = (
+    <div className="flex items-center justify-center gap-2">
+      {location ? (
+        <button
+          type="button"
+          onClick={() => {
+            setLocation(null)
+            markDirty()
+          }}
+          className={`${locationIconButton} text-brand-carmelita`}
+          aria-label="Quitar ubicación"
+          title="Quitar ubicación"
+        >
+          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+            <path d="M4 7h16" />
+            <path d="M9 7V5h6v2" />
+            <path d="M7 7l1 12h8l1-12" />
+          </svg>
+        </button>
+      ) : null}
+      <button
+        type="button"
+        onClick={() => setShowMap(true)}
+        className={locationIconButton}
+        aria-label={location ? 'Cambiar en mapa' : 'Marcar en mapa'}
+        title={location ? 'Cambiar en mapa' : 'Marcar en mapa'}
+      >
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11Z" />
+          <circle cx="12" cy="10" r="2.5" />
+        </svg>
+      </button>
+      {readOnly ? null : (
+        <button
+          type="submit"
+          form="seller-edit-profile-form"
+          disabled={submitDisabled}
+          className={locationSaveButton}
+          aria-label={loading ? 'Guardando' : 'Guardar cambios'}
+          title={loading ? 'Guardando' : 'Guardar cambios'}
+        >
+          {loading ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+          ) : (
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
+  )
+
   const locationFields = (
     <>
       <SellerSection
@@ -420,24 +476,13 @@ export default function SellerProfile() {
       </SellerSection>
 
       <SellerSection label="Ubicación en mapa" optional>
-        {location && <SellerLocationPreview location={location} />}
-        <div className={`flex flex-col gap-1.5 sm:flex-row sm:items-center ${location ? 'mt-3' : ''}`}>
-          <button type="button" onClick={() => setShowMap(true)} className={sellerBtnSecondary}>
-            {location ? 'Cambiar en mapa' : 'Marcar en mapa'}
-          </button>
-          {location && (
-            <button
-              type="button"
-              onClick={() => {
-                setLocation(null)
-                markDirty()
-              }}
-              className={sellerBtnGhost}
-            >
-              Quitar ubicación
-            </button>
-          )}
-        </div>
+        {location && (
+          <SellerLocationPreview
+            location={location}
+            footer={locationActions}
+          />
+        )}
+        {location ? null : <div className="flex justify-center">{locationActions}</div>}
       </SellerSection>
 
       <SellerSection
@@ -700,7 +745,9 @@ export default function SellerProfile() {
                   </p>
                 )}
 
-                {readOnly ? null : <div className={sellerFormActions}>{submitButton}</div>}
+                {readOnly || activePanel === PROFILE_PANEL_IDS.location ? null : (
+                  <div className={sellerFormActions}>{submitButton}</div>
+                )}
               </form>
             ) : (
               <div className="rounded-2xl border border-brand-green/12 bg-brand-white p-4 shadow-sm sm:p-5">

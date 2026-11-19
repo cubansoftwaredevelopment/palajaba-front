@@ -9,6 +9,7 @@ import {
   SELLER_MAP_DEFAULT_ZOOM,
   SELLER_MAP_LOCATION_ZOOM,
   sellerMapMarkerIcon,
+  bounceMapPin,
 } from '../../lib/sellerMap'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
@@ -54,6 +55,7 @@ export default function BuyerOrderLocationMap({ initialCoords, onChange, fill = 
         marker.addTo(map)
         markerRef.current = marker
       }
+      bounceMapPin(markerRef.current)
       onChangeRef.current({ lat, lng })
     }
 

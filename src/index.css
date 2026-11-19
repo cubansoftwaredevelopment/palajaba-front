@@ -602,6 +602,7 @@
   .seller-map-pin {
     background: transparent !important;
     border: none !important;
+    overflow: visible !important;
   }
 
   .buyer-order-map .leaflet-container {
@@ -850,6 +851,37 @@
   border-color: #a8a29e;
 }
 
+@keyframes seller-pin-hop {
+  0%,
+  14%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1, 1);
+  }
+  24% {
+    transform: translate3d(0, 3px, 0) scale(1.1, 0.86);
+  }
+  38% {
+    transform: translate3d(0, -18px, 0) scale(0.9, 1.16);
+  }
+  52% {
+    transform: translate3d(0, -22px, 0) scale(0.97, 1.04);
+  }
+  68% {
+    transform: translate3d(0, -4px, 0) scale(0.92, 1.1);
+  }
+  80% {
+    transform: translate3d(0, 4px, 0) scale(1.14, 0.8);
+  }
+  92% {
+    transform: translate3d(0, 0, 0) scale(1, 1);
+  }
+}
+
+.seller-map-pin__bounce.is-hopping {
+  transform-origin: 50% 100%;
+  animation: seller-pin-hop 1.7s ease-in-out infinite;
+}
+
 @keyframes step-focus {
   from {
     filter: blur(8px);
@@ -879,7 +911,8 @@ button.jaba-remove-btn:active:not(:disabled) {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .screen-step {
+  .screen-step,
+  .seller-map-pin__bounce.is-hopping {
     animation: none;
   }
 

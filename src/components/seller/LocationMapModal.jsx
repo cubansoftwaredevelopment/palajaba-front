@@ -8,6 +8,7 @@ import {
   SELLER_MAP_DEFAULT_ZOOM,
   SELLER_MAP_LOCATION_ZOOM,
   sellerMapMarkerIcon,
+  bounceMapPin,
 } from '../../lib/sellerMap'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import SellerModalPortal from './SellerModalPortal'
@@ -45,6 +46,7 @@ export default function LocationMapModal({ initialLocation, onConfirm, onClose: 
     } else {
       markerRef.current = L.marker([lat, lng], { icon: sellerMapMarkerIcon }).addTo(map)
     }
+    bounceMapPin(markerRef.current)
   }
 
   useEffect(() => {

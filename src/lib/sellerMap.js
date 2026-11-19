@@ -6,15 +6,17 @@ export const SELLER_MAP_PREVIEW_ZOOM = 15
 export const SELLER_MAP_LOCATION_ZOOM = 16
 
 const SELLER_MAP_PIN_HTML = `
-  <svg width="36" height="48" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block">
-    <path
-      d="M18 0C10.82 0 5 5.82 5 13c0 9.75 13 35 13 35s13-25.25 13-35C31 5.82 25.18 0 18 0z"
-      fill="#59802c"
-      stroke="#fdfbf2"
-      stroke-width="2"
-    />
-    <circle cx="18" cy="13" r="5.5" fill="#fdfbf2" />
-  </svg>
+  <div class="seller-map-pin__bounce">
+    <svg width="36" height="48" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block">
+      <path
+        d="M18 0C10.82 0 5 5.82 5 13c0 9.75 13 35 13 35s13-25.25 13-35C31 5.82 25.18 0 18 0z"
+        fill="#59802c"
+        stroke="#fdfbf2"
+        stroke-width="2"
+      />
+      <circle cx="18" cy="13" r="5.5" fill="#fdfbf2" />
+    </svg>
+  </div>
 `
 
 export const sellerMapMarkerIcon = L.divIcon({
@@ -25,16 +27,18 @@ export const sellerMapMarkerIcon = L.divIcon({
 })
 
 const BUYER_MAP_PIN_HTML = `
-  <svg width="36" height="48" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block">
-    <path
-      d="M18 0C10.82 0 5 5.82 5 13c0 9.75 13 35 13 35s13-25.25 13-35C31 5.82 25.18 0 18 0z"
-      fill="#7b4c38"
-      stroke="#fdfbf2"
-      stroke-width="2"
-    />
-    <circle cx="18" cy="10.4" r="2.7" fill="#fdfbf2" />
-    <path d="M12.4 18.6c.9-2.85 3-4.15 5.6-4.15s4.7 1.3 5.6 4.15c.2.6-.28 1.15-.9 1.15h-9.4c-.62 0-1.1-.55-.9-1.15z" fill="#fdfbf2" />
-  </svg>
+  <div class="seller-map-pin__bounce">
+    <svg width="36" height="48" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="display:block">
+      <path
+        d="M18 0C10.82 0 5 5.82 5 13c0 9.75 13 35 13 35s13-25.25 13-35C31 5.82 25.18 0 18 0z"
+        fill="#7b4c38"
+        stroke="#fdfbf2"
+        stroke-width="2"
+      />
+      <circle cx="18" cy="10.4" r="2.7" fill="#fdfbf2" />
+      <path d="M12.4 18.6c.9-2.85 3-4.15 5.6-4.15s4.7 1.3 5.6 4.15c.2.6-.28 1.15-.9 1.15h-9.4c-.62 0-1.1-.55-.9-1.15z" fill="#fdfbf2" />
+    </svg>
+  </div>
 `
 
 export const buyerMapMarkerIcon = L.divIcon({
@@ -43,6 +47,22 @@ export const buyerMapMarkerIcon = L.divIcon({
   iconSize: [36, 48],
   iconAnchor: [18, 48],
 })
+
+export function bounceMapPin(marker) {
+  const play = () => {
+    const pin = marker?.getElement()?.querySelector('.seller-map-pin__bounce')
+    if (!pin) return false
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true
+    pin.classList.remove('is-hopping')
+    void pin.offsetWidth
+    pin.classList.add('is-hopping')
+    return true
+  }
+  if (play()) return
+  window.requestAnimationFrame(() => {
+    if (!play()) window.requestAnimationFrame(play)
+  })
+}
 
 export function addSellerMapTiles(map) {
   return L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
