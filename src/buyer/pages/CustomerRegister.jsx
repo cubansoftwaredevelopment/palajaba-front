@@ -8,7 +8,7 @@ import AuthShell from '../../auth/components/AuthShell'
 import PasswordField from '../../auth/components/PasswordField'
 import { AcceptPlatformPrivacy, AcceptPlatformTerms } from '../../components/PlatformTermsLink'
 import Button from '../../components/Button'
-import { alertErrorClass, inputClass, labelClass } from '../../auth/components/formStyles'
+import { inputClass, labelClass } from '../../auth/components/formStyles'
 import { addCustomerFavorite, confirmCustomerRegistration, resendCustomerRegistration, startCustomerRegistration } from '../api.js'
 import { setCustomerSession, updateCustomerProfile } from '../../lib/customerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
@@ -23,8 +23,8 @@ export default function CustomerRegister() {
   const [challenge, setChallenge] = useState(null)
   const [emailCode, setEmailCode] = useState('')
   const [phoneCode, setPhoneCode] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { showError, toastNode } = useFormErrorToast()
   const [info, setInfo] = useState('')
   const backTo = location.state?.backTo || '/cliente'
   const reduced = useReducedMotion()

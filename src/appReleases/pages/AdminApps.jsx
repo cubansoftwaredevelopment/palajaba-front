@@ -131,6 +131,7 @@ export default function AdminApps() {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const { showError, toastNode } = useFormErrorToast({ variant: 'admin' })
 
   const loadReleases = useCallback(async () => {
     setError('')

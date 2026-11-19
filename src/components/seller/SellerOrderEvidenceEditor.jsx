@@ -28,6 +28,7 @@ export default function SellerOrderEvidenceEditor({ orderId, submitting, onSubmi
   const closeTimerRef = useRef(null)
   const draftKey = `palajaba:evidence-draft:${orderId}`
   const [error, setError] = useState('')
+  const { toastNode } = useFormErrorToast()
   const [open, setOpen] = useState(false)
   const [content, setContent] = useState(() => readEvidenceDraft(orderId) || EMPTY_STORE_PAGE)
   const [hasDraft, setHasDraft] = useState(() => Boolean(readEvidenceDraft(orderId)))

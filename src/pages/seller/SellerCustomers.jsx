@@ -15,6 +15,7 @@ import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import NoticeDateFilter from '../../components/filters/NoticeDateFilter'
 import {
   sellerModalBody,
+  sellerModalFooter,
   sellerModalSheet,
   sellerModalTitle,
 } from '../../components/seller/sellerStyles'
@@ -318,7 +319,9 @@ function CustomerNoticeModal({ onClose, onSent }) {
             <textarea value={content} maxLength={500} rows={4} onChange={(event) => setContent(event.target.value)} className="mt-1 w-full rounded-xl border border-brand-green/15 bg-white px-3 py-2 font-normal" />
           </label>
           {formError ? <p role="alert" className="mt-3 text-sm text-red-700">{formError}</p> : null}
-          <button type="button" onClick={submit} disabled={!canSend || sending} className="mt-5 min-h-11 w-full rounded-xl bg-brand-green px-4 font-bold text-brand-white disabled:opacity-50">
+        </div>
+        <div className={sellerModalFooter}>
+          <button type="button" onClick={submit} disabled={!canSend || sending} className="min-h-11 w-full rounded-xl bg-brand-green px-4 font-bold text-brand-white disabled:opacity-50">
             {sending ? 'Enviando…' : 'Enviar aviso'}
           </button>
         </div>

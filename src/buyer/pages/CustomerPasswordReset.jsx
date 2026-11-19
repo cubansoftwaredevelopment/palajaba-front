@@ -32,16 +32,16 @@ export default function CustomerPasswordReset() {
   const [code, setCode] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  const { showError, toastNode } = useFormErrorToast()
   const [loading, setLoading] = useState(false)
 
   async function start(event) {
     event.preventDefault()
-    setError('')
+    showError('')
     setMessage('')
     if (phone.length !== 8) {
-      setError('Indica un teléfono cubano de 8 dígitos.')
+      showError('Indica un teléfono cubano de 8 dígitos.')
       return
     }
     setLoading(true)
@@ -57,15 +57,15 @@ export default function CustomerPasswordReset() {
         setMessage(result.message)
       }
     } catch (cause) {
-      setError(getUserFacingMessage(cause, 'No pudimos enviar el código. Revisa el teléfono e inténtalo de nuevo.'))
+      showError(getUserFacingMessage(cause, 'No pudimos enviar el código. Revisa el teléfono e inténtalo de nuevo.'))
     } finally { setLoading(false) }
   }
 
   async function verify(event) {
     event.preventDefault()
-    setError('')
+    showError('')
     if (code.length < 4) {
-      setError('Ingresa el código que recibiste por SMS.')
+      showError('Ingresa el código que recibiste por SMS.')
       return
     }
     setLoading(true)
@@ -74,13 +74,13 @@ export default function CustomerPasswordReset() {
       setStep('password')
       setMessage(result.message)
     } catch (cause) {
-      setError(getUserFacingMessage(cause, 'No pudimos verificar el código. Revísalo e inténtalo de nuevo.'))
+      showError(getUserFacingMessage(cause, 'No pudimos verificar el código. Revísalo e inténtalo de nuevo.'))
     } finally { setLoading(false) }
   }
 
   async function resend() {
     if (!challenge?.challenge_id || loading) return
-    setError('')
+    showError('')
     setLoading(true)
     try {
       const result = await resendCustomerPasswordReset(challenge.challenge_id)
@@ -93,19 +93,19 @@ export default function CustomerPasswordReset() {
         setMessage('Identidad confirmada. Elige una nueva contraseña.')
       }
     } catch (cause) {
-      setError(getUserFacingMessage(cause, 'No pudimos reenviar el código. Inténtalo de nuevo.'))
+      showError(getUserFacingMessage(cause, 'No pudimos reenviar el código. Inténtalo de nuevo.'))
     } finally { setLoading(false) }
   }
 
   async function savePassword(event) {
     event.preventDefault()
-    setError('')
+    showError('')
     if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
+      showError('La contraseña debe tener al menos 6 caracteres.')
       return
     }
     if (password !== passwordConfirm) {
-      setError('Las contraseñas no coinciden.')
+      showError('Las contraseñas no coinciden.')
       return
     }
     setLoading(true)
@@ -113,7 +113,7 @@ export default function CustomerPasswordReset() {
       const result = await completeCustomerPasswordReset(challenge.challenge_id, password)
       navigate('/login', { replace: true, state: { accountType: 'customer', notice: result.message } })
     } catch (cause) {
-      setError(getUserFacingMessage(cause, 'No pudimos guardar la contraseña. Vuelve a solicitar el código.'))
+      showError(getUserFacingMessage(cause, 'No pudimos guardar la contraseña. Vuelve a solicitar el código.'))
     } finally { setLoading(false) }
   }
 

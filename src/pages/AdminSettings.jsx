@@ -159,6 +159,7 @@ export default function AdminSettings() {
   const [success, setSuccess] = useState('')
   const [smtpTestEmail, setSmtpTestEmail] = useState('')
   const [smtpTesting, setSmtpTesting] = useState(false)
+  const { showError, toastNode } = useFormErrorToast({ variant: 'admin' })
 
   const loadSettings = useCallback(async () => {
     setError('')

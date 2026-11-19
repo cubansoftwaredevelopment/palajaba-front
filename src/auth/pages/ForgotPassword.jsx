@@ -23,12 +23,12 @@ export default function ForgotPassword() {
   const [method, setMethod] = useState('phone')
   const [phoneDigits, setPhoneDigits] = useState('')
   const [storeName, setStoreName] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { showError, toastNode } = useFormErrorToast()
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setError('')
+    showError('')
     setLoading(true)
     try {
       const payload =
@@ -61,7 +61,7 @@ export default function ForgotPassword() {
         },
       })
     } catch (err) {
-      setError(
+      showError(
         getUserFacingMessage(
           err,
           'No pudimos enviar los códigos. Revisa los datos e inténtalo de nuevo.',

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
-import { adminAlertError, adminLabel } from './adminStyles'
+import { adminLabel } from './adminStyles'
 import { normalizePlanTier } from '../../constants/plan'
 import { parseCupInput } from '../../lib/money'
 import { usePlanPricing } from '../../lib/usePlanPricing'
@@ -21,18 +21,18 @@ export default function PaymentModal({ registration, onClose: requestClose, onSu
   const [paymentAmount, setPaymentAmount] = useState(
     () => String(registration.payment_amount_cup ?? suggested ?? ''),
   )
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const { showError, toastNode } = useFormErrorToast({ variant: 'admin', layerClassName: '!z-[260]' })
 
   async function handleSubmit(e) {
     e.preventDefault()
     const amountCup = parseCupInput(paymentAmount, { allowZero: true })
     if (amountCup == null) {
-      setError('Indica un monto válido en CUP (usa 0 si es gratuito).')
+      showError('Indica un monto válido en CUP (usa 0 si es gratuito).')
       return
     }
 
-    setError('')
+    showError('')
     setLoading(true)
     try {
       const token = getAdminToken()
@@ -40,7 +40,7 @@ export default function PaymentModal({ registration, onClose: requestClose, onSu
       onSuccess(updated)
       onClose()
     } catch (err) {
-      setError(getUserFacingMessage(err, 'No pudimos registrar el pago.'))
+      showError(getUserFacingMessage(err, 'No pudimos registrar el pago.'))
     } finally {
       setLoading(false)
     }

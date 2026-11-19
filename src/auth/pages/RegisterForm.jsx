@@ -86,6 +86,15 @@ export default function RegisterForm() {
   const [loading, setLoading] = useState(false)
   const [smsCooldownEndsAt, setSmsCooldownEndsAt] = useState(() => getSmsCooldownUntil(getActiveSmsCooldownPhone()))
   const smsCooldownRemaining = useCountdown(smsCooldownEndsAt)
+  const canGoBack = location.key !== 'default'
+
+  function goBack() {
+    if (canGoBack) {
+      navigate(-1)
+      return
+    }
+    navigate('/registro/planes')
+  }
 
   useEffect(() => {
     if (kind === 'account' && !hasSelectedAccountPlan) {
@@ -201,10 +210,7 @@ export default function RegisterForm() {
 
   return (
     <>
-    <AuthShell
-      backTo="/registro/planes"
-      backLabel="Elegir plan"
-    >
+    <AuthShell onBack={goBack} backLabel="Volver">
       <section className="animate-fade-in" aria-labelledby="register-form-title">
         <div className={authPageIntro}>
           <AuthHeader

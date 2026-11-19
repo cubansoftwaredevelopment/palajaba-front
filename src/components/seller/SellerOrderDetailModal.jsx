@@ -130,6 +130,7 @@ export default function SellerOrderDetailModal({
     if (!cancelling) setConfirmCancel(false)
   }, { motion: true })
   const [cupPerUnit, setCupPerUnit] = useState(getCupPerUnit)
+  const { showError, toastNode } = useFormErrorToast()
 
   useEffect(() => {
     loadExchangeRates()

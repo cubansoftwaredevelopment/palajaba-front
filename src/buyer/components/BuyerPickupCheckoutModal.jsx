@@ -55,8 +55,8 @@ export default function BuyerPickupCheckoutModal({
       phone_secondary: defaults.phone_secondary,
     }
   })
-  const [error, setError] = useState('')
   const [agreements, setAgreements] = useState({ delivery_policy: false, terms: false, ready: false })
+  const { showError, toastNode } = useFormErrorToast({ layerClassName: '!z-[260]' })
 
   useEffect(() => {
     if (!checkout) return undefined
@@ -67,7 +67,7 @@ export default function BuyerPickupCheckoutModal({
       phone_primary: String(getCustomerProfile()?.phone ?? '').replace(/\D/g, '').slice(-8),
       phone_secondary: defaults.phone_secondary,
     })
-    setError('')
+    showError('')
     setAgreements({ delivery_policy: false, terms: false, ready: false })
 
     function handleKeyDown(event) {
@@ -90,7 +90,7 @@ export default function BuyerPickupCheckoutModal({
 
     const validationError = validatePickupForm(form)
     if (validationError) {
-      setError(validationError)
+      showError(validationError)
       return
     }
 
@@ -110,7 +110,7 @@ export default function BuyerPickupCheckoutModal({
     })
 
     if (paymentMethod === 'qvapay' && !agreements.ready) {
-      setError('Acepta las condiciones de la tienda para pagar por QvaPay.')
+      showError('Acepta las condiciones de la tienda para pagar por QvaPay.')
       return
     }
 
