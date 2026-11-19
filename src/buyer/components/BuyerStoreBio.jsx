@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import TypeRevealText from './TypeRevealText'
 import { buyerStorePageBio, buyerStorePageBioLink } from './buyerStyles'
 
 const BIO_PREVIEW_MOBILE = 100
@@ -27,14 +28,6 @@ function useDesktopPreviewLimit() {
   return limit
 }
 
-function buildBiographyPreview(biography, limit, expanded) {
-  if (expanded || biography.length <= limit) {
-    return biography
-  }
-
-  return `${biography.slice(0, limit).trimEnd()}…`
-}
-
 export default function BuyerStoreBio({ biography, storeSlug }) {
   const text = biography?.trim()
   const previewLimit = useDesktopPreviewLimit()
@@ -47,11 +40,15 @@ export default function BuyerStoreBio({ biography, storeSlug }) {
   if (!text) return null
 
   const isTruncated = text.length > previewLimit
-  const preview = buildBiographyPreview(text, previewLimit, expanded)
 
   return (
     <div className="mt-4">
-      <p className={`${buyerStorePageBio} mt-0 whitespace-pre-wrap`}>{preview}</p>
+      <TypeRevealText
+        text={text}
+        limit={previewLimit}
+        expanded={expanded}
+        className={`${buyerStorePageBio} mt-0 whitespace-pre-wrap`}
+      />
       {isTruncated ? (
         <button
           type="button"

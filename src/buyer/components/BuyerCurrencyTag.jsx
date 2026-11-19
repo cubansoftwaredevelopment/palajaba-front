@@ -8,7 +8,7 @@ function prefersReducedMotion() {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-export default function BuyerCurrencyTag() {
+export default function BuyerCurrencyTag({ overlay = false }) {
   const listId = useId()
   const shellRef = useRef(null)
   const trackRef = useRef(null)
@@ -147,9 +147,9 @@ export default function BuyerCurrencyTag() {
             aria-label="Monedas de visualización"
             aria-multiselectable="true"
             aria-expanded={open}
-            className={`inline-flex max-w-full items-center overflow-hidden rounded-full border border-brand-green/20 bg-transparent ${
-              open ? 'p-0.5' : ''
-            }`}
+            className={`inline-flex max-w-full items-center overflow-hidden rounded-full border border-brand-green/20 ${
+              overlay ? 'bg-brand-white/95 shadow-[0_4px_16px_rgba(28,33,24,0.12)] backdrop-blur-sm' : 'bg-transparent'
+            } ${open ? 'p-0.5' : ''}`}
           >
             {open ? (
               <div ref={trackRef} className="flex items-center gap-0.5">

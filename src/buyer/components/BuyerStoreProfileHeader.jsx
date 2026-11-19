@@ -10,7 +10,7 @@ import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresenc
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useSheetExitMs } from '../../motion/presets'
 import BuyerStoreBio from './BuyerStoreBio'
-import BuyerStoreBannerCover, { storeBannerAspectClass } from './BuyerStoreBannerCover'
+import BuyerStoreBannerCover, { storeBannerAspectClass, storeHasCoverPhoto, StoreLogoCover } from './BuyerStoreBannerCover'
 import { socialLinkLabel, socialLinkUrl, socialLinksFromProfile } from '../../lib/socialLinks'
 import { useLiveLocation } from '../../live/context/LiveLocationContext.jsx'
 import { LOCATION_PERMISSION_GRANTED } from '../../live/constants'
@@ -91,7 +91,9 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
   const whatsapp = buildWhatsAppContactUrl(store.phone)
   const hasMap = Boolean(catalog.business_location)
   const banners = Array.isArray(catalog.banners) ? catalog.banners : []
-  const showMapBanner = banners.length === 0 && hasMap
+  const hasCoverPhoto = storeHasCoverPhoto(banners)
+  const showMapBanner = !hasCoverPhoto && hasMap
+  const showLogoCover = !hasCoverPhoto && !hasMap
   const [photoOpen, setPhotoOpen] = useState(false)
   const [mapOpen, setMapOpen] = useState(false)
   const { coords, requestLocation } = useLiveLocation()
@@ -151,6 +153,8 @@ export default function BuyerStoreProfileHeader({ catalog, location = null }) {
               Ver mapa
             </span>
           </button>
+        ) : showLogoCover ? (
+          <StoreLogoCover />
         ) : (
           <BuyerStoreBannerCover banners={banners} />
         )}

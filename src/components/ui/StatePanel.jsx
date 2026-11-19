@@ -5,7 +5,7 @@ import StateMascotImage from './StateMascotImage'
 
 const shellByVariant = {
   buyer:
-    'rounded-3xl border border-brand-carmelita/18 bg-gradient-to-b from-brand-carmelita/[0.07] to-brand-white px-5 py-7 text-center sm:px-6 lg:text-left',
+    'px-5 py-7 text-center sm:px-6 lg:text-left',
   seller:
     'rounded-2xl border border-brand-carmelita/15 bg-brand-carmelita/6 px-5 py-6 text-center',
   admin:

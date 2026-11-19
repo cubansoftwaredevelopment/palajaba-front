@@ -236,6 +236,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
       <BuyerDisplayedLocationProvider location={location}>
         <BuyerShell
           flushBottom
+          flushTop={Boolean(catalog) && !loading && !loadError}
           headerLayout="stack"
           headerStart={
             <BuyerStoreIdentity
@@ -309,7 +310,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
           ) : null}
 
           {!loading && !loadError && catalog ? (
-            <div className="flex min-h-full flex-1 flex-col pt-3">
+            <div className="flex min-h-full flex-1 flex-col">
               <BuyerStoreProfileHeader
                 catalog={catalog}
                 location={location}

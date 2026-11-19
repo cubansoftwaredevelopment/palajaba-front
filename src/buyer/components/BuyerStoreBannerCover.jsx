@@ -1,10 +1,94 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { LOGO } from '../../constants/branding'
 import { isUnservableLegacyBannerUrl, resolveMediaUrl } from '../../lib/media'
 
 const NO_BANNERS = []
 
 /** 16/9 con el alto reducido un 10%. */
 export const storeBannerAspectClass = 'aspect-[160/81]'
+
+export function storeHasCoverPhoto(banners) {
+  return (banners ?? []).some(
+    (banner) => banner?.image_url && !isUnservableLegacyBannerUrl(banner.image_url),
+  )
+}
+
+function randomLightSpot() {
+  return {
+    top: 10 + Math.random() * 80,
+    left: 6 + Math.random() * 88,
+  }
+}
+
+function StoreLogoLight() {
+  const ref = useRef(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return undefined
+    const start = randomLightSpot()
+    el.style.top = `${start.top}%`
+    el.style.left = `${start.left}%`
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined
+
+    let current = start
+    let cancelled = false
+    let animation
+
+    const travel = () => {
+      if (cancelled) return
+      const next = randomLightSpot()
+      const distance = Math.hypot(next.left - current.left, next.top - current.top)
+      animation = el.animate(
+        [
+          { top: `${current.top}%`, left: `${current.left}%` },
+          { top: `${next.top}%`, left: `${next.left}%` },
+        ],
+        { duration: 2200 + distance * 48, easing: 'ease-in-out', fill: 'forwards' },
+      )
+      current = next
+      animation.onfinish = travel
+    }
+
+    travel()
+    return () => {
+      cancelled = true
+      animation?.cancel()
+    }
+  }, [])
+
+  return (
+    <span
+      ref={ref}
+      className="pointer-events-none absolute top-1/2 left-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-green opacity-90 blur-xl"
+      style={{ boxShadow: '0 0 28px 12px var(--color-brand-green)' }}
+    />
+  )
+}
+
+export function StoreLogoCover() {
+  const mask = {
+    WebkitMaskImage: `url(${LOGO.black})`,
+    maskImage: `url(${LOGO.black})`,
+    WebkitMaskRepeat: 'no-repeat',
+    maskRepeat: 'no-repeat',
+    WebkitMaskPosition: 'center',
+    maskPosition: 'center',
+    WebkitMaskSize: 'contain',
+    maskSize: 'contain',
+    maskMode: 'luminance',
+  }
+
+  return (
+    <div className={`relative z-0 w-full overflow-hidden bg-brand-white ${storeBannerAspectClass}`} aria-hidden="true">
+      <StoreLogoLight />
+      <StoreLogoLight />
+      <div className="pointer-events-none absolute inset-0 z-10">
+        <div className="absolute inset-0 bg-brand-green" style={mask} />
+      </div>
+    </div>
+  )
+}
 
 export default function BuyerStoreBannerCover({ banners = NO_BANNERS }) {
   const [index, setIndex] = useState(0)

@@ -23,6 +23,7 @@ import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useSheetExitMs } from '../../motion/presets'
 import { useDismissibleModal } from './useOrderModalPresence'
 import BuyerProductPrices from './BuyerProductPrices'
+import TypeRevealText from './TypeRevealText'
 import BuyerProductSoldOutOverlay from './BuyerProductSoldOutOverlay'
 import ProductPhotoGallery from './ProductPhotoGallery'
 
@@ -206,12 +207,6 @@ export default function BuyerProductDetailModal({
   const description = product.description?.trim() ?? ''
 
   const hasLongDescription = description.length > DESCRIPTION_PREVIEW_LENGTH
-
-  const descriptionPreview = hasLongDescription && !descriptionExpanded
-
-    ? `${description.slice(0, DESCRIPTION_PREVIEW_LENGTH).trimEnd()}…`
-
-    : description
 
 
 
@@ -426,11 +421,12 @@ export default function BuyerProductDetailModal({
 
                 <div className="rounded-2xl border border-brand-green/10 bg-brand-green/[0.02] px-4 py-3.5">
 
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-brand-carmelita/90">
-
-                    {descriptionPreview}
-
-                  </p>
+                  <TypeRevealText
+                    text={description}
+                    limit={DESCRIPTION_PREVIEW_LENGTH}
+                    expanded={descriptionExpanded}
+                    className="whitespace-pre-wrap text-sm leading-relaxed text-brand-carmelita/90"
+                  />
 
                   {hasLongDescription ? (
 

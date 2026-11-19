@@ -22,6 +22,7 @@ export default function BuyerShell({
   headerSearch = null,
   headerLayout = 'row',
   flushBottom = false,
+  flushTop = false,
   footer = null,
   children,
 }) {
@@ -104,13 +105,22 @@ export default function BuyerShell({
         </div>
       </header>
 
-      {showCurrencyTag ? <BuyerCurrencyTag /> : null}
+      {showCurrencyTag && !flushTop ? <BuyerCurrencyTag /> : null}
 
-      <div className="page-scroll buyer-scroll relative z-0 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
-        <div className={`mx-auto w-full max-w-md px-5 pt-4 sm:px-6 lg:max-w-5xl lg:px-10 lg:pt-8 ${flushBottom || pageFooter ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
+      <div className="relative z-0 min-h-0 flex-1">
+      <div className="page-scroll buyer-scroll h-full overflow-y-auto overscroll-y-contain touch-pan-y">
+        <div className={`mx-auto w-full max-w-md px-5 sm:px-6 lg:max-w-5xl lg:px-10 ${flushTop ? 'pt-0' : 'pt-4 lg:pt-8'} ${flushBottom || pageFooter ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
           {children}
           {pageFooter ? <div className={`mt-auto ${footerPaddingClass}`}>{footer}</div> : null}
         </div>
+      </div>
+      {showCurrencyTag && flushTop ? (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30">
+          <div className="pointer-events-auto">
+            <BuyerCurrencyTag overlay />
+          </div>
+        </div>
+      ) : null}
       </div>
 
       {!isSellerPreview ? <BuyerSellerReturnFooter /> : null}
