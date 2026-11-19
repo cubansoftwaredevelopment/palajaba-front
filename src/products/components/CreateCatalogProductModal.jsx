@@ -13,11 +13,10 @@ import CategoryAutocomplete from '../../components/seller/CategoryAutocomplete'
 import SellerSelect from '../../components/seller/SellerSelect'
 import Checkbox from '../../components/ui/Checkbox'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
+import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 
 import {
-
-  sellerAlertError,
 
   sellerBtnPrimary,
 
@@ -200,7 +199,19 @@ export default function CreateCatalogProductModal({
 
   const [businessCategories, setBusinessCategories] = useState([])
 
-  const [error, setError] = useState('')
+  const [errorToast, setErrorToast] = useState(null)
+
+  function showError(message) {
+    if (!message) {
+      setErrorToast(null)
+      return
+    }
+    setErrorToast({
+      id: `${Date.now()}`,
+      tone: 'error',
+      title: message,
+    })
+  }
 
 
 
@@ -434,7 +445,7 @@ export default function CreateCatalogProductModal({
       const validation = validateImageFile(file)
       if (!validation.ok) {
         rejected = true
-        setError(validation.message)
+        showError(validation.message)
         continue
       }
       next.push({
@@ -451,9 +462,9 @@ export default function CreateCatalogProductModal({
     const accepted = next.slice(0, Math.max(0, room))
     next.slice(accepted.length).forEach((photo) => URL.revokeObjectURL(photo.preview))
     if (next.length > room) {
-      setError(`Un producto puede tener hasta ${MAX_PRODUCT_IMAGES} fotos.`)
+      showError(`Un producto puede tener hasta ${MAX_PRODUCT_IMAGES} fotos.`)
     } else if (!rejected) {
-      setError('')
+      showError('')
     }
     if (accepted.length === 0) return
     setPhotos((current) => withSingleFrontal([...current, ...accepted]))
@@ -481,7 +492,7 @@ export default function CreateCatalogProductModal({
 
     event.preventDefault()
 
-    setError('')
+    showError('')
 
 
 
@@ -489,7 +500,7 @@ export default function CreateCatalogProductModal({
 
     if (trimmedName.length < 2) {
 
-      setError('Escribe un nombre de al menos 2 caracteres.')
+      showError('Escribe un nombre de al menos 2 caracteres.')
 
       return
 
@@ -497,7 +508,7 @@ export default function CreateCatalogProductModal({
 
     if (photos.length === 0) {
 
-      setError('Sube una imagen del producto.')
+      showError('Sube una imagen del producto.')
 
       return
 
@@ -505,7 +516,7 @@ export default function CreateCatalogProductModal({
 
     if (!localCategoryId) {
 
-      setError('Selecciona una categoría local de tu catálogo.')
+      showError('Selecciona una categoría local de tu catálogo.')
 
       return
 
@@ -513,7 +524,7 @@ export default function CreateCatalogProductModal({
 
     if (!globalCategoryId) {
 
-      setError('Selecciona la categoría global de tu negocio.')
+      showError('Selecciona la categoría global de tu negocio.')
 
       return
 
@@ -525,7 +536,7 @@ export default function CreateCatalogProductModal({
 
     if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
 
-      setError('Indica un precio base válido.')
+      showError('Indica un precio base válido.')
 
       return
 
@@ -533,7 +544,7 @@ export default function CreateCatalogProductModal({
 
     const salesAreas = selectedProductSalesAreas(profile, selectedZoneKeys)
     if (zoneOptions.length && !salesAreas.length) {
-      setError('Elige al menos una zona de venta.')
+      showError('Elige al menos una zona de venta.')
       return
     }
 
@@ -550,7 +561,7 @@ export default function CreateCatalogProductModal({
     if (allowProductDiscount) {
       const parsedDiscount = Number.parseInt(String(discountPercent).trim(), 10)
       if (String(discountPercent).trim() && (!Number.isInteger(parsedDiscount) || parsedDiscount < 0 || parsedDiscount >= 100)) {
-        setError('El descuento debe ser un porcentaje entre 1 y 99.')
+        showError('El descuento debe ser un porcentaje entre 1 y 99.')
         return
       }
       formData.append('discount_percent', Number.isInteger(parsedDiscount) && parsedDiscount > 0 ? String(parsedDiscount) : '')
@@ -774,7 +785,7 @@ export default function CreateCatalogProductModal({
 
                 setName(event.target.value)
 
-                setError('')
+                showError('')
 
               }}
 
@@ -842,7 +853,7 @@ export default function CreateCatalogProductModal({
 
                   setLocalCategoryId(nextId)
 
-                  setError('')
+                  showError('')
 
                 }}
 
@@ -888,7 +899,7 @@ export default function CreateCatalogProductModal({
 
                   setGlobalCategoryId(nextId)
 
-                  setError('')
+                  showError('')
 
                 }}
 
@@ -1127,16 +1138,6 @@ export default function CreateCatalogProductModal({
 
 
 
-            {error && (
-
-              <p className={`mt-4 ${sellerAlertError}`} role="alert">
-
-                {error}
-
-              </p>
-
-            )}
-
           </div>
 
 
@@ -1167,7 +1168,12 @@ export default function CreateCatalogProductModal({
 
         </form>
       </SellerMotionSheet>
-
+      <SellerNotificationToast
+        toast={errorToast}
+        placement="top"
+        className="!z-[260]"
+        onDone={(id) => setErrorToast((current) => (current?.id === id ? null : current))}
+      />
     </SellerModalPortal>
 
   )

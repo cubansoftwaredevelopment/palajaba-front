@@ -10,6 +10,7 @@ import SellerLocationPreview from '../components/seller/SellerLocationPreview'
 import SellerProfileAvatarUpload from '../components/seller/SellerProfileAvatarUpload'
 import SellerSection from '../components/seller/SellerSection'
 import SellerSocialLinksEditor from '../components/seller/SellerSocialLinksEditor'
+import { useFormErrorToast } from '../components/ui/useFormErrorToast'
 import {
   sellerAlertError,
   sellerBtnGhost,
@@ -55,7 +56,7 @@ export default function SellerCompleteProfile() {
     profile?.business_area?.municipality_id ?? '',
   )
   const [deliveryAreas, setDeliveryAreas] = useState(profile?.delivery_areas ?? [])
-  const [loading, setLoading] = useState(false)
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [error, setError] = useState('')
 
   async function handlePhotoChange(event) {
@@ -65,11 +66,11 @@ export default function SellerCompleteProfile() {
 
     const validation = validateImageFile(file)
     if (!validation.ok) {
-      setError(validation.message)
+      showError(validation.message)
       return
     }
 
-    setError('')
+    showError('')
     setPhotoUploading(true)
     try {
       const token = getSellerToken()
@@ -77,7 +78,7 @@ export default function SellerCompleteProfile() {
       setPhotoUrl(updated.profile_photo_url)
       updateSellerProfileCache(updated)
     } catch (err) {
-      setError(getUserFacingMessage(err))
+      showError(getUserFacingMessage(err))
     } finally {
       setPhotoUploading(false)
       event.target.value = ''
@@ -86,21 +87,21 @@ export default function SellerCompleteProfile() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showError('')
 
     if (!photoUrl) {
-      setError('Sube una foto de perfil para continuar.')
+      showError('Sube una foto de perfil para continuar.')
       return
     }
 
     const businessArea = getBusinessAreaFromSelection(businessProvinceId, businessMunicipalityId)
     if (!businessArea) {
-      setError('Selecciona la provincia y el municipio de tu negocio.')
+      showError('Selecciona la provincia y el municipio de tu negocio.')
       return
     }
     const socialError = socialLinksError(socialLinks)
     if (socialError) {
-      setError(socialError)
+      showError(socialError)
       return
     }
 
@@ -122,7 +123,7 @@ export default function SellerCompleteProfile() {
       await refreshProfile()
       navigate('/tienda', { replace: true })
     } catch (err) {
-      setError(getUserFacingMessage(err))
+      showError(getUserFacingMessage(err))
     } finally {
       setLoading(false)
     }
@@ -246,12 +247,6 @@ export default function SellerCompleteProfile() {
               />
           </SellerSection>
 
-          {error && (
-            <p className={`${sellerFormFull} ${sellerAlertError}`} role="alert">
-              {error}
-            </p>
-          )}
-
           {readOnly ? null : <div className={`hidden sm:block ${sellerFormActions}`}>{submitButton}</div>}
           </fieldset>
         </form>
@@ -269,10 +264,11 @@ export default function SellerCompleteProfile() {
       )}
 
       {readOnly ? null : (
-      <div className="sm:hidden">
-        <div className={sellerStickyBar}>{submitButton}</div>
-      </div>
+        <div className="sm:hidden">
+          <div className={sellerStickyBar}>{submitButton}</div>
+        </div>
       )}
+      {toastNode}
     </>
   )
 }

@@ -11,13 +11,16 @@ import {
   sellerSidebarLogoWrap,
 } from './sellerStyles'
 
-function HeaderIconButton({ onClick, ariaLabel, children, badge = 0 }) {
+function HeaderIconButton({ onClick, ariaLabel, children, badge = 0, active = false }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-green ${sellerFocusRing}`}
+      className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-green ${sellerFocusRing} ${
+        active ? 'bg-brand-green/10 text-brand-green' : 'text-brand-carmelita/70'
+      }`}
       aria-label={ariaLabel}
+      aria-current={active ? 'page' : undefined}
     >
       {children}
       {badge > 0 && (
@@ -29,9 +32,9 @@ function HeaderIconButton({ onClick, ariaLabel, children, badge = 0 }) {
   )
 }
 
-function NotificationsButton({ onClick, unreadCount = 0 }) {
+function NotificationsButton({ onClick, unreadCount = 0, active = false }) {
   return (
-    <HeaderIconButton onClick={onClick} ariaLabel="Notificaciones" badge={unreadCount}>
+    <HeaderIconButton onClick={onClick} ariaLabel="Notificaciones" badge={unreadCount} active={active}>
       <svg
         width="20"
         height="20"
@@ -73,6 +76,7 @@ export default function SellerShell({
   subscriptionActive = true,
   onLogout,
   onNotifications,
+  notificationsActive = false,
   notificationCount = 0,
   pendingOrderCount = 0,
   showBottomNav = false,
@@ -130,7 +134,7 @@ export default function SellerShell({
                 </div>
               </div>
               <div className="ml-auto flex shrink-0 items-center">
-                <NotificationsButton onClick={onNotifications} unreadCount={notificationCount} />
+                <NotificationsButton onClick={onNotifications} unreadCount={notificationCount} active={notificationsActive} />
                 {onLogout && <LogoutButton onClick={onLogout} />}
               </div>
             </div>

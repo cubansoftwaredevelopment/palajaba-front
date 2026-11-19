@@ -89,6 +89,7 @@ let pushRole = null
 let anonymousPushStarted = false
 
 export const OPEN_SELLER_NOTIFICATIONS_EVENT = 'pala-jaba-open-seller-notifications'
+export const SELLER_NOTIFICATIONS_CHANGED_EVENT = 'pala-jaba-seller-notifications-changed'
 export const OPEN_CUSTOMER_AVISOS_EVENT = 'pala-jaba-open-customer-avisos'
 export const OPEN_APP_UPDATE_EVENT = 'pala-jaba-open-app-update'
 

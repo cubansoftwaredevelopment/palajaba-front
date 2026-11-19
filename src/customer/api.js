@@ -12,8 +12,17 @@ export function decideCustomerOrderEvidence(orderId, accept, token) {
   })
 }
 
-export function fetchCustomerPaymentNotifications(token) {
-  return request('/api/customers/me/notifications', { headers: authHeaders(token) })
+export function fetchCustomerPaymentNotifications(token, { offset, limit, dateFrom = '', dateTo = '', paged = false } = {}) {
+  if (!paged) {
+    return request('/api/customers/me/notifications', { headers: authHeaders(token) })
+  }
+  const params = new URLSearchParams({
+    offset: String(offset || 0),
+    limit: String(limit || 10),
+  })
+  if (dateFrom) params.set('date_from', dateFrom)
+  if (dateTo) params.set('date_to', dateTo)
+  return request(`/api/customers/me/notifications?${params}`, { headers: authHeaders(token) })
 }
 
 export function markCustomerPaymentNotificationRead(token, id) {

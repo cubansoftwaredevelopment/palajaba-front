@@ -445,8 +445,12 @@ export function fetchExchangeRates() {
   return request("/api/platform/exchange-rates");
 }
 
-export function fetchSellerNotifications(token) {
-  return request("/api/auth/me/notifications", {
+export function fetchSellerNotifications(token, { dateFrom = '', dateTo = '' } = {}) {
+  const params = new URLSearchParams()
+  if (dateFrom) params.set('date_from', dateFrom)
+  if (dateTo) params.set('date_to', dateTo)
+  const suffix = params.toString() ? `?${params}` : ''
+  return request(`/api/auth/me/notifications${suffix}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

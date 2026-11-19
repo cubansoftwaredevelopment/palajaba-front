@@ -3,6 +3,7 @@ import { inputClass, labelClass } from './formStyles'
 import Button from '../../components/Button'
 import { validateDiscountCode } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 
 export default function RegisterDiscountCodeField({
   billing,
@@ -12,7 +13,7 @@ export default function RegisterDiscountCodeField({
   onClear,
 }) {
   const [code, setCode] = useState(applied?.code ?? '')
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast()
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -23,12 +24,12 @@ export default function RegisterDiscountCodeField({
     event.preventDefault()
     const trimmed = code.trim()
     if (!trimmed) {
-      setError('Escribe un código de descuento.')
+      showError('Escribe un código de descuento.')
       return
     }
 
     setLoading(true)
-    setError('')
+    showError('')
     try {
       const result = await validateDiscountCode({
         code: trimmed,
@@ -38,7 +39,7 @@ export default function RegisterDiscountCodeField({
       onApplied(result)
     } catch (err) {
       onClear()
-      setError(getUserFacingMessage(err, 'No pudimos validar el código.'))
+      showError(getUserFacingMessage(err, 'No pudimos validar el código.'))
     } finally {
       setLoading(false)
     }
@@ -46,7 +47,7 @@ export default function RegisterDiscountCodeField({
 
   function handleRemove() {
     setCode('')
-    setError('')
+    showError('')
     onClear()
   }
 
@@ -86,12 +87,7 @@ export default function RegisterDiscountCodeField({
             descuento).
           </p>
         ) : null}
-
-        {error ? (
-          <p className="text-sm text-brand-carmelita" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {toastNode}
       </form>
     </div>
   )

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CATALOG_CATEGORY_SUGGESTIONS } from '../../constants/catalog'
 import {
-  sellerAlertError,
   sellerBtnPrimary,
   sellerBtnSecondary,
   sellerCharCounter,
@@ -17,12 +16,13 @@ import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 
 export default function CreateCatalogCategoryModal({ initialName = '', onClose: requestClose, onCreated }) {
   const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
   const [name, setName] = useState(initialName)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true, layerClassName: '!z-[260]' })
 
   useEffect(() => {
     function onKeyDown(e) {
@@ -38,11 +38,11 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showError('')
 
     const trimmed = name.trim()
     if (trimmed.length < 2) {
-      setError('Escribe un nombre de al menos 2 caracteres.')
+      showError('Escribe un nombre de al menos 2 caracteres.')
       return
     }
 
@@ -52,7 +52,7 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
       const category = await createCatalogCategory(token, { name: trimmed })
       onCreated(category)
     } catch (err) {
-      setError(getUserFacingMessage(err, 'No se pudo crear la categoría.'))
+      showError(getUserFacingMessage(err, 'No se pudo crear la categoría.'))
     } finally {
       setLoading(false)
     }
@@ -83,7 +83,7 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
                 value={name}
                 onChange={(e) => {
                   setName(e.target.value)
-                  setError('')
+                  showError('')
                 }}
                 maxLength={60}
                 placeholder="Ej.: Ferretería"
@@ -102,7 +102,7 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
                     type="button"
                     onClick={() => {
                       setName(suggestion)
-                      setError('')
+                      showError('')
                     }}
                     className={sellerChip(name === suggestion)}
                   >
@@ -110,12 +110,6 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
                   </button>
                 ))}
               </div>
-
-              {error && (
-                <p className={`mt-3 ${sellerAlertError}`} role="alert">
-                  {error}
-                </p>
-              )}
             </div>
 
             <div className={`${sellerModalFooter} grid grid-cols-2 gap-2`}>
@@ -128,6 +122,7 @@ export default function CreateCatalogCategoryModal({ initialName = '', onClose: 
             </div>
           </form>
       </SellerMotionSheet>
+      {toastNode}
     </SellerModalPortal>
   )
 }

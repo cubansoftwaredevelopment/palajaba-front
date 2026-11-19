@@ -27,8 +27,8 @@ import Checkbox from '../ui/Checkbox'
 import { downloadSellerOrderDocument } from '../../lib/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 import {
-  sellerAlertError,
   sellerAlertSuccess,
   sellerBtnDanger,
   sellerBtnPrimary,
@@ -138,6 +138,10 @@ export default function SellerOrderDetailModal({
   }, [])
 
   useEffect(() => {
+    if (error) showError(error)
+  }, [error, showError])
+
+  useEffect(() => {
     let cancelled = false
     fetchRenewalContactPhone()
       .then((data) => { if (!cancelled) setSupportPhone(data?.renewal_contact_phone || '') })
@@ -150,7 +154,7 @@ export default function SellerOrderDetailModal({
     setDeliveryPrice(order.delivery_price != null ? String(Math.round(order.delivery_price)) : '')
     setDeliveryCurrency(order.delivery_currency ?? 'CUP')
     setPaymentCurrency(order.payment_currency ?? '')
-    setLocalError('')
+    showError('')
     setConfirmCancel(false)
     setMapOpen(false)
     setRefundOpen(false)
@@ -254,16 +258,16 @@ export default function SellerOrderDetailModal({
         return { ...item, quantity: nextQuantity, line_total: item.unit_price * nextQuantity }
       }),
     )
-    setLocalError('')
+    showError('')
   }
 
   function removeItem(productId) {
     if (editableItems.length <= 1) {
-      setLocalError('El pedido debe tener al menos un producto.')
+      showError('El pedido debe tener al menos un producto.')
       return
     }
     setEditableItems((current) => current.filter((item) => item.product_id !== productId))
-    setLocalError('')
+    showError('')
   }
 
   function buildItemsPayload() {
@@ -278,7 +282,7 @@ export default function SellerOrderDetailModal({
 
   function handleSaveChanges() {
     if (editableItems.length === 0) {
-      setLocalError('El pedido debe tener al menos un producto.')
+      showError('El pedido debe tener al menos un producto.')
       return
     }
 
@@ -288,16 +292,16 @@ export default function SellerOrderDetailModal({
 
     if (!Object.keys(payload).length) return
 
-    setLocalError('')
+    showError('')
     onSave(payload)
   }
 
   function handleComplete() {
     const payload = { status: 'completed' }
-    setLocalError('')
+    showError('')
 
     if (!resolvedPaymentCurrency) {
-      setLocalError('Selecciona la moneda de pago antes de marcar el pedido como realizado.')
+      showError('Selecciona la moneda de pago antes de marcar el pedido como realizado.')
       return
     }
 
@@ -312,7 +316,7 @@ export default function SellerOrderDetailModal({
     if (order.delivery_requested) {
       const parsed = parseCupInput(deliveryPrice)
       if (parsed == null) {
-        setLocalError('Indica un precio válido para el domicilio.')
+        showError('Indica un precio válido para el domicilio.')
         return
       }
       payload.delivery_price = parsed
@@ -326,7 +330,7 @@ export default function SellerOrderDetailModal({
     if (order.delivery_requested) {
       const parsed = parseCupInput(deliveryPrice)
       if (parsed == null) {
-        setLocalError('Indica un precio válido para el domicilio antes de enviar la factura.')
+        showError('Indica un precio válido para el domicilio antes de enviar la factura.')
         return
       }
       onQvaAccept?.({ delivery_price: parsed, delivery_currency: deliveryCurrency })
@@ -357,14 +361,14 @@ export default function SellerOrderDetailModal({
     event.preventDefault()
     const cleaned = refundText.trim()
     if (cleaned.length < 3) {
-      setLocalError('Escribe el motivo del reembolso.')
+      showError('Escribe el motivo del reembolso.')
       return
     }
     if (!refundPreview.changed) {
-      setLocalError('Baja una cantidad, quita un producto o devuelve el domicilio.')
+      showError('Baja una cantidad, quita un producto o devuelve el domicilio.')
       return
     }
-    setLocalError('')
+    showError('')
     try {
       const token = getSellerToken()
       const images = []
@@ -383,7 +387,7 @@ export default function SellerOrderDetailModal({
       })
       setRefundOpen(false)
     } catch (err) {
-      setLocalError(getUserFacingMessage(err, 'No pudimos reembolsar al comprador.'))
+      showError(getUserFacingMessage(err, 'No pudimos reembolsar al comprador.'))
     }
   }
 
@@ -408,11 +412,11 @@ export default function SellerOrderDetailModal({
 
   async function downloadDocument(kind) {
     setDocumentDownload(kind)
-    setLocalError('')
+    showError('')
     try {
       await downloadSellerOrderDocument(getSellerToken(), order.id, kind)
     } catch (cause) {
-      setLocalError(getUserFacingMessage(cause, 'No pudimos descargar el PDF.'))
+      showError(getUserFacingMessage(cause, 'No pudimos descargar el PDF.'))
     } finally {
       setDocumentDownload(null)
     }
@@ -420,16 +424,16 @@ export default function SellerOrderDetailModal({
 
   function handleDownload(type) {
     if (!resolvedPaymentCurrency) {
-      setLocalError('Selecciona y guarda la moneda de pago antes de generar la factura.')
+      showError('Selecciona y guarda la moneda de pago antes de generar la factura.')
       return
     }
 
     if (hasPendingChanges) {
-      setLocalError('Guarda los cambios del pedido antes de generar la factura.')
+      showError('Guarda los cambios del pedido antes de generar la factura.')
       return
     }
 
-    setLocalError('')
+    showError('')
     onDownloadInvoice(type)
   }
 
@@ -574,7 +578,7 @@ export default function SellerOrderDetailModal({
               disabled={readOnly || !isPending}
               onChange={(next) => {
                 setPaymentCurrency(next)
-                setLocalError('')
+                showError('')
               }}
               options={[
                 { value: '', label: 'Seleccionar…' },
@@ -879,12 +883,6 @@ export default function SellerOrderDetailModal({
               </div>
             </div>
           ) : null}
-
-          {localError || error ? (
-            <p className="mt-4 rounded-xl border border-brand-carmelita/25 bg-brand-carmelita/10 px-3 py-2 text-sm text-brand-carmelita">
-              {localError || error}
-            </p>
-          ) : null}
         </div>
 
         <div className="shrink-0 flex gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
@@ -960,11 +958,6 @@ export default function SellerOrderDetailModal({
                 <span className="font-semibold text-brand-green">#{order.id.slice(-6).toUpperCase()}</span>{' '}
                 de tu bandeja. Úsalo solo si la compra no se realizó.
               </p>
-              {(localError || error) && confirmCancel ? (
-                <p className={`mt-3 ${sellerAlertError}`} role="alert">
-                  {localError || error}
-                </p>
-              ) : null}
               <div className="mt-5 grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -1025,6 +1018,7 @@ export default function SellerOrderDetailModal({
         onSubmit={submitSupportReport}
         whatsappUrl={supportWhatsAppUrl}
       />
+      {toastNode}
     </SellerModalPortal>
   )
 }

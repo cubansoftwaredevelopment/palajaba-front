@@ -702,3 +702,7 @@ export function useBuyerJaba() {
   }
   return context
 }
+
+export function useOptionalBuyerJaba() {
+  return useContext(BuyerJabaContext)
+}

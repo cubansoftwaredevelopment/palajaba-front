@@ -2,8 +2,8 @@ import { useState } from 'react'
 import AdminButton from './AdminButton'
 import AdminModal from './AdminModal'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 import {
-  adminAlertError,
   adminFocusRing,
   adminInput,
   adminLabel,
@@ -54,21 +54,21 @@ export default function AdminDiscountCodeForm({ initial, onSubmit, onClose: requ
   const [code, setCode] = useState(initial?.code ?? '')
   const [percentOff, setPercentOff] = useState(String(initial?.percent_off ?? ''))
   const [isActive, setIsActive] = useState(initial?.is_active ?? true)
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ variant: 'admin', layerClassName: '!z-[260]' })
 
   async function handleSubmit(event) {
     event.preventDefault()
     const parsedPercent = Number.parseInt(percentOff, 10)
     if (!code.trim()) {
-      setError('El código es obligatorio.')
+      showError('El código es obligatorio.')
       return
     }
     if (!Number.isFinite(parsedPercent) || parsedPercent < 1 || parsedPercent > 100) {
-      setError('El descuento debe estar entre 1 y 100.')
+      showError('El descuento debe estar entre 1 y 100.')
       return
     }
 
-    setError('')
+    showError('')
     await onSubmit({
       code: code.trim().toUpperCase(),
       percent_off: parsedPercent,
@@ -77,6 +77,7 @@ export default function AdminDiscountCodeForm({ initial, onSubmit, onClose: requ
   }
 
   return (
+    <>
     <AdminModal
       title={initial ? 'Editar código' : 'Nuevo código de descuento'}
       subtitle={
@@ -140,12 +141,6 @@ export default function AdminDiscountCodeForm({ initial, onSubmit, onClose: requ
 
         <ActiveToggle checked={isActive} onChange={setIsActive} />
 
-        {error ? (
-          <p className={adminAlertError} role="alert">
-            {error}
-          </p>
-        ) : null}
-
         <div className="flex flex-col gap-2 sm:flex-row">
           <AdminButton type="button" variant="secondary" onClick={onClose} disabled={loading}>
             Cancelar
@@ -156,5 +151,7 @@ export default function AdminDiscountCodeForm({ initial, onSubmit, onClose: requ
         </div>
       </form>
     </AdminModal>
+    {toastNode}
+    </>
   )
 }

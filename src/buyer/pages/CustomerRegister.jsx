@@ -12,6 +12,7 @@ import { alertErrorClass, inputClass, labelClass } from '../../auth/components/f
 import { addCustomerFavorite, confirmCustomerRegistration, resendCustomerRegistration, startCustomerRegistration } from '../api.js'
 import { setCustomerSession, updateCustomerProfile } from '../../lib/customerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 
 export default function CustomerRegister() {
   const navigate = useNavigate()
@@ -32,7 +33,7 @@ export default function CustomerRegister() {
   function goBack() {
     if (challenge) {
       setChallenge(null)
-      setError('')
+      showError('')
       setInfo('')
       return
     }
@@ -47,15 +48,15 @@ export default function CustomerRegister() {
   async function start(event) {
     event.preventDefault()
     if (!acceptedTerms) {
-      setError('Debes aceptar los términos y condiciones.')
+      showError('Debes aceptar los términos y condiciones.')
       return
     }
     if (!acceptedPrivacy) {
-      setError('Debes aceptar la política de privacidad.')
+      showError('Debes aceptar la política de privacidad.')
       return
     }
     setLoading(true)
-    setError('')
+    showError('')
     try {
       const result = await startCustomerRegistration({
         ...form,
@@ -75,19 +76,19 @@ export default function CustomerRegister() {
         setInfo(result.message)
       }
     } catch (cause) {
-      setError(getUserFacingMessage(cause, 'No pudimos enviar los códigos de verificación.'))
+      showError(getUserFacingMessage(cause, 'No pudimos enviar los códigos de verificación.'))
     } finally { setLoading(false) }
   }
 
   async function confirm(event) {
     event.preventDefault()
     setLoading(true)
-    setError('')
+    showError('')
     try {
       const result = await confirmCustomerRegistration({ challenge_id: challenge.challenge_id, email_code: emailCode, phone_code: phoneCode })
       await finishRegistration(result)
     } catch (cause) {
-      setError(getUserFacingMessage(cause, 'No pudimos verificar los códigos.'))
+      showError(getUserFacingMessage(cause, 'No pudimos verificar los códigos.'))
     } finally { setLoading(false) }
   }
 
@@ -104,11 +105,11 @@ export default function CustomerRegister() {
   }
 
   async function resend(channel) {
-    setError('')
+    showError('')
     try {
       const result = await resendCustomerRegistration({ challenge_id: challenge.challenge_id, channel })
       setInfo(result.message)
-    } catch (cause) { setError(getUserFacingMessage(cause, 'No pudimos reenviar el código.')) }
+    } catch (cause) { showError(getUserFacingMessage(cause, 'No pudimos reenviar el código.')) }
   }
 
   const stepShiftMotion = reduced
@@ -116,6 +117,7 @@ export default function CustomerRegister() {
     : stepShift
 
   return (
+    <>
     <AuthShell
       onBack={goBack}
       backLabel={challenge || canGoBack ? 'Volver' : 'Inicio'}
@@ -137,13 +139,11 @@ export default function CustomerRegister() {
               <PasswordField id="customer-password" label="Contraseña" value={form.password} onChange={(event) => change('password', event.target.value)} />
               <AcceptPlatformTerms id="customer-terms" checked={acceptedTerms} onChange={(event) => setAcceptedTerms(event.target.checked)} />
               <AcceptPlatformPrivacy id="customer-privacy" checked={acceptedPrivacy} onChange={(event) => setAcceptedPrivacy(event.target.checked)} />
-              {error ? <p className={alertErrorClass} role="alert">{error}</p> : null}
               <Button type="submit" disabled={loading || !acceptedTerms || !acceptedPrivacy}>{loading ? 'Enviando códigos…' : 'Continuar y verificar'}</Button>
             </form>
           ) : (
             <form onSubmit={confirm} className="flex flex-col gap-3.5" noValidate>
               {['email', 'phone'].map((channel) => <div key={channel}><label htmlFor={`customer-${channel}-code`} className={labelClass}>Código del {channel === 'email' ? 'correo' : 'SMS'} <span className="text-brand-carmelita">*</span></label><div className="flex gap-2"><input id={`customer-${channel}-code`} inputMode="numeric" autoComplete="one-time-code" value={channel === 'email' ? emailCode : phoneCode} onChange={(event) => (channel === 'email' ? setEmailCode : setPhoneCode)(event.target.value.replace(/\D/g, '').slice(0, 6))} className={inputClass} required /><button type="button" onClick={() => resend(channel)} className="shrink-0 rounded-xl border border-brand-green/20 px-3 text-xs font-bold text-brand-green">Reenviar</button></div></div>)}
-              {error ? <p className={alertErrorClass} role="alert">{error}</p> : null}
               <Button type="submit" disabled={loading || emailCode.length < 4 || phoneCode.length < 4}>{loading ? 'Verificando…' : 'Verificar y crear cuenta'}</Button>
             </form>
           )}
@@ -154,5 +154,7 @@ export default function CustomerRegister() {
         </PresenceContext.Provider>
       </section>
     </AuthShell>
+    {toastNode}
+    </>
   )
 }

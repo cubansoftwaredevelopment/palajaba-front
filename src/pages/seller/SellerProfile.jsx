@@ -22,7 +22,6 @@ import SellerSection from '../../components/seller/SellerSection'
 import SellerSocialLinksEditor from '../../components/seller/SellerSocialLinksEditor'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
 import {
-  sellerAlertError,
   sellerBtnPrimary,
   sellerCharCounter,
   sellerChoice,
@@ -140,7 +139,6 @@ export default function SellerProfile() {
   const [deliveryAreas, setDeliveryAreas] = useState(profile?.delivery_areas ?? [])
   const [gestoresEnabled, setGestoresEnabled] = useState(Boolean(profile?.gestores_enabled))
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [errorToast, setErrorToast] = useState(null)
   const [saved, setSaved] = useState(false)
   const [setupNotices, setSetupNotices] = useState([])
@@ -216,19 +214,22 @@ export default function SellerProfile() {
     }
   }
 
-  function showCaughtError(err) {
-    const resolved = resolveUserFacingError(err)
-    if (resolved.isServiceError) {
-      setError('')
-      setErrorToast({
-        id: `${Date.now()}`,
-        tone: 'error',
-        title: resolved.title || 'Algo salió mal',
-        content: resolved.message,
-      })
+  function showFormError(message, title = 'Revisa los datos') {
+    if (!message) {
+      setErrorToast(null)
       return
     }
-    setError(resolved.message)
+    setErrorToast({
+      id: `${Date.now()}`,
+      tone: 'error',
+      title,
+      content: message,
+    })
+  }
+
+  function showCaughtError(err) {
+    const resolved = resolveUserFacingError(err)
+    showFormError(resolved.message, resolved.title || 'Algo salió mal')
   }
 
   useEffect(() => {
@@ -244,15 +245,15 @@ export default function SellerProfile() {
 
   function goToHub() {
     setActivePanel(closeProfilePanel())
-    setError('')
+    showFormError('')
   }
 
   function handleMenuSelect(panelId) {
     const action = resolveProfileMenuAction(panelId)
     if (!action) return
 
-    setError('')
     setActivePanel(openProfilePanel(activePanel, action.panelId))
+    showFormError('')
   }
 
   async function handlePhotoChange(event) {
@@ -262,11 +263,11 @@ export default function SellerProfile() {
 
     const validation = validateImageFile(file)
     if (!validation.ok) {
-      setError(validation.message)
+      showFormError(validation.message)
       return
     }
 
-    setError('')
+    showFormError('')
     markDirty()
     setPhotoUploading(true)
     try {
@@ -285,21 +286,21 @@ export default function SellerProfile() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showFormError('')
     setSaved(false)
 
     if (!photoUrl) {
-      setError('Sube una foto de perfil para continuar.')
+      showFormError('Sube una foto de perfil para continuar.')
       return
     }
     const businessArea = getBusinessAreaFromSelection(businessProvinceId, businessMunicipalityId)
     if (!businessArea) {
-      setError('Selecciona la provincia y el municipio de tu negocio.')
+      showFormError('Selecciona la provincia y el municipio de tu negocio.')
       return
     }
     const socialError = socialLinksError(socialLinks)
     if (socialError) {
-      setError(socialError)
+      showFormError(socialError)
       return
     }
 
@@ -688,12 +689,6 @@ export default function SellerProfile() {
                 onDismiss={() => setSaved(false)}
               />
 
-              {error && !activePanel && (
-                <p className={`mb-3 ${sellerAlertError}`} role="alert">
-                  {error}
-                </p>
-              )}
-
               <SellerProfileHeroCard
                 profile={profile}
                 photoUrl={photoUrl}
@@ -738,12 +733,6 @@ export default function SellerProfile() {
                 <fieldset disabled={readOnly} className="min-w-0 border-0 p-0">
                   {renderActivePanelBody()}
                 </fieldset>
-
-                {error && (
-                  <p className={sellerAlertError} role="alert">
-                    {error}
-                  </p>
-                )}
 
                 {readOnly || activePanel === PROFILE_PANEL_IDS.location ? null : (
                   <div className={sellerFormActions}>{submitButton}</div>

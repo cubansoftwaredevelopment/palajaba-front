@@ -6,7 +6,8 @@ import AuthShell from '../components/AuthShell'
 import MethodTabs from '../components/MethodTabs'
 import PasswordField from '../components/PasswordField'
 import Button from '../../components/Button'
-import { alertErrorClass, inputClass, labelClass } from '../components/formStyles'
+import { inputClass, labelClass } from '../components/formStyles'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import { authLoginContainer } from '../components/authStyles'
 import { ApiError } from '../../lib/api'
 import { adminLogin, sellerLogin } from '../api.js'
@@ -30,13 +31,13 @@ export default function Login() {
   const [accountType, setAccountType] = useState(location.state?.accountType === 'customer' ? 'customer' : 'store')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [loading, setLoading] = useState(false)
   const notice = typeof location.state?.notice === 'string' ? location.state.notice : ''
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showError('')
     setLoading(true)
 
     try {
@@ -75,7 +76,7 @@ export default function Login() {
           // Las credenciales tampoco son de administrador.
         }
       }
-      setError(
+      showError(
         getUserFacingMessage(
           err,
           'No pudimos iniciar sesión. Revisa tus datos e inténtalo de nuevo.',
@@ -87,6 +88,7 @@ export default function Login() {
   }
 
   return (
+    <>
     <AuthShell
       onBack={() => {
         if (canGoBack) navigate(-1)
@@ -114,7 +116,7 @@ export default function Login() {
             <MethodTabs
               options={ACCOUNT_TYPES}
               value={accountType}
-              onChange={(next) => { setAccountType(next); setError('') }}
+              onChange={(next) => { setAccountType(next); showError('') }}
               ariaLabel="Tipo de cuenta"
             />
             {accountType === 'customer' ? (
@@ -167,12 +169,6 @@ export default function Login() {
               </Link>
             </p>
 
-            {error && (
-              <p className={alertErrorClass} role="alert">
-                {error}
-              </p>
-            )}
-
             <Button type="submit" disabled={loading} className="mt-1">
               {loading ? 'Entrando…' : 'Entrar'}
             </Button>
@@ -191,5 +187,7 @@ export default function Login() {
         </p>
       </section>
     </AuthShell>
+    {toastNode}
+    </>
   )
 }

@@ -28,11 +28,11 @@ function ToastCard({ toast, onClose }) {
   )
 }
 
-export default function AdminToastStack({ toasts, onDismiss }) {
+export default function AdminToastStack({ toasts, onDismiss, className = '' }) {
   if (!toasts?.length) return null
 
   return (
-    <div className="admin-theme pointer-events-none fixed bottom-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))] left-1/2 z-50 flex w-[min(24rem,calc(100%-2rem))] -translate-x-1/2 flex-col-reverse gap-2">
+    <div className={`admin-theme pointer-events-none fixed bottom-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))] left-1/2 z-50 flex w-[min(24rem,calc(100%-2rem))] -translate-x-1/2 flex-col-reverse gap-2 ${className}`}>
       {toasts.map((toast) => (
         <div key={toast.id} className="pointer-events-auto">
           <ToastCard toast={toast} onClose={onDismiss} />

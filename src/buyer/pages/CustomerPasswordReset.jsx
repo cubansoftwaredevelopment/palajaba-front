@@ -6,7 +6,8 @@ import AuthShell from '../../auth/components/AuthShell'
 import Button from '../../components/Button'
 import PasswordField from '../../auth/components/PasswordField'
 import PhoneField from '../../auth/components/PhoneField'
-import { alertErrorClass, hintClass, inputClass } from '../../auth/components/formStyles'
+import { hintClass, inputClass } from '../../auth/components/formStyles'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import {
   completeCustomerPasswordReset,
   confirmCustomerPasswordReset,
@@ -117,6 +118,7 @@ export default function CustomerPasswordReset() {
   }
 
   return (
+    <>
     <AuthShell
       onBack={() => {
         if (canGoBack) navigate(-1)
@@ -132,7 +134,6 @@ export default function CustomerPasswordReset() {
 
           {step === 'phone' ? <form onSubmit={start} className="flex flex-col gap-4" noValidate>
             <PhoneField id="customer-reset-phone" value={phone} onChange={setPhone} />
-            {error ? <p className={alertErrorClass} role="alert">{error}</p> : null}
             <Button type="submit" disabled={loading}>{loading ? 'Enviando código…' : 'Enviar código'}</Button>
           </form> : null}
 
@@ -142,21 +143,21 @@ export default function CustomerPasswordReset() {
               <input id="customer-reset-code" type="text" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} className={`${inputClass} tracking-[0.35em]`} placeholder="000000" required />
               <p className={hintClass}>Enviado al teléfono terminado en {challenge?.phone_hint?.slice(-2) || '••'}.</p>
             </div>
-            {error ? <p className={alertErrorClass} role="alert">{error}</p> : null}
             <button type="button" onClick={() => void resend()} disabled={loading} className="self-start text-sm font-semibold text-brand-green underline-offset-2 hover:underline disabled:opacity-60">{loading ? 'Enviando…' : 'Reenviar código'}</button>
             <Button type="submit" disabled={loading}>{loading ? 'Verificando…' : 'Verificar código'}</Button>
-            <button type="button" onClick={() => { setStep('phone'); setChallenge(null); setCode(''); setError('') }} className="text-sm font-semibold text-brand-carmelita underline-offset-2 hover:underline">Cambiar teléfono</button>
+            <button type="button" onClick={() => { setStep('phone'); setChallenge(null); setCode(''); showError('') }} className="text-sm font-semibold text-brand-carmelita underline-offset-2 hover:underline">Cambiar teléfono</button>
           </form> : null}
 
           {step === 'password' ? <form onSubmit={savePassword} className="flex flex-col gap-4" noValidate>
             <PasswordField id="customer-reset-password" label="Nueva contraseña" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" />
             <PasswordField id="customer-reset-password-confirm" label="Confirmar contraseña" value={passwordConfirm} onChange={(event) => setPasswordConfirm(event.target.value)} autoComplete="new-password" />
-            {error ? <p className={alertErrorClass} role="alert">{error}</p> : null}
             <Button type="submit" disabled={loading}>{loading ? 'Guardando…' : 'Guardar contraseña'}</Button>
           </form> : null}
         </AuthCard>
         <p className="mt-6 text-center text-sm text-brand-carmelita/90">¿La recuerdas? <Link to="/login" state={{ accountType: 'customer' }} className="font-semibold text-brand-green underline-offset-2 hover:underline">Inicia sesión</Link></p>
       </section>
     </AuthShell>
+    {toastNode}
+    </>
   )
 }

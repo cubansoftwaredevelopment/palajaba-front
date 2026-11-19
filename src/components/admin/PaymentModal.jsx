@@ -9,6 +9,7 @@ import { usePlanPricing } from '../../lib/usePlanPricing'
 import { updateRegistrationPayment } from '../../subscriptions/api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getAdminToken } from '../../lib/adminAuth'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 
 export default function PaymentModal({ registration, onClose: requestClose, onSuccess }) {
   const { dismiss: onClose, motionClass } = useDismissibleModal(requestClose)
@@ -46,6 +47,7 @@ export default function PaymentModal({ registration, onClose: requestClose, onSu
   }
 
   return (
+    <>
     <AdminModal
       title="Registrar monto pagado"
       subtitle={registration.store_name}
@@ -72,12 +74,6 @@ export default function PaymentModal({ registration, onClose: requestClose, onSu
           </p>
         </div>
 
-        {error && (
-          <p className={adminAlertError} role="alert">
-            {error}
-          </p>
-        )}
-
         <div className="flex flex-col gap-2 sm:flex-row">
           <AdminButton type="button" variant="secondary" onClick={onClose}>
             Cancelar
@@ -88,5 +84,7 @@ export default function PaymentModal({ registration, onClose: requestClose, onSu
         </div>
       </form>
     </AdminModal>
+    {toastNode}
+    </>
   )
 }

@@ -9,9 +9,10 @@ import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import { isoDate, rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 import FilterModal from '../../components/filters/FilterModal'
+import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import LoadingState from '../../components/ui/LoadingState'
 import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
-import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
+import NoticeDateFilter from '../../components/filters/NoticeDateFilter'
 import {
   sellerModalBody,
   sellerModalSheet,
@@ -339,6 +340,8 @@ export default function SellerCustomers() {
   const [noticesHasMore, setNoticesHasMore] = useState(false)
   const [loadingMoreNotices, setLoadingMoreNotices] = useState(false)
   const [noticesRefresh, setNoticesRefresh] = useState(0)
+  const [noticeDateFrom, setNoticeDateFrom] = useState('')
+  const [noticeDateTo, setNoticeDateTo] = useState('')
   const [customers, setCustomers] = useState([])
   const [selectedCustomer, setSelectedCustomer] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -452,7 +455,12 @@ export default function SellerCustomers() {
     setNoticesLoading(true)
     ;(async () => {
       try {
-        const data = await fetchStoreCustomerNotices(getSellerToken(), { offset: 0, limit: NOTICE_PAGE })
+        const data = await fetchStoreCustomerNotices(getSellerToken(), {
+          offset: 0,
+          limit: NOTICE_PAGE,
+          dateFrom: noticeDateFrom,
+          dateTo: noticeDateTo,
+        })
         if (cancelled) return
         setNotices(data.items ?? [])
         setNoticesHasMore(Boolean(data.has_more))
@@ -535,7 +543,17 @@ export default function SellerCustomers() {
       <motion.div key={sectionTab} className={tabMotion && !reducedMotion ? 'screen-step' : ''} {...tabShift}>
       {sectionTab === 'notices' ? (
         <>
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1">
+            <NoticeDateFilter
+              from={noticeDateFrom}
+              to={noticeDateTo}
+              onChange={(from, to) => {
+                setNoticeDateFrom(from)
+                setNoticeDateTo(to)
+              }}
+            />
+          </div>
           <button
             type="button"
             onClick={() => setNoticeOpen(true)}
@@ -569,7 +587,7 @@ export default function SellerCustomers() {
             ) : null}
           </>
         ) : (
-          <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">Aún no has enviado avisos a tus clientes.</p>
+          <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">{noticeDateFrom || noticeDateTo ? 'No hay avisos en esas fechas.' : 'Aún no has enviado avisos a tus clientes.'}</p>
         )}
         </>
       ) : loading ? <LoadingState message="Cargando clientes…" /> : customersEmpty ? <p className="rounded-2xl bg-brand-white p-5 text-sm text-brand-carmelita/70">Aún no tienes clientes registrados por pedidos.</p> : (

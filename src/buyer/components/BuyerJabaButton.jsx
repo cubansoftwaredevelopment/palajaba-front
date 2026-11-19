@@ -2,13 +2,15 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { JABA_BAG } from '../../constants/branding'
 import { badgeSpring } from '../../motion/presets'
-import { useBuyerJaba } from '../context.js'
+import { useOptionalBuyerJaba } from '../context.js'
 import { buyerJabaBadge, buyerJabaTrigger } from './buyerStyles'
 
 export default function BuyerJabaButton() {
   const reduced = useReducedMotion()
-  const { count } = useBuyerJaba()
+  const jaba = useOptionalBuyerJaba()
   const location = useLocation()
+  if (!jaba) return null
+  const { count } = jaba
   const onCart = location.pathname === '/cart'
 
   return (

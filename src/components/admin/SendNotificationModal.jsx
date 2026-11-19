@@ -9,6 +9,7 @@ import { buildAdminNotificationPayload, matchesCustomerQuery, matchesStoreQuery 
 import { fetchAdminCustomers, fetchRegistrations } from '../../auth/api.js'
 import { getAdminToken } from '../../lib/adminAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 
 function toggleValue(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value]
@@ -30,7 +31,7 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
   const [customerQuery, setCustomerQuery] = useState('')
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ variant: 'admin', layerClassName: '!z-[260]' })
 
   const filteredStores = useMemo(
     () => stores.filter((store) => matchesStoreQuery(store, storeQuery)).slice(0, 40),
@@ -150,17 +151,17 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showError('')
 
     const trimmedTitle = title.trim()
     const trimmedContent = content.trim()
     if (!trimmedTitle || !trimmedContent) {
-      setError('Completa el título y el contenido.')
+      showError('Completa el título y el contenido.')
       return
     }
 
     if (!audiences.length && !selectedSellerIds.length && !selectedCustomerIds.length) {
-      setError('Elige al menos un grupo, un negocio o un cliente.')
+      showError('Elige al menos un grupo, un negocio o un cliente.')
       return
     }
 
@@ -177,13 +178,14 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
       )
       onClose()
     } catch (err) {
-      setError(getUserFacingMessage(err, 'No pudimos enviar la notificación.'))
+      showError(getUserFacingMessage(err, 'No pudimos enviar la notificación.'))
     } finally {
       setLoading(false)
     }
   }
 
   return (
+    <>
     <AdminModal
       title="Nueva notificación"
       subtitle={`Destinatarios: ${audienceSummary}`}
@@ -392,12 +394,6 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
           />
         </div>
 
-        {error && (
-          <p className={adminAlertError} role="alert">
-            {error}
-          </p>
-        )}
-
         <div className="flex flex-col gap-2 pt-1">
           <AdminButton type="submit" disabled={loading || storesLoading || customersLoading}>
             {loading ? 'Enviando…' : 'Enviar aviso'}
@@ -408,5 +404,7 @@ export default function SendNotificationModal({ onClose: requestClose, onSubmit 
         </div>
       </form>
     </AdminModal>
+    {toastNode}
+    </>
   )
 }

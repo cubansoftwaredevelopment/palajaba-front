@@ -6,7 +6,8 @@ import PasswordField from '../../components/auth/PasswordField'
 import PhoneField from '../../components/auth/PhoneField'
 import Button from '../../components/Button'
 import GestorShell from '../../components/gestor/GestorShell'
-import { alertErrorClass, hintClass } from '../../components/auth/formStyles'
+import { hintClass } from '../../components/auth/formStyles'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import { gestorSetup } from '../../lib/api'
 import {
   clearGestorSetup,
@@ -27,7 +28,7 @@ export default function GestorSetup() {
   const [password, setPassword] = useState('')
   const [passwordConfirm, setPasswordConfirm] = useState('')
   const [phoneDigits, setPhoneDigits] = useState('')
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -41,18 +42,18 @@ export default function GestorSetup() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showError('')
 
     if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres.')
+      showError('La contraseña debe tener al menos 6 caracteres.')
       return
     }
     if (password !== passwordConfirm) {
-      setError('Las contraseñas no coinciden.')
+      showError('Las contraseñas no coinciden.')
       return
     }
     if (phoneDigits.length !== PHONE_DIGITS_LENGTH) {
-      setError('El teléfono debe tener 8 dígitos.')
+      showError('El teléfono debe tener 8 dígitos.')
       return
     }
 
@@ -65,7 +66,7 @@ export default function GestorSetup() {
       })
 
       if (!data.access_token || !data.gestor) {
-        setError('No pudimos completar el registro. Inténtalo de nuevo.')
+        showError('No pudimos completar el registro. Inténtalo de nuevo.')
         return
       }
 
@@ -76,7 +77,7 @@ export default function GestorSetup() {
       })
       navigate(gestorPanelPath(slug || setup.store_slug), { replace: true })
     } catch (err) {
-      setError(
+      showError(
         getUserFacingMessage(
           err,
           'No pudimos guardar tus datos. El enlace puede haber expirado; vuelve a iniciar sesión.',
@@ -88,6 +89,7 @@ export default function GestorSetup() {
   }
 
   return (
+    <>
     <GestorShell backTo={gestorLoginPath(slug)} backLabel="Volver al login">
       <section className="animate-fade-in" aria-labelledby="gestor-setup-title">
         <AuthHeader
@@ -126,12 +128,6 @@ export default function GestorSetup() {
               <p className={hintClass}>Los clientes te escribirán a este número al pedir.</p>
             </div>
 
-            {error ? (
-              <p className={alertErrorClass} role="alert">
-                {error}
-              </p>
-            ) : null}
-
             <Button type="submit" disabled={loading} className="mt-1">
               {loading ? 'Guardando…' : 'Guardar y entrar'}
             </Button>
@@ -139,5 +135,7 @@ export default function GestorSetup() {
         </AuthCard>
       </section>
     </GestorShell>
+    {toastNode}
+    </>
   )
 }

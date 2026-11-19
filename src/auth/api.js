@@ -57,8 +57,10 @@ export function suggestStoreCustomers(token, query) {
   return request(`/api/customers/store/customers/suggestions?${params}`, { headers: customerHeaders(token) })
 }
 
-export function fetchStoreCustomerNotices(token, { offset = 0, limit = 10 } = {}) {
+export function fetchStoreCustomerNotices(token, { offset = 0, limit = 10, dateFrom = '', dateTo = '' } = {}) {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) })
+  if (dateFrom) params.set('date_from', dateFrom)
+  if (dateTo) params.set('date_to', dateTo)
   return request(`/api/customers/store/notices?${params}`, { headers: customerHeaders(token) })
 }
 

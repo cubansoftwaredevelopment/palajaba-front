@@ -8,6 +8,7 @@ import { useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import SellerMotionSheet from '../../motion/SellerMotionSheet'
 import { useSheetExitMs } from '../../motion/presets'
 import SellerModalPortal from './SellerModalPortal'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 import SellerRichTextEditor from './SellerRichTextEditor'
 
 const sellerEvidenceModalOverlay = buyerProductDetailOverlay.replace('z-[85]', 'z-[220]')
@@ -176,6 +177,7 @@ export default function SellerOrderEvidenceEditor({ orderId, submitting, onSubmi
                   {submitting ? 'Enviando evidencia…' : 'Enviar evidencia al cliente'}
                 </button>
               </footer>
+          {toastNode}
           </SellerMotionSheet>
         </SellerModalPortal>
       ) : null}

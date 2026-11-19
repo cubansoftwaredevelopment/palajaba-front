@@ -14,6 +14,7 @@ import {
   adminSection,
   adminSubtle,
 } from '../../components/admin/adminStyles'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import {
   createAdminAppRelease,
   deleteAdminAppRelease,
@@ -172,6 +173,7 @@ export default function AdminApps() {
     event.preventDefault()
     if (!uploadPlatform || !file) {
       setError('Selecciona el archivo del build.')
+      showError('Selecciona el archivo del build.')
       return
     }
     setUploading(true)
@@ -198,7 +200,7 @@ export default function AdminApps() {
         navigate('/admin', { replace: true })
         return
       }
-      setError(getUserFacingMessage(err, 'No pudimos subir el build.'))
+      showError(getUserFacingMessage(err, 'No pudimos subir el build.'))
     } finally {
       setUploading(false)
     }
@@ -219,7 +221,7 @@ export default function AdminApps() {
         navigate('/admin', { replace: true })
         return
       }
-      setError(getUserFacingMessage(err, 'No pudimos marcar el build como main.'))
+      showError(getUserFacingMessage(err, 'No pudimos marcar el build como main.'))
     } finally {
       setBusyId(null)
     }
@@ -242,7 +244,7 @@ export default function AdminApps() {
         navigate('/admin', { replace: true })
         return
       }
-      setError(getUserFacingMessage(err, 'No pudimos eliminar el build.'))
+      showError(getUserFacingMessage(err, 'No pudimos eliminar el build.'))
     } finally {
       setBusyId(null)
     }
@@ -255,7 +257,7 @@ export default function AdminApps() {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-4">
         {error ? <p className={adminAlertError}>{error}</p> : null}
         {success ? <p className={adminAlertSuccess}>{success}</p> : null}
-
+        {toastNode}
         {loading ? (
           <LoadingState message="Cargando builds…" />
         ) : (

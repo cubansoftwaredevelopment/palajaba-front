@@ -6,6 +6,7 @@ import { TextStyle } from '@tiptap/extension-text-style'
 import { Link } from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
 import LoadingState from '../ui/LoadingState'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 import { validateImageFile } from '../../lib/imageUpload'
 import { EMPTY_STORE_PAGE, normalizeStoreLink } from '../../lib/storePages'
 import ResizableImage from './resizableImage.js'
@@ -144,7 +145,7 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
   const linkInputRef = useRef(null)
   const [linkDraft, setLinkDraft] = useState('')
   const [uploading, setUploading] = useState('')
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast()
   const [menu, setMenu] = useState('')
   const extensions = useMemo(() => createEditorExtensions(), [])
   const closeMenu = useCallback(() => setMenu(''), [])
@@ -196,16 +197,16 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
     if (!file || !editor) return
     const validation = validateImageFile(file)
     if (!validation.ok) {
-      setError(validation.message)
+      showError(validation.message)
       return
     }
     setUploading('uploading')
-    setError('')
+    showError('')
     try {
       const result = await uploadImage(file)
       editor.chain().focus().setImage({ src: result.url, alt: imageAlt, width: 100 }).run()
     } catch (cause) {
-      setError(cause?.message || 'No pudimos subir la imagen.')
+      showError(cause?.message || 'No pudimos subir la imagen.')
     } finally {
       setUploading('')
       if (inputRef.current) inputRef.current.value = ''
@@ -227,7 +228,7 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
       }
       const href = imageLink ? editor.getAttributes('image').href : editor.getAttributes('link').href
       setLinkDraft(href || '')
-      setError('')
+      showError('')
     }
     setMenu((current) => (current === name ? '' : name))
   }
@@ -240,10 +241,10 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
     if (!editor) return
     const href = normalizeStoreLink(raw)
     if (!href) {
-      setError('Escribe un enlace http, https o una ruta que empiece por /.')
+      showError('Escribe un enlace http, https o una ruta que empiece por /.')
       return
     }
-    setError('')
+    showError('')
     if (editor.isActive('image')) {
       editor.chain().focus().updateAttributes('image', { href }).run()
     } else {
@@ -496,9 +497,7 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
           <span className="pointer-events-none absolute left-4 top-3 text-sm text-brand-carmelita/55">{placeholder}</span>
         ) : null}
       </div>
-      {error ? (
-        <p role="alert" className="rounded-xl border border-brand-carmelita/20 bg-brand-carmelita/10 px-3 py-2 text-sm text-brand-carmelita">{error}</p>
-      ) : null}
+      {toastNode}
     </div>
   )
 }

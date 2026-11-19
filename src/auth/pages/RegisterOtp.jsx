@@ -5,6 +5,7 @@ import AuthShell from '../components/AuthShell'
 import { authFormWrap, authPageIntro } from '../components/authStyles'
 import RegisterProgress from '../components/RegisterProgress'
 import Button from '../../components/Button'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import {
   alertErrorClass,
   hintClass,
@@ -58,7 +59,7 @@ export default function RegisterOtp() {
 
   const [emailCode, setEmailCode] = useState('')
   const [phoneCode, setPhoneCode] = useState('')
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [info, setInfo] = useState(location.state?.message || '')
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState('')
@@ -82,9 +83,9 @@ export default function RegisterOtp() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showError('')
     if (emailCode.length < 4 || phoneCode.length < 4) {
-      setError('Ingresa los dos códigos de verificación.')
+      showError('Ingresa los dos códigos de verificación.')
       return
     }
     setLoading(true)
@@ -116,7 +117,7 @@ export default function RegisterOtp() {
         state: { kind: result.kind || kind, message: result.message },
       })
     } catch (err) {
-      setError(
+      showError(
         getUserFacingMessage(
           err,
           'No pudimos verificar los códigos. Revísalos o pídelos de nuevo.',
@@ -128,7 +129,7 @@ export default function RegisterOtp() {
   }
 
   async function handleResend(channel) {
-    setError('')
+    showError('')
     setResending(channel)
     try {
       const result = await resendRegisterOtp({
@@ -142,9 +143,9 @@ export default function RegisterOtp() {
       const cooldownUntil = applySmsFailFromError(err, phone)
       if (cooldownUntil) {
         setSmsCooldownEndsAt(cooldownUntil)
-        setError(smsFailUserMessage(cooldownUntil - Date.now()))
+        showError(smsFailUserMessage(cooldownUntil - Date.now()))
       } else {
-        setError(
+        showError(
           getUserFacingMessage(
             err,
             'No pudimos reenviar el código. Espera un momento e inténtalo de nuevo.',
@@ -159,6 +160,7 @@ export default function RegisterOtp() {
   if (!challengeId) return null
 
   return (
+    <>
     <AuthShell backTo="/registro" backLabel="Datos">
       <section className="animate-fade-in" aria-labelledby="register-otp-title">
         <div className={authPageIntro}>
@@ -242,10 +244,6 @@ export default function RegisterOtp() {
             <p className={alertErrorClass} role="alert">
               {smsFailUserMessage(smsCooldownRemaining)}
             </p>
-          ) : error ? (
-            <p className={alertErrorClass} role="alert">
-              {error}
-            </p>
           ) : null}
 
           <Button type="submit" className="mt-1" disabled={loading}>
@@ -254,5 +252,7 @@ export default function RegisterOtp() {
         </form>
       </section>
     </AuthShell>
+    {toastNode}
+    </>
   )
 }

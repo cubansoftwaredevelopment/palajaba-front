@@ -5,7 +5,8 @@ import AuthHeader from '../../components/auth/AuthHeader'
 import PasswordField from '../../components/auth/PasswordField'
 import Button from '../../components/Button'
 import GestorShell from '../../components/gestor/GestorShell'
-import { alertErrorClass, hintClass, inputClass, labelClass } from '../../components/auth/formStyles'
+import { hintClass, inputClass, labelClass } from '../../components/auth/formStyles'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import { gestorLogin } from '../../lib/api'
 import { fetchMarketplaceStore } from '../../buyer/api.js'
 import {
@@ -26,7 +27,7 @@ export default function GestorLogin() {
   const [storeName, setStoreName] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -52,11 +53,11 @@ export default function GestorLogin() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showError('')
 
     const validated = validateGestorUsername(username)
     if (!validated.ok) {
-      setError(validated.message)
+      showError(validated.message)
       return
     }
 
@@ -81,7 +82,7 @@ export default function GestorLogin() {
       }
 
       if (!data.access_token || !data.gestor) {
-        setError('No pudimos iniciar sesión. Inténtalo de nuevo.')
+        showError('No pudimos iniciar sesión. Inténtalo de nuevo.')
         return
       }
 
@@ -91,7 +92,7 @@ export default function GestorLogin() {
       })
       navigate(gestorPanelPath(slug), { replace: true })
     } catch (err) {
-      setError(
+      showError(
         getUserFacingMessage(err, 'No pudimos iniciar sesión. Revisa tus datos e inténtalo de nuevo.'),
       )
     } finally {
@@ -100,6 +101,7 @@ export default function GestorLogin() {
   }
 
   return (
+    <>
     <GestorShell backTo="/" backLabel="Inicio">
       <section className="animate-fade-in" aria-labelledby="gestor-login-title">
         <AuthHeader
@@ -145,12 +147,6 @@ export default function GestorLogin() {
               <p className={hintClass}>Si es tu primer ingreso, déjala vacía.</p>
             </div>
 
-            {error ? (
-              <p className={alertErrorClass} role="alert">
-                {error}
-              </p>
-            ) : null}
-
             <Button type="submit" disabled={loading} className="mt-1">
               {loading ? 'Entrando…' : 'Entrar'}
             </Button>
@@ -158,5 +154,7 @@ export default function GestorLogin() {
         </AuthCard>
       </section>
     </GestorShell>
+    {toastNode}
+    </>
   )
 }

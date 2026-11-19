@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import PhoneField from '../../components/auth/PhoneField'
 import { getCustomerProfile } from '../../lib/customerAuth'
 import { customerHasQvaPayUsername } from '../../customer/api.js'
-import { alertErrorClass } from '../../components/auth/formStyles'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import {
   getBuyerDeliveryDefaults,
   saveBuyerDeliveryDefaults,
@@ -82,7 +82,7 @@ export default function BuyerPickupCheckoutModal({
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
-    if (error) setError('')
+    showError('')
   }
 
   async function handleSubmit(event, paymentMethod = 'contact') {
@@ -188,8 +188,6 @@ export default function BuyerPickupCheckoutModal({
                 pages={shownCheckout.storePages}
                 onChange={setAgreements}
               />
-
-              {error ? <p className={alertErrorClass}>{error}</p> : null}
             </div>
           </div>
 
@@ -208,6 +206,7 @@ export default function BuyerPickupCheckoutModal({
             </button>
           </div>
         </form>
+        {toastNode}
     </BuyerMotionFrame>
   )
 }

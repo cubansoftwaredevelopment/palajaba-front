@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 
 import { searchSellerOrderedProducts } from '../../products/api.js'
@@ -10,8 +11,6 @@ import { productDiscountPercent, productSaleAmount } from '../../lib/displayPric
 import {
   buildManualOrderPayload,
   createManualOrderLineItem,
-  getProductSearchStatus,
-  inferManualOrderPaymentCurrency,
   PAYMENT_CURRENCIES,
   validateManualOrderDraft,
 } from '../../lib/sellerManualOrder'
@@ -20,9 +19,10 @@ import { formatDateForApi, startOfDay } from '../../lib/dates'
 import SellerModalPortal from './SellerModalPortal'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import SellerSelect from './SellerSelect'
+import SearchBar from '../../buyer/components/SearchBar'
 import Checkbox from '../ui/Checkbox'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 import {
-  sellerAlertError,
   sellerBtnPrimary,
   sellerBtnSecondary,
   sellerHint,
@@ -35,6 +35,55 @@ import {
   sellerModalTitle,
   sellerSection,
 } from './sellerStyles'
+
+const PRODUCT_SEARCH_HINTS = [
+  'buscar por nombre',
+  'buscar por categoría',
+]
+
+function useAnimatedNumber(target, duration = 460) {
+  const [display, setDisplay] = useState(target)
+  const displayRef = useRef(target)
+
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const from = displayRef.current
+    const to = Number(target) || 0
+    if (reduced || Math.abs(from - to) < 0.001) {
+      displayRef.current = to
+      setDisplay(to)
+      return undefined
+    }
+    const start = performance.now()
+    let frame = 0
+    const tick = (now) => {
+      const progress = Math.min(1, (now - start) / duration)
+      const eased = 1 - (1 - progress) ** 3
+      const next = from + (to - from) * eased
+      displayRef.current = next
+      setDisplay(next)
+      if (progress < 1) frame = requestAnimationFrame(tick)
+      else {
+        displayRef.current = to
+        setDisplay(to)
+      }
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [duration, target])
+
+  return display
+}
+
+function AnimatedCount({ value }) {
+  const animated = useAnimatedNumber(value)
+  return <span className="tabular-nums">{Math.round(animated)}</span>
+}
+
+function AnimatedPrice({ amount, currency }) {
+  const animated = useAnimatedNumber(amount)
+  return <span className="tabular-nums">{formatPrice(animated, currency)}</span>
+}
 
 function QuantityStepper({ value, onChange, max = 99 }) {
   return (
@@ -68,10 +117,8 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
   const [searchLoading, setSearchLoading] = useState(true)
   const [searchError, setSearchError] = useState('')
   const [suggestions, setSuggestions] = useState([])
-  const [searchTotal, setSearchTotal] = useState(0)
   const [hasOrderedProducts, setHasOrderedProducts] = useState(false)
   const [lineItems, setLineItems] = useState([])
-  const [paymentCurrency, setPaymentCurrency] = useState('')
   const [withDelivery, setWithDelivery] = useState(false)
   const [delivery, setDelivery] = useState({
     recipient_name: '',
@@ -80,34 +127,42 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
     phone_secondary: '',
     notes: '',
   })
+  const [deliveryCurrency, setDeliveryCurrency] = useState('CUP')
+  const [deliveryCost, setDeliveryCost] = useState('')
   const [includeSaleDate, setIncludeSaleDate] = useState(false)
   const [saleDate, setSaleDate] = useState(null)
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true, layerClassName: '!z-[260]' })
   const [productSearch, setProductSearch] = useState('')
   const [catalogRevision, setCatalogRevision] = useState(0)
 
   useEffect(() => {
     let cancelled = false
-    const handle = setTimeout(async () => {
-      setSearchLoading(true)
+    const query = productSearch.trim()
+    if (!query) {
+      setSuggestions([])
       setSearchError('')
+    }
+    const handle = setTimeout(async () => {
+      if (query) {
+        setSearchLoading(true)
+        setSearchError('')
+      }
       try {
-        const data = await searchSellerOrderedProducts(getSellerToken(), productSearch)
+        const data = await searchSellerOrderedProducts(getSellerToken(), query)
         if (cancelled) return
-        setSuggestions(Array.isArray(data?.products) ? data.products : [])
-        setSearchTotal(Number(data?.total) || 0)
         setHasOrderedProducts(Boolean(data?.has_ordered_products))
+        if (!query) return
+        setSuggestions(Array.isArray(data?.products) ? data.products : [])
       } catch {
         if (cancelled) return
+        if (!query) return
         setSuggestions([])
-        setSearchTotal(0)
-        setHasOrderedProducts(false)
         setSearchError('No pudimos buscar productos.')
       } finally {
         if (!cancelled) setSearchLoading(false)
       }
-    }, 250)
+    }, query ? 250 : 0)
 
     return () => {
       cancelled = true
@@ -144,23 +199,26 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
     [lineItems, suggestions],
   )
 
-  const productSearchStatus = useMemo(
-    () =>
-      getProductSearchStatus({
-        query: productSearch,
-        total: searchTotal,
-        shown: suggestions.length,
-        hasOrderedProducts,
-      }),
-    [hasOrderedProducts, productSearch, searchTotal, suggestions.length],
-  )
+  const productQuery = productSearch.trim()
+  const unitCount = lineItems.reduce((sum, item) => sum + item.quantity, 0)
+  const totalsByCurrency = useMemo(() => {
+    const totals = new Map()
+    for (const item of lineItems) {
+      const currency = String(item.currency || '').toUpperCase()
+      const amount = Number(item.unit_price) * Number(item.quantity)
+      totals.set(currency, (totals.get(currency) || 0) + amount)
+    }
+    return [...totals.entries()]
+  }, [lineItems])
+  const reducedMotion = useReducedMotion()
 
   function handleAddProduct(productId) {
     const product = productsById[productId]
     if (!product) return
     const nextItem = createManualOrderLineItem(product)
     setLineItems((current) => [...current, nextItem])
-    setPaymentCurrency((current) => current || inferManualOrderPaymentCurrency([...lineItems, nextItem]))
+    setProductSearch('')
+    setSuggestions([])
   }
 
   function handleRemoveItem(productId) {
@@ -177,34 +235,44 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setError('')
+    showError('')
 
     const validationError = validateManualOrderDraft(lineItems, productsById)
     if (validationError) {
-      setError(validationError)
+      showError(validationError)
       return
     }
 
     if (includeSaleDate && !saleDate) {
-      setError('Elige la fecha de venta o desactiva esa opción.')
+      showError('Elige la fecha de venta o desactiva esa opción.')
       return
     }
 
     if (withDelivery) {
       if (!delivery.recipient_name.trim() || !delivery.address.trim() || !delivery.phone_primary.trim()) {
-        setError('Completa nombre, dirección y teléfono del domicilio.')
+        showError('Completa nombre, dirección y teléfono del domicilio.')
         return
       }
       if (delivery.phone_primary.trim().length < 8) {
-        setError('Ingresa un teléfono de contacto con al menos 8 caracteres.')
+        showError('Ingresa un teléfono de contacto con al menos 8 caracteres.')
+        return
+      }
+      const cost = Number(String(deliveryCost).trim().replace(',', '.'))
+      if (!deliveryCurrency || !PAYMENT_CURRENCIES.includes(deliveryCurrency)) {
+        showError('Elige la moneda del domicilio.')
+        return
+      }
+      if (!Number.isFinite(cost) || cost < 0) {
+        showError('Indica el costo del domicilio.')
         return
       }
     }
 
     const payload = buildManualOrderPayload({
       lineItems,
-      paymentCurrency: paymentCurrency || inferManualOrderPaymentCurrency(lineItems) || null,
       soldAt: includeSaleDate ? formatDateForApi(saleDate) : null,
+      deliveryPrice: withDelivery ? Number(String(deliveryCost).trim().replace(',', '.')) : null,
+      deliveryCurrency: withDelivery ? deliveryCurrency : null,
       delivery: withDelivery
         ? {
             recipient_name: delivery.recipient_name.trim(),
@@ -221,7 +289,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
       await onCreated(payload)
       onClose()
     } catch (err) {
-      setError(getUserFacingMessage(err, 'No pudimos registrar el pedido.'))
+      showError(getUserFacingMessage(err, 'No pudimos registrar el pedido.'))
     } finally {
       setSubmitting(false)
     }
@@ -259,74 +327,75 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
 
           <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
             <div className={`${sellerModalBody} space-y-4`}>
-              <div className={`${sellerSection} space-y-2`}>
-                <label htmlFor="manual-order-product-search" className={sellerLabel}>
-                  Buscar producto
-                </label>
-                <input
+              <div className={`${sellerSection} space-y-3`}>
+                <p className={sellerLabel}>Productos del pedido</p>
+                <SearchBar
                   id="manual-order-product-search"
-                  type="search"
-                  className={sellerModalInput}
-                  placeholder="Nombre o categoría…"
                   value={productSearch}
                   onChange={(event) => setProductSearch(event.target.value)}
-                  autoComplete="off"
+                  onClear={() => {
+                    setProductSearch('')
+                    setSuggestions([])
+                    setSearchError('')
+                  }}
+                  label="Buscar producto"
+                  phrases={PRODUCT_SEARCH_HINTS}
                 />
-                {searchLoading ? <p className={sellerHint}>Buscando productos…</p> : null}
-                {searchError ? <p className={sellerAlertError}>{searchError}</p> : null}
-                {!searchLoading && !searchError && productSearchStatus.message ? (
-                  <p
-                    className={
-                      productSearchStatus.type === 'no-results'
-                        ? sellerAlertError
-                        : sellerHint
-                    }
+                {productQuery ? (
+                  <ul
+                    className="max-h-52 overflow-y-auto rounded-2xl border border-brand-green/12 bg-brand-white py-1 shadow-[0_12px_32px_rgba(89,128,44,0.16)]"
+                    aria-label="Sugerencias de productos"
                   >
-                    {productSearchStatus.message}
-                  </p>
-                ) : null}
-                {!searchLoading && !searchError && visibleSuggestions.length > 0 ? (
-                  <ul className="max-h-52 space-y-1.5 overflow-y-auto overscroll-contain rounded-xl border border-brand-green/10 bg-brand-green/[0.02] p-1.5">
-                    {visibleSuggestions.map((product) => (
-                      <li key={product.id}>
-                        <button
-                          type="button"
-                          className="flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left transition-colors active:bg-brand-yellow/15"
-                          onClick={() => handleAddProduct(product.id)}
-                        >
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-semibold text-brand-green">
-                              {product.name}
-                            </span>
-                            <span className="mt-0.5 block text-xs text-brand-carmelita/80">
-                              {product.category_name}
-                              {product.stock_quantity != null ? ` · Stock: ${product.stock_quantity}` : ''}
-                            </span>
-                          </span>
-                          <span className="shrink-0 text-xs font-semibold text-brand-green">
-                            {formatPrice(
-                              productSaleAmount(product),
-                              product.base_currency,
-                            )}
-                            {productDiscountPercent(product) ? (
-                              <span className="ml-1 font-bold">
-                                -{productDiscountPercent(product)}%
-                              </span>
-                            ) : null}
-                          </span>
-                        </button>
+                    {searchLoading ? <li className="px-4 py-3 text-sm text-brand-carmelita">Buscando…</li> : null}
+                    {!searchLoading && searchError ? <li className="px-4 py-3 text-sm text-brand-carmelita">{searchError}</li> : null}
+                    {!searchLoading && !searchError && !visibleSuggestions.length ? (
+                      <li className="px-4 py-3 text-sm text-brand-carmelita">
+                        {suggestions.length ? 'Esos productos ya están en el pedido.' : 'Sin coincidencias.'}
                       </li>
-                    ))}
+                    ) : null}
+                    {!searchLoading && !searchError
+                      ? visibleSuggestions.map((product) => (
+                        <li key={product.id}>
+                          <button
+                            type="button"
+                            className="flex w-full items-start justify-between gap-3 px-4 py-2.5 text-left touch-manipulation active:bg-brand-yellow/15"
+                            onClick={() => handleAddProduct(product.id)}
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-semibold text-brand-green">
+                                {product.name}
+                              </span>
+                              <span className="mt-0.5 block text-xs text-brand-carmelita/80">
+                                {product.category_name}
+                                {product.stock_quantity != null ? ` · Stock: ${product.stock_quantity}` : ''}
+                              </span>
+                            </span>
+                            <span className="shrink-0 text-xs font-semibold text-brand-green">
+                              {formatPrice(
+                                productSaleAmount(product),
+                                product.base_currency,
+                              )}
+                              {productDiscountPercent(product) ? (
+                                <span className="ml-1 font-bold">
+                                  -{productDiscountPercent(product)}%
+                                </span>
+                              ) : null}
+                            </span>
+                          </button>
+                        </li>
+                      ))
+                      : null}
                   </ul>
                 ) : null}
-              </div>
-
-              {lineItems.length > 0 ? (
-                <div className={`${sellerSection} space-y-3`}>
-                  <p className={sellerLabel}>Productos del pedido</p>
+                <AnimatePresence initial={false}>
                   {lineItems.map((item) => (
-                    <div
+                    <motion.div
                       key={item.product_id}
+                      layout
+                      initial={reducedMotion ? false : { opacity: 0, y: 10, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                       className="rounded-xl border border-brand-green/10 bg-brand-green/[0.02] p-3"
                     >
                       <div className="flex items-start justify-between gap-3">
@@ -345,18 +414,35 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                           Quitar
                         </button>
                       </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-xs text-brand-carmelita/80">Cantidad</span>
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <span className="text-xs text-brand-carmelita/80">
+                          Cantidad · <AnimatedPrice amount={item.unit_price * item.quantity} currency={item.currency} />
+                        </span>
                         <QuantityStepper
                           value={item.quantity}
                           max={item.stock_quantity ?? 99}
                           onChange={(quantity) => handleQuantityChange(item.product_id, quantity)}
                         />
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
-                </div>
-              ) : null}
+                </AnimatePresence>
+                {lineItems.length ? (
+                  <div className="flex items-center justify-between gap-3 border-t border-brand-green/10 pt-3 text-sm">
+                    <span className="font-semibold text-brand-carmelita">
+                      <AnimatedCount value={unitCount} /> {unitCount === 1 ? 'producto' : 'productos'}
+                    </span>
+                    <span className="text-right font-bold text-brand-green">
+                      {totalsByCurrency.map(([currency, amount], index) => (
+                        <span key={currency}>
+                          {index ? ' · ' : ''}
+                          <AnimatedPrice amount={amount} currency={currency} />
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
 
               {!searchLoading && !searchError && !hasOrderedProducts ? (
                 <div className="rounded-2xl border border-brand-yellow/25 bg-brand-yellow/15 px-4 py-4 text-center">
@@ -375,23 +461,6 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                   </button>
                 </div>
               ) : null}
-
-              <div className={`${sellerSection} space-y-2`}>
-                <label htmlFor="manual-order-payment-currency" className={sellerLabel}>
-                  Moneda de pago
-                </label>
-                <SellerSelect
-                  id="manual-order-payment-currency"
-                  ariaLabel="Moneda de pago"
-                  modal
-                  value={paymentCurrency}
-                  onChange={setPaymentCurrency}
-                  options={[
-                    { value: '', label: 'Inferir según productos' },
-                    ...PAYMENT_CURRENCIES.map((currency) => ({ value: currency, label: currency })),
-                  ]}
-                />
-              </div>
 
               <div className={`${sellerSection} space-y-3`}>
                 <label className="flex items-center gap-2.5 text-sm text-brand-carmelita">
@@ -470,15 +539,39 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                         }
                       />
                     </div>
+                    <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-3">
+                      <div>
+                        <label htmlFor="manual-order-delivery-cost" className={sellerLabel}>
+                          Costo del domicilio
+                        </label>
+                        <input
+                          id="manual-order-delivery-cost"
+                          inputMode="decimal"
+                          className={`mt-1.5 ${sellerModalInput}`}
+                          value={deliveryCost}
+                          placeholder="0"
+                          onChange={(event) => setDeliveryCost(event.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor="manual-order-delivery-currency" className={sellerLabel}>
+                          Moneda
+                        </label>
+                        <div className="mt-1.5">
+                          <SellerSelect
+                            id="manual-order-delivery-currency"
+                            ariaLabel="Moneda del domicilio"
+                            modal
+                            value={deliveryCurrency}
+                            onChange={setDeliveryCurrency}
+                            options={PAYMENT_CURRENCIES.map((currency) => ({ value: currency, label: currency }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 ) : null}
               </div>
-
-              {error ? (
-                <p className={sellerAlertError} role="alert">
-                  {error}
-                </p>
-              ) : null}
             </div>
 
             <div className={`${sellerModalFooter} grid grid-cols-2 gap-2`}>
@@ -495,6 +588,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
             </div>
           </form>
       </SellerMotionSheet>
+      {toastNode}
     </SellerModalPortal>
   )
 }

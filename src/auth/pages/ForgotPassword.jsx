@@ -6,7 +6,8 @@ import AuthShell from '../components/AuthShell'
 import MethodTabs from '../components/MethodTabs'
 import PhoneField from '../components/PhoneField'
 import Button from '../../components/Button'
-import { alertErrorClass, inputClass, labelClass } from '../components/formStyles'
+import { inputClass, labelClass } from '../components/formStyles'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import { confirmPasswordResetOtp, startPasswordReset } from '../api.js'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
@@ -72,6 +73,7 @@ export default function ForgotPassword() {
   }
 
   return (
+    <>
     <AuthShell
       onBack={() => {
         if (canGoBack) navigate(-1)
@@ -116,12 +118,6 @@ export default function ForgotPassword() {
               </div>
             )}
 
-            {error ? (
-              <p className={alertErrorClass} role="alert">
-                {error}
-              </p>
-            ) : null}
-
             <Button type="submit" disabled={loading} className="mt-1">
               {loading ? 'Enviando códigos…' : 'Enviar códigos'}
             </Button>
@@ -139,5 +135,7 @@ export default function ForgotPassword() {
         </p>
       </section>
     </AuthShell>
+    {toastNode}
+    </>
   )
 }

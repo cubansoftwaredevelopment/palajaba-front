@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import AccountDeleteModal from '../AccountDeleteModal'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 import SellerProfileFieldGroup from './SellerProfileFieldGroup'
 import SellerSection from './SellerSection'
 import {
-  sellerAlertError,
   sellerBtnDanger,
   sellerBtnPrimary,
   sellerBtnSecondary,
@@ -112,10 +112,10 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
 
   const [phoneDigits, setPhoneDigits] = useState(() => phoneDigitsFromStored(profile?.phone))
   const [phoneLoading, setPhoneLoading] = useState(false)
-  const [phoneError, setPhoneError] = useState('')
   const [phoneSaved, setPhoneSaved] = useState(false)
   const [phoneChallengeId, setPhoneChallengeId] = useState('')
   const [phoneCode, setPhoneCode] = useState('')
@@ -124,7 +124,6 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
   const [email, setEmail] = useState(() => profile?.email || '')
   const [emailLoading, setEmailLoading] = useState(false)
-  const [emailError, setEmailError] = useState('')
   const [emailSaved, setEmailSaved] = useState(false)
   const [emailChallengeId, setEmailChallengeId] = useState('')
   const [emailCode, setEmailCode] = useState('')
@@ -132,7 +131,6 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
   const [storeName, setStoreName] = useState(() => profile?.store_name || '')
   const [storeNameLoading, setStoreNameLoading] = useState(false)
-  const [storeNameError, setStoreNameError] = useState('')
   const [storeNameSaved, setStoreNameSaved] = useState(false)
 
   const storedDigits = useMemo(() => phoneDigitsFromStored(profile?.phone), [profile?.phone])
@@ -198,18 +196,18 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
   async function handlePhoneSend(event) {
     event.preventDefault()
-    setPhoneError('')
+    showError('')
     setPhoneSaved(false)
 
     if (phoneDigits.length !== PHONE_DIGITS_LENGTH) {
-      setPhoneError('Indica un teléfono cubano de 8 dígitos.')
+      showError('Indica un teléfono cubano de 8 dígitos.')
       return
     }
 
     const cooldownUntil = getSmsCooldownUntil(phoneDigits)
     if (cooldownUntil > Date.now()) {
       setSmsCooldownEndsAt(cooldownUntil)
-      setPhoneError(smsFailUserMessage(cooldownUntil - Date.now()))
+      showError(smsFailUserMessage(cooldownUntil - Date.now()))
       return
     }
 
@@ -230,9 +228,9 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
       const until = applySmsFailFromError(err, phoneDigits)
       if (until) {
         setSmsCooldownEndsAt(until)
-        setPhoneError(smsFailUserMessage(until - Date.now()))
+        showError(smsFailUserMessage(until - Date.now()))
       } else {
-        setPhoneError(getUserFacingMessage(err, 'No pudimos enviar el código al teléfono.'))
+        showError(getUserFacingMessage(err, 'No pudimos enviar el código al teléfono.'))
       }
     } finally {
       setPhoneLoading(false)
@@ -241,7 +239,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
   async function handlePhoneResend() {
     if (!phoneChallengeId || phoneResendLocked) return
-    setPhoneError('')
+    showError('')
     setPhoneLoading(true)
     try {
       const token = getSellerToken()
@@ -251,9 +249,9 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
       const until = applySmsFailFromError(err, phoneDigits)
       if (until) {
         setSmsCooldownEndsAt(until)
-        setPhoneError(smsFailUserMessage(until - Date.now()))
+        showError(smsFailUserMessage(until - Date.now()))
       } else {
-        setPhoneError(getUserFacingMessage(err, 'No pudimos reenviar el código.'))
+        showError(getUserFacingMessage(err, 'No pudimos reenviar el código.'))
       }
     } finally {
       setPhoneLoading(false)
@@ -263,7 +261,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
   async function handlePhoneConfirm(event) {
     event.preventDefault()
     if (!canConfirmPhone) return
-    setPhoneError('')
+    showError('')
     setPhoneSaved(false)
     setPhoneLoading(true)
     try {
@@ -274,7 +272,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
       resetPhoneChallenge()
       setPhoneSaved(true)
     } catch (err) {
-      setPhoneError(getUserFacingMessage(err, 'No pudimos verificar el teléfono.'))
+      showError(getUserFacingMessage(err, 'No pudimos verificar el teléfono.'))
     } finally {
       setPhoneLoading(false)
     }
@@ -282,11 +280,11 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
   async function handleEmailSend(event) {
     event.preventDefault()
-    setEmailError('')
+    showError('')
     setEmailSaved(false)
 
     if (!isValidEmail(email)) {
-      setEmailError('El correo no es válido.')
+      showError('El correo no es válido.')
       return
     }
 
@@ -304,7 +302,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
       setEmailChallengeId(result.challenge_id)
       setEmailEndsAt(expiryMs(result.expires_at))
     } catch (err) {
-      setEmailError(getUserFacingMessage(err, 'No pudimos enviar el código al correo.'))
+      showError(getUserFacingMessage(err, 'No pudimos enviar el código al correo.'))
     } finally {
       setEmailLoading(false)
     }
@@ -312,14 +310,14 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
   async function handleEmailResend() {
     if (!emailChallengeId || emailRemaining > 0) return
-    setEmailError('')
+    showError('')
     setEmailLoading(true)
     try {
       const token = getSellerToken()
       const result = await resendSellerContactOtp(token, emailChallengeId)
       setEmailEndsAt(expiryMs(result.expires_at))
     } catch (err) {
-      setEmailError(getUserFacingMessage(err, 'No pudimos reenviar el código.'))
+      showError(getUserFacingMessage(err, 'No pudimos reenviar el código.'))
     } finally {
       setEmailLoading(false)
     }
@@ -328,7 +326,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
   async function handleEmailConfirm(event) {
     event.preventDefault()
     if (!canConfirmEmail) return
-    setEmailError('')
+    showError('')
     setEmailSaved(false)
     setEmailLoading(true)
     try {
@@ -339,7 +337,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
       resetEmailChallenge()
       setEmailSaved(true)
     } catch (err) {
-      setEmailError(getUserFacingMessage(err, 'No pudimos verificar el correo.'))
+      showError(getUserFacingMessage(err, 'No pudimos verificar el correo.'))
     } finally {
       setEmailLoading(false)
     }
@@ -347,11 +345,11 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
 
   async function handleStoreNameSubmit(event) {
     event.preventDefault()
-    setStoreNameError('')
+    showError('')
     setStoreNameSaved(false)
 
     if (!normalizedStoreName) {
-      setStoreNameError('Indica el nombre de tu negocio.')
+      showError('Indica el nombre de tu negocio.')
       return
     }
 
@@ -363,7 +361,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
       await onUpdated?.()
       setStoreNameSaved(true)
     } catch (err) {
-      setStoreNameError(getUserFacingMessage(err, 'No pudimos actualizar el nombre.'))
+      showError(getUserFacingMessage(err, 'No pudimos actualizar el nombre.'))
     } finally {
       setStoreNameLoading(false)
     }
@@ -389,7 +387,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
             value={storeName}
             onChange={(event) => {
               setStoreName(event.target.value)
-              setStoreNameError('')
+              showError('')
               setStoreNameSaved(false)
             }}
             className={`mt-1.5 ${sellerInputBare}`}
@@ -401,17 +399,11 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
             Actual: {profile?.store_name || '—'}. Usarás este nombre para iniciar sesión.
           </p>
 
-          {storeNameError && (
-            <p className={`mt-3 ${sellerAlertError}`} role="alert">
-              {storeNameError}
-            </p>
-          )}
-
-          {storeNameSaved && !storeNameError && (
+          {storeNameSaved ? (
             <p className="mt-3 text-center text-xs font-semibold text-brand-green sm:text-sm" role="status">
               Nombre actualizado.
             </p>
-          )}
+          ) : null}
 
           <button type="submit" disabled={readOnly || !canSaveStoreName} className={`mt-4 ${sellerBtnPrimary}`}>
             {storeNameLoading ? 'Guardando…' : 'Guardar nombre'}
@@ -440,7 +432,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
               value={formatPhoneDigits(phoneDigits)}
               onChange={(event) => {
                 setPhoneDigits(getPhoneDigits(event.target.value))
-                setPhoneError('')
+                showError('')
                 setPhoneSaved(false)
                 resetPhoneChallenge()
               }}
@@ -463,7 +455,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
                 value={phoneCode}
                 onChange={(value) => {
                   setPhoneCode(value)
-                  setPhoneError('')
+                  showError('')
                 }}
               />
               <button
@@ -483,17 +475,11 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
             </>
           ) : null}
 
-          {phoneError && (
-            <p className={`mt-3 ${sellerAlertError}`} role="alert">
-              {phoneError}
-            </p>
-          )}
-
-          {phoneSaved && !phoneError && (
+          {phoneSaved ? (
             <p className="mt-3 text-center text-xs font-semibold text-brand-green sm:text-sm" role="status">
               Teléfono actualizado.
             </p>
-          )}
+          ) : null}
 
           <button
             type="submit"
@@ -529,7 +515,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
             value={email}
             onChange={(event) => {
               setEmail(event.target.value)
-              setEmailError('')
+              showError('')
               setEmailSaved(false)
               resetEmailChallenge()
             }}
@@ -550,7 +536,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
                 value={emailCode}
                 onChange={(value) => {
                   setEmailCode(value)
-                  setEmailError('')
+                  showError('')
                 }}
               />
               <button
@@ -568,17 +554,11 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
             </>
           ) : null}
 
-          {emailError && (
-            <p className={`mt-3 ${sellerAlertError}`} role="alert">
-              {emailError}
-            </p>
-          )}
-
-          {emailSaved && !emailError && (
+          {emailSaved ? (
             <p className="mt-3 text-center text-xs font-semibold text-brand-green sm:text-sm" role="status">
               Correo actualizado.
             </p>
-          )}
+          ) : null}
 
           <button
             type="submit"
@@ -648,6 +628,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
       <>
         <div className="flex flex-col gap-2.5 sm:gap-3">{body}</div>
         {deleteModal}
+        {toastNode}
       </>
     )
   }
@@ -661,6 +642,7 @@ export default function SellerAdvancedProfileSettings({ profile, onUpdated, embe
         {body}
       </SellerProfileFieldGroup>
       {deleteModal}
+      {toastNode}
     </>
   )
 }

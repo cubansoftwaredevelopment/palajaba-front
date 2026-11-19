@@ -5,10 +5,9 @@ import { sellerMain, sellerMainWithNav } from './sellerStyles'
 import SellerLoadingScreen from './SellerLoadingScreen'
 import SellerLogoutModal from './SellerLogoutModal'
 import SellerNotificationToast from './SellerNotificationToast'
-import SellerNotificationsPanel from './SellerNotificationsPanel'
 import SellerShell from './SellerShell'
 import StatePanel from '../ui/StatePanel'
-import { fetchSellerNotifications, fetchSellerOrders, fetchSellerUnreadNotificationCount, markSellerNotificationRead, markSellerSystemNotificationsRead } from '../../lib/api'
+import { fetchSellerNotifications, fetchSellerOrders, fetchSellerUnreadNotificationCount } from '../../lib/api'
 import { fetchSellerProfile } from '../../auth/api.js'
 import { resolveMediaUrl } from '../../lib/media'
 import { BRAND_NAME } from '../../constants/branding'
@@ -27,6 +26,7 @@ import { SELLER_LIVE_POLL_MS } from '../../live/constants'
 import {
   connectSellerEvents,
   OPEN_SELLER_NOTIFICATIONS_EVENT,
+  SELLER_NOTIFICATIONS_CHANGED_EVENT,
   startSellerPush,
   stopSellerPush,
 } from '../../live/utils'
@@ -52,11 +52,8 @@ export default function SellerLayout() {
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [liveToasts, setLiveToasts] = useState([])
   const profileNoticesToastedRef = useRef(false)
-  const [notifications, setNotifications] = useState([])
-  const [notificationsLoading, setNotificationsLoading] = useState(false)
   const [notificationCount, setNotificationCount] = useState(0)
   const [pendingOrderCount, setPendingOrderCount] = useState(0)
   const previousNotificationCountRef = useRef(null)
@@ -106,65 +103,24 @@ export default function SellerLayout() {
     }
   }, [])
 
-  async function loadNotifications() {
-    const token = getSellerToken()
-    if (!token) return
-    setNotificationsLoading(true)
-    try {
-      const data = await fetchSellerNotifications(token)
-      setNotifications(data)
-      await refreshUnreadCount()
-    } catch {
-      setNotifications([])
-    } finally {
-      setNotificationsLoading(false)
-    }
-  }
-
-  async function handleMarkNotificationRead(notificationId) {
-    const token = getSellerToken()
-    if (!token) return
-    try {
-      const updated = await markSellerNotificationRead(token, notificationId)
-      setNotifications((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item)),
-      )
-      setNotificationCount((count) => Math.max(0, count - 1))
-    } catch {
-      await refreshUnreadCount()
-    }
-  }
-
-  async function handleMarkAllSystemNotificationsRead() {
-    const token = getSellerToken()
-    if (!token) return
-    try {
-      await markSellerSystemNotificationsRead(token)
-      const data = await fetchSellerNotifications(token)
-      setNotifications(data)
-      await refreshUnreadCount()
-    } catch {
-      await refreshUnreadCount()
-    }
-  }
-
-  async function openNotifications() {
-    setShowNotifications(true)
-    await loadNotifications()
-  }
-
-  function closeNotifications() {
-    setShowNotifications(false)
-    refreshUnreadCount()
+  function openNotifications() {
+    navigate('/tienda/notificaciones')
   }
 
   useEffect(() => {
     function onOpenFromPush() {
-      void openNotifications()
+      openNotifications()
+    }
+    function onNotificationsChanged() {
+      void refreshUnreadCount()
     }
     window.addEventListener(OPEN_SELLER_NOTIFICATIONS_EVENT, onOpenFromPush)
-    return () => window.removeEventListener(OPEN_SELLER_NOTIFICATIONS_EVENT, onOpenFromPush)
-  }, [])
+    window.addEventListener(SELLER_NOTIFICATIONS_CHANGED_EVENT, onNotificationsChanged)
+    return () => {
+      window.removeEventListener(OPEN_SELLER_NOTIFICATIONS_EVENT, onOpenFromPush)
+      window.removeEventListener(SELLER_NOTIFICATIONS_CHANGED_EVENT, onNotificationsChanged)
+    }
+  }, [navigate, refreshUnreadCount])
 
   useEffect(() => {
     let cancelled = false
@@ -342,6 +298,7 @@ export default function SellerLayout() {
         subscriptionActive={profile.subscription_active}
         onLogout={() => setShowLogoutConfirm(true)}
         onNotifications={openNotifications}
+        notificationsActive={location.pathname === '/tienda/notificaciones'}
         notificationCount={notificationCount}
         pendingOrderCount={pendingOrderCount}
         showBottomNav={showBottomNav}
@@ -357,17 +314,6 @@ export default function SellerLayout() {
           contentClassName={fillPage ? '' : (showBottomNav ? sellerMainWithNav : sellerMain)}
         />
       </SellerShell>
-
-      {showNotifications && (
-        <SellerNotificationsPanel
-          notifications={notifications}
-          loading={notificationsLoading}
-          onClose={closeNotifications}
-          onMarkRead={handleMarkNotificationRead}
-          onMarkAllSystemRead={handleMarkAllSystemNotificationsRead}
-          storeName={profile?.store_name}
-        />
-      )}
 
       <SellerNotificationToast
         toasts={liveToasts}

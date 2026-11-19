@@ -6,6 +6,7 @@ import {
   sellerNoticeToastLeave,
   sellerNoticeToastShellNav,
   sellerNoticeToastShellPage,
+  sellerNoticeToastShellTop,
 } from './sellerStyles'
 
 const VISIBLE_MS = 4200
@@ -71,17 +72,22 @@ function NoticeToastCard({ toast, onDone, onOpen, paused, onPress }) {
   )
 }
 
-export default function SellerNotificationToast({ toast, toasts, aboveNav = false, onDone, onOpen }) {
+export default function SellerNotificationToast({ toast, toasts, aboveNav = false, placement = 'bottom', className = '', onDone, onOpen }) {
   const items = toasts ?? (toast ? [toast] : [])
   const [open, setOpen] = useState(false)
   if (!items.length) return null
 
   const isError = items.some((item) => item.tone === 'error')
   const stacked = items.length > 1 && !open
+  const shell = placement === 'top'
+    ? sellerNoticeToastShellTop
+    : aboveNav
+      ? sellerNoticeToastShellNav
+      : sellerNoticeToastShellPage
 
   return (
     <div
-      className={`${aboveNav ? sellerNoticeToastShellNav : sellerNoticeToastShellPage} flex-col items-center`}
+      className={`${shell} flex-col items-center ${className}`}
       aria-live={isError ? 'assertive' : 'polite'}
       aria-atomic="true"
     >

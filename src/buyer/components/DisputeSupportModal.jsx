@@ -3,6 +3,7 @@ import BuyerModalPortal from './BuyerModalPortal'
 import { buyerDeliveryModal, buyerDeliveryModalBody, buyerDeliveryModalFooter, buyerDeliveryModalHeader, buyerDeliveryOverlay } from './buyerStyles'
 import { useSwipeDownSheet } from './useOrderModalPresence'
 import { openExternalUrl } from '../../lib/nativeApp'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 
 const MAX_IMAGES = 6
 
@@ -12,7 +13,7 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
   const [text, setText] = useState('')
   const [images, setImages] = useState([])
   const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true, layerClassName: '!z-[260]' })
   const [ready, setReady] = useState(false)
   const sheetProps = useSwipeDownSheet(() => {
     if (!submitting) onClose()
@@ -26,7 +27,7 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
       return []
     })
     setSubmitting(false)
-    setError('')
+    showError('')
     setReady(false)
     return undefined
   }, [open])
@@ -52,7 +53,7 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
       return [...current, ...next]
     })
     if (images.length + selected.length > MAX_IMAGES) {
-      setError(`Puedes adjuntar hasta ${MAX_IMAGES} imágenes.`)
+      showError(`Puedes adjuntar hasta ${MAX_IMAGES} imágenes.`)
     }
   }
 
@@ -68,22 +69,23 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
     event.preventDefault()
     const cleaned = text.trim()
     if (cleaned.length < 3) {
-      setError('Explica el motivo con un poco más de detalle.')
+      showError('Explica el motivo con un poco más de detalle.')
       return
     }
     setSubmitting(true)
-    setError('')
+    showError('')
     try {
       await onSubmit({ text: cleaned, files: images.map((item) => item.file) })
       setReady(true)
     } catch (cause) {
-      setError(cause?.message || 'No pudimos guardar el motivo.')
+      showError(cause?.message || 'No pudimos guardar el motivo.')
     } finally {
       setSubmitting(false)
     }
   }
 
   return (
+    <>
     <BuyerModalPortal>
       <button type="button" className={`${buyerDeliveryOverlay} !z-[260]`} aria-label="Cerrar motivo" onClick={close} />
       <div {...sheetProps} role="dialog" aria-modal="true" aria-labelledby={titleId} className={`${buyerDeliveryModal} !z-[270]`}>
@@ -140,7 +142,6 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
                 Adjuntar imagen
                 <input type="file" accept="image/jpeg,image/png,image/webp" multiple className="sr-only" onChange={addImages} />
               </label>
-              {error ? <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{error}</p> : null}
             </div>
             <div className={buyerDeliveryModalFooter}>
               <button type="submit" disabled={submitting} className="min-h-11 rounded-xl bg-brand-green px-3 font-bold text-white disabled:opacity-60">
@@ -154,5 +155,7 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
         )}
       </div>
     </BuyerModalPortal>
+    {toastNode}
+    </>
   )
 }

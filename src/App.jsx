@@ -20,6 +20,7 @@ import SellerCatalog from './products/pages/SellerCatalog'
 import SellerCatalogPreview from './products/pages/SellerCatalogPreview'
 import SellerOrders from './pages/seller/SellerOrders'
 import SellerCustomers from './pages/seller/SellerCustomers'
+import SellerNotifications from './pages/seller/SellerNotifications'
 import SellerGestores from './pages/seller/SellerGestores'
 import SellerProfile from './pages/seller/SellerProfile'
 import GestorRoute from './components/gestor/GestorRoute'
@@ -168,6 +169,7 @@ const router = createBrowserRouter([
           { path: 'catalogo/vista-previa', element: <SellerCatalogPreview /> },
           { path: 'gestores', element: <SellerGestores /> },
           { path: 'pedidos', element: <SellerOrders /> },
+          { path: 'notificaciones', element: <SellerNotifications /> },
           { path: 'clientes', element: <SellerCustomers /> },
           { path: 'estadisticas', element: <SellerStats /> },
           { path: 'perfil', element: <SellerProfile /> },

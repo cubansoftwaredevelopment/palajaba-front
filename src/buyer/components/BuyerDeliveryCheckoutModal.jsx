@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import PhoneField from '../../components/auth/PhoneField'
-import { alertErrorClass } from '../../components/auth/formStyles'
 import {
   getBuyerDeliveryDefaults,
   saveBuyerDeliveryDefaults,
@@ -11,6 +10,7 @@ import {
 import { getBuyerLocation } from '../../lib/buyerLocation'
 import { formatPhoneDigits, PHONE_PREFIX } from '../../lib/phone'
 import { useLiveLocation } from '../../live/context/LiveLocationContext.jsx'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import BuyerOrderLocationMap from './BuyerOrderLocationMap'
 import SellerSelect from '../../components/seller/SellerSelect'
@@ -90,7 +90,7 @@ export default function BuyerDeliveryCheckoutModal({
   const [form, setForm] = useState(buyerDeliveryDefaults)
   const [selectedAddressId, setSelectedAddressId] = useState('')
   const savedAddresses = getCustomerProfile()?.addresses ?? []
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true, layerClassName: '!z-[260]' })
   const [agreements, setAgreements] = useState({ delivery_policy: false, terms: false, ready: false })
 
   useEffect(() => {
@@ -98,7 +98,7 @@ export default function BuyerDeliveryCheckoutModal({
 
     setForm(buyerDeliveryDefaults())
     setSelectedAddressId('')
-    setError('')
+    showError('')
     setAgreements({ delivery_policy: false, terms: false, ready: false })
 
     function handleKeyDown(event) {
@@ -113,7 +113,7 @@ export default function BuyerDeliveryCheckoutModal({
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }))
-    if (error) setError('')
+    showError('')
   }
 
   function applySavedAddress(addressId) {
@@ -128,7 +128,7 @@ export default function BuyerDeliveryCheckoutModal({
   }
 
   function goBack() {
-    setError('')
+    showError('')
     if (step === 3) setPickup(false)
     setStep((current) => Math.max(1, current - 1))
   }
@@ -136,10 +136,10 @@ export default function BuyerDeliveryCheckoutModal({
   function goNextFromContact() {
     const validationError = validateDeliveryContact(form)
     if (validationError) {
-      setError(validationError)
+      showError(validationError)
       return
     }
-    setError('')
+    showError('')
     setStep(2)
   }
 
@@ -147,13 +147,13 @@ export default function BuyerDeliveryCheckoutModal({
     if (!skipLocation) {
       const validationError = validateDeliveryAddress(form)
       if (validationError) {
-        setError(validationError)
+        showError(validationError)
         return
       }
     }
     if (skipLocation) setPoint(null)
     setPickup(skipLocation)
-    setError('')
+    showError('')
     setStep(3)
   }
 
@@ -169,14 +169,14 @@ export default function BuyerDeliveryCheckoutModal({
     }
 
     if (paymentMethod === 'qvapay' && !agreements.ready) {
-      setError('Acepta las condiciones de la tienda para pagar por QvaPay.')
+      showError('Acepta las condiciones de la tienda para pagar por QvaPay.')
       return
     }
 
     if (pickup) {
       const validationError = validateDeliveryContact(form)
       if (validationError) {
-        setError(validationError)
+        showError(validationError)
         return
       }
 
@@ -200,7 +200,7 @@ export default function BuyerDeliveryCheckoutModal({
 
     const validationError = validateDeliveryForm(form)
     if (validationError) {
-      setError(validationError)
+      showError(validationError)
       return
     }
 
@@ -237,6 +237,7 @@ export default function BuyerDeliveryCheckoutModal({
   const secondaryPhone = formatContact(form.phone_secondary)
 
   return (
+    <>
     <BuyerMotionFrame
       split
       overlayAs="button"
@@ -415,8 +416,6 @@ export default function BuyerDeliveryCheckoutModal({
                 onChange={setAgreements}
               />
             </div>
-
-            {error ? <p className={`${alertErrorClass} mt-4`}>{error}</p> : null}
           </div>
 
           <div className={buyerDeliveryModalFooter}>
@@ -470,5 +469,7 @@ export default function BuyerDeliveryCheckoutModal({
           </div>
         </form>
     </BuyerMotionFrame>
+    {toastNode}
+    </>
   )
 }

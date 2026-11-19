@@ -13,6 +13,7 @@ import {
   adminSubtle,
 } from '../components/admin/adminStyles'
 import { fetchAdminSettings, sendAdminSmtpTest, updateAdminSettings } from '../lib/api'
+import { useFormErrorToast } from '../components/ui/useFormErrorToast'
 import { getUserFacingMessage, isSessionError } from '../lib/userFacingError'
 import { clearAdminToken, getAdminToken } from '../lib/adminAuth'
 import { PHONE_PREFIX, formatPhoneDigits, getPhoneDigits } from '../lib/phone'
@@ -161,6 +162,7 @@ export default function AdminSettings() {
 
   const loadSettings = useCallback(async () => {
     setError('')
+    setError('')
     setLoading(true)
     try {
       const token = getAdminToken()
@@ -219,11 +221,11 @@ export default function AdminSettings() {
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setError('')
+    showError('')
     setSuccess('')
 
     if (phoneDigits.length !== 8) {
-      setError('Indica un teléfono cubano de 8 dígitos.')
+      showError('Indica un teléfono cubano de 8 dígitos.')
       return
     }
 
@@ -232,17 +234,17 @@ export default function AdminSettings() {
       const email = admin.email.trim()
       const phone = admin.phone.trim()
       if (!email && !phone) {
-        setError('Completa el correo y el teléfono de cada administrador.')
+        showError('Completa el correo y el teléfono de cada administrador.')
         return
       }
       if (!email || !phone) {
-        setError('Cada administrador necesita correo y teléfono.')
+        showError('Cada administrador necesita correo y teléfono.')
         return
       }
       parsedAdmins.push({ email, phone })
     }
     if (!parsedAdmins.length) {
-      setError('Agrega al menos un administrador.')
+      showError('Agrega al menos un administrador.')
       return
     }
 
@@ -250,7 +252,7 @@ export default function AdminSettings() {
     for (const planId of ADVERTISING_PLAN_IDS) {
       const amount = parseAmount(advertisingPrices[planId])
       if (amount == null) {
-        setError('Cada precio de publicidad debe ser un número mayor o igual a 0.')
+        showError('Cada precio de publicidad debe ser un número mayor o igual a 0.')
         return
       }
       parsedAds[planId] = { amount }
@@ -258,12 +260,12 @@ export default function AdminSettings() {
 
     const parsedFee = parseAmount(transactionFeePercent)
     if (parsedFee == null || parsedFee > 100) {
-      setError('La tarifa por transacción debe estar entre 0 y 100.')
+      showError('La tarifa por transacción debe estar entre 0 y 100.')
       return
     }
     const parsedPlanDiscount = parseAmount(qvapayPlanDiscountPercent)
     if (parsedPlanDiscount == null || parsedPlanDiscount > 100) {
-      setError('El descuento de los planes por QvaPay debe estar entre 0 y 100.')
+      showError('El descuento de los planes por QvaPay debe estar entre 0 y 100.')
       return
     }
 
@@ -273,7 +275,7 @@ export default function AdminSettings() {
       for (const period of BILLING_PERIOD_ORDER) {
         const amount = parseAmount(planPrices[tier][period].amount)
         if (amount == null) {
-          setError('Cada precio debe ser un número mayor o igual a 0.')
+          showError('Cada precio debe ser un número mayor o igual a 0.')
           return
         }
         parsedPrices[tier][period] = {
@@ -306,7 +308,7 @@ export default function AdminSettings() {
       setQvapayPlanDiscountPercent(String(updated.qvapay_plan_discount_percent ?? parsedPlanDiscount))
       setSuccess('Configuración guardada.')
     } catch (err) {
-      setError(getUserFacingMessage(err, 'No pudimos guardar la configuración.'))
+      showError(getUserFacingMessage(err, 'No pudimos guardar la configuración.'))
     } finally {
       setSaving(false)
     }
@@ -315,10 +317,10 @@ export default function AdminSettings() {
   async function handleSmtpTest() {
     const email = smtpTestEmail.trim()
     if (!email || !email.includes('@')) {
-      setError('Escribe un correo para la prueba.')
+      showError('Escribe un correo para la prueba.')
       return
     }
-    setError('')
+    showError('')
     setSuccess('')
     setSmtpTesting(true)
     try {
@@ -330,7 +332,7 @@ export default function AdminSettings() {
         navigate('/admin', { replace: true })
         return
       }
-      setError(getUserFacingMessage(err, 'No pudimos enviar el correo de prueba.'))
+      showError(getUserFacingMessage(err, 'No pudimos enviar el correo de prueba.'))
     } finally {
       setSmtpTesting(false)
     }
@@ -674,6 +676,7 @@ export default function AdminSettings() {
           </div>
         </form>
       )}
+      {toastNode}
     </div>
   )
 }

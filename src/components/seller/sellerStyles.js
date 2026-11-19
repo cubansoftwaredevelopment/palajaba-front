@@ -236,12 +236,6 @@ export const sellerModalBody =
 export const sellerModalFooter =
   'shrink-0 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]'
 
-export const sellerNotificationsOverlay =
-  'fixed inset-0 z-[200] flex items-end justify-center bg-brand-green/20 p-0 backdrop-blur-[3px] sm:items-center sm:p-4'
-
-export const sellerNotificationsPanel =
-  'relative flex w-full max-w-md min-h-0 flex-col overflow-hidden rounded-t-3xl border border-brand-green/12 bg-brand-white shadow-[0_24px_60px_rgba(89,128,44,0.2)] sm:max-h-[min(88dvh,40rem)] sm:rounded-3xl lg:max-w-lg'
-
 export const sellerNoticeToastShell =
   'pointer-events-none fixed inset-x-0 z-[85] flex justify-center px-4'
 
@@ -250,6 +244,9 @@ export const sellerNoticeToastShellNav =
 
 export const sellerNoticeToastShellPage =
   `${sellerNoticeToastShell} bottom-[max(1.25rem,var(--safe-bottom))]`
+
+export const sellerNoticeToastShellTop =
+  `${sellerNoticeToastShell} top-[max(1rem,var(--safe-top))]`
 
 export const sellerNoticeToastCard =
   'pointer-events-auto w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-brand-green/15 bg-brand-white px-4 py-3 text-left shadow-[0_12px_32px_rgba(89,128,44,0.18)]'

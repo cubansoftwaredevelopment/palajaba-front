@@ -7,6 +7,7 @@ import { validateImageFile, IMAGE_UPLOAD_HINT } from '../../lib/imageUpload'
 import { resolveMediaUrl } from '../../lib/media'
 import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { useFormErrorToast } from '../ui/useFormErrorToast'
 import { sellerHasStoreBanners } from '../../constants/plan'
 import BuyerStoreBannerCover, { storeBannerAspectClass } from '../../buyer/components/BuyerStoreBannerCover'
 import { buyerStorePageHeader, buyerStorePageName } from '../../buyer/components/buyerStyles'
@@ -20,7 +21,7 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
   const [notice, setNotice] = useState('')
   const [deletingId, setDeletingId] = useState('')
   const [togglingId, setTogglingId] = useState('')
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
 
   function applyProfile(updated) {
     setBanners(updated?.store_banners ?? [])
@@ -34,7 +35,7 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
       forgetUploadResult(detail.id)
       if (!detail.ok) {
         setNotice('')
-        setError(detail.error || 'No pudimos subir el banner.')
+        showError(detail.error || 'No pudimos subir el banner.')
         return
       }
       const token = getSellerToken()
@@ -45,7 +46,7 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
           setNotice('El banner ya está en tu tienda.')
         })
         .catch((err) => {
-          setError(getUserFacingMessage(err, 'El banner se guardó, pero no pudimos refrescar la lista.'))
+          showError(getUserFacingMessage(err, 'El banner se guardó, pero no pudimos refrescar la lista.'))
         })
     }
     consumeUploadResults('store_banner').forEach(handleResult)
@@ -63,11 +64,11 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
 
     const validation = validateImageFile(file)
     if (!validation.ok) {
-      setError(validation.message)
+      showError(validation.message)
       return
     }
 
-    setError('')
+    showError('')
     setNotice('')
     setUploading(true)
     try {
@@ -85,33 +86,33 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
       const updated = await uploadSellerStoreBanner(getSellerToken(), file)
       applyProfile(updated)
     } catch (err) {
-      setError(getUserFacingMessage(err, 'No pudimos subir el banner.'))
+      showError(getUserFacingMessage(err, 'No pudimos subir el banner.'))
     } finally {
       setUploading(false)
     }
   }
 
   async function handleToggle(banner) {
-    setError('')
+    showError('')
     setTogglingId(banner.id)
     try {
       const updated = await updateSellerStoreBanner(getSellerToken(), banner.id, banner.is_active === false)
       applyProfile(updated)
     } catch (err) {
-      setError(getUserFacingMessage(err, 'No pudimos actualizar el banner.'))
+      showError(getUserFacingMessage(err, 'No pudimos actualizar el banner.'))
     } finally {
       setTogglingId('')
     }
   }
 
   async function handleDelete(bannerId) {
-    setError('')
+    showError('')
     setDeletingId(bannerId)
     try {
       const updated = await deleteSellerStoreBanner(getSellerToken(), bannerId)
       applyProfile(updated)
     } catch (err) {
-      setError(getUserFacingMessage(err, 'No pudimos quitar el banner.'))
+      showError(getUserFacingMessage(err, 'No pudimos quitar el banner.'))
     } finally {
       setDeletingId('')
     }
@@ -221,6 +222,7 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
           <h3 id="store-banner-preview-title" className={sellerLabel}>
             Vista previa
           </h3>
+      {toastNode}
           <p className={sellerHint}>
             Amplía la vista hasta el ancho de esta pantalla.
           </p>

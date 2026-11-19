@@ -7,6 +7,7 @@ import AdminSelect from '../../components/admin/AdminSelect'
 import { useDismissibleModal } from '../../buyer/components/useOrderModalPresence'
 import Checkbox from '../../components/ui/Checkbox'
 import { adminAlertError, adminLabel, adminSubtle } from '../../components/admin/adminStyles'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import { BILLING_LABELS, PLAN_TIER_LABELS } from '../../constants/admin.js'
 import { getSellerPlan, normalizePlanTier, PLAN_TIER_ORDER } from '../constants.js'
 import { parseCupInput } from '../../lib/money'
@@ -155,7 +156,7 @@ export default function SubscriptionModal({ registration, mode, onClose: request
   const [paymentAmount, setPaymentAmount] = useState(
     () => String(getPlanPrice(planTier, billingPeriod)?.amount ?? ''),
   )
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ variant: 'admin', layerClassName: '!z-[260]' })
   const [loading, setLoading] = useState(false)
   const [gestores, setGestores] = useState([])
   const [gestoresLoading, setGestoresLoading] = useState(false)
@@ -246,28 +247,28 @@ export default function SubscriptionModal({ registration, mode, onClose: request
     e.preventDefault()
 
     if (needsGestorPick && keepGestorIds.length > gestorLimit) {
-      setError(`Elige como máximo ${gestorLimit} gestores para el plan ${PLAN_TIER_LABELS[planTier]}.`)
+      showError(`Elige como máximo ${gestorLimit} gestores para el plan ${PLAN_TIER_LABELS[planTier]}.`)
       return
     }
 
     if (!isEdit && !endsAt) {
-      setError('Selecciona la fecha de fin de suscripción.')
+      showError('Selecciona la fecha de fin de suscripción.')
       return
     }
 
     const endDate = isEdit ? null : formatDateForApi(endsAt)
     if (!isEdit && !endDate) {
-      setError('La fecha seleccionada no es válida.')
+      showError('La fecha seleccionada no es válida.')
       return
     }
 
     const amountCup = isEdit ? null : parseCupInput(paymentAmount, { allowZero: true })
     if (!isEdit && amountCup == null) {
-      setError('Indica el monto pagado en CUP (usa 0 si es gratuito).')
+      showError('Indica el monto pagado en CUP (usa 0 si es gratuito).')
       return
     }
 
-    setError('')
+    showError('')
     setLoading(true)
 
     try {
@@ -301,7 +302,7 @@ export default function SubscriptionModal({ registration, mode, onClose: request
       onSuccess(updated)
       onClose()
     } catch (err) {
-      setError(
+      showError(
         getUserFacingMessage(
           err,
           isRenew
@@ -315,6 +316,7 @@ export default function SubscriptionModal({ registration, mode, onClose: request
   }
 
   return (
+    <>
     <AdminModal
       title={modalTitle}
       subtitle={`${registration.store_name}${isRenew ? ' · suscripción vencida' : ''}`}
@@ -386,12 +388,6 @@ export default function SubscriptionModal({ registration, mode, onClose: request
           </div>
         ) : null}
 
-        {error && (
-          <p className={adminAlertError} role="alert">
-            {error}
-          </p>
-        )}
-
         <div className="flex flex-col gap-2 sm:flex-row">
           <AdminButton type="button" variant="secondary" onClick={onClose}>
             Cancelar
@@ -409,5 +405,7 @@ export default function SubscriptionModal({ registration, mode, onClose: request
         </div>
       </form>
     </AdminModal>
+    {toastNode}
+    </>
   )
 }

@@ -16,6 +16,7 @@ import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import ShareCatalogModal from '../components/ShareCatalogModal'
 import ShareSelectedProductsModal from '../components/ShareSelectedProductsModal'
 import SellerSuccessAlert from '../../components/seller/SellerSuccessAlert'
+import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
 import StatePanel from '../../components/ui/StatePanel'
 import LoadingState from '../../components/ui/LoadingState'
 import {
@@ -53,6 +54,17 @@ export default function SellerCatalog() {
   const [shareSelection, setShareSelection] = useState(null)
   const [showReorderCategories, setShowReorderCategories] = useState(false)
   const [categoryToOrganize, setCategoryToOrganize] = useState(null)
+  const [errorToast, setErrorToast] = useState(null)
+
+  function showProductError(message, title = 'No se pudo guardar el producto') {
+    setSuccessMessage('')
+    setErrorToast({
+      id: `${Date.now()}`,
+      tone: 'error',
+      title,
+      content: message,
+    })
+  }
 
   const loadCatalog = useCallback(async () => {
     setError('')
@@ -82,8 +94,7 @@ export default function SellerCatalog() {
       if (!detail || detail.kind !== 'catalog_product') return
       forgetUploadResult(detail.id)
       if (!detail.ok) {
-        setSuccessMessage('')
-        setError(detail.error || 'No se pudo crear el producto.')
+        showProductError(detail.error || 'No se pudo crear el producto.')
         return
       }
       setError('')
@@ -100,8 +111,7 @@ export default function SellerCatalog() {
 
   function openCreateProduct(localCategoryId = '') {
     if ((summary?.categories?.length ?? 0) === 0) {
-      setError('Crea primero una categoría local para organizar tu catálogo.')
-      setShowCreateCategory(true)
+      showProductError('Crea primero una categoría local para organizar tu catálogo.', 'Revisa los datos')
       return
     }
     setCreateProductLocalCategoryId(localCategoryId)
@@ -159,15 +169,14 @@ export default function SellerCatalog() {
         })
         .catch((err) => {
           setSuccessMessage('')
-          setError(getUserFacingMessage(err, 'No se pudo crear el producto.'))
+          showProductError(getUserFacingMessage(err, 'No se pudo crear el producto.'))
         })
       return
     }
     updateCatalogProduct(token, productId, formData)
       .then((saved) => handleProductSaved(saved, { created: false }))
       .catch((err) => {
-        setSuccessMessage('')
-        setError(getUserFacingMessage(err, 'No se pudo actualizar el producto.'))
+        showProductError(getUserFacingMessage(err, 'No se pudo actualizar el producto.'))
       })
   }
 
@@ -237,6 +246,7 @@ export default function SellerCatalog() {
   const showProductForm = summary && (showCreateProduct || productToEdit)
 
   return (
+    <>
     <section className={sellerCatalogSection}>
       <div className={`${sellerPageWrap} ${sellerSectionGap}`}>
         <SellerPageHeader
@@ -384,5 +394,11 @@ export default function SellerCatalog() {
         />
       ) : null}
     </section>
+      <SellerNotificationToast
+        toast={errorToast}
+        aboveNav
+        onDone={(id) => setErrorToast((current) => (current?.id === id ? null : current))}
+      />
+    </>
   )
 }

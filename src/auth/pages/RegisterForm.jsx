@@ -8,6 +8,7 @@ import PhoneField from '../components/PhoneField'
 import RegisterProgress from '../components/RegisterProgress'
 import { AcceptPlatformPrivacy, AcceptPlatformTerms } from '../../components/PlatformTermsLink'
 import Button from '../../components/Button'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import {
   alertErrorClass,
   hintClass,
@@ -81,7 +82,7 @@ export default function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [loading, setLoading] = useState(false)
   const [smsCooldownEndsAt, setSmsCooldownEndsAt] = useState(() => getSmsCooldownUntil(getActiveSmsCooldownPhone()))
   const smsCooldownRemaining = useCountdown(smsCooldownEndsAt)
@@ -96,7 +97,7 @@ export default function RegisterForm() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError('')
+    showError('')
 
     const validationError = validateForm({
       storeName,
@@ -109,14 +110,14 @@ export default function RegisterForm() {
     })
 
     if (validationError) {
-      setError(validationError)
+      showError(validationError)
       return
     }
 
     if (getSmsCooldownUntil(phoneDigits) > Date.now()) {
       const until = getSmsCooldownUntil(phoneDigits)
       setSmsCooldownEndsAt(until)
-      setError(smsFailUserMessage(until - Date.now()))
+      showError(smsFailUserMessage(until - Date.now()))
       return
     }
 
@@ -184,9 +185,9 @@ export default function RegisterForm() {
       const cooldownUntil = applySmsFailFromError(err, phoneDigits)
       if (cooldownUntil) {
         setSmsCooldownEndsAt(cooldownUntil)
-        setError(smsFailUserMessage(cooldownUntil - Date.now()))
+        showError(smsFailUserMessage(cooldownUntil - Date.now()))
       } else {
-        setError(
+        showError(
           getUserFacingMessage(
             err,
             'No pudimos enviar los códigos. Revisa tus datos e inténtalo de nuevo.',
@@ -199,6 +200,7 @@ export default function RegisterForm() {
   }
 
   return (
+    <>
     <AuthShell
       backTo="/registro/planes"
       backLabel="Elegir plan"
@@ -282,10 +284,6 @@ export default function RegisterForm() {
             <p className={alertErrorClass} role="alert">
               {smsFailUserMessage(smsCooldownRemaining)}
             </p>
-          ) : error ? (
-            <p className={alertErrorClass} role="alert">
-              {error}
-            </p>
           ) : null}
 
           <Button type="submit" className="mt-1" disabled={loading || smsCooldownRemaining > 0 || !acceptedTerms || !acceptedPrivacy}>
@@ -298,5 +296,7 @@ export default function RegisterForm() {
         </form>
       </section>
     </AuthShell>
+    {toastNode}
+    </>
   )
 }

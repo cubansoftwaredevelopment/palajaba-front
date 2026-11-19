@@ -13,6 +13,7 @@ import { isSubscriptionCheckoutClosed, isSubscriptionCheckoutPaid, subscriptionC
 import { getRegisterSteps } from '../constants.js'
 import { PAYMENT_CARD_NUMBER, PAYMENT_PHONE, PAYMENT_QR_IMAGE } from '../../constants/payment.js'
 import { completeRegistrationPayment } from '../api.js'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import { setSellerSession } from '../../lib/sellerAuth'
 
 export default function RegisterPayment() {
@@ -30,7 +31,7 @@ export default function RegisterPayment() {
     ? '— USD'
     : `${usdEquivalent.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
   const [checkout, setCheckout] = useState(null)
-  const [error, setError] = useState('')
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [loading, setLoading] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('cup')
   const [retryCount, setRetryCount] = useState(0)
@@ -59,7 +60,7 @@ export default function RegisterPayment() {
     creationRef.current.then((result) => {
       if (!stopped) setCheckout(result)
     }).catch((err) => {
-      if (!stopped) setError(err?.message || 'No pudimos crear la factura QvaPay.')
+      if (!stopped) showError(err?.message || 'No pudimos crear la factura QvaPay.')
     }).finally(() => {
       if (!stopped) setLoading(false)
     })
@@ -86,11 +87,11 @@ export default function RegisterPayment() {
   async function completePayment() {
     if (paymentMethod === 'qvapay' && !isSubscriptionCheckoutPaid(checkout)) return
     if (paymentMethod === 'cup' && !transferId.trim()) {
-      setError('Escribe el ID de la transferencia para continuar.')
+      showError('Escribe el ID de la transferencia para continuar.')
       return
     }
     setLoading(true)
-    setError('')
+    showError('')
     try {
       const result = await completeRegistrationPayment({
         challenge_id: location.state.challengeId,
@@ -104,7 +105,7 @@ export default function RegisterPayment() {
         navigate('/registro/exito', { replace: true, state: { kind: result.kind, message: result.message } })
       }
     } catch (err) {
-      setError(err?.message || 'No pudimos completar el registro. Inténtalo nuevamente.')
+      showError(err?.message || 'No pudimos completar el registro. Inténtalo nuevamente.')
     } finally {
       setLoading(false)
     }
@@ -114,11 +115,12 @@ export default function RegisterPayment() {
     creationRef.current = null
     setCheckout(null)
     setLoading(true)
-    setError('')
+    showError('')
     setRetryCount((count) => count + 1)
   }
 
   return (
+    <>
     <AuthShell backTo="/registro/planes" backLabel="Plan" contentWidth="narrow">
       <section className="animate-fade-in" aria-labelledby="payment-title">
         <div className={"grid gap-4 sm:grid-cols-[minmax(0,1.2fr)_minmax(240px,0.8fr)] sm:items-center"}>
@@ -169,14 +171,12 @@ export default function RegisterPayment() {
                 <p className="text-sm leading-relaxed text-brand-carmelita/85">Transfiere el importe indicado y escribe el identificador de la transferencia para que podamos revisarla.</p>
                 <label htmlFor="registration-transfer-id" className="text-sm font-semibold text-brand-green">ID de la transferencia</label>
                 <input id="registration-transfer-id" type="text" value={transferId} onChange={(event) => setTransferId(event.target.value)} className="w-full rounded-xl border border-brand-green/20 bg-brand-white px-3 py-3 text-sm text-brand-green outline-none focus:border-brand-green" placeholder="Ej. 1234567890" autoComplete="off" />
-                {error ? <p className="text-sm text-red-700" role="alert">{error}</p> : null}
                 <Button type="button" disabled={loading} onClick={completePayment}>{loading ? 'Completando…' : 'Confirmar pago y crear tienda'}</Button>
               </AuthCard>
             </div>
           ) : (
             <AuthCard className="flex flex-col gap-3">
               {loading ? <p className="py-3 text-center text-sm text-brand-carmelita/80" role="status">Preparando factura QvaPay…</p> : null}
-              {error ? <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700" role="alert">{error}</p> : null}
               {checkout?.payment_url && checkout.status === 'pending' ? (
                 <a href={checkout.payment_url} target="_blank" rel="noreferrer" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-green px-4 py-3 text-center text-sm font-bold text-brand-white shadow-sm transition hover:bg-brand-green/90">Abrir factura QvaPay</a>
               ) : null}
@@ -195,5 +195,7 @@ export default function RegisterPayment() {
         </div>
       </section>
     </AuthShell>
+    {toastNode}
+    </>
   )
 }

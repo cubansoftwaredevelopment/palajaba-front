@@ -20,6 +20,7 @@ import BuyerOrderLocationMap from '../../buyer/components/BuyerOrderLocationMap'
 import BuyerProductCard from '../../buyer/components/BuyerProductCard'
 import Logo from '../../components/Logo'
 import LoadingState from '../../components/ui/LoadingState'
+import DeadState from '../../components/ui/DeadState'
 import SellerLocationPreview from '../../components/seller/SellerLocationPreview'
 import NotificationBodyText from '../../components/ui/NotificationBodyText'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
@@ -27,6 +28,7 @@ import { useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useSheetExitMs } from '../../motion/presets'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
 import {
   connectCustomerEvents,
   OPEN_CUSTOMER_AVISOS_EVENT,
@@ -35,10 +37,12 @@ import {
 } from '../../live/utils'
 import SearchBar from '../../buyer/components/SearchBar'
 import FilterModal from '../../components/filters/FilterModal'
+import NoticeDateFilter from '../../components/filters/NoticeDateFilter'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 
 const CUSTOMER_ORDER_PAGE = 10
+const CUSTOMER_NOTICE_PAGE = 10
 
 const CUSTOMER_ORDER_HINTS = [
   'buscar por tienda',
@@ -97,6 +101,10 @@ export default function CustomerAccount() {
   const [notificationsLoading, setNotificationsLoading] = useState(true)
   const [notificationsError, setNotificationsError] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [noticeDateFrom, setNoticeDateFrom] = useState('')
+  const [noticeDateTo, setNoticeDateTo] = useState('')
+  const [noticesHasMore, setNoticesHasMore] = useState(false)
+  const [loadingMoreNotices, setLoadingMoreNotices] = useState(false)
   const [favoriteProducts, setFavoriteProducts] = useState([])
   const [orderSearch, setOrderSearch] = useState('')
   const [orderFiltersOpen, setOrderFiltersOpen] = useState(false)
@@ -111,6 +119,7 @@ export default function CustomerAccount() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [logoutOpen, setLogoutOpen] = useState(false)
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const [deleteError, setDeleteError] = useState('')
@@ -130,20 +139,34 @@ export default function CustomerAccount() {
   const [profileError, setProfileError] = useState('')
   const [photoUploading, setPhotoUploading] = useState(false)
 
-  const loadPaymentNotifications = useCallback(async () => {
-    setNotificationsLoading(true)
-    setNotificationsError('')
+  const loadPaymentNotifications = useCallback(async ({ append = false, offset = 0 } = {}) => {
+    if (append) setLoadingMoreNotices(true)
+    else {
+      setNotificationsLoading(true)
+      setNotificationsError('')
+    }
     try {
-      const notifications = await fetchCustomerPaymentNotifications(token)
-      setPaymentNotifications(Array.isArray(notifications) ? notifications : [])
+      const page = await fetchCustomerPaymentNotifications(token, {
+        paged: true,
+        offset,
+        limit: CUSTOMER_NOTICE_PAGE,
+        dateFrom: noticeDateFrom,
+        dateTo: noticeDateTo,
+      })
+      const items = Array.isArray(page) ? page : (Array.isArray(page?.items) ? page.items : [])
+      setPaymentNotifications((current) => (append ? [...current, ...items] : items))
+      setNoticesHasMore(Boolean(page?.has_more))
     } catch (cause) {
-      setNotificationsError(getUserFacingMessage(cause, 'No pudimos cargar tus avisos.'))
-      setPaymentNotifications([])
+      if (!append) {
+        setNotificationsError(getUserFacingMessage(cause, 'No pudimos cargar tus avisos.'))
+        setPaymentNotifications([])
+        setNoticesHasMore(false)
+      }
     } finally {
       setNotificationsLoading(false)
+      setLoadingMoreNotices(false)
     }
-  }, [token])
-
+  }, [noticeDateFrom, noticeDateTo, token])
   const applyCustomerOrders = useCallback((page, { append = false } = {}) => {
     const items = Array.isArray(page?.items) ? page.items : []
     setOrders((current) => append ? [...current, ...items] : items)
@@ -197,8 +220,13 @@ export default function CustomerAccount() {
     } catch (cause) {
       setError(getUserFacingMessage(cause, 'No pudimos cargar tu cuenta.'))
     } finally { setLoading(false) }
-  }, [applyCustomerOrders, loadPaymentNotifications, token])
+  }, [applyCustomerOrders, token])
 
+  useEffect(() => {
+    if (!token) return undefined
+    void loadPaymentNotifications()
+    return undefined
+  }, [loadPaymentNotifications, token])
   useEffect(() => {
     queueMicrotask(() => { void load() })
   }, [load])
@@ -275,6 +303,7 @@ export default function CustomerAccount() {
     event.preventDefault()
     if (!point) {
       setError('Marca la ubicación de esta dirección en el mapa.')
+      showError('Marca la ubicación de esta dirección en el mapa.')
       return
     }
     setSavingAddress(true)
@@ -1035,12 +1064,19 @@ export default function CustomerAccount() {
 
               {section === "avisos" ? (
                 <section className="space-y-3">
+                  <NoticeDateFilter
+                    from={noticeDateFrom}
+                    to={noticeDateTo}
+                    onChange={(from, to) => {
+                      setNoticeDateFrom(from)
+                      setNoticeDateTo(to)
+                    }}
+                  />
                   {notificationsLoading ? <LoadingState message="Cargando avisos…" size="sm" /> : null}
                   {!notificationsLoading && notificationsError ? (
-                    <div className={`${sectionClass} space-y-3`}>
-                      <p role="alert" className="text-sm text-brand-carmelita">{notificationsError}</p>
+                    <DeadState variant="panel" title="Sin resultados" message={notificationsError}>
                       <button type="button" onClick={loadPaymentNotifications} className="min-h-10 rounded-xl bg-brand-green px-4 text-sm font-bold text-brand-white">Reintentar</button>
-                    </div>
+                    </DeadState>
                   ) : null}
                   {!notificationsLoading && !notificationsError && unreadNotificationCount > 0 ? (
                     <div className="flex justify-end">
@@ -1096,7 +1132,25 @@ export default function CustomerAccount() {
                       </div>
                     </article>
                   )) : null}
-                  {!notificationsLoading && !notificationsError && !paymentNotifications.length ? <div className={sectionClass}><p className="text-sm text-brand-carmelita/70">No tienes avisos.</p></div> : null}
+                  {!notificationsLoading && !notificationsError && !paymentNotifications.length ? (
+                    <DeadState
+                      variant="panel"
+                      title="Sin resultados"
+                      message={noticeDateFrom || noticeDateTo ? 'No hay avisos en esas fechas.' : 'No tienes avisos.'}
+                    />
+                  ) : null}
+                  {!notificationsLoading && !notificationsError && noticesHasMore ? (
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => loadPaymentNotifications({ append: true, offset: paymentNotifications.length })}
+                        disabled={loadingMoreNotices}
+                        className="min-h-11 rounded-xl border border-brand-green/20 bg-brand-white px-5 text-sm font-semibold text-brand-green disabled:opacity-60"
+                      >
+                        {loadingMoreNotices ? 'Cargando…' : 'Cargar más avisos'}
+                      </button>
+                    </div>
+                  ) : null}
                 </section>
               ) : null}
 
@@ -1247,6 +1301,7 @@ export default function CustomerAccount() {
             </form>
         </BuyerMotionFrame>
       ) : null}
+      {toastNode}
     </div>
   );
 }

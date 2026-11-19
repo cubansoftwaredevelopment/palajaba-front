@@ -67,8 +67,9 @@ export function createManualOrderLineItem(product, quantity = 1) {
 
 export function buildManualOrderPayload({
   lineItems,
-  paymentCurrency = null,
   delivery = null,
+  deliveryPrice = null,
+  deliveryCurrency = null,
   soldAt = null,
 }) {
   const items = (lineItems ?? []).map((item) => ({
@@ -80,11 +81,10 @@ export function buildManualOrderPayload({
   }))
 
   const payload = { items }
-  if (paymentCurrency) {
-    payload.payment_currency = paymentCurrency
-  }
   if (delivery) {
     payload.delivery = delivery
+    payload.delivery_price = Number(deliveryPrice)
+    payload.delivery_currency = deliveryCurrency
   }
   if (soldAt) {
     payload.sold_at = soldAt
