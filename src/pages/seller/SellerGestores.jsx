@@ -43,7 +43,7 @@ import {
 } from '../../lib/sellerGestores'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { gestorLoginPath } from '../../lib/gestorAuth'
-import { resolveStoreSlug } from '../../lib/storeShare'
+import { getPublicSiteOrigin, resolveStoreSlug } from '../../lib/storeShare'
 import {
   sellerAlertError,
   sellerBtnPrimary,
@@ -77,7 +77,7 @@ export default function SellerGestores() {
   const { profile } = useOutletContext()
   const storeSlug = resolveStoreSlug(profile)
   const loginUrl = storeSlug
-    ? `${typeof window !== 'undefined' ? window.location.origin : ''}${gestorLoginPath(storeSlug)}`
+    ? `${getPublicSiteOrigin()}${gestorLoginPath(storeSlug)}`
     : ''
   const [gestores, setGestores] = useState([])
   const [products, setProducts] = useState([])

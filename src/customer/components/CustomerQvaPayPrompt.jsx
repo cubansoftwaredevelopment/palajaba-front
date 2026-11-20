@@ -11,7 +11,7 @@ export default function CustomerQvaPayPrompt({
   onAddUser,
   onDone,
   title = 'Usuario de QvaPay',
-  description = 'Agrega y verifica tu usuario de QvaPay en el perfil para poder pagar y recibir devoluciones.',
+  description = 'Agrega y verifica tu usuario de QvaPay para hacer compras más sencillas y seguras con las tiendas disponibles.',
   addLabel = 'Agregar usuario',
 }) {
   const hideOnCloseRef = useRef(false)

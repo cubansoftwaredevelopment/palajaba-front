@@ -31,6 +31,7 @@ export default function RegisterPayment() {
     ? '— USD'
     : `${usdEquivalent.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
   const [checkout, setCheckout] = useState(null)
+  const [invoiceFailed, setInvoiceFailed] = useState(false)
   const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [loading, setLoading] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState('cup')
@@ -54,13 +55,17 @@ export default function RegisterPayment() {
     }
     let stopped = false
     setLoading(true)
+    setInvoiceFailed(false)
     if (!creationRef.current) {
       creationRef.current = createInitialSubscriptionQvaPayCheckout({ planTier, billingPeriod: billing })
     }
     creationRef.current.then((result) => {
       if (!stopped) setCheckout(result)
     }).catch((err) => {
-      if (!stopped) showError(err?.message || 'No pudimos crear la factura QvaPay.')
+      if (!stopped) {
+        setInvoiceFailed(true)
+        showError(err?.message || 'No pudimos crear la factura QvaPay.')
+      }
     }).finally(() => {
       if (!stopped) setLoading(false)
     })
@@ -185,7 +190,7 @@ export default function RegisterPayment() {
                 {checkout && isSubscriptionCheckoutClosed(checkout) && !isSubscriptionCheckoutPaid(checkout) ? (
                   <Button type="button" className="min-w-0 flex-1 px-2 text-xs sm:text-sm" onClick={retryInvoice}>Solicitar otra factura</Button>
                 ) : null}
-                {!checkout?.purchase_id && !loading && error ? (
+                {!checkout?.purchase_id && !loading && invoiceFailed ? (
                   <Button type="button" className="min-w-0 flex-1 px-2 text-xs sm:text-sm" onClick={retryInvoice}>Reintentar</Button>
                 ) : null}
                 <Button type="button" className="min-w-0 flex-1 px-2 text-xs sm:text-sm" disabled={!isSubscriptionCheckoutPaid(checkout) || loading} onClick={completePayment}>{loading ? 'Completando…' : 'Confirmar pago y crear tienda'}</Button>

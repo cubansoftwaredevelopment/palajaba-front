@@ -18,6 +18,7 @@ import {
   updateGestorProfileCache,
 } from '../../lib/gestorAuth'
 import { storeGestorPublicPath } from '../../lib/storeSlug'
+import { getPublicSiteOrigin } from '../../lib/storeShare'
 import {
   areAllGestorProductsSelected,
   applyMarginToAllGestorProducts,
@@ -62,10 +63,9 @@ export default function GestorPanel() {
   const username = gestor?.username || cachedProfile?.username || ''
   const publicCatalogPath =
     slug && username ? storeGestorPublicPath(slug, username) : null
-  const publicCatalogUrl =
-    publicCatalogPath && typeof window !== 'undefined'
-      ? `${window.location.origin}${publicCatalogPath}`
-      : publicCatalogPath
+  const publicCatalogUrl = publicCatalogPath
+    ? `${getPublicSiteOrigin()}${publicCatalogPath}`
+    : publicCatalogPath
 
   const loadPanel = useCallback(async () => {
     setLoading(true)

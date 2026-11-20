@@ -9,7 +9,8 @@ import { getSellerToken, updateSellerProfileCache } from '../../lib/sellerAuth'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { useFormErrorToast } from '../ui/useFormErrorToast'
 import { sellerHasStoreBanners } from '../../constants/plan'
-import BuyerStoreBannerCover, { storeBannerAspectClass } from '../../buyer/components/BuyerStoreBannerCover'
+import BuyerStoreBannerCover, { storeBannerAspectClass, storeHasCoverPhoto, StoreLogoCover } from '../../buyer/components/BuyerStoreBannerCover'
+import SellerLocationPreview from './SellerLocationPreview'
 import { buyerStorePageHeader, buyerStorePageName } from '../../buyer/components/buyerStyles'
 
 const PREVIEW_MIN_WIDTH = 320
@@ -163,12 +164,6 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
             </p>
           ) : null}
 
-          {error ? (
-            <p className={sellerAlertError} role="alert">
-              {error}
-            </p>
-          ) : null}
-
           {banners.length ? (
             <ul className="flex flex-col gap-2">
               {banners.map((banner, index) => {
@@ -214,7 +209,9 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
               })}
             </ul>
           ) : (
-            <p className="text-sm text-brand-carmelita/80">Todavía no tienes banners. La cabecera usa un fondo de marca hasta que subas uno.</p>
+            <p className="text-sm text-brand-carmelita/80">
+              Todavía no tienes banners. La cabecera muestra lo mismo que ven tus clientes al entrar a la tienda.
+            </p>
           )}
         </section>
 
@@ -226,7 +223,10 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
           <p className={sellerHint}>
             Amplía la vista hasta el ancho de esta pantalla.
           </p>
-          <StoreBannerPreview banners={activeBanners} profile={profile} />
+          <StoreBannerPreview
+            banners={canManageBanners ? activeBanners : []}
+            profile={profile}
+          />
         </section>
       </div>
     </div>
@@ -263,8 +263,19 @@ function StoreBannerPreview({ banners, profile }) {
   return (
     <div ref={frameRef} className="flex w-full flex-col gap-3">
       <div className="mx-auto w-full" style={{ maxWidth: previewWidth }}>
-        <section className={buyerStorePageHeader}>
-          <BuyerStoreBannerCover banners={banners} />
+        <section className={`${buyerStorePageHeader} !mx-0 !w-full`}>
+          {storeHasCoverPhoto(banners) ? (
+            <BuyerStoreBannerCover banners={banners} />
+          ) : profile?.business_location ? (
+            <div className={`relative z-0 block w-full overflow-hidden bg-brand-green/10 ${storeBannerAspectClass}`} aria-hidden="true">
+              <SellerLocationPreview location={profile.business_location} banner />
+              <span className="pointer-events-none absolute bottom-14 right-3 rounded-full bg-white/90 px-2.5 py-1 text-[0.65rem] font-bold text-brand-green shadow-sm">
+                Ver mapa
+              </span>
+            </div>
+          ) : (
+            <StoreLogoCover />
+          )}
           <div className={`relative z-10 pb-5 ${wide ? 'px-5' : 'px-4'}`}>
             <div className={`flex items-center justify-between gap-3 ${wide ? '-mt-12' : '-mt-10'}`}>
               <div

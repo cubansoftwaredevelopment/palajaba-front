@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core'
 import { Share } from '@capacitor/share'
 import { BRAND_NAME } from '../constants/branding'
 import { storeGestorPublicPath, storePublicPath } from './storeSlug'
-import { buildWhatsAppShareUrl } from './storeShare'
+import { buildWhatsAppShareUrl, getPublicSiteOrigin } from './storeShare'
 
 export function zoneLabel(location) {
   const municipality = location?.municipality?.name
@@ -12,8 +12,9 @@ export function zoneLabel(location) {
 }
 
 function absoluteUrl(path) {
-  if (typeof window === 'undefined') return path
-  return `${window.location.origin}${path}`
+  const origin = getPublicSiteOrigin()
+  if (!origin) return path
+  return `${origin}${path}`
 }
 
 function zoneQuery(location, extra = {}) {
