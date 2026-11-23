@@ -43,6 +43,7 @@ const EMPTY_FILTERS = {
   approved: '',
   plan: 'all',
   billing: 'all',
+  gestores: '',
   app: '',
 }
 
@@ -230,6 +231,7 @@ export default function AdminDashboard() {
         if (!includesText(item.approved_at ? formatDateTime(item.approved_at) : '', filters.approved)) return false
         if (filters.plan !== 'all' && getSellerPlan(item).id !== filters.plan) return false
         if (filters.billing !== 'all' && item.billing_period !== filters.billing) return false
+        if (!includesText(String(item.gestor_count ?? 0), filters.gestores)) return false
         if (!includesText(formatAppDownloadsText(item.app_downloads), filters.app)) return false
         return true
       }),
@@ -325,6 +327,7 @@ export default function AdminDashboard() {
                   <th className="px-3 py-2">Plan</th>
                   <th className="px-3 py-2">Tiempo de suscripción</th>
                   <th className="px-3 py-2">Pedidos pendientes / confirmados</th>
+                  <th className="px-3 py-2">Gestores</th>
                   <th className="px-3 py-2">Dispositivo</th>
                   <th className="px-3 py-2">Acciones</th>
                 </tr>
@@ -415,6 +418,17 @@ export default function AdminDashboard() {
                       ]}
                     />
                   </th>
+                  <th className="px-2 py-2" />
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.gestores}
+                      onChange={(event) => updateFilter('gestores', event.target.value)}
+                      className={filterInput}
+                      placeholder="Cantidad"
+                      aria-label="Filtrar por cantidad de gestores"
+                      inputMode="numeric"
+                    />
+                  </th>
                   <th className="px-2 py-2">
                     <input
                       value={filters.app}
@@ -430,7 +444,7 @@ export default function AdminDashboard() {
               <tbody>
                 {pageItems.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                    <td colSpan={12} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                       Ningún negocio coincide con estos filtros.
                     </td>
                   </tr>
@@ -469,6 +483,9 @@ export default function AdminDashboard() {
                         <div className="mt-1 text-xs text-zinc-400">
                           {item.completed_orders_count ?? 0} confirmados
                         </div>
+                      </td>
+                      <td className="px-3 py-3 tabular-nums text-zinc-100">
+                        {item.gestor_count ?? 0}
                       </td>
                       <td className="px-3 py-3">
                         <AdminAppDownloadsCell downloads={item.app_downloads} />
