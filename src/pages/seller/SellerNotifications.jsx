@@ -67,8 +67,6 @@ function NotificationIcon({ kind }) {
 
 function NotificationCard({ notification, onMarkRead, storeName = '' }) {
   const unread = !notification.read_at
-  const isExpiring = notification.kind === NOTIFICATION_KIND_EXPIRING
-  const isNewOrder = notification.kind === NOTIFICATION_KIND_NEW_ORDER
   const hasViewOrdersAction =
     notification.action_label && notification.action_type === ACTION_VIEW_ORDERS
   const hasRenewAction =
@@ -78,21 +76,9 @@ function NotificationCard({ notification, onMarkRead, storeName = '' }) {
     if (unread) await onMarkRead(notification.id)
   }
 
-  const cardClass = unread
-    ? isExpiring
-      ? 'border-brand-carmelita/22 bg-gradient-to-br from-brand-yellow/14 to-brand-white'
-      : isNewOrder
-        ? 'border-brand-yellow/28 bg-gradient-to-br from-brand-yellow/10 to-brand-white'
-        : 'border-brand-green/18 bg-brand-green/[0.03]'
-    : 'border-brand-green/10 bg-brand-white'
-
   return (
-    <article
-      className={`overflow-hidden rounded-2xl border shadow-[0_2px_10px_rgba(89,128,44,0.04)] ${cardClass} ${
-        unread ? 'border-l-[3px] border-l-brand-carmelita' : ''
-      }`}
-    >
-      <div className="flex items-start gap-3 p-4">
+    <article className="py-4">
+      <div className="flex items-start gap-3">
         <NotificationIcon kind={notification.kind} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -116,14 +102,14 @@ function NotificationCard({ notification, onMarkRead, storeName = '' }) {
                 <Link
                   to="/tienda/pedidos"
                   onClick={handleOpen}
-                  className={`${sellerBtnPrimary} !min-h-9 !px-4 !py-2 !text-xs`}
+                  className={`${sellerBtnPrimary} !min-h-9 !w-auto !px-4 !py-2 !text-xs`}
                 >
                   {notification.action_label}
                 </Link>
               ) : null}
               {hasRenewAction ? (
                 <RenewPlanButton
-                  className="!min-h-9 !px-4 !py-2 !text-xs"
+                  className="!min-h-9 !w-auto !px-4 !py-2 !text-xs"
                   size="compact"
                   storeName={storeName}
                 />
@@ -134,7 +120,7 @@ function NotificationCard({ notification, onMarkRead, storeName = '' }) {
             <button
               type="button"
               onClick={handleOpen}
-              className={`mt-3 ${sellerBtnSecondary} !min-h-9 !px-4 !py-2 !text-xs`}
+              className={`mt-3 ${sellerBtnSecondary} !min-h-9 !w-auto !px-4 !py-2 !text-xs`}
             >
               Marcar como leída
             </button>
@@ -242,14 +228,16 @@ export default function SellerNotifications() {
       />
 
       {!loading && unreadSystemCount > 0 ? (
-        <button
-          type="button"
-          onClick={handleMarkAllSystemRead}
-          disabled={markingAll}
-          className={`${sellerBtnSecondary} !min-h-9 self-start !px-3 !py-2 !text-xs`}
-        >
-          {markingAll ? 'Marcando…' : 'Marcar todas como leídas'}
-        </button>
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleMarkAllSystemRead}
+            disabled={markingAll}
+            className={`${sellerBtnSecondary} !min-h-9 !w-auto !px-3 !py-2 !text-xs`}
+          >
+            {markingAll ? 'Marcando…' : 'Marcar todas como leídas'}
+          </button>
+        </div>
       ) : null}
 
       {loading ? (
@@ -276,7 +264,7 @@ export default function SellerNotifications() {
       ) : null}
 
       {!loading && notifications.length > 0 ? (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col divide-y divide-neutral-300">
           {notifications.map((notification) => (
             <li key={notification.id}>
               <NotificationCard

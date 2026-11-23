@@ -33,6 +33,10 @@ import { clearedDateFilter, countActiveFilters } from '../../components/filters/
 
 const SELLER_ORDERS_PAGE_SIZE = 15
 
+function isAssignableOrder(order) {
+  return Boolean(order?.delivery_requested) && order.status !== 'cancelled' && !order.mensajeria
+}
+
 const ORDER_SEARCH_HINTS = [
   'buscar por cliente',
   'buscar por teléfono',
@@ -255,6 +259,12 @@ export default function SellerOrders() {
       return exactOrderMatch || !dateFilterEnabled || isInRange(order, activeTab, dateRange)
     })
   }, [activeTab, pendingOrders, completedOrders, search, clientFilter, productFilters, currencyFilter, deliveryFilter, dateRange, dateFilterEnabled, resultFilter])
+
+  const tabRemaining = Math.max(
+    0,
+    (activeTab === 'pending' ? orderStatusCounts.pending : orderStatusCounts.completed) - (activeTab === 'pending' ? pendingOrders.length : completedOrders.length),
+  )
+  const nextPageCount = Math.min(SELLER_ORDERS_PAGE_SIZE, tabRemaining)
 
   const filterOptions = useMemo(() => {
     const allOrders = [...pendingOrders, ...completedOrders]
@@ -527,18 +537,33 @@ export default function SellerOrders() {
             </div>
           ) : null}
 
-          {selectingOrders && activeTab === 'pending' ? (
-            <div className="mb-3 flex gap-2">
-              <button type="button" className={sellerBtnPrimaryCompact} disabled={selectedOrderIds.length === 0} onClick={() => {
-                const unpaid = orders.some((order) => selectedOrderIds.includes(order.id) && order.payment_method === 'qvapay' && order.qvapay?.payment_status !== 'paid')
-                if (unpaid) {
-                  setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
-                  return
-                }
-                setAssignNotice('')
-                setAssignOpen(true)
-              }}>Asignar a</button>
-              <button type="button" className="min-h-10 rounded-full border border-brand-green/20 px-4 text-sm font-semibold text-brand-green" onClick={() => { setSelectingOrders(false); setSelectedOrderIds([]); setAssignNotice('') }}>Cancelar</button>
+          {activeTab === 'pending' ? (
+            <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+              {selectingOrders ? (
+                <button type="button" className="min-h-10 rounded-full border border-brand-green/20 px-4 text-sm font-semibold text-brand-green" onClick={() => { setSelectingOrders(false); setSelectedOrderIds([]); setAssignNotice('') }}>Cancelar</button>
+              ) : null}
+              <button
+                type="button"
+                className={`${sellerBtnPrimaryCompact} !w-auto !min-w-0`}
+                disabled={readOnly || !visibleOrders.some(isAssignableOrder)}
+                onClick={() => {
+                  const selected = orders.filter((order) => selectedOrderIds.includes(order.id))
+                  if (selected.length === 0) {
+                    setSelectingOrders(true)
+                    setAssignNotice('Presiona sobre un pedido con domicilio para seleccionarlo.')
+                    return
+                  }
+                  const unpaid = selected.some((order) => order.payment_method === 'qvapay' && order.qvapay?.payment_status !== 'paid')
+                  if (unpaid) {
+                    setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
+                    return
+                  }
+                  setAssignNotice('')
+                  setAssignOpen(true)
+                }}
+              >
+                Asignar a
+              </button>
             </div>
           ) : null}
 
@@ -596,10 +621,10 @@ export default function SellerOrders() {
               />
             ))}
           </SellerOrdersGroup>
-          {ordersHasMore ? (
+          {ordersHasMore && nextPageCount > 0 ? (
             <div className="mt-4 flex justify-center">
               <button type="button" onClick={loadMoreOrders} disabled={loadingMoreOrders} className="min-h-11 rounded-xl border border-brand-green/20 bg-brand-white px-5 text-sm font-semibold text-brand-green disabled:opacity-60">
-                {loadingMoreOrders ? 'Cargando…' : 'Cargar 15 pedidos más'}
+                {loadingMoreOrders ? 'Cargando…' : `Cargar ${nextPageCount} pedido${nextPageCount === 1 ? '' : 's'} más`}
               </button>
             </div>
           ) : null}
