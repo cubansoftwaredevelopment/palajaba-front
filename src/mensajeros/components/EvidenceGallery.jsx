@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { resolveMediaUrl } from '../../lib/media'
 import { backdropFade } from '../../motion/presets'
+import CourierEvidenceDownload from './CourierEvidenceDownload'
 
-export default function EvidenceGallery({ evidence, images, note, inline = false }) {
+export default function EvidenceGallery({ evidence, images, note, inline = false, orderId = '' }) {
   const photos = images || evidence?.images || []
   const caption = note ?? evidence?.note ?? ''
   const [open, setOpen] = useState(null)
@@ -59,6 +60,7 @@ export default function EvidenceGallery({ evidence, images, note, inline = false
     <div className="mt-2">
       {caption ? <p className="text-sm text-brand-carmelita">{caption}</p> : null}
       {photos.length ? <div className="mt-2 grid grid-cols-3 gap-2">{thumbs}</div> : null}
+      {orderId ? <CourierEvidenceDownload orderId={orderId} /> : null}
       {viewer}
     </div>
   )

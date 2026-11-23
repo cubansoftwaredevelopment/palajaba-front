@@ -5,6 +5,7 @@ import { convertBetweenCurrencies } from '../../lib/displayPrice'
 import { loadExchangeRates, getCupPerUnit } from '../../lib/exchangeRates'
 import { formatPrice, parseCupInput } from '../../lib/money'
 import { resolveMediaUrl } from '../../lib/media'
+import CourierEvidenceDownload from '../../mensajeros/components/CourierEvidenceDownload'
 import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
@@ -612,35 +613,32 @@ export default function SellerOrderDetailModal({
             </p>
           ) : null}
 
-          {!isQvaOrder ? <div className="mt-4">
-            <label htmlFor="payment-currency" className={sellerLabel}>
-              Moneda de pago
-            </label>
-            <SellerSelect
-              id="payment-currency"
-              ariaLabel="Moneda de pago"
-              value={paymentCurrency}
-              disabled={readOnly || !isPending}
-              onChange={(next) => {
-                setPaymentCurrency(next)
-                showError('')
-              }}
-              options={[
-                { value: '', label: 'Seleccionar…' },
-                ...PAYMENT_CURRENCIES.map((currency) => ({ value: currency, label: currency })),
-              ]}
-            />
-            {order.payment_currency && !paymentDirty ? (
-              <p className={`mt-1.5 ${sellerHint}`}>
-                El comprador pidió en {order.payment_currency}; los precios del pedido ya están en esa moneda.
-              </p>
-            ) : null}
-            {paymentTotal != null ? (
-              <p className={`mt-2 ${sellerAlertSuccess}`}>
-                Total en {resolvedPaymentCurrency}: {formatPrice(paymentTotal, resolvedPaymentCurrency)}
-              </p>
-            ) : null}
-          </div> : null}
+          {!isQvaOrder && !order.payment_currency ? (
+            <div className="mt-4">
+              <label htmlFor="payment-currency" className={sellerLabel}>
+                Moneda de pago
+              </label>
+              <SellerSelect
+                id="payment-currency"
+                ariaLabel="Moneda de pago"
+                value={paymentCurrency}
+                disabled={readOnly || !isPending}
+                onChange={(next) => {
+                  setPaymentCurrency(next)
+                  showError('')
+                }}
+                options={[
+                  { value: '', label: 'Seleccionar…' },
+                  ...PAYMENT_CURRENCIES.map((currency) => ({ value: currency, label: currency })),
+                ]}
+              />
+            </div>
+          ) : null}
+          {!isQvaOrder && paymentTotal != null ? (
+            <p className={`mt-2 ${sellerAlertSuccess}`}>
+              Total en {resolvedPaymentCurrency}: {formatPrice(paymentTotal, resolvedPaymentCurrency)}
+            </p>
+          ) : null}
 
           <OrderDocumentDownloads
             agreements={order.store_agreements}
@@ -680,6 +678,7 @@ export default function SellerOrderDetailModal({
                 {order.mensajeria?.evidence ? (
                   <div className="pt-2">
                     <p className="font-semibold text-brand-green">Evidencia del mensajero</p>
+                    <CourierEvidenceDownload orderId={order.id} role="seller" />
                     {order.mensajeria.evidence.note ? <p className="mt-1">{order.mensajeria.evidence.note}</p> : null}
                     {(order.mensajeria.evidence.images || []).length ? (
                       <div className="mt-2 grid grid-cols-3 gap-2">

@@ -140,7 +140,7 @@ export default function MensajeroRouteView({ batch, vehicles, onBack, onStart, o
             <p className="font-semibold text-brand-carmelita">#{order.code} · {order.buyer_name}</p>
             <p className="text-sm text-brand-carmelita">{order.address || 'Este pedido no tiene pin: solo dirección de texto.'}</p>
             <OrderCourierCost order={order} km={km} done={order.assignment_status === 'closed'} />
-            <EvidenceGallery evidence={order.evidence} />
+            <EvidenceGallery evidence={order.evidence} orderId={order.evidence ? order.id : ''} />
           </li>
         ))}
       </ul>

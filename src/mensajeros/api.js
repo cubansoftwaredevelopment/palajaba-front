@@ -1,4 +1,5 @@
-import { request } from '../lib/api'
+import { ApiError, parseApiErrorDetail, request } from '../lib/api'
+import { downloadBlob } from '../lib/downloadFile'
 import { getCustomerToken } from '../lib/customerAuth'
 import { getMensajeroToken } from './lib/session'
 import { getSellerToken } from '../lib/sellerAuth'
@@ -100,6 +101,42 @@ export function pushMensajeroPoint(batchId, point) {
     body: JSON.stringify(point),
     clientId: point.client_id,
   })
+}
+
+function apiBase() {
+  if (import.meta.env.DEV) return ''
+  return import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8081'
+}
+
+async function downloadPdf(path, token, fallbackName) {
+  const response = await fetch(`${apiBase()}${path}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    const parsed = parseApiErrorDetail(data.detail)
+    throw new ApiError(parsed.message, { code: parsed.code, data: parsed.data, status: response.status })
+  }
+  const blob = await response.blob()
+  const disposition = response.headers.get('Content-Disposition') ?? ''
+  const match = disposition.match(/filename="([^"]+)"/)
+  await downloadBlob(blob, match?.[1] ?? fallbackName, 'application/pdf')
+}
+
+export function downloadSellerCourierEvidence(orderId) {
+  return downloadPdf(
+    `/api/auth/me/mensajeros/orders/${encodeURIComponent(orderId)}/evidence.pdf`,
+    getSellerToken(),
+    `evidencia-mensajero-${String(orderId).slice(-6)}.pdf`,
+  )
+}
+
+export function downloadMensajeroEvidence(orderId) {
+  return downloadPdf(
+    `/api/mensajeros/orders/${encodeURIComponent(orderId)}/evidence.pdf`,
+    getMensajeroToken(),
+    `evidencia-mensajero-${String(orderId).slice(-6)}.pdf`,
+  )
 }
 
 export function submitMensajeroEvidence(orderId, { note, files }) {

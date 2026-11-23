@@ -248,7 +248,7 @@ export default function MensajeroPanel() {
                               {order.address ? <p className="mt-0.5">{order.address}</p> : null}
                               {order.phone ? <p className="mt-0.5">{order.phone}</p> : null}
                               <OrderCourierCost order={order} km={item.km} done={order.assignment_status === 'closed'} />
-                              <EvidenceGallery evidence={order.evidence} />
+                              <EvidenceGallery evidence={order.evidence} orderId={order.evidence ? order.id : ''} />
                             </li>
                           ))}
                         </ul>
