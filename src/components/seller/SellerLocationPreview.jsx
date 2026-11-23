@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { addSellerMapTiles, bounceMapPin, buyerMapMarkerIcon, sellerMapMarkerIcon, SELLER_MAP_LOCATION_ZOOM, SELLER_MAP_PREVIEW_ZOOM } from '../../lib/sellerMap'
+import { bounceMapPin, buyerMapMarkerIcon, sellerMapMarkerIcon, SELLER_MAP_LOCATION_ZOOM, SELLER_MAP_PREVIEW_ZOOM } from '../../lib/sellerMap'
+import { createAppMap } from '../map/createAppMap'
 
 export default function SellerLocationPreview({
   location,
@@ -26,21 +27,13 @@ export default function SellerLocationPreview({
 
     const canExplore = interactive || viewOnly
     const center = [location.lat, location.lng]
-    const map = L.map(mapRef.current, {
-      zoomControl: canExplore,
-      attributionControl: interactive,
-      scrollWheelZoom: canExplore,
-      doubleClickZoom: canExplore,
-      dragging: canExplore,
-      touchZoom: canExplore,
-      boxZoom: interactive,
-      keyboard: canExplore,
-    }).setView(
+    const map = createAppMap(mapRef.current, {
       center,
-      canExplore ? SELLER_MAP_LOCATION_ZOOM : SELLER_MAP_PREVIEW_ZOOM,
-    )
-
-    addSellerMapTiles(map)
+      zoom: canExplore ? SELLER_MAP_LOCATION_ZOOM : SELLER_MAP_PREVIEW_ZOOM,
+      interactive: canExplore,
+      attributionControl: interactive,
+      boxZoom: interactive,
+    })
     const storeMarker = L.marker(center, { icon: sellerMapMarkerIcon }).addTo(map)
     bounceMapPin(storeMarker)
 

@@ -25,7 +25,7 @@ import MethodTabs from '../../auth/components/MethodTabs'
 
 import { isCustomerPaidOrder } from '../../constants/orderStatus'
 
-const statusLabel = { pending_confirmation: 'Pendiente', completed: 'Confirmado', cancelled: 'Cancelado' }
+const statusLabel = { pending_confirmation: 'Pendiente', in_transit: 'En tránsito', completed: 'Confirmado', cancelled: 'Cancelado' }
 const NOTICE_PAGE = 10
 const CUSTOMER_TABS = [
   { id: 'customers', label: 'Clientes' },

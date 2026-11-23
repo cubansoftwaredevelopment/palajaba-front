@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import {
-  addSellerMapTiles,
   getCurrentMapPosition,
   SELLER_MAP_DEFAULT_CENTER,
   SELLER_MAP_DEFAULT_ZOOM,
@@ -10,6 +9,7 @@ import {
   sellerMapMarkerIcon,
   bounceMapPin,
 } from '../../lib/sellerMap'
+import { createAppMap } from '../map/createAppMap'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import SellerModalPortal from './SellerModalPortal'
 
@@ -57,8 +57,7 @@ export default function LocationMapModal({ initialLocation, onConfirm, onClose: 
       : SELLER_MAP_DEFAULT_CENTER
 
     const zoom = initialLocation ? SELLER_MAP_LOCATION_ZOOM : SELLER_MAP_DEFAULT_ZOOM
-    const map = L.map(mapRef.current, { zoomControl: true }).setView(start, zoom)
-    addSellerMapTiles(map)
+    const map = createAppMap(mapRef.current, { center: start, zoom, attributionControl: true })
 
     if (initialLocation) {
       placeMarkerRef.current(initialLocation.lat, initialLocation.lng)

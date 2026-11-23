@@ -30,7 +30,7 @@ export default function SubscriptionDatePicker({
           months: 'flex flex-col',
           month: 'w-full',
           month_caption: 'mb-3 flex items-center justify-center',
-          caption_label: 'font-display text-base font-bold text-brand-green',
+          caption_label: 'text-base font-bold text-brand-green',
           nav: 'flex items-center gap-1',
           button_previous:
             'inline-flex h-9 w-9 items-center justify-center rounded-full text-brand-green transition-colors hover:bg-brand-yellow/25',

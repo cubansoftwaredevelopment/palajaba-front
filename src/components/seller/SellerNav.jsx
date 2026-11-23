@@ -27,6 +27,15 @@ const SELLER_NAV_ICONS = {
       <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
     </svg>
   ),
+  mensajeros: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2" />
+      <path d="M15 18H9" />
+      <path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14" />
+      <circle cx="17" cy="18" r="2" />
+      <circle cx="7" cy="18" r="2" />
+    </svg>
+  ),
   clientes: (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
       <circle cx="9" cy="8" r="3.5" />
@@ -48,7 +57,7 @@ const SELLER_NAV_ICONS = {
 }
 
 function bottomLinkClass(isActive) {
-  return `flex min-w-0 flex-1 basis-0 flex-col items-center justify-center gap-0.5 py-1.5 text-[0.625rem] font-semibold leading-none transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/30 sm:text-xs ${sellerFocusRing} ${
+  return `flex w-[4.6rem] shrink-0 snap-start flex-col items-center justify-center gap-0.5 py-1.5 text-[0.625rem] font-semibold leading-none transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/30 sm:text-xs ${sellerFocusRing} ${
     isActive ? 'text-brand-green' : 'text-brand-carmelita/65 active:text-brand-green'
   }`
 }
@@ -79,7 +88,7 @@ export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0, pro
       style={{ paddingBottom: 'max(0.375rem, var(--safe-bottom))' }}
       aria-label="Secciones de tu tienda"
     >
-      <div className="mx-auto flex w-full min-w-0 max-w-md items-stretch px-0.5 sm:px-1">
+      <div className="mx-auto flex w-full min-w-0 max-w-md snap-x items-stretch overflow-x-auto px-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-1 [&::-webkit-scrollbar]:hidden">
         {items.map((item) => (
           <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => bottomLinkClass(isActive)}>
             {({ isActive }) => {

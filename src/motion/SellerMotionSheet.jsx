@@ -17,6 +17,7 @@ export default function SellerMotionSheet({
   overlayClassName = sellerModalOverlay,
   panelClassName = sellerModalSheet,
   panelAs = 'div',
+  dismissOnBackdrop = true,
   children,
 }) {
   return (
@@ -30,7 +31,9 @@ export default function SellerMotionSheet({
       overlayProps={{
         role: 'presentation',
         onMouseDown: (event) => {
-          if (event.target === event.currentTarget) onClose?.()
+          if (event.target !== event.currentTarget) return
+          event.preventDefault()
+          if (dismissOnBackdrop) onClose?.()
         },
       }}
       panelProps={{

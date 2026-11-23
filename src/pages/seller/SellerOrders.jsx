@@ -28,6 +28,7 @@ import { getUserFacingMessage } from '../../lib/userFacingError'
 import { rangeForPeriod } from '../../components/admin/AdminDateRangeControls'
 import { acceptSellerQvaPayOrder, refundSellerQvaPayOrder, rejectSellerQvaPayOrder, submitSellerOrderEvidence } from '../../auth/api.js'
 import FilterModal from '../../components/filters/FilterModal'
+import { AssignCourierModal } from '../../mensajeros'
 import { clearedDateFilter, countActiveFilters } from '../../components/filters/filterState'
 
 const SELLER_ORDERS_PAGE_SIZE = 15
@@ -127,6 +128,10 @@ export default function SellerOrders() {
   const [dateRange, setDateRange] = useState(() => rangeForPeriod('daily'))
   const [dateFilterEnabled, setDateFilterEnabled] = useState(false)
   const [resultFilter, setResultFilter] = useState('')
+  const [selectingOrders, setSelectingOrders] = useState(false)
+  const [selectedOrderIds, setSelectedOrderIds] = useState([])
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignNotice, setAssignNotice] = useState('')
 
   const loadOrders = useCallback(async ({ silent = false } = {}) => {
     if (!silent) {
@@ -227,7 +232,7 @@ export default function SellerOrders() {
       ? orders.find((order) => orderIdentifier(order).toLocaleLowerCase('es') === orderSearchTarget.toLocaleLowerCase('es'))
       : null
     setActiveTab(targetOrder
-      ? targetOrder.status === 'pending_confirmation' ? 'pending' : 'completed'
+      ? (targetOrder.status === 'completed' || targetOrder.status === 'cancelled' ? 'completed' : 'pending')
       : pendingOrders.length > 0 ? 'pending' : 'completed')
     setTabInitialized(true)
   }, [loading, tabInitialized, pendingOrders.length, orders, orderSearchTarget, ordersHasMore, loadMoreOrders, error])
@@ -340,7 +345,7 @@ export default function SellerOrders() {
 
       if (selectedOrder.status !== updated.status) {
         setOrderStatusCounts((current) => ({
-          pending: Math.max(0, current.pending + (updated.status === 'pending_confirmation' ? 1 : 0) - (selectedOrder.status === 'pending_confirmation' ? 1 : 0)),
+          pending: Math.max(0, current.pending + (updated.status === 'pending_confirmation' || updated.status === 'in_transit' ? 1 : 0) - (selectedOrder.status === 'pending_confirmation' || selectedOrder.status === 'in_transit' ? 1 : 0)),
           completed: Math.max(0, current.completed + (updated.status === 'completed' ? 1 : 0) - (selectedOrder.status === 'completed' ? 1 : 0)),
         }))
       }
@@ -522,6 +527,23 @@ export default function SellerOrders() {
             </div>
           ) : null}
 
+          {selectingOrders && activeTab === 'pending' ? (
+            <div className="mb-3 flex gap-2">
+              <button type="button" className={sellerBtnPrimaryCompact} disabled={selectedOrderIds.length === 0} onClick={() => {
+                const unpaid = orders.some((order) => selectedOrderIds.includes(order.id) && order.payment_method === 'qvapay' && order.qvapay?.payment_status !== 'paid')
+                if (unpaid) {
+                  setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
+                  return
+                }
+                setAssignNotice('')
+                setAssignOpen(true)
+              }}>Asignar a</button>
+              <button type="button" className="min-h-10 rounded-full border border-brand-green/20 px-4 text-sm font-semibold text-brand-green" onClick={() => { setSelectingOrders(false); setSelectedOrderIds([]); setAssignNotice('') }}>Cancelar</button>
+            </div>
+          ) : null}
+
+          {assignNotice ? <p role="alert" className="mb-3 rounded-xl bg-brand-carmelita/10 px-3 py-2 text-sm font-semibold text-brand-carmelita">{assignNotice}</p> : null}
+
           <SellerOrdersGroup
             count={visibleOrders.length}
             emptyIcon={activeTab === 'pending' ? PendingIcon : CompletedIcon}
@@ -549,6 +571,27 @@ export default function SellerOrders() {
                 key={order.id}
                 order={order}
                 variant={activeTab === 'pending' ? 'pending' : 'completed'}
+                selecting={selectingOrders && activeTab === 'pending'}
+                selected={selectedOrderIds.includes(order.id)}
+                onLongPress={(item) => {
+                  if (item.payment_method === 'qvapay' && item.qvapay?.payment_status !== 'paid') {
+                    setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
+                    return
+                  }
+                  if (activeTab !== 'pending' || !item.delivery_requested || item.status === 'cancelled' || item.mensajeria) return
+                  setAssignNotice('')
+                  setSelectingOrders(true)
+                  setSelectedOrderIds((current) => current.includes(item.id) ? current : [...current, item.id])
+                }}
+                onToggle={(item) => {
+                  if (item.payment_method === 'qvapay' && item.qvapay?.payment_status !== 'paid') {
+                    setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
+                    return
+                  }
+                  if (!item.delivery_requested || item.status === 'cancelled' || item.mensajeria) return
+                  setAssignNotice('')
+                  setSelectedOrderIds((current) => current.includes(item.id) ? current.filter((id) => id !== item.id) : [...current, item.id])
+                }}
                 onOpen={setSelectedOrder}
               />
             ))}
@@ -585,6 +628,19 @@ export default function SellerOrders() {
         </>
       ) : null}
 
+      {assignOpen ? (
+        <AssignCourierModal
+          orders={orders.filter((order) => selectedOrderIds.includes(order.id))}
+          onClose={() => setAssignOpen(false)}
+          onDone={() => {
+            setAssignOpen(false)
+            setSelectingOrders(false)
+            setSelectedOrderIds([])
+            loadOrders()
+          }}
+        />
+      ) : null}
+
       {manualOrderOpen ? (
         <SellerManualOrderModal
           onClose={() => setManualOrderOpen(false)}
@@ -611,6 +667,10 @@ export default function SellerOrders() {
           onQvaReject={handleQvaReject}
           onQvaRefund={handleQvaRefund}
           onSubmitEvidence={handleSubmitEvidence}
+          onAssignmentCancelled={() => {
+            setSelectedOrder(null)
+            loadOrders()
+          }}
         />
       ) : null}
 

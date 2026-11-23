@@ -135,6 +135,13 @@ function dispatchPushNavigation(data) {
         },
       }),
     )
+    return
+  }
+  if (screen === 'mensajero_panel') {
+    const alias = String(data.alias || '').trim()
+    if (alias && !window.location.pathname.startsWith(`/mensajero/${alias}`)) {
+      window.location.assign(`/mensajero/${alias}/panel`)
+    }
   }
 }
 
@@ -177,6 +184,9 @@ async function ensurePushListeners(PushNotifications) {
         await registerCustomerDevice({ token: event.value, platform }, pushAuthToken)
       } else if (pushRole === 'seller') {
         await registerSellerDevice({ token: event.value, platform })
+      } else if (pushRole === 'mensajero') {
+        const { registerMensajeroDevice } = await import('../mensajeros/api')
+        await registerMensajeroDevice({ token: event.value, platform })
       }
     } catch {
       /* push de cuenta no disponible */
@@ -224,6 +234,10 @@ export async function startSellerPush(accessToken) {
 
 export async function startCustomerPush(accessToken) {
   await startNativePush(accessToken, 'customer')
+}
+
+export async function startMensajeroPush() {
+  await startNativePush('', 'mensajero')
 }
 
 export async function stopSellerPush() {

@@ -4,7 +4,8 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
 import { adminCard, adminMuted, adminSubtle } from '../../components/admin/adminStyles'
-import { addSellerMapTiles, SELLER_MAP_DEFAULT_CENTER, SELLER_MAP_DEFAULT_ZOOM } from '../../lib/sellerMap'
+import { SELLER_MAP_DEFAULT_CENTER, SELLER_MAP_DEFAULT_ZOOM } from '../../lib/sellerMap'
+import { createAppMap } from '../../components/map/createAppMap'
 
 const pinIcon = L.divIcon({
   className: 'admin-device-pin',
@@ -32,18 +33,11 @@ function OrderPinsCanvas({ pins, frameKey, interactive }) {
   useEffect(() => {
     const node = containerRef.current
     if (!node || mapRef.current) return undefined
-    const map = L.map(node, {
+    const map = createAppMap(node, {
       center: SELLER_MAP_DEFAULT_CENTER,
       zoom: SELLER_MAP_DEFAULT_ZOOM,
-      zoomControl: interactive,
-      scrollWheelZoom: interactive,
-      doubleClickZoom: interactive,
-      touchZoom: interactive,
-      boxZoom: interactive,
-      keyboard: interactive,
-      dragging: interactive,
+      interactive,
     })
-    addSellerMapTiles(map)
     layerRef.current = L.layerGroup().addTo(map)
     mapRef.current = map
     requestAnimationFrame(() => map.invalidateSize())

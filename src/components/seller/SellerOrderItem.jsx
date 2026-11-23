@@ -21,7 +21,7 @@ function ChevronIcon() {
   )
 }
 
-export default function SellerOrderItem({ order, variant = 'pending', onOpen }) {
+export default function SellerOrderItem({ order, variant = 'pending', onOpen, selecting = false, selected = false, onLongPress, onToggle }) {
   const itemCount = order.items.reduce((total, item) => total + item.quantity, 0)
   const isPending = variant === 'pending'
   const evidence = order.payment_method === 'qvapay' ? order.qvapay?.evidence : null
@@ -37,7 +37,20 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
   const buyerPhone = order.buyer_phone || order.delivery?.phone_primary
 
   function handleActivate() {
+    if (selecting) {
+      onToggle?.(order)
+      return
+    }
     onOpen(order)
+  }
+
+  function handlePointerDown() {
+    if (selecting || !onLongPress) return undefined
+    const timer = window.setTimeout(() => onLongPress(order), 450)
+    const clear = () => window.clearTimeout(timer)
+    window.addEventListener('pointerup', clear, { once: true })
+    window.addEventListener('pointercancel', clear, { once: true })
+    return undefined
   }
 
   function handleKeyDown(event) {
@@ -52,6 +65,7 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
       role="button"
       tabIndex={0}
       onClick={handleActivate}
+      onPointerDown={handlePointerDown}
       onKeyDown={handleKeyDown}
       className={`group flex w-full cursor-pointer text-left transition-colors [touch-action:pan-y] active:bg-black/[0.03] ${sellerFocusRing}`}
     >
@@ -59,6 +73,9 @@ export default function SellerOrderItem({ order, variant = 'pending', onOpen }) 
         <span className="flex items-start justify-between gap-3">
           <span className="min-w-0">
             <span className="flex flex-wrap items-center gap-2">
+              {selecting ? (
+                <span className={`grid h-5 w-5 place-items-center rounded-md border text-[0.7rem] font-bold ${selected ? 'border-brand-green bg-brand-green text-brand-white' : 'border-brand-green/30 text-transparent'}`} aria-hidden>✓</span>
+              ) : null}
               <span className="font-display text-sm font-bold text-brand-green">
                 #{orderCode}
               </span>

@@ -641,10 +641,16 @@
     line-height: 2.25rem;
   }
 
-  .seller-map-pin {
+  .seller-map-pin,
+  .route-map-pin {
     background: transparent !important;
     border: none !important;
     overflow: visible !important;
+  }
+
+  .route-pin__float {
+    transform-origin: 50% 100%;
+    animation: route-pin-float 1.6s ease-in-out infinite;
   }
 
   .buyer-order-map .leaflet-container {
@@ -952,9 +958,15 @@ button.jaba-remove-btn:active:not(:disabled) {
   color: #a34f3e;
 }
 
+@keyframes route-pin-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-7px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .screen-step,
-  .seller-map-pin__bounce.is-hopping {
+  .seller-map-pin__bounce.is-hopping,
+  .route-pin__float {
     animation: none;
   }
 
@@ -963,4 +975,8 @@ button.jaba-remove-btn:active:not(:disabled) {
   button.jaba-remove-btn:active:not(:disabled) {
     transform: none;
   }
+}
+
+.map-allows-page-scroll .leaflet-container {
+  touch-action: pan-y pinch-zoom;
 }

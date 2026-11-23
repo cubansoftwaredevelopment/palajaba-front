@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import {
-  addSellerMapTiles,
   getCurrentMapPosition,
   SELLER_MAP_DEFAULT_CENTER,
   SELLER_MAP_DEFAULT_ZOOM,
@@ -11,6 +10,7 @@ import {
   sellerMapMarkerIcon,
   bounceMapPin,
 } from '../../lib/sellerMap'
+import { createAppMap } from '../../components/map/createAppMap'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
 export default function BuyerOrderLocationMap({ initialCoords, onChange, fill = false, heightClass = 'h-64' }) {
@@ -29,11 +29,11 @@ export default function BuyerOrderLocationMap({ initialCoords, onChange, fill = 
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return undefined
 
-    const map = L.map(mapRef.current, { zoomControl: true, attributionControl: false }).setView(
-      SELLER_MAP_DEFAULT_CENTER,
-      SELLER_MAP_DEFAULT_ZOOM,
-    )
-    addSellerMapTiles(map)
+    const map = createAppMap(mapRef.current, {
+      center: SELLER_MAP_DEFAULT_CENTER,
+      zoom: SELLER_MAP_DEFAULT_ZOOM,
+      attributionControl: false,
+    })
 
     function placeMarker(lat, lng) {
       selectedLocationRef.current = { lat, lng }

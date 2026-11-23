@@ -40,7 +40,7 @@ function NoticeToastCard({ toast, onDone, onOpen, paused, onPress }) {
       }`}
       onClick={() => {
         if (onPress?.()) return
-        if (onOpen) onOpen()
+        if (onOpen) onOpen(toast)
         else setLeaving(true)
       }}
     >

@@ -15,8 +15,23 @@ import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 import { openExternalUrl } from '../../lib/nativeApp'
 import { downloadCustomerOrderDocument } from '../../lib/api.js'
 import OrderDocumentDownloads from '../../buyer/components/OrderDocumentDownloads'
+import OrderRouteMap from '../../components/map/OrderRouteMap'
 import OrderPlatformTerms from '../../buyer/components/OrderPlatformTerms'
 import QvaPayReleaseCountdown from './QvaPayReleaseCountdown.jsx'
+
+function customerMensajeriaLabel(order) {
+  const delivery = Number(order.delivery_price)
+  const fee = Number(order.courier_fee_amount)
+  const deliveryOk = Number.isFinite(delivery)
+  const feeOk = Number.isFinite(fee)
+  const currency = order.delivery_currency || 'CUP'
+  const feeCurrency = order.courier_fee_currency || currency
+  if (deliveryOk && feeOk && feeCurrency === currency) return formatPrice(delivery + fee, currency)
+  if (deliveryOk && feeOk) return `${formatPrice(delivery, currency)} + ${formatPrice(fee, feeCurrency)}`
+  if (deliveryOk) return formatPrice(delivery, currency)
+  if (feeOk) return formatPrice(fee, feeCurrency)
+  return 'Por definir'
+}
 
 export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) {
   const exitMs = useSheetExitMs()
@@ -119,9 +134,10 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
         panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'customer-order-detail-title' }}
       >
         <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
-        <div className="flex items-start justify-between gap-4">
+        {order.delivery_requested ? <OrderRouteMap orderId={order.id} role="customer" fullscreen /> : null}
+        <div className="mt-4 flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-carmelita/60">Detalle del pedido</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-carmelita/60">Pedido #{String(order.id || '').slice(-6).toUpperCase()}</p>
             <h2 id="customer-order-detail-title" className="mt-1 text-xl font-bold text-brand-green">{order.store_name}</h2>
             <p className="mt-1 text-sm text-brand-carmelita/70">{formatDate(order.created_at)}</p>
           </div>
@@ -201,10 +217,9 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
           ))}
           <div className="flex justify-between gap-4 py-3 text-sm">
             <dt>Mensajería</dt>
-            <dd className="text-right font-bold">{order.delivery_requested && order.delivery_price != null ? formatPrice(order.delivery_price, order.delivery_currency || 'CUP') : 'No solicitada · 0'}</dd>
+            <dd className="text-right font-bold">{order.delivery_requested ? customerMensajeriaLabel(order) : 'No solicitada · 0'}</dd>
           </div>
         </dl>
-
         <OrderDocumentDownloads
           agreements={order.store_agreements}
           evidence={canRespondToQvaPayEvidence(qvapay) ? null : evidence}

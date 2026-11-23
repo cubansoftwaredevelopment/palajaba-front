@@ -990,19 +990,20 @@ export default function CustomerAccount() {
                       {visibleCustomerOrders.map((order) => {
                         const evidenceStatus = order.payment_method === 'qvapay' ? order.qvapay?.evidence?.status : null
                         const highlighted = needsBuyerOrderAttention(order)
-                        const statusTone = order.status === 'completed'
+                        const statusTone = order.status === 'completed' || order.status === 'in_transit'
                           ? 'bg-brand-green'
                           : order.status === 'cancelled'
                             ? 'bg-red-600'
                             : 'bg-brand-yellow'
                         const statusLabel = getBuyerOrderStatusLabel(order)
-                        const statusText = order.status === 'completed'
+                        const statusText = order.status === 'completed' || order.status === 'in_transit'
                           ? 'text-brand-green'
                           : order.status === 'cancelled'
                             ? 'text-red-700'
                             : statusLabel === 'Por procesar'
                               ? 'text-yellow-600'
                               : 'text-amber-800'
+                        const orderCode = String(order.id || '').slice(-6).toUpperCase()
                         return (
                         <li key={order.id}>
                           <button
@@ -1014,7 +1015,10 @@ export default function CustomerAccount() {
                           <span className={`my-3.5 w-1 shrink-0 rounded-full ${statusTone}`} aria-hidden="true" />
                           <span className="min-w-0 flex-1 py-3.5 pl-3">
                           <div className="flex justify-between gap-3">
-                            <strong>{order.store_name}</strong>
+                            <span className="min-w-0">
+                              <strong className="block truncate">{order.store_name}</strong>
+                              <span className="mt-0.5 block text-xs font-bold text-brand-green">#{orderCode}</span>
+                            </span>
                             <span className={`inline-flex shrink-0 items-center gap-1 text-right text-xs font-bold ${statusText}`}>
                               {highlighted ? <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[0.65rem] font-extrabold leading-none text-white ${evidenceStatus === 'rejected' ? 'bg-red-700' : 'bg-amber-700'}`} aria-hidden="true">!</span> : null}
                               {statusLabel}

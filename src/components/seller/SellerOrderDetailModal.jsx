@@ -4,6 +4,7 @@ import { formatOrderDateTime } from '../../lib/dates'
 import { convertBetweenCurrencies } from '../../lib/displayPrice'
 import { loadExchangeRates, getCupPerUnit } from '../../lib/exchangeRates'
 import { formatPrice, parseCupInput } from '../../lib/money'
+import { resolveMediaUrl } from '../../lib/media'
 import { buildOpenStreetMapUrl } from '../../lib/openStreetMap'
 import { buildWhatsAppUrl } from '../../lib/whatsappOrder'
 import { openExternalUrl } from '../../lib/nativeApp'
@@ -11,6 +12,7 @@ import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
 import OrderDocumentDownloads from '../../buyer/components/OrderDocumentDownloads'
 import OrderPlatformTerms from '../../buyer/components/OrderPlatformTerms'
 import SellerLocationPreview from './SellerLocationPreview'
+import OrderRouteMap from '../map/OrderRouteMap'
 import SellerModalPortal from './SellerModalPortal'
 import { useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
@@ -87,6 +89,40 @@ function calcPaymentTotal(order, items, paymentCurrency, deliveryPreview, cupPer
   return total
 }
 
+function CancelAssignmentButton({ orderId, onDone }) {
+  const [error, setError] = useState('')
+  async function cancelAssignment() {
+    try {
+      const { cancelMensajeroAssignment } = await import('../../mensajeros/api')
+      const { getSellerToken } = await import('../../lib/sellerAuth')
+      await cancelMensajeroAssignment(getSellerToken(), orderId)
+      onDone?.()
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+  return (
+    <div className="pt-2">
+      <button type="button" className="text-sm font-semibold text-red-700" onClick={cancelAssignment}>Cancelar asignación</button>
+      {error ? <p className="text-xs font-semibold text-red-700">{error}</p> : null}
+    </div>
+  )
+}
+
+function CourierPriceLine({ amount, currency, feeAmount, feeCurrency }) {
+  const fee = Number(feeAmount)
+  const base = Number(amount)
+  if (!Number.isFinite(fee)) return null
+  const sameCurrency = !feeCurrency || !currency || feeCurrency === currency
+  const sum = sameCurrency && Number.isFinite(base) ? base + fee : null
+  return (
+    <p className="col-span-2 text-sm font-semibold text-brand-carmelita" aria-readonly="true">
+      + {formatPrice(fee, feeCurrency || currency || 'CUP')}
+      {sum != null ? ` = ${formatPrice(sum, feeCurrency || currency || 'CUP')}` : ''}
+    </p>
+  )
+}
+
 export default function SellerOrderDetailModal({
   order,
   saving,
@@ -101,6 +137,7 @@ export default function SellerOrderDetailModal({
   onQvaReject,
   onQvaRefund,
   onSubmitEvidence,
+  onAssignmentCancelled,
 }) {
   const readOnly = useSellerReadOnly()
   const exitMs = useSheetExitMs()
@@ -186,15 +223,18 @@ export default function SellerOrderDetailModal({
     }
   }, [onClose, mapPresent])
 
-  const isPending = order.status === 'pending_confirmation'
+  const isPending = order.status === 'pending_confirmation' || order.status === 'in_transit'
   const isQvaOrder = order.payment_method === 'qvapay'
   const qvapay = order.qvapay
   const evidence = qvapay?.evidence
   const orderSettled = order.status === 'completed' || order.status === 'cancelled'
+  const canMarkDone = order.status === 'pending_confirmation' && !isQvaOrder && !readOnly
   const orderWorkflowLabel = order.status === 'completed'
     ? 'Compra realizada'
     : order.status === 'cancelled'
       ? 'Cancelado'
+      : order.status === 'in_transit'
+        ? 'En tránsito'
       : isCustomerPaidOrder(order)
         ? 'Pagado'
       : evidence?.status === 'pending'
@@ -298,6 +338,10 @@ export default function SellerOrderDetailModal({
   }
 
   function handleComplete() {
+    if (order.status === 'in_transit') {
+      showError('No puedes marcar como realizado un pedido que está en tránsito.')
+      return
+    }
     const payload = { status: 'completed' }
     showError('')
 
@@ -626,25 +670,24 @@ export default function SellerOrderDetailModal({
                   <span className="font-semibold text-brand-green">Contacto:</span> {order.delivery.phone_primary}
                   {order.delivery.phone_secondary ? `, ${order.delivery.phone_secondary}` : ''}
                 </div>
-                {deliveryMapUrl ? (
+                <div className="pt-2">
+                  <p className="mb-1.5 font-semibold text-brand-green">Ruta del pedido</p>
+                  <OrderRouteMap orderId={order.id} role="seller" />
+                </div>
+                {order.mensajeria && order.mensajeria.status === 'assigned' && !order.mensajeria.route_started ? (
+                  <CancelAssignmentButton orderId={order.id} onDone={onAssignmentCancelled} />
+                ) : null}
+                {order.mensajeria?.evidence ? (
                   <div className="pt-2">
-                    <p className="mb-1.5 font-semibold text-brand-green">Ubicación del pedido</p>
-                    <div className="relative">
-                      <SellerLocationPreview
-                        location={{
-                          lat: Number(order.delivery.latitude),
-                          lng: Number(order.delivery.longitude),
-                          label: 'Ubicación del pedido',
-                        }}
-                        mapClassName="h-48 w-full"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setMapOpen(true)}
-                        className="absolute inset-0 z-20 rounded-2xl"
-                        aria-label="Abrir mapa en pantalla completa"
-                      />
-                    </div>
+                    <p className="font-semibold text-brand-green">Evidencia del mensajero</p>
+                    {order.mensajeria.evidence.note ? <p className="mt-1">{order.mensajeria.evidence.note}</p> : null}
+                    {(order.mensajeria.evidence.images || []).length ? (
+                      <div className="mt-2 grid grid-cols-3 gap-2">
+                        {order.mensajeria.evidence.images.map((url) => (
+                          <img key={url} src={resolveMediaUrl(url)} alt="" className="h-20 w-full rounded-xl object-cover" />
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 ) : null}
                 {order.delivery.notes ? (
@@ -687,6 +730,7 @@ export default function SellerOrderDetailModal({
                   }))}
                 />
               </div>
+              <CourierPriceLine amount={parseCupInput(deliveryPrice)} currency={deliveryCurrency} feeAmount={order.mensajeria?.fee_amount} feeCurrency={order.mensajeria?.fee_currency} />
               <p className={`col-span-2 ${sellerHint}`}>
                 {isQvaOrder ? 'Define el costo de entrega para emitir la factura QvaPay.' : 'Agrega el costo del domicilio antes de marcar el pedido como realizado.'}
               </p>
@@ -694,9 +738,10 @@ export default function SellerOrderDetailModal({
           ) : null}
 
           {order.delivery_requested && (!isPending || readOnly) && order.delivery_price != null ? (
-            <p className={`mt-4 ${sellerAlertSuccess}`}>
-              Domicilio: {formatPrice(order.delivery_price, order.delivery_currency ?? 'CUP')}
-            </p>
+            <div className={`mt-4 ${sellerAlertSuccess}`}>
+              <p>Domicilio: {formatPrice(order.delivery_price, order.delivery_currency ?? 'CUP')}</p>
+              <CourierPriceLine amount={order.delivery_price} currency={order.delivery_currency} feeAmount={order.mensajeria?.fee_amount} feeCurrency={order.mensajeria?.fee_currency} />
+            </div>
           ) : null}
 
           {isQvaOrder ? (
@@ -912,7 +957,7 @@ export default function SellerOrderDetailModal({
               <button type="button" onClick={handleRejectQvaPay} disabled={saving || cancelling} className={`${sellerBtnDanger} min-w-0 flex-1 px-2 text-center leading-tight`}>Rechazar solicitud</button>
               <button type="button" onClick={handleAcceptQvaPay} disabled={saving || cancelling} className={`${sellerBtnPrimary} min-w-0 flex-1 px-2 text-center leading-tight`}>{saving ? 'Creando…' : 'Aceptar y enviar factura'}</button>
             </>
-          ) : isPending && !isQvaOrder && !readOnly ? (
+          ) : canMarkDone ? (
             <button
               type="button"
               onClick={handleComplete}
@@ -927,6 +972,8 @@ export default function SellerOrderDetailModal({
             <span className="flex min-w-0 flex-1 items-center justify-center rounded-xl bg-red-50 px-3 py-2.5 text-center text-xs font-semibold leading-tight text-red-800">Pedido cancelado</span>
           ) : isQvaOrder ? (
             <span className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-brand-green/10 px-3 py-2.5 text-center text-xs font-semibold text-brand-carmelita">Esperando al cliente</span>
+          ) : order.status === 'in_transit' ? (
+            <span className="flex min-w-0 flex-1 items-center justify-center rounded-xl border border-brand-green/10 px-3 py-2.5 text-center text-xs font-semibold text-brand-carmelita">En tránsito</span>
           ) : (
             <span className={`flex min-w-0 flex-1 items-center justify-center rounded-xl px-3 py-2.5 text-center text-xs font-semibold leading-tight ${sellerAlertSuccess}`}>
               Pedido cerrado

@@ -22,6 +22,7 @@ import SellerOrders from './pages/seller/SellerOrders'
 import SellerCustomers from './pages/seller/SellerCustomers'
 import SellerNotifications from './pages/seller/SellerNotifications'
 import SellerGestores from './pages/seller/SellerGestores'
+import { MensajeroLogin, MensajeroPanel, MensajeroRouteGuard, MensajeroSetup, SellerMensajeros } from './mensajeros'
 import SellerProfile from './pages/seller/SellerProfile'
 import GestorRoute from './components/gestor/GestorRoute'
 import GestorLogin from './pages/gestor/GestorLogin'
@@ -168,6 +169,7 @@ const router = createBrowserRouter([
           { path: 'catalogo', element: <SellerCatalog /> },
           { path: 'catalogo/vista-previa', element: <SellerCatalogPreview /> },
           { path: 'gestores', element: <SellerGestores /> },
+          { path: 'mensajeros', element: <SellerMensajeros /> },
           { path: 'pedidos', element: <SellerOrders /> },
           { path: 'notificaciones', element: <SellerNotifications /> },
           { path: 'clientes', element: <SellerCustomers /> },
@@ -220,6 +222,16 @@ const router = createBrowserRouter([
           <GestorRoute>
             <GestorPanel />
           </GestorRoute>
+        ),
+      },
+      { path: 'mensajero/:alias', element: <MensajeroLogin /> },
+      { path: 'mensajero/:alias/setup', element: <MensajeroSetup /> },
+      {
+        path: 'mensajero/:alias/panel',
+        element: (
+          <MensajeroRouteGuard>
+            <MensajeroPanel />
+          </MensajeroRouteGuard>
         ),
       },
       {

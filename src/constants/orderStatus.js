@@ -1,5 +1,6 @@
 export const ORDER_STATUS_LABELS = {
   pending_confirmation: 'Por procesar',
+  in_transit: 'En tránsito',
   completed: 'Compra realizada',
   cancelled: 'Cancelado',
 }
@@ -13,5 +14,6 @@ export function isCustomerPaidOrder(order) {
 
 export const ORDER_STATUS_STYLES = {
   pending_confirmation: 'bg-brand-yellow/20 text-brand-green',
+  in_transit: 'bg-brand-green/12 text-brand-green',
   completed: 'bg-brand-green/12 text-brand-green',
 }

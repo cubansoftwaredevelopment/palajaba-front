@@ -4,9 +4,11 @@ import '@fontsource/great-vibes/latin-400.css'
 import './index.css'
 import App from './App.jsx'
 import { ensureBackgroundUploads } from './lib/backgroundUpload'
+import { startSyncManager } from './syncManager'
 import { LiveLocationProvider } from './live/context/LiveLocationContext.jsx'
 
 ensureBackgroundUploads()
+startSyncManager()
 
 const rootEl = document.getElementById('root')
 if (!rootEl) {

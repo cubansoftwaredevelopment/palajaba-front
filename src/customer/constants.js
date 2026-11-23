@@ -3,10 +3,10 @@ import { buildWhatsAppUrl } from '../lib/whatsappOrder'
 
 export const sectionClass = 'rounded-2xl border border-brand-green/10 bg-brand-white p-4 shadow-sm sm:p-6'
 
-const statusLabel = { pending_confirmation: 'Por procesar', completed: 'Completado', cancelled: 'Cancelado' }
+const statusLabel = { pending_confirmation: 'Por procesar', in_transit: 'En tránsito', completed: 'Completado', cancelled: 'Cancelado' }
 
 export function getBuyerOrderStatusLabel(order) {
-  if (order.status === 'completed' || order.status === 'cancelled') return statusLabel[order.status]
+  if (order.status === 'completed' || order.status === 'cancelled' || order.status === 'in_transit') return statusLabel[order.status]
   if (isCustomerPaidOrder(order)) return 'Pagado'
   const evidenceStatus = order.payment_method === 'qvapay' ? order.qvapay?.evidence?.status : null
   if (evidenceStatus === 'pending') return 'Evidencia enviada'

@@ -1,5 +1,6 @@
 import { downloadBlob } from "./downloadFile";
 import { getUserFacingMessage } from "./userFacingError";
+import { cachedRead, dropSend, enqueueSend, holdSend, releaseHold, rememberRead } from "../syncManager";
 
 /** En dev usa rutas relativas → proxy de Vite. En prod usa VITE_API_URL. */
 function getApiBase() {
@@ -108,27 +109,45 @@ export async function parseApiError(response) {
 }
 
 export async function request(path, options = {}) {
-  const headers = { ...options.headers };
-  const hasBody = options.body != null && options.body !== "";
+  const { clientId, syncSkip, ...fetchOptions } = options;
+  const headers = { ...fetchOptions.headers };
+  const hasBody = fetchOptions.body != null && fetchOptions.body !== "";
   if (
     hasBody &&
     !headers["Content-Type"] &&
-    !(options.body instanceof FormData)
+    !(fetchOptions.body instanceof FormData)
   ) {
     headers["Content-Type"] = "application/json";
+  }
+
+  const method = String(fetchOptions.method || "GET").toUpperCase();
+  const tracked = !syncSkip;
+  let syncId = null;
+  if (tracked && method !== "GET") {
+    syncId = clientId || (globalThis.crypto?.randomUUID?.() ?? `sync-${Date.now()}`);
+    await enqueueSend({ id: syncId, path, method, headers, body: fetchOptions.body });
+    holdSend(syncId);
   }
 
   let response;
   try {
     response = await fetch(`${getApiBase()}${path}`, {
-      ...options,
+      ...fetchOptions,
+      method,
       headers,
     });
   } catch {
+    releaseHold();
+    if (tracked && method === "GET") {
+      const cached = await cachedRead(path);
+      if (cached !== undefined) return cached;
+    }
     throw new ApiError("Error de conexión", { code: NETWORK_ERROR_CODE });
   }
 
   if (!response.ok) {
+    if (syncId) await dropSend(syncId);
+    releaseHold();
     const data = await response.json().catch(() => ({}));
     const parsed = parseApiErrorDetail(data.detail);
     const fallback =
@@ -148,11 +167,16 @@ export async function request(path, options = {}) {
     });
   }
 
+  if (syncId) await dropSend(syncId);
+  releaseHold();
+
   if (response.status === 204) {
     return null;
   }
 
-  return response.json();
+  const payload = await response.json();
+  if (tracked && method === "GET") await rememberRead(path, payload);
+  return payload;
 }
 
 export function updateSellerStoreBanner(token, bannerId, isActive) {

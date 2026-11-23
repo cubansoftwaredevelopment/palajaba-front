@@ -1,4 +1,4 @@
-export default function AuthHeader({ eyebrow, title, description, layout = 'center' }) {
+export default function AuthHeader({ eyebrow, title, description, layout = 'center', titleId }) {
   const alignment =
     layout === 'desktop-left' ? 'text-center lg:text-left' : 'text-center'
 
@@ -9,7 +9,7 @@ export default function AuthHeader({ eyebrow, title, description, layout = 'cent
           {eyebrow}
         </p>
       )}
-      <h1 className="font-script text-5xl leading-[1.15] text-brand-carmelita sm:text-6xl">
+      <h1 id={titleId} className="font-script text-5xl leading-[1.15] text-brand-carmelita sm:text-6xl">
         {title}
       </h1>
       {description && (
