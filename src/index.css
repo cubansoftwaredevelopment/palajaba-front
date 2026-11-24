@@ -49,6 +49,7 @@
   --animate-float-delayed: float 6s ease-in-out 1s infinite;
   --animate-avatar-halo: avatar-halo 2.2s ease-out infinite;
   --animate-levitate: levitate 2.8s ease-in-out infinite;
+  --animate-refresh-mascot-in: refresh-mascot-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-pulse-soft: pulse-soft 4s ease-in-out infinite;
   --animate-jaba-badge-bump: jaba-badge-bump 0.35s ease-out;
   --animate-jaba-toast-in: jaba-toast-in 0.28s ease-out;
@@ -321,6 +322,17 @@
     }
     50% {
       transform: translateY(-12px);
+    }
+  }
+
+  @keyframes refresh-mascot-in {
+    from {
+      opacity: 0;
+      transform: translateY(-2.75rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
 

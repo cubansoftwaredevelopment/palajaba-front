@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useOutlet, useLocation } from 'react-router-dom'
 import { stepShift } from './presets'
@@ -22,6 +23,17 @@ export function isBuyerMotionPath(pathname) {
   return true
 }
 
+export function isCustomerAccountPath(pathname) {
+  if (pathname === '/cliente') return true
+  if (!pathname.startsWith('/cliente/')) return false
+  return !pathname.startsWith('/cliente/registro') && !pathname.startsWith('/cliente/recuperar')
+}
+
+function motionFrameKey(pathname) {
+  if (isCustomerAccountPath(pathname)) return '/cliente'
+  return pathname
+}
+
 const reducedShift = {
   initial: false,
   animate: { opacity: 1, x: 0 },
@@ -34,17 +46,32 @@ export default function RouteMotion() {
   const outlet = useOutlet()
   const reduced = useReducedMotion()
   const shift = reduced ? reducedShift : stepShift
+  const frameKey = motionFrameKey(location.pathname)
+  const accountActive = frameKey === '/cliente'
+  const accountPane = useRef(null)
+  if (accountActive) accountPane.current = outlet
 
   return (
     <div className="relative h-dvh w-full overflow-hidden">
-      <AnimatePresence mode="popLayout" initial={false}>
-        <motion.div
-          key={location.pathname}
-          className={reduced ? 'absolute inset-0 h-full w-full overflow-hidden' : 'screen-step absolute inset-0 h-full w-full overflow-hidden'}
-          {...shift}
+      {accountPane.current ? (
+        <div
+          className={`absolute inset-0 h-full w-full overflow-hidden ${accountActive ? 'z-10' : 'hidden'}`}
+          inert={accountActive ? undefined : true}
+          aria-hidden={accountActive ? undefined : true}
         >
-          {outlet}
-        </motion.div>
+          {accountPane.current}
+        </div>
+      ) : null}
+      <AnimatePresence mode="popLayout" initial={false}>
+        {accountActive ? null : (
+          <motion.div
+            key={frameKey}
+            className={reduced ? 'absolute inset-0 z-20 h-full w-full overflow-hidden' : 'screen-step absolute inset-0 z-20 h-full w-full overflow-hidden'}
+            {...shift}
+          >
+            {outlet}
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   )

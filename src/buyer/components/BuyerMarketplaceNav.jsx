@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 import { matchPath, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { fetchMarketplaceFeed } from '../api.js'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
+import { readSection } from '../../session/sectionStore'
+import { readMatchingSnapshot } from '../../session/useSectionSnapshot'
 import { isAdminAuthenticated } from '../../lib/adminAuth'
 import { useBuyerDisplayCurrency } from '../context.js'
 import { getAdditionalMunicipalities, getBuyerLocation, setMarketplaceCategoryFilter } from '../../lib/buyerLocation'
@@ -41,6 +43,14 @@ function WhatsAppMark({ jumping = false, size = 20 }) {
       />
     </svg>
   )
+}
+
+const stockedCategoryCache = new Map()
+
+function stockedCategories(sections) {
+  return (sections ?? [])
+    .filter((section) => (section.total_products ?? section.products?.length ?? 0) > 0)
+    .map((section) => ({ id: section.category_id, name: section.category_name }))
 }
 
 const FEED_ACCOUNT_LINKS = [
@@ -187,20 +197,6 @@ export default function BuyerMarketplaceNav({
   }, [])
 
   useEffect(() => {
-    let cancelled = false
-    fetchRenewalContactPhone()
-      .then((data) => {
-        if (!cancelled) setHelpPhone(data?.renewal_contact_phone || '')
-      })
-      .catch(() => {
-        if (!cancelled) setHelpPhone('')
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  useEffect(() => {
     if (!isCatalog) return undefined
     setCategories(catalogCategories)
     setCategoriesLoading(catalogCategoriesLoading)
@@ -219,6 +215,25 @@ export default function BuyerMarketplaceNav({
 
   useEffect(() => {
     if (isCatalog || !categoryOpen || !provinceId || !municipalityId) return undefined
+    const key = `${provinceId}|${municipalityId}|${currencies.join(',')}`
+    const savedList = stockedCategoryCache.get(key)
+    if (savedList) {
+      setCategories(savedList)
+      setCategoriesLoading(false)
+      return undefined
+    }
+    const home = readMatchingSnapshot(readSection('customer', 'marketplace-home'), {
+      provinceId,
+      municipalityId,
+      currencyKey: currencies.join(','),
+    })
+    if (home?.sections && home.has_more === false) {
+      const stocked = stockedCategories(home.sections)
+      stockedCategoryCache.set(key, stocked)
+      setCategories(stocked)
+      setCategoriesLoading(false)
+      return undefined
+    }
     let cancelled = false
     setCategoriesLoading(true)
     fetchMarketplaceFeed({
@@ -232,9 +247,8 @@ export default function BuyerMarketplaceNav({
     })
       .then((data) => {
         if (cancelled) return
-        const stocked = (data?.sections ?? [])
-          .filter((section) => (section.total_products ?? section.products?.length ?? 0) > 0)
-          .map((section) => ({ id: section.category_id, name: section.category_name }))
+        const stocked = stockedCategories(data?.sections)
+        stockedCategoryCache.set(key, stocked)
         setCategories(stocked)
       })
       .catch(() => {
@@ -316,9 +330,19 @@ export default function BuyerMarketplaceNav({
 
   useEffect(() => () => window.clearTimeout(helpTimerRef.current), [])
 
-  function openHelp() {
+  async function openHelp() {
     if (helpJumping) return
-    const url = buildWhatsAppUrl(helpPhone, HELP_MESSAGE)
+    let phone = helpPhone
+    if (!phone) {
+      try {
+        const data = await fetchRenewalContactPhone()
+        phone = data?.renewal_contact_phone || ''
+        setHelpPhone(phone)
+      } catch {
+        return
+      }
+    }
+    const url = buildWhatsAppUrl(phone, HELP_MESSAGE)
     if (!url) return
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) {
@@ -395,7 +419,6 @@ export default function BuyerMarketplaceNav({
           )) : (
             <BarItem
               label="Ayuda"
-              disabled={!helpPhone}
               onClick={openHelp}
               icon={<WhatsAppMark jumping={helpJumping} />}
             />
@@ -417,7 +440,6 @@ export default function BuyerMarketplaceNav({
         <button
           type="button"
           onClick={openHelp}
-          disabled={!helpPhone}
           aria-label="Ayuda"
           className="fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-green text-white shadow-[0_8px_24px_rgba(89,128,44,0.28)] touch-manipulation disabled:opacity-40"
           style={{ bottom: 'calc(4.75rem + var(--safe-bottom))' }}

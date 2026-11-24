@@ -3,13 +3,57 @@ import { NavLink } from 'react-router-dom'
 import AppDownloadPrompt from '../../appReleases/components/AppDownloadPrompt.jsx'
 import { fetchCustomerPaymentNotifications } from '../../customer/api.js'
 import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerToken, isCustomerAuthenticated } from '../../lib/customerAuth'
-import { connectCustomerEvents } from '../../live/utils'
 import BuyerJabaButton from './BuyerJabaButton'
 
 export const CUSTOMER_NOTICES_EVENT = 'pala-jaba:customer-notices'
 
+let noticeCache = null
+let noticePromise = null
+const noticeListeners = new Set()
+
 function unreadCount(list) {
   return (Array.isArray(list) ? list : []).filter((item) => !item.read_at).length
+}
+
+function publishCustomerNotices(list) {
+  noticeCache = Array.isArray(list) ? list : []
+  noticeListeners.forEach((listener) => listener(noticeCache))
+}
+
+export function readCustomerNotices() {
+  return noticeCache
+}
+
+export function subscribeCustomerNotices(listener) {
+  noticeListeners.add(listener)
+  return () => noticeListeners.delete(listener)
+}
+
+export function ensureCustomerNotices(token) {
+  if (noticeCache) return Promise.resolve(noticeCache)
+  if (!noticePromise) {
+    noticePromise = fetchCustomerPaymentNotifications(token)
+      .then((list) => {
+        publishCustomerNotices(list)
+        return noticeCache
+      })
+      .catch((error) => {
+        noticePromise = null
+        throw error
+      })
+  }
+  return noticePromise
+}
+
+export function upsertCustomerNotice(notification) {
+  if (!notification?.id) return
+  const current = noticeCache || []
+  const exists = current.some((item) => item.id === notification.id)
+  publishCustomerNotices(
+    exists
+      ? current.map((item) => (item.id === notification.id ? { ...item, ...notification } : item))
+      : [notification, ...current],
+  )
 }
 
 function BuyerCustomerNotices() {
@@ -30,23 +74,24 @@ function BuyerCustomerNotices() {
     const token = getCustomerToken()
     let cancelled = false
 
-    function load() {
-      fetchCustomerPaymentNotifications(token)
-        .then((list) => {
-          if (!cancelled) setUnread(unreadCount(list))
-        })
-        .catch(() => {
-          if (!cancelled) setUnread(0)
-        })
+    function apply(list) {
+      if (!cancelled) setUnread(unreadCount(list))
     }
 
-    load()
-    window.addEventListener(CUSTOMER_NOTICES_EVENT, load)
-    const stop = connectCustomerEvents(token, () => load())
+    const cached = readCustomerNotices()
+    if (cached) apply(cached)
+    else ensureCustomerNotices(token).then(apply).catch(() => apply([]))
+
+    const unsubscribe = subscribeCustomerNotices(apply)
+    function onChange() {
+      const latest = readCustomerNotices()
+      if (latest) apply(latest)
+    }
+    window.addEventListener(CUSTOMER_NOTICES_EVENT, onChange)
     return () => {
       cancelled = true
-      window.removeEventListener(CUSTOMER_NOTICES_EVENT, load)
-      stop()
+      unsubscribe()
+      window.removeEventListener(CUSTOMER_NOTICES_EVENT, onChange)
     }
   }, [signedIn])
 

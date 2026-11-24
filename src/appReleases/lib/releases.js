@@ -88,22 +88,25 @@ export function releaseFileHref(release) {
   return resolveAppReleaseFileUrl(release.id) || release.download_url || null
 }
 
-export async function loadMainAppReleases() {
-  try {
-    return await fetchMainAppReleases()
-  } catch {
-    return { android: null, ios: null }
+let mainReleasesPromise = null
+let promptStatusToken = ''
+let promptStatusPromise = null
+
+export function loadMainAppReleases() {
+  if (!mainReleasesPromise) {
+    mainReleasesPromise = fetchMainAppReleases().catch(() => ({ android: null, ios: null }))
   }
+  return mainReleasesPromise
 }
 
-export async function loadAppReleasePromptStatus() {
+export function loadAppReleasePromptStatus() {
   const token = sessionTokenForAppDownload()
-  if (!token) return null
-  try {
-    return await fetchAppReleasePromptStatus(token)
-  } catch {
-    return null
+  if (!token) return Promise.resolve(null)
+  if (!promptStatusPromise || promptStatusToken !== token) {
+    promptStatusToken = token
+    promptStatusPromise = fetchAppReleasePromptStatus(token).catch(() => null)
   }
+  return promptStatusPromise
 }
 
 export function mainsFromPromptStatus(status) {

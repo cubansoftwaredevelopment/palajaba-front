@@ -5,8 +5,16 @@ function authHeaders(token) {
   return { Authorization: `Bearer ${token}` }
 }
 
+let renewalContactPromise = null
+
 export function fetchRenewalContactPhone() {
-  return request('/api/platform/renewal-contact')
+  if (!renewalContactPromise) {
+    renewalContactPromise = request('/api/platform/renewal-contact').catch((error) => {
+      renewalContactPromise = null
+      throw error
+    })
+  }
+  return renewalContactPromise
 }
 
 export function fetchPlanPrices() {

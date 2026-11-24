@@ -2,15 +2,30 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { fetchMarketplaceBanners } from '../api.js'
 import { isUnservableLegacyBannerUrl, resolveMediaUrl } from '../../lib/media'
 
+const bannerCache = new Map()
+
+function bannerCacheKey(provinceId) {
+  return provinceId || ''
+}
+
 export default function BuyerBannerCarousel({ provinceId = null, initialBannerId = null }) {
-  const [banners, setBanners] = useState([])
+  const cacheKey = bannerCacheKey(provinceId)
+  const [banners, setBanners] = useState(() => bannerCache.get(cacheKey) || [])
   const [index, setIndex] = useState(0)
   const [animate, setAnimate] = useState(true)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !bannerCache.has(cacheKey))
   const indexRef = useRef(0)
   indexRef.current = index
 
   useEffect(() => {
+    const saved = bannerCache.get(cacheKey)
+    if (saved) {
+      setBanners(saved)
+      const focus = saved.findIndex((item) => item.id === initialBannerId)
+      setIndex(focus >= 0 ? focus : 0)
+      setLoading(false)
+      return undefined
+    }
     let cancelled = false
     setLoading(true)
     fetchMarketplaceBanners(provinceId)
@@ -19,6 +34,7 @@ export default function BuyerBannerCarousel({ provinceId = null, initialBannerId
         const list = (Array.isArray(data) ? data : []).filter(
           (item) => item?.image_url && !isUnservableLegacyBannerUrl(item.image_url),
         )
+        bannerCache.set(cacheKey, list)
         setBanners(list)
         const focus = list.findIndex((item) => item.id === initialBannerId)
         setIndex(focus >= 0 ? focus : 0)
@@ -32,7 +48,7 @@ export default function BuyerBannerCarousel({ provinceId = null, initialBannerId
     return () => {
       cancelled = true
     }
-  }, [provinceId, initialBannerId])
+  }, [cacheKey, initialBannerId, provinceId])
 
   useEffect(() => {
     if (banners.length <= 1) return undefined

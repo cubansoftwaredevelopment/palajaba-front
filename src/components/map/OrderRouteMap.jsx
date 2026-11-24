@@ -7,7 +7,7 @@ import { resolveMediaUrl } from '../../lib/media'
 import { fetchCustomerOrderTracking, fetchSellerOrderTracking, saveCustomerOrderLocation } from '../../mensajeros/api'
 import { getSellerToken } from '../../lib/sellerAuth'
 
-export default function OrderRouteMap({ orderId, role = 'seller', fullscreen = false }) {
+export default function OrderRouteMap({ orderId, role = 'seller', fullscreen = false, live = true }) {
   const [tracking, setTracking] = useState(null)
   const [message, setMessage] = useState('')
   const [courierOpen, setCourierOpen] = useState(false)
@@ -27,12 +27,17 @@ export default function OrderRouteMap({ orderId, role = 'seller', fullscreen = f
       }
     }
     load()
+    if (!live) {
+      return () => {
+        stopped = true
+      }
+    }
     const timer = window.setInterval(load, 5000)
     return () => {
       stopped = true
       window.clearInterval(timer)
     }
-  }, [orderId, role])
+  }, [live, orderId, role])
 
   async function locate() {
     setMessage('')

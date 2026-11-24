@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import Logo from '../../components/Logo'
 import { BRAND_NAME } from '../../constants/branding'
@@ -31,24 +31,19 @@ export default function BuyerFeedFooter() {
   const returnTo = `${location.pathname}${location.search}`
   const place = placeLine(getBuyerLocation())
 
-  useEffect(() => {
-    let cancelled = false
-    fetchRenewalContactPhone()
-      .then((data) => {
-        if (!cancelled) setSupportPhone(data?.renewal_contact_phone || '')
-      })
-      .catch(() => {
-        if (!cancelled) setSupportPhone('')
-      })
-    return () => {
-      cancelled = true
+  async function contactSupport() {
+    let phone = supportPhone
+    if (!phone) {
+      try {
+        const data = await fetchRenewalContactPhone()
+        phone = data?.renewal_contact_phone || ''
+        setSupportPhone(phone)
+      } catch {
+        return
+      }
     }
-  }, [])
-
-  const supportUrl = buildWhatsAppUrl(supportPhone, SUPPORT_MESSAGE)
-
-  function contactSupport() {
-    if (supportUrl) openExternalUrl(supportUrl)
+    const url = buildWhatsAppUrl(phone, SUPPORT_MESSAGE)
+    if (url) openExternalUrl(url)
   }
 
   return (
@@ -71,7 +66,7 @@ export default function BuyerFeedFooter() {
                 <Link to={PLATFORM_PRIVACY_PATH} state={{ returnTo }} className={linkClass}>Política de privacidad</Link>
               </li>
               <li>
-                <button type="button" onClick={contactSupport} disabled={!supportUrl} className={`${linkClass} disabled:cursor-not-allowed disabled:opacity-40`}>
+                <button type="button" onClick={contactSupport} className={linkClass}>
                   Contactar soporte
                 </button>
               </li>

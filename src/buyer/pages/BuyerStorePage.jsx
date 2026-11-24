@@ -31,6 +31,7 @@ import { getAdditionalMunicipalities } from "../../lib/buyerLocation";
 import { storeGestorPublicPath, storePublicPath } from "../../lib/storeSlug";
 import { resolveUserFacingError } from "../../lib/userFacingError";
 import { usePublicStoreLocation } from "./usePublicStoreLocation";
+import { readMatchingSnapshot, useSectionSnapshot } from "../../session/useSectionSnapshot";
 
 const PAGE_SIZE = 5;
 
@@ -98,8 +99,19 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
   const [additionalMunicipalityIds] = useState(() =>
     getAdditionalMunicipalities(location.province.id),
   );
-  const [catalog, setCatalog] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const placeQuery = {
+    provinceId: location.province.id,
+    municipalityId: location.municipality.id,
+    currencyKey: currencies.join(","),
+    gestor: gestorUsername || "",
+  };
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot(
+    "customer",
+    `marketplace-store:${storeSlug}:${gestorUsername || ""}`,
+  );
+  const cachedCatalog = readMatchingSnapshot(snapshot, placeQuery);
+  const [catalog, setCatalog] = useState(cachedCatalog);
+  const [loading, setLoading] = useState(!cachedCatalog);
   const [loadError, setLoadError] = useState(null);
   const isGestorCatalog = Boolean(gestorUsername);
 
@@ -127,6 +139,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
             limitPerCategory: PAGE_SIZE,
           });
       setCatalog(data);
+      commit(data, placeQuery);
       if (!isGestorCatalog && data?.store?.id) {
         const phones = Array.isArray(data.checkout_phones)
           ? data.checkout_phones
@@ -160,6 +173,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
     additionalMunicipalityIds,
     currencies,
     isGestorCatalog,
+    commit,
     gestorUsername,
     location.municipality.id,
     location.province.id,
@@ -167,6 +181,7 @@ function BuyerStorePageContent({ location, gestorUsername = null }) {
   ]);
 
   useEffect(() => {
+    if (skipInitialRef.current && cachedCatalog) return;
     loadCatalog();
   }, [loadCatalog]);
 

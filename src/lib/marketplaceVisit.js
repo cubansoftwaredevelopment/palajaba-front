@@ -40,10 +40,15 @@ export function buildMarketplaceVisitPayload({ provinceId, municipalityId, sessi
   }
 }
 
-/** Registra visita al home del marketplace sin bloquear la UI. */
+const recordedVisits = new Set()
+
+/** Registra visita al home del marketplace sin bloquear la UI. Una vez por zona en esta pestaña. */
 export function recordMarketplaceVisit({ provinceId, municipalityId }) {
   const payload = buildMarketplaceVisitPayload({ provinceId, municipalityId })
   if (!payload) return
+  const visitKey = `${payload.province_id}:${payload.municipality_id}`
+  if (recordedVisits.has(visitKey)) return
+  recordedVisits.add(visitKey)
 
   fetch(`${getApiBase()}/api/marketplace/visits`, {
     method: 'POST',

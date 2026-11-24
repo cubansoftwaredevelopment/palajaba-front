@@ -21,6 +21,15 @@ export function useSectionSnapshot(role, key) {
   return { snapshot, commit, skipInitialRef }
 }
 
+export function readMatchingSnapshot(snapshot, query) {
+  if (!snapshot?.data || !query) return null
+  const saved = snapshot.query || {}
+  for (const key of Object.keys(query)) {
+    if (saved[key] !== query[key]) return null
+  }
+  return snapshot.data
+}
+
 export function useSectionRefreshing(role, key) {
   const [refreshing, setRefreshing] = useState(() => Boolean(role && key && isSectionRefreshing(role, key)))
 

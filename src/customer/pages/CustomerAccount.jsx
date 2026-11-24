@@ -30,6 +30,7 @@ import NotificationBodyText from '../../components/ui/NotificationBodyText'
 import SellerLogoutModal from '../../components/seller/SellerLogoutModal'
 import { useOrderModalPresence, useSwipeDownSheet } from '../../buyer/components/useOrderModalPresence'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
+import { isCustomerAccountPath } from '../../motion/RouteMotion'
 import { useSheetExitMs } from '../../motion/presets'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
@@ -63,6 +64,14 @@ function releaseClippedScroll(from) {
   }
 }
 
+function contactDraftFromProfile(profile) {
+  return {
+    email: profile?.email || '',
+    phone: profile?.phone || '',
+    identity_card: profile?.identity_card || '',
+  }
+}
+
 function revealAccountSection(id) {
   window.requestAnimationFrame(() => {
     const target = document.getElementById(id)
@@ -84,14 +93,20 @@ export default function CustomerAccount() {
   const navigate = useNavigate()
   const location = useLocation()
   const reducedMotion = useReducedMotion()
-  const section = location.pathname === '/cliente/avisos'
-    ? 'avisos'
-    : CUSTOMER_NAV.find((item) => item.path === location.pathname)?.id || 'perfil'
+  const routedSection = isCustomerAccountPath(location.pathname)
+    ? (location.pathname === '/cliente/avisos'
+      ? 'avisos'
+      : CUSTOMER_NAV.find((item) => item.path === location.pathname)?.id || 'perfil')
+    : null
+  const heldSection = useRef(routedSection || 'perfil')
+  if (routedSection) heldSection.current = routedSection
+  const section = heldSection.current
   const token = getCustomerToken()
   const { snapshot, commit, skipInitialRef } = useSectionSnapshot('customer', 'account')
   const cachedAccount = snapshot?.data
+  const cachedProfile = cachedAccount?.profile ?? null
   const savedNoticeQuery = snapshot?.query ?? {}
-  const [profile, setProfile] = useState(cachedAccount?.profile ?? null)
+  const [profile, setProfile] = useState(cachedProfile)
   const [qvaPayPromptHeld, setQvaPayPromptHeld] = useState(() => Boolean(location.state?.focusQvaPay))
   const [qvaPayPromptSection, setQvaPayPromptSection] = useState(section)
   if (qvaPayPromptSection !== section) {
@@ -123,7 +138,7 @@ export default function CustomerAccount() {
   const [datePeriod, setDatePeriod] = useState('daily')
   const [dateRange, setDateRange] = useState(() => rangeForPeriod('daily'))
   const [dateFilterEnabled, setDateFilterEnabled] = useState(false)
-  const [loading, setLoading] = useState(snapshot == null)
+  const [loading, setLoading] = useState(cachedProfile == null)
   const [error, setError] = useState('')
   const [logoutOpen, setLogoutOpen] = useState(false)
   const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
@@ -138,7 +153,7 @@ export default function CustomerAccount() {
   const [addressText, setAddressText] = useState('')
   const [point, setPoint] = useState(null)
   const [savingAddress, setSavingAddress] = useState(false)
-  const [contactDraft, setContactDraft] = useState({ email: '', phone: '', identity_card: '' })
+  const [contactDraft, setContactDraft] = useState(() => contactDraftFromProfile(cachedProfile))
   const [contactChallenge, setContactChallenge] = useState(null)
   const [contactCode, setContactCode] = useState('')
   const [contactLoading, setContactLoading] = useState(false)
@@ -146,10 +161,17 @@ export default function CustomerAccount() {
   const [profileError, setProfileError] = useState('')
   const [photoUploading, setPhotoUploading] = useState(false)
 
-  const hasAccountRef = useRef(snapshot != null)
+  const hasAccountRef = useRef(cachedProfile != null)
+  const accountScrollRef = useRef(null)
+  const seenSectionRef = useRef(section)
   useEffect(() => {
     hasAccountRef.current = Boolean(profile)
   }, [profile])
+  useEffect(() => {
+    if (seenSectionRef.current === section) return
+    seenSectionRef.current = section
+    accountScrollRef.current?.scrollTo({ top: 0 })
+  }, [section])
 
   const loadPaymentNotifications = useCallback(async ({ append = false, offset = 0, silent = false } = {}) => {
     if (append) setLoadingMoreNotices(true)
@@ -240,7 +262,7 @@ export default function CustomerAccount() {
     void loadPaymentNotifications()
     return undefined
   }, [loadPaymentNotifications, token])
-  const accountReadyRef = useRef(snapshot != null)
+  const accountReadyRef = useRef(cachedProfile != null)
   useEffect(() => {
     if (accountReadyRef.current) return
     queueMicrotask(() => { void load() })
@@ -291,10 +313,12 @@ export default function CustomerAccount() {
       setPaymentNotifications((current) => current.some((item) => item.id === notification.id)
         ? current
         : [notification, ...current])
+      if (!isCustomerAccountPath(window.location.pathname)) return
       void refreshCustomerOrders()
     }, () => {
+      if (!isCustomerAccountPath(window.location.pathname)) return
       void refreshCustomerOrders()
-      void loadPaymentNotifications()
+      void loadPaymentNotifications({ silent: true })
     })
   }, [loadPaymentNotifications, refreshCustomerOrders, token])
 
@@ -592,7 +616,7 @@ export default function CustomerAccount() {
         }}
         onDone={(dismissForever) => { void finishQvaPayPrompt(dismissForever) }}
       />
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain pb-[calc(5.5rem+var(--safe-bottom))]" {...pullHandlers}>
+      <main ref={accountScrollRef} className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain pb-[calc(5.5rem+var(--safe-bottom))]" {...pullHandlers}>
         <header className="sticky top-0 z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 pt-[max(0.75rem,var(--safe-top))] pb-3 backdrop-blur-md sm:px-5 lg:px-8 lg:pt-[max(1rem,var(--safe-top))] lg:pb-4">
           <div className="mx-auto flex w-full max-w-md items-center gap-2.5 sm:gap-3 lg:max-w-none">
             <Link

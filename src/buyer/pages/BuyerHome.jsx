@@ -43,6 +43,7 @@ import {
   MARKETPLACE_LABEL,
 } from "../../constants/branding";
 import { markFrontendReady } from "../../lib/frontendReady";
+import { readMatchingSnapshot, useSectionSnapshot } from "../../session/useSectionSnapshot";
 
 const ROW_PAGE_SIZE = 5;
 const SEARCH_PAGE_SIZE = 20;
@@ -80,8 +81,17 @@ export default function BuyerHome() {
 function BuyerHomeContent({ preview = null }) {
   const location = preview ?? getBuyerLocation();
   const { currencies, toggleCurrency } = useBuyerDisplayCurrency();
-  const [feed, setFeed] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const placeQuery = {
+    provinceId: location.province.id,
+    municipalityId: location.municipality.id,
+    currencyKey: currencies.join(","),
+  };
+  const { snapshot, commit } = useSectionSnapshot("customer", preview ? "marketplace-preview" : "marketplace-home");
+  const cachedFeed = preview ? null : readMatchingSnapshot(snapshot, placeQuery);
+  const zoneKey = `${placeQuery.provinceId}|${placeQuery.municipalityId}|${placeQuery.currencyKey}`;
+  const localFeedKeyRef = useRef(cachedFeed ? zoneKey : "");
+  const [feed, setFeed] = useState(cachedFeed);
+  const [loading, setLoading] = useState(!cachedFeed);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState(null);
   const loadingMoreRef = useRef(false);
@@ -148,21 +158,20 @@ function BuyerHomeContent({ preview = null }) {
           limit: SECTION_PAGE_SIZE,
           offset,
         });
+        let nextFeed = data;
         setFeed((current) => {
           if (!append || !current) return data;
-          const seen = new Set(
-            current.sections.map((section) => section.category_id),
-          );
-          return {
+          const seen = new Set(current.sections.map((section) => section.category_id));
+          nextFeed = {
             ...data,
             sections: [
               ...current.sections,
-              ...data.sections.filter(
-                (section) => !seen.has(section.category_id),
-              ),
+              ...data.sections.filter((section) => !seen.has(section.category_id)),
             ],
           };
+          return nextFeed;
         });
+        if (!preview) commit(nextFeed, placeQuery);
         if (!append) markFrontendReady();
       } catch (err) {
         if (!append) {
@@ -184,12 +193,18 @@ function BuyerHomeContent({ preview = null }) {
         }
       }
     },
-    [additionalMunicipalityIds, currencies, location.municipality.id, location.province.id],
+    [additionalMunicipalityIds, commit, currencies, location.municipality.id, location.province.id, preview],
   );
 
   useEffect(() => {
+    if (cachedFeed) {
+      localFeedKeyRef.current = zoneKey;
+      return;
+    }
+    if (localFeedKeyRef.current === zoneKey) return;
+    localFeedKeyRef.current = zoneKey;
     loadFeed();
-  }, [loadFeed]);
+  }, [cachedFeed, loadFeed, zoneKey]);
 
   useEffect(() => {
     if (!loadError) return undefined;
@@ -336,6 +351,25 @@ function BuyerHomeContent({ preview = null }) {
     <BuyerAssortmentHints hints={assortmentHints} onCurrency={toggleCurrency} />
   );
 
+  function rememberSectionProducts(categoryId, incoming, hasMore) {
+    let nextFeed = null;
+    setFeed((current) => {
+      if (!current) return current;
+      const sections = current.sections.map((item) => {
+        if (item.category_id !== categoryId) return item;
+        const seen = new Set((item.products || []).map((product) => product.id));
+        return {
+          ...item,
+          products: [...(item.products || []), ...incoming.filter((product) => !seen.has(product.id))],
+          has_more: hasMore,
+        };
+      });
+      nextFeed = { ...current, sections };
+      return nextFeed;
+    });
+    if (nextFeed && !preview) commit(nextFeed, placeQuery);
+  }
+
   useEffect(() => {
     const sentinel = sentinelRef.current;
     if (!sentinel || !hasMoreSections || loading || loadingMore || showSearchGrid)
@@ -468,10 +502,12 @@ function BuyerHomeContent({ preview = null }) {
                       globalCategoryId: section.category_id,
                       limit: ROW_PAGE_SIZE,
                       offset,
-                    }).then((data) => ({
-                      products: data.products,
-                      has_more: data.has_more,
-                    }))
+                    }).then((data) => {
+                      const products = data.products || [];
+                      const hasMore = Boolean(data.has_more);
+                      rememberSectionProducts(section.category_id, products, hasMore);
+                      return { products, has_more: hasMore };
+                    })
                   }
                 />
               ))}

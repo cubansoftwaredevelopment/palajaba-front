@@ -2,11 +2,10 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
 import { BRAND_NAME } from '../../constants/branding'
-import { fetchCustomerPaymentNotifications } from '../../customer/api.js'
 import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerToken, isCustomerAuthenticated } from '../../lib/customerAuth'
 import { connectCustomerEvents } from '../../live/utils'
 import { isBuyerMotionPath } from '../../motion/RouteMotion'
-import { CUSTOMER_NOTICES_EVENT } from './BuyerHeaderTools'
+import { CUSTOMER_NOTICES_EVENT, ensureCustomerNotices, upsertCustomerNotice } from './BuyerHeaderTools'
 
 function asToast(notification) {
   const fromAdmin = Boolean(notification.from_admin) || notification.kind === 'admin'
@@ -57,7 +56,7 @@ export default function CustomerNoticeToasts() {
       toastedIds.clear()
       setToasts([])
       if (!token) return
-      fetchCustomerPaymentNotifications(token)
+      ensureCustomerNotices(token)
         .then((list) => {
           if (cancelled || current !== generation) return
           push((Array.isArray(list) ? list : []).filter((item) => !item.read_at))
@@ -65,6 +64,7 @@ export default function CustomerNoticeToasts() {
         .catch(() => {})
       stopEvents = connectCustomerEvents(token, (notification) => {
         if (cancelled || current !== generation || !notification || notification.read_at) return
+        upsertCustomerNotice(notification)
         push([notification])
         window.dispatchEvent(new Event(CUSTOMER_NOTICES_EVENT))
       })

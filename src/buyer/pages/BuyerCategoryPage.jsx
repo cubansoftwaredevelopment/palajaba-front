@@ -24,6 +24,7 @@ import {
 } from '../../lib/buyerLocation'
 import { resolveMarketplaceCategory } from '../../lib/marketplaceCategory'
 import { resolveUserFacingError } from '../../lib/userFacingError'
+import { readMatchingSnapshot, useSectionSnapshot } from '../../session/useSectionSnapshot'
 
 const PAGE_SIZE = 20
 
@@ -48,11 +49,21 @@ function BuyerCategoryPageContent() {
   const sentinelRef = useRef(null)
   const loadingMoreRef = useRef(false)
 
-  const [category, setCategory] = useState(null)
-  const [resolving, setResolving] = useState(true)
-  const [products, setProducts] = useState([])
-  const [hasMore, setHasMore] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const placeQuery = {
+    provinceId: location.province.id,
+    municipalityId: location.municipality.id,
+    currencyKey: currencies.join(','),
+    slug: categorySlug || '',
+  }
+  const { snapshot, commit } = useSectionSnapshot('customer', `marketplace-category:${categorySlug || ''}`)
+  const cached = readMatchingSnapshot(snapshot, placeQuery)
+  const placeKey = `${placeQuery.provinceId}|${placeQuery.municipalityId}|${placeQuery.currencyKey}|${placeQuery.slug}`
+  const localKeyRef = useRef(cached ? placeKey : '')
+  const [category, setCategory] = useState(cached?.category ?? null)
+  const [resolving, setResolving] = useState(!cached)
+  const [products, setProducts] = useState(cached?.products ?? [])
+  const [hasMore, setHasMore] = useState(Boolean(cached?.hasMore))
+  const [loading, setLoading] = useState(!cached)
   const [loadingMore, setLoadingMore] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const [additionalMunicipalityIds] = useState(() =>
@@ -68,6 +79,7 @@ function BuyerCategoryPageContent() {
   }, [additionalMunicipalityIds, location.municipality.id])
 
   useEffect(() => {
+    if (localKeyRef.current === placeKey) return undefined
     let cancelled = false
     const hinted = hintedCategory?.categoryId
       ? {
@@ -101,7 +113,7 @@ function BuyerCategoryPageContent() {
     return () => {
       cancelled = true
     }
-  }, [categorySlug, hintedCategory?.categoryId, hintedCategory?.categoryName])
+  }, [categorySlug, hintedCategory?.categoryId, hintedCategory?.categoryName, placeKey])
 
   const loadProducts = useCallback(
     async ({ offset = 0, append = false } = {}) => {
@@ -125,12 +137,19 @@ function BuyerCategoryPageContent() {
           limit: PAGE_SIZE,
           offset,
         })
+        let nextProducts = data.products ?? []
         setProducts((current) => {
-          if (!append) return data.products ?? []
+          if (!append) return nextProducts
           const seen = new Set(current.map((item) => item.id))
-          return [...current, ...(data.products ?? []).filter((item) => !seen.has(item.id))]
+          nextProducts = [...current, ...nextProducts.filter((item) => !seen.has(item.id))]
+          return nextProducts
         })
-        setHasMore(Boolean(data.has_more))
+        const nextHasMore = Boolean(data.has_more)
+        setHasMore(nextHasMore)
+        if (category) {
+          localKeyRef.current = placeKey
+          commit({ category, products: nextProducts, hasMore: nextHasMore }, placeQuery)
+        }
       } catch (err) {
         if (!append) {
           setLoadError(
@@ -151,10 +170,13 @@ function BuyerCategoryPageContent() {
     },
     [
       additionalMunicipalityIds,
+      category,
       category?.id,
+      commit,
       currencies,
       location.municipality.id,
       location.province.id,
+      placeKey,
     ],
   )
 
@@ -163,9 +185,11 @@ function BuyerCategoryPageContent() {
       setLoading(false)
       return undefined
     }
+    if (localKeyRef.current === placeKey) return undefined
+    localKeyRef.current = placeKey
     loadProducts({ offset: 0, append: false })
     return undefined
-  }, [category?.id, loadProducts])
+  }, [category?.id, loadProducts, placeKey])
 
   useEffect(() => {
     const sentinel = sentinelRef.current

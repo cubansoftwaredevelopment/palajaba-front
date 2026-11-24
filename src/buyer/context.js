@@ -127,6 +127,7 @@ function buildJabaAddedToastMessage(productName) {
 }
 
 const BuyerJabaContext = createContext(null)
+let jabaSyncDone = false
 
 function buildCheckoutPayload(group, storeItems) {
   const gestorItem = storeItems.find((item) => item.gestor_id)
@@ -238,18 +239,22 @@ export function BuyerJabaProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    if (jabaSyncDone) return undefined
     const controller = new AbortController()
 
     async function syncOnLoad() {
-      if (!getJabaItems().length) return
+      if (!getJabaItems().length) {
+        if (!controller.signal.aborted) jabaSyncDone = true
+        return
+      }
 
       try {
         const { removed } = await syncJabaWithBackend(getBuyerLocation(), { signal: controller.signal })
-        if (!controller.signal.aborted && removed.length) {
-          setSyncRemoved(removed)
-        }
+        if (controller.signal.aborted) return
+        jabaSyncDone = true
+        if (removed.length) setSyncRemoved(removed)
       } catch {
-        // Si falla la red, conservamos la jaba local.
+        if (!controller.signal.aborted) jabaSyncDone = true
       }
     }
 

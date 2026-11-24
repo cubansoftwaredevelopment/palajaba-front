@@ -55,12 +55,23 @@ export default function BuyerCategoryProductRow({ section, loadMore, href, store
   }, [])
 
   useEffect(() => {
-    setProducts(section.products)
+    const next = section.products || []
+    setProducts((current) => {
+      if (current.length === next.length && current.every((item, index) => item.id === next[index]?.id)) return current
+      return next
+    })
     setHasMore(section.has_more)
-    setVisibleCount(Math.min(HORIZONTAL_BATCH, section.products?.length ?? 0))
+    setVisibleCount((count) => {
+      const floor = Math.min(HORIZONTAL_BATCH, next.length)
+      if (count >= floor && count <= next.length) return count
+      return floor
+    })
+  }, [section.category_id, section.products, section.has_more])
+
+  useEffect(() => {
     setError('')
     holdUntilLeaveRef.current = false
-  }, [section.category_id, section.products, section.has_more])
+  }, [section.category_id])
 
   useEffect(() => {
     updateScrollState()

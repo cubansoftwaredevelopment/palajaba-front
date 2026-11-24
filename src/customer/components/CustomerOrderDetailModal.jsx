@@ -134,7 +134,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
         panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'customer-order-detail-title' }}
       >
         <div className="mx-auto mb-3 h-1 w-10 shrink-0 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
-        {order.delivery_requested ? <OrderRouteMap orderId={order.id} role="customer" fullscreen /> : null}
+        {order.delivery_requested ? <OrderRouteMap orderId={order.id} role="customer" fullscreen live={order.status === 'in_transit'} /> : null}
         <div className="mt-4 flex items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-brand-carmelita/60">Pedido #{String(order.id || '').slice(-6).toUpperCase()}</p>
