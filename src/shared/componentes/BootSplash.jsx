@@ -4,7 +4,7 @@ import { animate, motion, useMotionValue, useReducedMotion } from 'framer-motion
 import { stepShift } from '../../motion/presets.js'
 import { FRONTEND_READY_EVENT } from '../utils/frontendReady.js'
 
-const TAGLINE = 'El que quiere vender vende y que que quiere comprar resuelve'
+const TAGLINE = 'El que quiere vender vende y el que quiere comprar resuelve'
 const LABEL = "Pa' La Jaba"
 const TRAVEL_S = 0.4
 const HOLD_MS = 1000
