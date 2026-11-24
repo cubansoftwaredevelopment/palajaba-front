@@ -42,12 +42,12 @@ export default function MensajeroSetup() {
   }
 
   return (
-    <MensajeroEntrySheet titleId="mensajero-setup-title" onClose={() => navigate(mensajeroLoginPath(alias), { replace: true })}>
+    <MensajeroEntrySheet titleId="mensajero-setup-title" onClose={() => { if (window.history.length > 1) navigate(-1); else navigate('/', { replace: true }) }}>
       {toastNode}
       <AuthHeader titleId="mensajero-setup-title" title="Crea tu contraseña" description="Con ella entras a tus mensajerías." />
       <form className="space-y-4" noValidate onSubmit={handleSubmit}>
         <PasswordField id="mensajero-new-password" label="Contraseña" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" required={false} />
-        <PasswordField id="mensajero-confirm-password" label="Confirmar" value={confirm} onChange={(event) => setConfirm(event.target.value)} autoComplete="new-password" required={false} />
+        <PasswordField id="mensajero-confirm-password" label="Confirmar contraseña" value={confirm} onChange={(event) => setConfirm(event.target.value)} autoComplete="new-password" required={false} />
         <Button type="submit" disabled={loading}>{loading ? 'Guardando…' : 'Guardar contraseña'}</Button>
       </form>
     </MensajeroEntrySheet>

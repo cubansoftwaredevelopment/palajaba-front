@@ -9,7 +9,7 @@ import SellerLogoutModal from '../../seller/componentes/SellerLogoutModal.jsx'
 import SellerNotificationToast from '../../seller/componentes/SellerNotificationToast.jsx'
 import { sellerBtnPrimary, sellerBtnSecondary, sellerFocusRing, sellerHeader, sellerHeaderInner, sellerPageWrap } from '../../seller/componentes/sellerStyles.js'
 import { formatOrderDateTime } from '../../shared/utils/dates.js'
-import { fetchMensajeroSummary, markMensajeroNoticeRead, startMensajeroBatch } from '../api'
+import { fetchMensajeroMe, fetchMensajeroSummary, markMensajeroNoticeRead, startMensajeroBatch } from '../api'
 import CompletedRouteModal from '../componentes/CompletedRouteModal.jsx'
 import EvidenceGallery from '../componentes/EvidenceGallery.jsx'
 import OrderCourierCost from '../componentes/OrderCourierCost.jsx'
@@ -128,8 +128,27 @@ export default function MensajeroPanel() {
     () => runSectionRefresh('mensajero', 'summary', () => load()),
     [load],
   )
-  const { handlers: pullHandlers } = usePullToRefresh(refreshSummary)
+  const refreshProfile = useCallback(
+    () => runSectionRefresh('mensajero', 'profile', async () => {
+      try {
+        const next = await fetchMensajeroMe()
+        setProfile(next)
+        updateMensajeroProfile(next)
+        setError('')
+      } catch (err) {
+        setError(err.message)
+      }
+    }),
+    [],
+  )
+  const refresh = useCallback(
+    () => (section === 'profile' && !batch ? refreshProfile() : refreshSummary()),
+    [section, batch, refreshProfile, refreshSummary],
+  )
+  const { handlers: pullHandlers } = usePullToRefresh(refresh)
   const summaryRefreshing = useSectionRefreshing('mensajero', 'summary')
+  const profileRefreshing = useSectionRefreshing('mensajero', 'profile')
+  const refreshing = section === 'profile' && !batch ? profileRefreshing : summaryRefreshing
 
   useEffect(() => {
     startMensajeroPush().catch(() => {})
@@ -235,7 +254,7 @@ export default function MensajeroPanel() {
         </div>
       </header>
       <main className={`${sellerPageWrap} mx-auto min-h-0 w-full flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-[calc(5.5rem+var(--safe-bottom))]`} {...pullHandlers}>
-        <SectionRefreshMascot active={summaryRefreshing} />
+        <SectionRefreshMascot active={refreshing} />
         {error ? <p className="mb-3 text-sm font-semibold text-red-700">{error}</p> : null}
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div key={batch ? `route-${batch.id}` : section} className={stepClass} {...shift}>

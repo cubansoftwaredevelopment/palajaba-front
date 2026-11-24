@@ -67,6 +67,10 @@ export function mensajeroSetup(payload) {
   return request('/api/mensajeros/setup', { method: 'POST', body: JSON.stringify(payload) })
 }
 
+export function fetchMensajeroMe() {
+  return request('/api/mensajeros/me', { headers: authHeaders(getMensajeroToken()) })
+}
+
 export function fetchMensajeroSummary(params = {}) {
   const search = new URLSearchParams()
   if (params.start) search.set('start', params.start)

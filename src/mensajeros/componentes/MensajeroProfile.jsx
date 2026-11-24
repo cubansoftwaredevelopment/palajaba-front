@@ -32,6 +32,7 @@ export default function MensajeroProfile({ profile, onChange }) {
   const [photoKey, setPhotoKey] = useState(0)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   async function onPhoto(event) {
     const file = event.target.files?.[0]
@@ -48,7 +49,9 @@ export default function MensajeroProfile({ profile, onChange }) {
 
   async function onVehicle(event) {
     event.preventDefault()
+    if (saving) return
     setError('')
+    setMessage('')
     if (!vehicleType) {
       setError('Elige un tipo de vehículo.')
       return
@@ -61,6 +64,8 @@ export default function MensajeroProfile({ profile, onChange }) {
       setError('Puedes subir hasta 5 fotos del vehículo.')
       return
     }
+    const wasEditing = Boolean(editing)
+    setSaving(true)
     try {
       const payload = {
         vehicleType,
@@ -77,9 +82,11 @@ export default function MensajeroProfile({ profile, onChange }) {
       setVehicleType('moto')
       setPlate('')
       clearPhotos()
-      setMessage(editing ? 'Vehículo actualizado.' : 'Vehículo guardado.')
+      setMessage(wasEditing ? 'Vehículo actualizado.' : 'Vehículo guardado.')
     } catch (err) {
       setError(err.message)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -170,7 +177,8 @@ export default function MensajeroProfile({ profile, onChange }) {
         </label>
         <p className="min-w-0 font-display text-2xl font-bold leading-tight text-brand-carmelita">{[profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.username}</p>
       </div>
-      <form className="space-y-2 rounded-2xl border border-brand-green/12 bg-brand-white p-3" onSubmit={onVehicle}>
+      <form className="rounded-2xl border border-brand-green/12 bg-brand-white p-3" onSubmit={onVehicle} aria-busy={saving}>
+        <fieldset disabled={saving} className="space-y-2 border-0 p-0 disabled:opacity-70">
         <SellerFilterDropdown
           label="Vehículo"
           placeholder="Tipo de vehículo"
@@ -198,7 +206,14 @@ export default function MensajeroProfile({ profile, onChange }) {
           </div>
         </div>
         <div className="flex gap-2">
-          <button className={sellerBtnPrimary} type="submit">{editing ? 'Guardar' : 'Agregar vehículo'}</button>
+          <button className={sellerBtnPrimary} type="submit" aria-disabled={saving}>
+            {saving ? (
+              <span className="inline-flex items-center gap-2">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
+                Subiendo…
+              </span>
+            ) : editing ? 'Guardar' : 'Agregar vehículo'}
+          </button>
           {editing ? <button className={sellerBtnSecondary} type="button" onClick={cancelEdit}>Cancelar</button> : null}
         </div>
         <ul className="space-y-2 text-sm text-brand-carmelita">
@@ -219,6 +234,8 @@ export default function MensajeroProfile({ profile, onChange }) {
             </li>
           ))}
         </ul>
+        </fieldset>
+        {saving ? <p role="status" className="mt-2 text-sm font-semibold text-brand-carmelita">Subiendo el vehículo…</p> : null}
       </form>
       {toDelete ? (
         <ConfirmModal

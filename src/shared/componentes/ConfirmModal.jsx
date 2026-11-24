@@ -72,16 +72,18 @@ export default function ConfirmModal({
 
           <div className="mt-6 flex w-full flex-col gap-2.5">
             {children}
-            {confirmLabel ? (
-              <Button type="button" variant={confirmVariant} onClick={onConfirm}>
-                {confirmLabel}
-              </Button>
-            ) : null}
-            {cancelLabel ? (
-              <Button type="button" variant="ghost" onClick={onClose}>
-                {cancelLabel}
-              </Button>
-            ) : null}
+            <div className={`flex w-full gap-2.5 ${confirmLabel && cancelLabel ? 'flex-row' : 'flex-col'}`}>
+              {confirmLabel ? (
+                <Button type="button" variant={confirmVariant} className={cancelLabel ? 'min-w-0 flex-1 !w-auto' : ''} onClick={onConfirm}>
+                  {confirmLabel}
+                </Button>
+              ) : null}
+              {cancelLabel ? (
+                <Button type="button" variant="ghost" className={confirmLabel ? 'min-w-0 flex-1 !w-auto' : ''} onClick={onClose}>
+                  {cancelLabel}
+                </Button>
+              ) : null}
+            </div>
           </div>
         </div>
     </SellerMotionSheet>,
