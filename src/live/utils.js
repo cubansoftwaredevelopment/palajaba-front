@@ -28,6 +28,14 @@ export function connectSellerEvents(accessToken, onNotification, onDataUpdate) {
           onNotification(data.notification)
         } else if (data?.type === 'seller_data_update') {
           onDataUpdate?.(data)
+        } else if (data?.type === 'app_release_update' && data.release) {
+          window.dispatchEvent(new CustomEvent(OPEN_APP_UPDATE_EVENT, {
+            detail: {
+              release: data.release,
+              platform: data.release.platform || '',
+              version: data.release.version || '',
+            },
+          }))
         }
       } catch {
         /* mensaje ignorado */
@@ -62,6 +70,14 @@ export function connectCustomerEvents(accessToken, onNotification, onDataUpdate)
           onNotification?.(data.notification)
         } else if (data?.type === 'customer_data_update') {
           onDataUpdate?.(data)
+        } else if (data?.type === 'app_release_update' && data.release) {
+          window.dispatchEvent(new CustomEvent(OPEN_APP_UPDATE_EVENT, {
+            detail: {
+              release: data.release,
+              platform: data.release.platform || '',
+              version: data.release.version || '',
+            },
+          }))
         }
       } catch {
         /* mensaje ignorado */

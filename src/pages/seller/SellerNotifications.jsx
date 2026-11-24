@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import NoticeDateFilter from '../../components/filters/NoticeDateFilter'
 import RenewPlanButton from '../../components/seller/RenewPlanButton'
@@ -18,6 +18,11 @@ import {
 } from '../../lib/api'
 import { formatRelativeTime } from '../../lib/dates'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
+
+const NOTIFICATION_PAGE = 10
 import {
   OPEN_SELLER_NOTIFICATIONS_EVENT,
   SELLER_NOTIFICATIONS_CHANGED_EVENT,
@@ -134,11 +139,19 @@ function NotificationCard({ notification, onMarkRead, storeName = '' }) {
 export default function SellerNotifications() {
   const { profile } = useOutletContext()
   const storeName = profile?.store_name || ''
-  const [notifications, setNotifications] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'notifications')
+  const cachedNotes = snapshot?.data
+  const [notifications, setNotifications] = useState(cachedNotes?.items ?? [])
+  const [hasMore, setHasMore] = useState(Boolean(cachedNotes?.hasMore))
+  const [loading, setLoading] = useState(snapshot == null)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [dateFrom, setDateFrom] = useState(snapshot?.query?.dateFrom ?? '')
+  const [dateTo, setDateTo] = useState(snapshot?.query?.dateTo ?? '')
   const [markingAll, setMarkingAll] = useState(false)
+  const notificationsRef = useRef(notifications)
+  useEffect(() => {
+    notificationsRef.current = notifications
+  }, [notifications])
 
   const unreadCount = useMemo(
     () => notifications.filter((item) => !item.read_at).length,
@@ -150,23 +163,41 @@ export default function SellerNotifications() {
   )
   const datesActive = Boolean(dateFrom || dateTo)
 
-  const loadNotifications = useCallback(async () => {
+  const loadNotifications = useCallback(async ({ silent = false, append = false, offset = 0 } = {}) => {
     const token = getSellerToken()
     if (!token) return
-    setLoading(true)
+    if (append) setLoadingMore(true)
+    else if (!silent && notificationsRef.current.length === 0) setLoading(true)
     try {
-      const data = await fetchSellerNotifications(token, { dateFrom, dateTo })
-      setNotifications(Array.isArray(data) ? data : [])
+      const page = await fetchSellerNotifications(token, {
+        dateFrom,
+        dateTo,
+        offset,
+        limit: NOTIFICATION_PAGE,
+        paged: true,
+      })
+      const items = Array.isArray(page?.items) ? page.items : []
+      const next = append ? [...notificationsRef.current, ...items] : items
+      setNotifications(next)
+      setHasMore(Boolean(page?.has_more))
+      commit({ items: next, hasMore: Boolean(page?.has_more) }, { dateFrom, dateTo })
     } catch {
-      setNotifications([])
+      if (!silent && !append) {
+        setNotifications([])
+        setHasMore(false)
+      }
     } finally {
       setLoading(false)
+      setLoadingMore(false)
     }
-  }, [dateFrom, dateTo])
+  }, [dateFrom, dateTo, commit])
 
   useEffect(() => {
+    if (skipInitialRef.current) return
     void loadNotifications()
   }, [loadNotifications])
+
+  useRegisterSectionRefresh(() => runSectionRefresh('seller', 'notifications', () => loadNotifications({ silent: true })))
 
   useEffect(() => {
     function onOpen() {
@@ -181,9 +212,9 @@ export default function SellerNotifications() {
     if (!token) return
     try {
       const updated = await markSellerNotificationRead(token, notificationId)
-      setNotifications((current) =>
-        current.map((item) => (item.id === updated.id ? updated : item)),
-      )
+      const next = notifications.map((item) => (item.id === updated.id ? updated : item))
+      setNotifications(next)
+      commit({ items: next, hasMore }, { dateFrom, dateTo })
       notifyChanged()
     } catch {
       notifyChanged()
@@ -240,7 +271,7 @@ export default function SellerNotifications() {
         </div>
       ) : null}
 
-      {loading ? (
+      {loading && notifications.length === 0 ? (
         <LoadingState variant="compact" message="Cargando avisos…" className="py-14" />
       ) : null}
 
@@ -263,7 +294,7 @@ export default function SellerNotifications() {
         </div>
       ) : null}
 
-      {!loading && notifications.length > 0 ? (
+      {notifications.length > 0 ? (
         <ul className="flex flex-col divide-y divide-neutral-300">
           {notifications.map((notification) => (
             <li key={notification.id}>
@@ -275,6 +306,16 @@ export default function SellerNotifications() {
             </li>
           ))}
         </ul>
+      ) : null}
+      {hasMore ? (
+        <button
+          type="button"
+          onClick={() => loadNotifications({ append: true, offset: notifications.length, silent: true })}
+          disabled={loadingMore}
+          className={`${sellerBtnSecondary} mx-auto !min-h-10 !w-auto !px-4 !py-2 !text-sm`}
+        >
+          {loadingMore ? 'Cargando…' : 'Cargar más avisos'}
+        </button>
       ) : null}
     </div>
   )

@@ -24,6 +24,9 @@ import {
   maxGestoresForPlan,
 } from '../../lib/gestorPlanLimits'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
 import {
   areAllProductsSelected,
@@ -79,12 +82,17 @@ export default function SellerGestores() {
   const loginUrl = storeSlug
     ? `${getPublicSiteOrigin()}${gestorLoginPath(storeSlug)}`
     : ''
-  const [gestores, setGestores] = useState([])
-  const [products, setProducts] = useState([])
-  const [savedAccess, setSavedAccess] = useState(null)
-  const [accessMode, setAccessMode] = useState('selected')
-  const [selectedIds, setSelectedIds] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'gestores')
+  const cached = snapshot?.data
+  const restoredAccess = cached
+    ? deriveSelectionFromAccess(cached.access, cached.products)
+    : { mode: 'selected', selectedIds: [] }
+  const [gestores, setGestores] = useState(cached?.list ?? [])
+  const [products, setProducts] = useState(cached?.products ?? [])
+  const [savedAccess, setSavedAccess] = useState(cached?.access ?? null)
+  const [accessMode, setAccessMode] = useState(restoredAccess.mode)
+  const [selectedIds, setSelectedIds] = useState(restoredAccess.selectedIds)
+  const [loading, setLoading] = useState(!cached)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
@@ -98,16 +106,16 @@ export default function SellerGestores() {
   const [savingAccess, setSavingAccess] = useState(false)
   const [accessError, setAccessError] = useState('')
 
-  const [savedCheckoutIds, setSavedCheckoutIds] = useState([])
-  const [checkoutIds, setCheckoutIds] = useState([])
-  const [savedIncludeStorePhone, setSavedIncludeStorePhone] = useState(true)
-  const [includeStorePhone, setIncludeStorePhone] = useState(true)
+  const [savedCheckoutIds, setSavedCheckoutIds] = useState(cached?.checkoutIds ?? [])
+  const [checkoutIds, setCheckoutIds] = useState(cached?.checkoutIds ?? [])
+  const [savedIncludeStorePhone, setSavedIncludeStorePhone] = useState(cached?.includeStore ?? true)
+  const [includeStorePhone, setIncludeStorePhone] = useState(cached?.includeStore ?? true)
   const [savingCheckoutPhones, setSavingCheckoutPhones] = useState(false)
   const [checkoutPhonesError, setCheckoutPhonesError] = useState('')
   const [copiedLoginUrl, setCopiedLoginUrl] = useState(false)
 
   const loadAll = useCallback(async () => {
-    setLoading(true)
+    setLoading((current) => current && !cached)
     setError('')
     try {
       const token = getSellerToken()
@@ -131,6 +139,13 @@ export default function SellerGestores() {
       setCheckoutIds(ids)
       setSavedIncludeStorePhone(includeStore)
       setIncludeStorePhone(includeStore)
+      commit({
+        list,
+        products: networkProducts,
+        access,
+        checkoutIds: ids,
+        includeStore,
+      })
     } catch (err) {
       setGestores([])
       setProducts([])
@@ -142,11 +157,25 @@ export default function SellerGestores() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [commit])
 
   useEffect(() => {
+    if (skipInitialRef.current) return
     loadAll()
   }, [loadAll])
+
+  useRegisterSectionRefresh(() => runSectionRefresh('seller', 'gestores', () => loadAll()))
+
+  useEffect(() => {
+    if (loading || error) return
+    commit({
+      list: gestores,
+      products,
+      access: savedAccess,
+      checkoutIds: savedCheckoutIds,
+      includeStore: savedIncludeStorePhone,
+    })
+  }, [loading, error, gestores, products, savedAccess, savedCheckoutIds, savedIncludeStorePhone, commit])
 
   const draftAccess = useMemo(
     () => buildCatalogAccessPayload(accessMode, selectedIds),

@@ -1,3 +1,5 @@
+import { clearRoleSections } from '../session/sectionStore'
+
 const TOKEN_KEY = 'pala_jaba_seller_token'
 const SELLER_KEY = 'pala_jaba_seller_profile'
 export const SELLER_AUTH_CHANGE_EVENT = 'pala-jaba:seller-auth-change'
@@ -65,6 +67,7 @@ export function getSellerProfile() {
 export function clearSellerSession() {
   removeStoredValue(TOKEN_KEY)
   removeStoredValue(SELLER_KEY)
+  clearRoleSections('seller')
   notifySellerAuthChange()
 }
 

@@ -1,27 +1,38 @@
 import { useEffect, useState } from 'react'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { fetchSellerQvaPayAccount, saveSellerQvaPayAccount, deleteSellerQvaPayAccount } from '../../auth/api.js'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerSection from './SellerSection'
 import { sellerAlertError, sellerAlertSuccess, sellerBtnDanger, sellerBtnPrimary, sellerHint, sellerInput, sellerLabel } from './sellerStyles'
 
 export default function SellerQvaPaySettings({ onUpdated, readOnly = false }) {
-  const [username, setUsername] = useState('')
-  const [savedUsername, setSavedUsername] = useState('')
-  const [verified, setVerified] = useState(false)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'profile-qvapay')
+  const cached = snapshot?.data
+  const [username, setUsername] = useState(cached?.username ?? '')
+  const [savedUsername, setSavedUsername] = useState(cached?.username ?? '')
+  const [verified, setVerified] = useState(Boolean(cached?.verified))
   const [verificationUnavailable, setVerificationUnavailable] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!cached)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (skipInitialRef.current && cached) return undefined
     let active = true
     fetchSellerQvaPayAccount(getSellerToken())
       .then((data) => {
         if (!active) return
-        setUsername(data.username || '')
-        setSavedUsername(data.username || '')
-        setVerified(Boolean(data.verified))
+        const next = {
+          username: data.username || '',
+          verified: Boolean(data.verified),
+          configured: Boolean(String(data.username || '').trim()),
+          dismissed: Boolean(cached?.dismissed),
+        }
+        setUsername(next.username)
+        setSavedUsername(next.username)
+        setVerified(next.verified)
+        commit(next)
       })
       .catch(() => { if (active) setError('No pudimos cargar tu cuenta QvaPay.') })
       .finally(() => { if (active) setLoading(false) })
@@ -34,8 +45,15 @@ export default function SellerQvaPaySettings({ onUpdated, readOnly = false }) {
     setVerificationUnavailable(false)
     try {
       const data = await saveSellerQvaPayAccount(getSellerToken(), username.trim(), { skipVerification })
-      setUsername(data.username); setSavedUsername(data.username)
-      setVerified(Boolean(data.verified))
+      const next = {
+        username: data.username || '',
+        verified: Boolean(data.verified),
+        configured: Boolean(String(data.username || '').trim()),
+        dismissed: Boolean(snapshot?.data?.dismissed),
+      }
+      setUsername(next.username); setSavedUsername(next.username)
+      setVerified(next.verified)
+      commit(next)
       setMessage(data.verified
         ? 'Tu cuenta QvaPay fue verificada y guardada.'
         : 'Guardamos el usuario sin verificar. La verificación falló por un problema temporal de nuestro lado; puedes volver a intentarlo más tarde.')
@@ -53,7 +71,10 @@ export default function SellerQvaPaySettings({ onUpdated, readOnly = false }) {
     setSaving(true); setError(''); setMessage('')
     try {
       await deleteSellerQvaPayAccount(getSellerToken())
-      setUsername(''); setSavedUsername(''); setVerified(false); setVerificationUnavailable(false); setMessage('Cuenta QvaPay eliminada.'); onUpdated?.()
+      const next = { username: '', verified: false, configured: false, dismissed: Boolean(snapshot?.data?.dismissed) }
+      setUsername(''); setSavedUsername(''); setVerified(false); setVerificationUnavailable(false)
+      commit(next)
+      setMessage('Cuenta QvaPay eliminada.'); onUpdated?.()
     } catch (cause) { setError(cause?.message || 'No pudimos eliminar la cuenta.') }
     finally { setSaving(false) }
   }

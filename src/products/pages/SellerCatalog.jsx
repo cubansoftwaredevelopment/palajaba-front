@@ -29,6 +29,10 @@ import { sellerHasProductDiscounts } from '../../subscriptions/constants.js'
 import { createCatalogProduct, fetchSellerCatalog, updateCatalogProduct } from '../api.js'
 import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { usePullToRefresh } from '../../components/usePullToRefresh'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { resolveStoreSlug } from '../../lib/storeShare'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { BACKGROUND_UPLOAD_EVENT, consumeUploadResults, forgetUploadResult, startBackgroundFormUpload } from '../../lib/backgroundUpload'
@@ -37,8 +41,9 @@ export default function SellerCatalog() {
   const { profile } = useOutletContext()
   const readOnly = useSellerReadOnly()
   const navigate = useNavigate()
-  const [summary, setSummary] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'catalog')
+  const [summary, setSummary] = useState(snapshot?.data ?? null)
+  const [loading, setLoading] = useState(!snapshot?.data)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [showCreateCategory, setShowCreateCategory] = useState(false)
@@ -66,23 +71,34 @@ export default function SellerCatalog() {
     })
   }
 
-  const loadCatalog = useCallback(async () => {
-    setError('')
-    setLoading(true)
+  const loadCatalog = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) {
+      setError('')
+      setLoading(true)
+    }
     try {
       const token = getSellerToken()
       const data = await fetchSellerCatalog(token)
       setSummary(data)
+      commit(data)
     } catch (err) {
       setError(getUserFacingMessage(err, 'No pudimos cargar tu catálogo. Inténtalo de nuevo.'))
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
-  }, [])
+  }, [commit])
 
   useEffect(() => {
+    if (skipInitialRef.current) return
     loadCatalog()
   }, [loadCatalog])
+
+  const refreshCatalog = useCallback(
+    () => runSectionRefresh('seller', 'catalog', () => loadCatalog({ silent: true })),
+    [loadCatalog],
+  )
+  useRegisterSectionRefresh(refreshCatalog)
+  const { handlers: pullHandlers } = usePullToRefresh(refreshCatalog)
 
   useEffect(() => {
     window.addEventListener(SELLER_PRODUCTS_REFRESH_EVENT, loadCatalog)
@@ -205,6 +221,7 @@ export default function SellerCatalog() {
   function handleCategoriesReordered(nextSummary) {
     setShowReorderCategories(false)
     setSummary(nextSummary)
+    commit(nextSummary)
     setSuccessMessage('Orden de categorías actualizado.')
   }
 
@@ -233,6 +250,7 @@ export default function SellerCatalog() {
   function handleProductsOrganized(nextSummary) {
     setCategoryToOrganize(null)
     setSummary(nextSummary)
+    commit(nextSummary)
     setSuccessMessage('Orden de productos actualizado.')
   }
 
@@ -247,7 +265,7 @@ export default function SellerCatalog() {
 
   return (
     <>
-    <section className={sellerCatalogSection}>
+    <section className={sellerCatalogSection} {...pullHandlers}>
       <div className={`${sellerPageWrap} ${sellerSectionGap}`}>
         <SellerPageHeader
           eyebrow="Catálogo"

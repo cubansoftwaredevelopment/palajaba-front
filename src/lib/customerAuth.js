@@ -1,3 +1,5 @@
+import { clearRoleSections } from '../session/sectionStore'
+
 const TOKEN_KEY = 'pala_jaba_customer_token'
 const PROFILE_KEY = 'pala_jaba_customer_profile'
 export const CUSTOMER_AUTH_CHANGE_EVENT = 'pala-jaba:customer-auth-change'
@@ -32,6 +34,7 @@ export function clearCustomerSession() {
   try {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(PROFILE_KEY)
+    clearRoleSections('customer')
     window.dispatchEvent(new CustomEvent(CUSTOMER_AUTH_CHANGE_EVENT, { detail: null }))
   } catch { /* storage may be disabled */ }
 }

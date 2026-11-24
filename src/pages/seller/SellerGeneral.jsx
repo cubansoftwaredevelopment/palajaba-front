@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 
@@ -25,6 +25,9 @@ import { fetchSellerProductsSoldChart, fetchSellerRevenueChart, fetchSellerStats
 import { formatDateTime } from '../../lib/dates'
 import { resolveMediaUrl } from '../../lib/media'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { beginSectionRefresh, endSectionRefresh } from '../../session/sectionStore'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 
 function formatMonthLabel(year, month) {
@@ -35,33 +38,47 @@ function formatMonthLabel(year, month) {
 export default function SellerGeneral() {
   const navigate = useNavigate()
   const { profile: seller } = useOutletContext()
-  const [stats, setStats] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'general')
+  const cached = snapshot?.data
+  const query = snapshot?.query
+  const [reloadTick, setReloadTick] = useState(0)
+  const appliedPeriodRef = useRef(false)
+  const [stats, setStats] = useState(cached?.stats ?? null)
+  const [loading, setLoading] = useState(!cached)
   const [error, setError] = useState('')
-  const [selectedYear, setSelectedYear] = useState(null)
-  const [selectedMonth, setSelectedMonth] = useState(null)
-  const [revenueGranularity, setRevenueGranularity] = useState('daily')
-  const [productsSoldGranularity, setProductsSoldGranularity] = useState('daily')
-  const [revenueChart, setRevenueChart] = useState(null)
-  const [revenueLoading, setRevenueLoading] = useState(true)
+  const [selectedYear, setSelectedYear] = useState(query?.selectedYear ?? null)
+  const [selectedMonth, setSelectedMonth] = useState(query?.selectedMonth ?? null)
+  const [revenueGranularity, setRevenueGranularity] = useState(query?.revenueGranularity ?? 'daily')
+  const [productsSoldGranularity, setProductsSoldGranularity] = useState(query?.productsSoldGranularity ?? 'daily')
+  const [revenueChart, setRevenueChart] = useState(cached?.revenueChart ?? null)
+  const [revenueLoading, setRevenueLoading] = useState(!cached)
   const [revenueError, setRevenueError] = useState('')
-  const [productsSoldChart, setProductsSoldChart] = useState(null)
-  const [productsSoldLoading, setProductsSoldLoading] = useState(true)
+  const [productsSoldChart, setProductsSoldChart] = useState(cached?.productsSoldChart ?? null)
+  const [productsSoldLoading, setProductsSoldLoading] = useState(!cached)
   const [productsSoldError, setProductsSoldError] = useState('')
-  const [topProducts, setTopProducts] = useState(null)
-  const [topProductsLoading, setTopProductsLoading] = useState(true)
+  const [topProducts, setTopProducts] = useState(cached?.topProducts ?? null)
+  const [topProductsLoading, setTopProductsLoading] = useState(!cached)
   const [topProductsError, setTopProductsError] = useState('')
   const [photoOpen, setPhotoOpen] = useState(false)
   const [monthDirection, setMonthDirection] = useState(1)
   const reducedMotion = useReducedMotion()
 
+  useRegisterSectionRefresh(() => setReloadTick((value) => value + 1))
+
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
+    if (skipInitialRef.current) return undefined
+    if (appliedPeriodRef.current) {
+      appliedPeriodRef.current = false
+      return undefined
+    }
 
     let cancelled = false
+    const markRefresh = reloadTick > 0
 
     async function loadStats() {
-      setLoading(true)
+      if (markRefresh) beginSectionRefresh('seller', 'general')
+      else if (!stats) setLoading(true)
       setError('')
       try {
         const token = getSellerToken()
@@ -73,6 +90,7 @@ export default function SellerGeneral() {
         if (!cancelled) {
           setStats(data)
           if (selectedYear == null || selectedMonth == null) {
+            appliedPeriodRef.current = true
             setSelectedYear(data.year)
             setSelectedMonth(data.month)
           }
@@ -84,6 +102,7 @@ export default function SellerGeneral() {
         }
       } finally {
         if (!cancelled) setLoading(false)
+        if (markRefresh) endSectionRefresh('seller', 'general')
       }
     }
 
@@ -91,16 +110,19 @@ export default function SellerGeneral() {
     return () => {
       cancelled = true
     }
-  }, [seller, selectedYear, selectedMonth])
+  }, [seller, selectedYear, selectedMonth, reloadTick])
 
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
     if (selectedYear == null || selectedMonth == null) return undefined
+    if (skipInitialRef.current) return undefined
 
     let cancelled = false
+    const markRefresh = reloadTick > 0
 
     async function loadRevenueChart() {
-      setRevenueLoading(true)
+      if (markRefresh) beginSectionRefresh('seller', 'general')
+      else setRevenueLoading(true)
       setRevenueError('')
       try {
         const token = getSellerToken()
@@ -117,6 +139,7 @@ export default function SellerGeneral() {
         }
       } finally {
         if (!cancelled) setRevenueLoading(false)
+        if (markRefresh) endSectionRefresh('seller', 'general')
       }
     }
 
@@ -124,16 +147,19 @@ export default function SellerGeneral() {
     return () => {
       cancelled = true
     }
-  }, [seller, selectedYear, selectedMonth, revenueGranularity])
+  }, [seller, selectedYear, selectedMonth, revenueGranularity, reloadTick])
 
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
     if (selectedYear == null || selectedMonth == null) return undefined
+    if (skipInitialRef.current) return undefined
 
     let cancelled = false
+    const markRefresh = reloadTick > 0
 
     async function loadProductsSoldChart() {
-      setProductsSoldLoading(true)
+      if (markRefresh) beginSectionRefresh('seller', 'general')
+      else setProductsSoldLoading(true)
       setProductsSoldError('')
       try {
         const token = getSellerToken()
@@ -150,6 +176,7 @@ export default function SellerGeneral() {
         }
       } finally {
         if (!cancelled) setProductsSoldLoading(false)
+        if (markRefresh) endSectionRefresh('seller', 'general')
       }
     }
 
@@ -157,15 +184,18 @@ export default function SellerGeneral() {
     return () => {
       cancelled = true
     }
-  }, [seller, selectedYear, selectedMonth, productsSoldGranularity])
+  }, [seller, selectedYear, selectedMonth, productsSoldGranularity, reloadTick])
 
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
+    if (skipInitialRef.current) return undefined
 
     let cancelled = false
+    const markRefresh = reloadTick > 0
 
     async function loadTopProducts() {
-      setTopProductsLoading(true)
+      if (markRefresh) beginSectionRefresh('seller', 'general')
+      else setTopProductsLoading(true)
       setTopProductsError('')
       try {
         const token = getSellerToken()
@@ -178,6 +208,7 @@ export default function SellerGeneral() {
         }
       } finally {
         if (!cancelled) setTopProductsLoading(false)
+        if (markRefresh) endSectionRefresh('seller', 'general')
       }
     }
 
@@ -185,7 +216,15 @@ export default function SellerGeneral() {
     return () => {
       cancelled = true
     }
-  }, [seller])
+  }, [seller, reloadTick])
+
+  useEffect(() => {
+    if (!stats) return
+    commit(
+      { stats, revenueChart, productsSoldChart, topProducts },
+      { selectedYear, selectedMonth, revenueGranularity, productsSoldGranularity },
+    )
+  }, [stats, revenueChart, productsSoldChart, topProducts, selectedYear, selectedMonth, revenueGranularity, productsSoldGranularity, commit])
 
   useEffect(() => {
     if (!stats?.period) return

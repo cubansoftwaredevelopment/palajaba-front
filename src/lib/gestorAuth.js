@@ -1,3 +1,5 @@
+import { clearRoleSections } from '../session/sectionStore'
+
 const TOKEN_KEY = 'pala_jaba_gestor_token'
 const GESTOR_KEY = 'pala_jaba_gestor_profile'
 const CONTEXT_KEY = 'pala_jaba_gestor_context'
@@ -72,6 +74,7 @@ export function clearGestorSession() {
   removeStoredValue(TOKEN_KEY)
   removeStoredValue(GESTOR_KEY)
   removeStoredValue(CONTEXT_KEY)
+  clearRoleSections('gestor')
 }
 
 export function isGestorAuthenticated() {

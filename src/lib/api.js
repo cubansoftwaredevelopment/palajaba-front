@@ -469,10 +469,14 @@ export function fetchExchangeRates() {
   return request("/api/platform/exchange-rates");
 }
 
-export function fetchSellerNotifications(token, { dateFrom = '', dateTo = '' } = {}) {
+export function fetchSellerNotifications(token, { dateFrom = '', dateTo = '', offset = 0, limit = 10, paged = false } = {}) {
   const params = new URLSearchParams()
   if (dateFrom) params.set('date_from', dateFrom)
   if (dateTo) params.set('date_to', dateTo)
+  if (paged) {
+    params.set('offset', String(offset))
+    params.set('limit', String(limit))
+  }
   const suffix = params.toString() ? `?${params}` : ''
   return request(`/api/auth/me/notifications${suffix}`, {
     headers: {

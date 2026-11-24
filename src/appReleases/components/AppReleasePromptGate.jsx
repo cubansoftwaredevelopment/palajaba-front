@@ -36,7 +36,6 @@ function isPreviewPath() {
 export default function AppReleasePromptGate() {
   const location = useLocation()
   const onComprarHome = Boolean(useMatch({ path: '/comprar', end: true }))
-  const onSellerHome = Boolean(useMatch({ path: '/tienda', end: true }))
   const [downloadOpen, setDownloadOpen] = useState(false)
   const [updateOpen, setUpdateOpen] = useState(false)
   const [mains, setMains] = useState(null)
@@ -54,6 +53,31 @@ export default function AppReleasePromptGate() {
     }
     function onAppUpdatePush(event) {
       const detail = event?.detail || {}
+      const release = detail.release
+      if (release?.version) {
+        const inNative = isInNativeApp()
+        const currentPlatform = getNativePlatformKey()
+        if (inNative && release.platform && currentPlatform && release.platform !== currentPlatform) return
+        if (inNative) {
+          void getNativeAppVersion().then((version) => {
+            if (!version || !shouldShowUpdatePrompt(version, release.version)) return
+            clearUpdatePromptDismissed()
+            setNativeVersion(version)
+            setMainRelease(release)
+            setUpdatePlatform(release.platform || currentPlatform)
+            setDownloadOpen(false)
+            setUpdateOpen(true)
+          })
+          return
+        }
+        setMains((current) => ({
+          android: release.platform === 'android' ? release : current?.android ?? null,
+          ios: release.platform === 'ios' ? release : current?.ios ?? null,
+        }))
+        setUpdateOpen(false)
+        setDownloadOpen(true)
+        return
+      }
       const currentPlatform = getNativePlatformKey()
       if (
         detail.platform &&
@@ -75,12 +99,12 @@ export default function AppReleasePromptGate() {
   }, [])
 
   useEffect(() => {
-    if (isPreviewPath()) return undefined
+    if (isPreviewPath() || location.pathname === '/tienda') return undefined
     let cancelled = false
 
     ;(async () => {
       const pending = peekAppReleasePromptPending()
-      const consider = Boolean(pending || onComprarHome || onSellerHome || forceUpdateCheck)
+      const consider = Boolean(pending || onComprarHome || forceUpdateCheck)
       if (!consider) return
 
       const inNative = isInNativeApp()
@@ -171,7 +195,7 @@ export default function AppReleasePromptGate() {
     return () => {
       cancelled = true
     }
-  }, [location.pathname, location.search, onComprarHome, onSellerHome, promptTick, forceUpdateCheck])
+  }, [location.pathname, location.search, onComprarHome, promptTick, forceUpdateCheck])
 
   useEffect(() => {
     if (!bouncePlatform) return undefined

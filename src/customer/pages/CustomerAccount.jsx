@@ -1,4 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import SectionRefreshMascot from '../../components/SectionRefreshMascot'
+import { usePullToRefresh } from '../../components/usePullToRefresh'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useSectionRefreshing, useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { AnimatePresence, motion, PresenceContext, useReducedMotion } from 'framer-motion'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { fetchCustomerOrders, fetchCustomerProfile, addCustomerAddress, updateCustomerAddress, deleteCustomerAddress, uploadCustomerPhoto, startCustomerEmailOtp, startCustomerPhoneOtp, confirmCustomerContactOtp, updateCustomerIdentityCard, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, markAllCustomerPaymentNotificationsRead, dismissCustomerQvaPayPrompt, deleteCustomerAccount } from '../api.js'
@@ -84,28 +88,31 @@ export default function CustomerAccount() {
     ? 'avisos'
     : CUSTOMER_NAV.find((item) => item.path === location.pathname)?.id || 'perfil'
   const token = getCustomerToken()
-  const [profile, setProfile] = useState(null)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('customer', 'account')
+  const cachedAccount = snapshot?.data
+  const savedNoticeQuery = snapshot?.query ?? {}
+  const [profile, setProfile] = useState(cachedAccount?.profile ?? null)
   const [qvaPayPromptHeld, setQvaPayPromptHeld] = useState(() => Boolean(location.state?.focusQvaPay))
   const [qvaPayPromptSection, setQvaPayPromptSection] = useState(section)
   if (qvaPayPromptSection !== section) {
     setQvaPayPromptSection(section)
     setQvaPayPromptHeld(section === 'perfil' && Boolean(location.state?.focusQvaPay))
   }
-  const [orders, setOrders] = useState([])
-  const [ordersHasMore, setOrdersHasMore] = useState(false)
-  const [ordersAttention, setOrdersAttention] = useState(false)
+  const [orders, setOrders] = useState(cachedAccount?.orders ?? [])
+  const [ordersHasMore, setOrdersHasMore] = useState(cachedAccount?.ordersHasMore ?? false)
+  const [ordersAttention, setOrdersAttention] = useState(cachedAccount?.ordersAttention ?? false)
   const [loadingMoreOrders, setLoadingMoreOrders] = useState(false)
   const ordersLengthRef = useRef(0)
   ordersLengthRef.current = orders.length
-  const [paymentNotifications, setPaymentNotifications] = useState([])
-  const [notificationsLoading, setNotificationsLoading] = useState(true)
+  const [paymentNotifications, setPaymentNotifications] = useState(cachedAccount?.paymentNotifications ?? [])
+  const [notificationsLoading, setNotificationsLoading] = useState(snapshot == null)
   const [notificationsError, setNotificationsError] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
-  const [noticeDateFrom, setNoticeDateFrom] = useState('')
-  const [noticeDateTo, setNoticeDateTo] = useState('')
-  const [noticesHasMore, setNoticesHasMore] = useState(false)
+  const [noticeDateFrom, setNoticeDateFrom] = useState(savedNoticeQuery.noticeDateFrom ?? '')
+  const [noticeDateTo, setNoticeDateTo] = useState(savedNoticeQuery.noticeDateTo ?? '')
+  const [noticesHasMore, setNoticesHasMore] = useState(cachedAccount?.noticesHasMore ?? false)
   const [loadingMoreNotices, setLoadingMoreNotices] = useState(false)
-  const [favoriteProducts, setFavoriteProducts] = useState([])
+  const [favoriteProducts, setFavoriteProducts] = useState(cachedAccount?.favoriteProducts ?? [])
   const [orderSearch, setOrderSearch] = useState('')
   const [orderFiltersOpen, setOrderFiltersOpen] = useState(false)
   const [storeFilter, setStoreFilter] = useState('')
@@ -116,7 +123,7 @@ export default function CustomerAccount() {
   const [datePeriod, setDatePeriod] = useState('daily')
   const [dateRange, setDateRange] = useState(() => rangeForPeriod('daily'))
   const [dateFilterEnabled, setDateFilterEnabled] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(snapshot == null)
   const [error, setError] = useState('')
   const [logoutOpen, setLogoutOpen] = useState(false)
   const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
@@ -139,9 +146,14 @@ export default function CustomerAccount() {
   const [profileError, setProfileError] = useState('')
   const [photoUploading, setPhotoUploading] = useState(false)
 
-  const loadPaymentNotifications = useCallback(async ({ append = false, offset = 0 } = {}) => {
+  const hasAccountRef = useRef(snapshot != null)
+  useEffect(() => {
+    hasAccountRef.current = Boolean(profile)
+  }, [profile])
+
+  const loadPaymentNotifications = useCallback(async ({ append = false, offset = 0, silent = false } = {}) => {
     if (append) setLoadingMoreNotices(true)
-    else {
+    else if (!silent) {
       setNotificationsLoading(true)
       setNotificationsError('')
     }
@@ -157,7 +169,7 @@ export default function CustomerAccount() {
       setPaymentNotifications((current) => (append ? [...current, ...items] : items))
       setNoticesHasMore(Boolean(page?.has_more))
     } catch (cause) {
-      if (!append) {
+      if (!append && !silent) {
         setNotificationsError(getUserFacingMessage(cause, 'No pudimos cargar tus avisos.'))
         setPaymentNotifications([])
         setNoticesHasMore(false)
@@ -190,7 +202,7 @@ export default function CustomerAccount() {
   }, [applyCustomerOrders, token])
 
   const load = useCallback(async () => {
-    setLoading(true)
+    if (!hasAccountRef.current) setLoading(true)
     setError('')
     try {
       const [customer, customerOrders] = await Promise.all([
@@ -224,12 +236,39 @@ export default function CustomerAccount() {
 
   useEffect(() => {
     if (!token) return undefined
+    if (skipInitialRef.current) return undefined
     void loadPaymentNotifications()
     return undefined
   }, [loadPaymentNotifications, token])
+  const accountReadyRef = useRef(snapshot != null)
   useEffect(() => {
+    if (accountReadyRef.current) return
     queueMicrotask(() => { void load() })
   }, [load])
+
+  useEffect(() => {
+    if (!profile && orders.length === 0 && paymentNotifications.length === 0 && favoriteProducts.length === 0) return
+    commit({
+      profile,
+      orders,
+      ordersHasMore,
+      ordersAttention,
+      paymentNotifications,
+      noticesHasMore,
+      favoriteProducts,
+    }, { noticeDateFrom, noticeDateTo })
+  }, [profile, orders, ordersHasMore, ordersAttention, paymentNotifications, noticesHasMore, favoriteProducts, noticeDateFrom, noticeDateTo, commit])
+
+  const refreshVisibleSection = useCallback(() => {
+    const task = section === 'avisos'
+      ? () => loadPaymentNotifications({ silent: true })
+      : section === 'pedidos'
+        ? () => refreshCustomerOrders()
+        : () => load()
+    return runSectionRefresh('customer', section, task)
+  }, [section, load, loadPaymentNotifications, refreshCustomerOrders])
+  const { handlers: pullHandlers } = usePullToRefresh(refreshVisibleSection)
+  const accountRefreshing = useSectionRefreshing('customer', section)
 
   useEffect(() => {
     if (!token) return undefined
@@ -553,8 +592,8 @@ export default function CustomerAccount() {
         }}
         onDone={(dismissForever) => { void finishQvaPayPrompt(dismissForever) }}
       />
-      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain pb-[calc(5.5rem+var(--safe-bottom))]">
-        <header className="z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 pt-[max(0.75rem,var(--safe-top))] pb-3 backdrop-blur-md sm:px-5 lg:px-8 lg:pt-[max(1rem,var(--safe-top))] lg:pb-4">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain pb-[calc(5.5rem+var(--safe-bottom))]" {...pullHandlers}>
+        <header className="sticky top-0 z-20 shrink-0 border-b border-brand-green/8 bg-brand-white/95 px-4 pt-[max(0.75rem,var(--safe-top))] pb-3 backdrop-blur-md sm:px-5 lg:px-8 lg:pt-[max(1rem,var(--safe-top))] lg:pb-4">
           <div className="mx-auto flex w-full max-w-md items-center gap-2.5 sm:gap-3 lg:max-w-none">
             <Link
               to="/comprar"
@@ -571,6 +610,7 @@ export default function CustomerAccount() {
             </div>
           </div>
         </header>
+        <SectionRefreshMascot active={accountRefreshing} />
         <div className={`mx-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8 ${section === 'perfil' ? 'pt-3' : 'pt-6'}`}>
           {section === 'perfil' ? null : (
           <header className={`mb-6 ${section === 'pedidos' || section === 'favoritos' || section === 'direcciones' ? 'text-center' : ''}`}>
@@ -600,7 +640,7 @@ export default function CustomerAccount() {
               {error}
             </p>
           ) : null}
-          {loading ? (
+          {loading && !profile ? (
             <LoadingState message="Cargando tu cuenta…" />
           ) : profile ? (
             <div className="grid gap-4">
@@ -1076,7 +1116,7 @@ export default function CustomerAccount() {
                       setNoticeDateTo(to)
                     }}
                   />
-                  {notificationsLoading ? <LoadingState message="Cargando avisos…" size="sm" /> : null}
+                  {notificationsLoading && paymentNotifications.length === 0 ? <LoadingState message="Cargando avisos…" size="sm" /> : null}
                   {!notificationsLoading && notificationsError ? (
                     <DeadState variant="panel" title="Sin resultados" message={notificationsError}>
                       <button type="button" onClick={loadPaymentNotifications} className="min-h-10 rounded-xl bg-brand-green px-4 text-sm font-bold text-brand-white">Reintentar</button>
@@ -1093,7 +1133,7 @@ export default function CustomerAccount() {
                       </button>
                     </div>
                   ) : null}
-                  {!notificationsLoading && !notificationsError && paymentNotifications.length ? paymentNotifications.map((notification) => (
+                  {!notificationsError && paymentNotifications.length ? paymentNotifications.map((notification) => (
                     <article
                       key={notification.id}
                       className={`w-full rounded-2xl border p-4 text-left ${notification.read_at ? 'border-brand-green/10 bg-brand-white' : 'border-brand-green/25 bg-brand-green/[0.04]'}`}
@@ -1143,7 +1183,7 @@ export default function CustomerAccount() {
                       message={noticeDateFrom || noticeDateTo ? 'No hay avisos en esas fechas.' : 'No tienes avisos.'}
                     />
                   ) : null}
-                  {!notificationsLoading && !notificationsError && noticesHasMore ? (
+                  {!notificationsError && noticesHasMore ? (
                     <div className="flex justify-center">
                       <button
                         type="button"

@@ -1,18 +1,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import SellerPageMotion from '../../motion/SellerPageMotion'
+import { SectionRefreshProvider } from '../../session/SectionRefresh'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useSectionRefreshing, useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { sellerMain, sellerMainWithNav } from './sellerStyles'
 import SellerLoadingScreen from './SellerLoadingScreen'
 import SellerLogoutModal from './SellerLogoutModal'
 import SellerNotificationToast from './SellerNotificationToast'
 import SellerShell from './SellerShell'
 import StatePanel from '../ui/StatePanel'
-import { fetchSellerNotifications, fetchSellerOrders, fetchSellerUnreadNotificationCount } from '../../lib/api'
+import { fetchSellerUnreadNotificationCount } from '../../lib/api'
 import { fetchSellerProfile } from '../../auth/api.js'
 import { resolveMediaUrl } from '../../lib/media'
 import { BRAND_NAME } from '../../constants/branding'
 import {
   clearSellerSession,
+  getSellerProfile,
   getSellerToken,
   setSellerSession,
 } from '../../lib/sellerAuth'
@@ -20,9 +24,8 @@ import { clearSellerMarketplaceVisit } from '../../lib/sellerMarketplaceNav'
 import { getSellerDefaultPath, getSellerNavItems, sellerHasGestores } from '../../lib/planAccess'
 import { SellerReadOnlyContext } from './sellerReadOnly'
 import { getSellerPlan } from '../../subscriptions/constants.js'
-import { requestSellerOrdersRefresh, SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
+import { requestSellerOrdersRefresh } from '../../lib/sellerOrdersRefresh'
 import { requestSellerProductsRefresh } from '../../lib/sellerProductsRefresh'
-import { SELLER_LIVE_POLL_MS } from '../../live/constants'
 import {
   connectSellerEvents,
   OPEN_SELLER_NOTIFICATIONS_EVENT,
@@ -31,6 +34,20 @@ import {
   stopSellerPush,
 } from '../../live/utils'
 import { isSessionError, resolveUserFacingError } from '../../lib/userFacingError'
+
+function sellerSectionKey(pathname) {
+  if (pathname === '/tienda') return 'general'
+  if (pathname.startsWith('/tienda/catalogo/vista-previa')) return 'catalog-preview'
+  if (pathname.startsWith('/tienda/catalogo')) return 'catalog'
+  if (pathname.startsWith('/tienda/pedidos')) return 'orders'
+  if (pathname.startsWith('/tienda/notificaciones')) return 'notifications'
+  if (pathname.startsWith('/tienda/clientes')) return 'customers'
+  if (pathname.startsWith('/tienda/gestores')) return 'gestores'
+  if (pathname.startsWith('/tienda/mensajeros')) return 'mensajeros'
+  if (pathname.startsWith('/tienda/estadisticas')) return 'stats'
+  if (pathname.startsWith('/tienda/perfil')) return 'profile'
+  return null
+}
 
 function sellerNoticeToast(notification) {
   const fromAdmin = Boolean(notification.from_admin)
@@ -48,14 +65,15 @@ function sellerNoticeToast(notification) {
 export default function SellerLayout() {
   const navigate = useNavigate()
   const location = useLocation()
-  const [profile, setProfile] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { snapshot: shellSnapshot, commit: commitShell } = useSectionSnapshot('seller', 'shell')
+  const rememberedProfile = shellSnapshot?.data?.profile ?? getSellerProfile()
+  const [profile, setProfile] = useState(rememberedProfile)
+  const [loading, setLoading] = useState(!rememberedProfile)
   const [loadError, setLoadError] = useState(null)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const [liveToasts, setLiveToasts] = useState([])
-  const profileNoticesToastedRef = useRef(false)
-  const [notificationCount, setNotificationCount] = useState(0)
-  const [pendingOrderCount, setPendingOrderCount] = useState(0)
+  const [notificationCount, setNotificationCount] = useState(shellSnapshot?.data?.notificationCount ?? 0)
+  const [pendingOrderCount, setPendingOrderCount] = useState(shellSnapshot?.data?.pendingOrderCount ?? 0)
   const previousNotificationCountRef = useRef(null)
 
   const refreshProfile = useCallback(async () => {
@@ -74,17 +92,6 @@ export default function SellerLayout() {
     setShowLogoutConfirm(false)
     navigate('/', { replace: true })
   }
-
-  const refreshPendingOrderCount = useCallback(async () => {
-    const token = getSellerToken()
-    if (!token) return
-    try {
-      const orders = await fetchSellerOrders(token, { limit: 1 })
-      setPendingOrderCount(orders.pending_count ?? 0)
-    } catch {
-      // Mantén el último conteo durante fallos temporales de red.
-    }
-  }, [])
 
   const refreshUnreadCount = useCallback(async () => {
     const token = getSellerToken()
@@ -123,6 +130,7 @@ export default function SellerLayout() {
   }, [navigate, refreshUnreadCount])
 
   useEffect(() => {
+    if (profile) return undefined
     let cancelled = false
 
     async function load() {
@@ -130,11 +138,7 @@ export default function SellerLayout() {
       setLoading(true)
       try {
         const data = await refreshProfile()
-        if (!cancelled) {
-          setProfile(data)
-          await refreshUnreadCount()
-          await refreshPendingOrderCount()
-        }
+        if (!cancelled) setProfile(data)
       } catch (err) {
         if (!cancelled) {
           if (isSessionError(err)) {
@@ -156,38 +160,20 @@ export default function SellerLayout() {
     return () => {
       cancelled = true
     }
-  }, [refreshProfile, refreshPendingOrderCount, refreshUnreadCount])
+  }, [profile, refreshProfile])
+
+  useEffect(() => {
+    if (!profile) return
+    commitShell({ profile, notificationCount, pendingOrderCount })
+  }, [profile, notificationCount, pendingOrderCount, commitShell])
 
   useEffect(() => {
     if (!profile?.profile_completed) return undefined
-
-    function handleVisible() {
-      if (document.visibilityState === 'visible') {
-        refreshUnreadCount()
-        refreshPendingOrderCount()
-        refreshProfile().catch(() => {})
-      }
-    }
-
-    function handleOrdersRefresh() {
-      refreshPendingOrderCount()
-    }
-
-    const intervalId = window.setInterval(() => {
-      refreshUnreadCount()
-      refreshProfile().catch(() => {})
-    }, SELLER_LIVE_POLL_MS)
-    document.addEventListener('visibilitychange', handleVisible)
-    window.addEventListener(SELLER_ORDERS_REFRESH_EVENT, handleOrdersRefresh)
 
     const token = getSellerToken()
     if (token) startSellerPush(token)
     const stopEvents = token
       ? connectSellerEvents(token, (notification) => {
-          setNotifications((current) => {
-            if (current.some((item) => item.id === notification.id)) return current
-            return [notification, ...current]
-          })
           if (!notification.read_at) {
             setNotificationCount((count) => {
               const next = count + 1
@@ -207,44 +193,27 @@ export default function SellerLayout() {
           if (Number.isFinite(Number(event.pending_order_count))) {
             setPendingOrderCount(Number(event.pending_order_count))
           }
+          if (Number.isFinite(Number(event.unread_count))) {
+            const next = Number(event.unread_count)
+            previousNotificationCountRef.current = next
+            setNotificationCount(next)
+          }
           if (event.resources?.includes('orders')) requestSellerOrdersRefresh()
           if (event.resources?.includes('products')) requestSellerProductsRefresh()
         })
       : () => {}
 
     return () => {
-      window.clearInterval(intervalId)
-      document.removeEventListener('visibilitychange', handleVisible)
-      window.removeEventListener(SELLER_ORDERS_REFRESH_EVENT, handleOrdersRefresh)
       stopEvents()
     }
-  }, [profile?.profile_completed, refreshPendingOrderCount, refreshProfile, refreshUnreadCount])
+  }, [profile?.profile_completed])
 
-  useEffect(() => {
-    if (location.pathname === '/tienda/perfil') return undefined
-    if (!profile?.profile_completed || profileNoticesToastedRef.current) return undefined
-    profileNoticesToastedRef.current = true
-    const token = getSellerToken()
-    if (!token) return undefined
-    let cancelled = false
-    fetchSellerNotifications(token)
-      .then((data) => {
-        if (cancelled) return
-        const unread = (Array.isArray(data) ? data : []).filter((item) => !item.read_at)
-        if (!unread.length) return
-        setLiveToasts((current) => {
-          const seen = new Set(current.map((item) => item.id))
-          const incoming = unread
-            .filter((item) => !seen.has(item.id))
-            .map((item) => sellerNoticeToast(item))
-          return incoming.length ? [...incoming, ...current] : current
-        })
-      })
-      .catch(() => {})
-    return () => {
-      cancelled = true
-    }
-  }, [location.pathname, profile?.profile_completed])
+  const sectionKey = sellerSectionKey(location.pathname)
+  const sectionRefreshing = useSectionRefreshing('seller', sectionKey)
+  const refreshVisibleShell = useCallback(() => {
+    const key = sectionKey || 'shell'
+    return runSectionRefresh('seller', key, () => refreshProfile())
+  }, [refreshProfile, sectionKey])
 
   if (loading) {
     return <SellerLoadingScreen />
@@ -292,7 +261,9 @@ export default function SellerLayout() {
 
   return (
     <SellerReadOnlyContext.Provider value={readOnly}>
+      <SectionRefreshProvider fallback={refreshVisibleShell}>
       <SellerShell
+        refreshing={sectionRefreshing}
         storeName={profile.store_name}
         planName={getSellerPlan(profile).name}
         subscriptionActive={profile.subscription_active}
@@ -314,6 +285,7 @@ export default function SellerLayout() {
           contentClassName={fillPage ? '' : (showBottomNav ? sellerMainWithNav : sellerMain)}
         />
       </SellerShell>
+      </SectionRefreshProvider>
 
       <SellerNotificationToast
         toasts={liveToasts}

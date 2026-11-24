@@ -20,6 +20,9 @@ import { getUserFacingMessage } from '../../lib/userFacingError'
 import { getSellerToken } from '../../lib/sellerAuth'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import { createSellerMensajero, deleteSellerMensajero, fetchSellerMensajeros, updateSellerMensajero } from '../api'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { VEHICLE_TYPES, vehicleLabel } from '../constants'
 
 const SEARCH_HINTS = ['buscar por nombre', 'buscar por apellido']
@@ -132,9 +135,10 @@ function CreateMensajeroModal({ messenger = null, onClose: requestClose, onCreat
 }
 
 export default function SellerMensajeros() {
-  const [items, setItems] = useState([])
-  const [search, setSearch] = useState('')
-  const [vehicleType, setVehicleType] = useState('')
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'mensajeros')
+  const [items, setItems] = useState(snapshot?.data ?? [])
+  const [search, setSearch] = useState(snapshot?.query?.search ?? '')
+  const [vehicleType, setVehicleType] = useState(snapshot?.query?.vehicleType ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(null)
@@ -144,13 +148,18 @@ export default function SellerMensajeros() {
 
   const load = useCallback(async () => {
     const data = await fetchSellerMensajeros(getSellerToken(), { search, vehicleType })
-    setItems(data.items || [])
-  }, [search, vehicleType])
+    const next = data.items || []
+    setItems(next)
+    commit(next, { search, vehicleType })
+  }, [search, vehicleType, commit])
 
   useEffect(() => {
+    if (skipInitialRef.current) return undefined
     const timer = window.setTimeout(() => { load().catch((err) => setError(err.message)) }, 200)
     return () => window.clearTimeout(timer)
   }, [load])
+
+  useRegisterSectionRefresh(() => runSectionRefresh('seller', 'mensajeros', () => load().catch((err) => setError(err.message))))
 
   async function confirmDelete() {
     if (!toDelete || deleting) return

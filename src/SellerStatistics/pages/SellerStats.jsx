@@ -8,6 +8,9 @@ import { sellerHasStatistics } from '../../constants/plan'
 import { PROFILE_PANEL_IDS } from '../../lib/sellerProfileHub'
 import { sellerAlertError, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { beginSectionRefresh, endSectionRefresh } from '../../session/sectionStore'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import {
   fetchSellerDeliveredOrders,
@@ -44,11 +47,14 @@ const EMPTY_BUNDLE = {
 export default function SellerStats() {
   const navigate = useNavigate()
   const { profile: seller } = useOutletContext()
-  const [period, setPeriod] = useState('daily')
-  const [range, setRange] = useState(() => rangeForPeriod('daily'))
-  const [bundle, setBundle] = useState(EMPTY_BUNDLE)
-  const [loading, setLoading] = useState(true)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'stats')
+  const [period, setPeriod] = useState(snapshot?.query?.period ?? 'daily')
+  const [range, setRange] = useState(() => snapshot?.query?.range ?? rangeForPeriod('daily'))
+  const [bundle, setBundle] = useState(snapshot?.data ?? EMPTY_BUNDLE)
+  const [loading, setLoading] = useState(!snapshot)
   const [error, setError] = useState('')
+  const [reloadTick, setReloadTick] = useState(0)
+  useRegisterSectionRefresh(() => setReloadTick((value) => value + 1))
 
   const windowQuery = useMemo(
     () => ({
@@ -61,11 +67,14 @@ export default function SellerStats() {
 
   useEffect(() => {
     if (!seller || !sellerHasStatistics(seller)) return undefined
+    if (skipInitialRef.current) return undefined
 
     let cancelled = false
+    const markRefresh = reloadTick > 0
 
     async function load() {
-      setLoading(true)
+      if (markRefresh) beginSectionRefresh('seller', 'stats')
+      else if (!snapshot?.data) setLoading(true)
       setError('')
       try {
         const token = getSellerToken()
@@ -91,7 +100,7 @@ export default function SellerStats() {
           fetchSellerTopSold(token, windowQuery),
         ])
         if (!cancelled) {
-          setBundle({
+          const next = {
             kpis,
             conversion,
             highViews,
@@ -101,7 +110,9 @@ export default function SellerStats() {
             orders,
             revenue,
             topSold,
-          })
+          }
+          setBundle(next)
+          commit(next, { period, range })
         }
       } catch (err) {
         if (!cancelled) {
@@ -110,6 +121,7 @@ export default function SellerStats() {
         }
       } finally {
         if (!cancelled) setLoading(false)
+        if (markRefresh) endSectionRefresh('seller', 'stats')
       }
     }
 
@@ -117,7 +129,7 @@ export default function SellerStats() {
     return () => {
       cancelled = true
     }
-  }, [seller, windowQuery])
+  }, [seller, windowQuery, reloadTick])
 
   if (!seller) return null
 

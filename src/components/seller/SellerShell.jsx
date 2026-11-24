@@ -1,3 +1,4 @@
+import SectionRefreshMascot from '../SectionRefreshMascot'
 import Logo from '../Logo'
 import { SellerBottomNav, SellerSidebarNav } from './SellerNav'
 import {
@@ -84,6 +85,7 @@ export default function SellerShell({
   hideChrome = false,
   navItems,
   profilePhotoUrl = '',
+  refreshing = false,
   children,
   footer,
 }) {
@@ -148,9 +150,15 @@ export default function SellerShell({
           ) : null}
 
           {catalogLayout ? (
-            <main className={`${sellerMainCatalog} relative`}>{children}</main>
+            <main className={`${sellerMainCatalog} relative`}>
+              <SectionRefreshMascot active={refreshing} />
+              {children}
+            </main>
           ) : (
-            <main className={useFixedViewport ? 'relative min-h-0 flex-1 overflow-hidden' : 'relative min-h-0 flex-1'}>{children}</main>
+            <main className={useFixedViewport ? 'relative min-h-0 flex-1 overflow-hidden' : 'relative min-h-0 flex-1'}>
+              <SectionRefreshMascot active={refreshing} />
+              {children}
+            </main>
           )}
 
           {footer && <div className="sm:hidden">{footer}</div>}

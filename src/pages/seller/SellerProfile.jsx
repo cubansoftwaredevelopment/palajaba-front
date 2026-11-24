@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useLocation, useNavigate, useOutletContext } from 'react-router-dom'
 import { useStepShift } from '../../motion/SellerPageMotion'
@@ -123,7 +124,10 @@ export default function SellerProfile() {
   const fileInputRef = useRef(null)
   const menuSections = useMemo(() => getProfileMenuSections(profile), [profile])
 
-  const [activePanel, setActivePanel] = useState(null)
+  const { snapshot: panelSnapshot, commit: commitPanel } = useSectionSnapshot('seller', 'profile-panel')
+  const { snapshot: qvaSnapshot, commit: commitQva } = useSectionSnapshot('seller', 'profile-qvapay')
+  const cachedQva = qvaSnapshot?.data
+  const [activePanel, setActivePanel] = useState(panelSnapshot?.data ?? null)
   const [photoUrl, setPhotoUrl] = useState(profile?.profile_photo_url ?? null)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [location, setLocation] = useState(profile?.business_location ?? null)
@@ -142,9 +146,9 @@ export default function SellerProfile() {
   const [errorToast, setErrorToast] = useState(null)
   const [saved, setSaved] = useState(false)
   const [setupNotices, setSetupNotices] = useState([])
-  const [qvapayConfigured, setQvapayConfigured] = useState(false)
-  const [qvapayPromptDismissed, setQvapayPromptDismissed] = useState(false)
-  const [qvapayAccountLoaded, setQvapayAccountLoaded] = useState(false)
+  const [qvapayConfigured, setQvapayConfigured] = useState(Boolean(cachedQva?.configured))
+  const [qvapayPromptDismissed, setQvapayPromptDismissed] = useState(Boolean(cachedQva?.dismissed))
+  const [qvapayAccountLoaded, setQvapayAccountLoaded] = useState(Boolean(cachedQva))
   const [qvapayPromptHeld, setQvapayPromptHeld] = useState(false)
   const [policyWarningDismissed, setPolicyWarningDismissed] = useState(false)
   const setupWarningShownRef = useRef(false)
@@ -158,14 +162,34 @@ export default function SellerProfile() {
   const showQvaPayPrompt = qvapayAccountLoaded && !qvapayConfigured && !qvapayPromptDismissed && !qvapayPromptHeld && setupNotices.length === 0 && !showPolicyWarning
 
   useEffect(() => {
-    if (!profile) return undefined
+    commitPanel(activePanel)
+  }, [activePanel, commitPanel])
+
+  const qvaReadyRef = useRef(Boolean(cachedQva))
+  useEffect(() => {
+    if (!cachedQva) return
+    setQvapayConfigured(Boolean(cachedQva.configured))
+    setQvapayPromptDismissed(Boolean(cachedQva.dismissed))
+    setQvapayAccountLoaded(true)
+  }, [cachedQva])
+
+  useEffect(() => {
+    if (!profile || qvaReadyRef.current) return undefined
     let active = true
     fetchSellerQvaPayAccount(getSellerToken())
       .then((account) => {
         if (!active) return
-        setQvapayConfigured(Boolean(String(account?.username || '').trim()))
-        setQvapayPromptDismissed(Boolean(account?.prompt_dismissed))
+        const next = {
+          username: account?.username || '',
+          verified: Boolean(account?.verified),
+          configured: Boolean(String(account?.username || '').trim()),
+          dismissed: Boolean(account?.prompt_dismissed),
+        }
+        setQvapayConfigured(next.configured)
+        setQvapayPromptDismissed(next.dismissed)
         setQvapayAccountLoaded(true)
+        qvaReadyRef.current = true
+        commitQva(next)
       })
       .catch(() => {
         if (!active) return

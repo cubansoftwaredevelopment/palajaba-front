@@ -107,10 +107,17 @@ export function completeRegistrationPayment(payload) {
   })
 }
 
+let sellerProfileFlight = null
+
 export function fetchSellerProfile(token) {
-  return request('/api/auth/me', {
+  if (sellerProfileFlight?.token === token) return sellerProfileFlight.promise
+  const promise = request('/api/auth/me', {
     headers: authHeaders(token),
+  }).finally(() => {
+    if (sellerProfileFlight?.promise === promise) sellerProfileFlight = null
   })
+  sellerProfileFlight = { token, promise }
+  return promise
 }
 
 export function deleteSellerAccount(token) {

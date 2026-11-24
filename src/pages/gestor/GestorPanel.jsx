@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import GestorShell from '../../components/gestor/GestorShell'
 import Checkbox from '../../components/ui/Checkbox'
@@ -33,6 +33,8 @@ import {
   updateGestorProductMargin,
 } from '../../lib/gestorCatalog'
 import { getUserFacingMessage } from '../../lib/userFacingError'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import {
   sellerAlertError,
   sellerAlertSuccess,
@@ -49,10 +51,12 @@ export default function GestorPanel() {
   const slug = String(storeSlug ?? '').trim()
   const context = getGestorContext()
   const cachedProfile = getGestorProfile()
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('gestor', 'panel')
+  const cachedPanel = snapshot?.data
 
-  const [gestor, setGestor] = useState(cachedProfile)
-  const [drafts, setDrafts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [gestor, setGestor] = useState(cachedPanel?.gestor ?? cachedProfile)
+  const [drafts, setDrafts] = useState(cachedPanel?.drafts ?? [])
+  const [loading, setLoading] = useState(!cachedPanel)
   const [error, setError] = useState('')
   const [saveError, setSaveError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -67,8 +71,12 @@ export default function GestorPanel() {
     ? `${getPublicSiteOrigin()}${publicCatalogPath}`
     : publicCatalogPath
 
+  const commitRef = useRef(commit)
+  useEffect(() => {
+    commitRef.current = commit
+  }, [commit])
+
   const loadPanel = useCallback(async () => {
-    setLoading(true)
     setError('')
     try {
       const token = getGestorToken()
@@ -78,16 +86,24 @@ export default function GestorPanel() {
       ])
       setGestor(me)
       updateGestorProfileCache(me)
-      setDrafts(createGestorProductDrafts(products))
+      const nextDrafts = createGestorProductDrafts(products)
+      setDrafts(nextDrafts)
+      commitRef.current({ gestor: me, drafts: nextDrafts })
     } catch (err) {
       setDrafts([])
       setError(getUserFacingMessage(err, 'No pudimos cargar tu panel. Inténtalo de nuevo.'))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [setDrafts])
+
+  const refreshPanel = useCallback(
+    () => runSectionRefresh('gestor', 'panel', () => loadPanel()),
+    [loadPanel],
+  )
 
   useEffect(() => {
+    if (skipInitialRef.current) return
     loadPanel()
   }, [loadPanel])
 
@@ -142,6 +158,7 @@ export default function GestorPanel() {
       const updated = await updateGestorSelectedProducts(token, payload.products)
       setGestor(updated)
       updateGestorProfileCache(updated)
+      commit({ gestor: updated, drafts })
       setSuccessMessage('Productos guardados.')
     } catch (err) {
       setSaveError(getUserFacingMessage(err, 'No pudimos guardar. Inténtalo de nuevo.'))
@@ -152,7 +169,7 @@ export default function GestorPanel() {
 
   if (loading) {
     return (
-      <GestorShell title={storeTitle} subtitle={username ? `@${username}` : ''} onLogout={handleLogout}>
+      <GestorShell title={storeTitle} subtitle={username ? `@${username}` : ''} onLogout={handleLogout} onPullRefresh={refreshPanel}>
         <LoadingState label="Cargando tu catálogo…" />
       </GestorShell>
     )
@@ -160,7 +177,7 @@ export default function GestorPanel() {
 
   if (error) {
     return (
-      <GestorShell title={storeTitle} subtitle={username ? `@${username}` : ''} onLogout={handleLogout}>
+      <GestorShell title={storeTitle} subtitle={username ? `@${username}` : ''} onLogout={handleLogout} onPullRefresh={refreshPanel}>
         <StatePanel
           variant="seller"
           title="No se pudo cargar"
@@ -173,7 +190,7 @@ export default function GestorPanel() {
   }
 
   return (
-    <GestorShell title={storeTitle} subtitle={username ? `@${username}` : ''} onLogout={handleLogout}>
+    <GestorShell title={storeTitle} subtitle={username ? `@${username}` : ''} onLogout={handleLogout} onPullRefresh={refreshPanel}>
       <div className="animate-fade-in flex flex-col gap-4">
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-carmelita">

@@ -28,6 +28,8 @@ import {
 import { sellerHasFullStoreCustomization } from '../../subscriptions/constants.js'
 import { resolveStoreSlug } from '../../lib/storeShare'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { resolveUserFacingError } from '../../lib/userFacingError'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { sellerFocusRing } from '../../components/seller/sellerStyles'
@@ -79,8 +81,9 @@ function SellerCatalogPreviewContent() {
     }
   }, [profile?.business_area])
 
-  const [catalog, setCatalog] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'catalog-preview')
+  const [catalog, setCatalog] = useState(snapshot?.data ?? null)
+  const [loading, setLoading] = useState(!snapshot?.data)
   const [loadError, setLoadError] = useState(null)
   const canCustomizeTheme = sellerHasFullStoreCustomization(profile)
   const [catalogTheme, setCatalogTheme] = useState(
@@ -122,14 +125,16 @@ function SellerCatalogPreviewContent() {
     catalog?.catalog_palette,
   ])
 
-  const loadCatalog = useCallback(async () => {
+  const loadCatalog = useCallback(async ({ silent = false } = {}) => {
     if (!storeSlug || !previewLocation) {
       setLoading(false)
       return
     }
 
-    setLoading(true)
-    setLoadError(null)
+    if (!silent) {
+      setLoading(true)
+      setLoadError(null)
+    }
 
     try {
       const data = await fetchMarketplaceStoreCatalog({
@@ -140,12 +145,14 @@ function SellerCatalogPreviewContent() {
         limitPerCategory: PAGE_SIZE,
       })
       setCatalog(data)
+      commit(data)
       setCatalogTheme(
         canCustomizeTheme
           ? normalizeCatalogTheme(data.catalog_theme)
           : DEFAULT_CATALOG_THEME,
       )
     } catch (err) {
+      if (silent) return
       setLoadError(
         resolveUserFacingError(err, {
           contextTitle: 'No se pudo abrir la vista previa',
@@ -154,11 +161,12 @@ function SellerCatalogPreviewContent() {
       )
       setCatalog(null)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
-  }, [canCustomizeTheme, currencies, previewLocation, storeSlug])
+  }, [canCustomizeTheme, currencies, previewLocation, storeSlug, commit])
 
   useEffect(() => {
+    if (skipInitialRef.current) return
     loadCatalog()
   }, [loadCatalog])
 
@@ -258,6 +266,7 @@ function SellerCatalogPreviewContent() {
         backTo="/tienda/catalogo"
         backLabel="Volver"
         headerEnd={header}
+        onPullRefresh={() => runSectionRefresh('seller', 'catalog-preview', () => loadCatalog({ silent: true }))}
       >
         {children}
       </BuyerShell>

@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import SearchBar from '../../buyer/components/SearchBar'
 import { useNavigate } from 'react-router-dom'
 import { fetchStoreCustomerNotices, fetchStoreCustomers, sendStoreCustomerNotice, suggestStoreCustomers } from '../../auth/api'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { beginSectionRefresh, endSectionRefresh } from '../../session/sectionStore'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { getUserFacingMessage } from '../../lib/userFacingError'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
@@ -334,40 +337,76 @@ export default function SellerCustomers() {
   const navigate = useNavigate()
   const readOnly = useSellerReadOnly()
   const reducedMotion = useReducedMotion()
-  const [sectionTab, setSectionTab] = useState('customers')
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'customers')
+  const cached = snapshot?.data
+  const savedQuery = snapshot?.query ?? {}
+  const savedRef = useRef(cached ?? {})
+  const [sectionTab, setSectionTab] = useState(savedQuery.sectionTab ?? 'customers')
   const [tabDirection, setTabDirection] = useState(1)
   const [tabMotion, setTabMotion] = useState(false)
   const [noticeOpen, setNoticeOpen] = useState(false)
-  const [notices, setNotices] = useState([])
+  const [notices, setNotices] = useState(cached?.notices ?? [])
   const [noticesLoading, setNoticesLoading] = useState(false)
-  const [noticesHasMore, setNoticesHasMore] = useState(false)
+  const [noticesHasMore, setNoticesHasMore] = useState(cached?.noticesHasMore ?? false)
   const [loadingMoreNotices, setLoadingMoreNotices] = useState(false)
   const [noticesRefresh, setNoticesRefresh] = useState(0)
-  const [noticeDateFrom, setNoticeDateFrom] = useState('')
-  const [noticeDateTo, setNoticeDateTo] = useState('')
-  const [customers, setCustomers] = useState([])
+  const [noticeDateFrom, setNoticeDateFrom] = useState(savedQuery.noticeDateFrom ?? '')
+  const [noticeDateTo, setNoticeDateTo] = useState(savedQuery.noticeDateTo ?? '')
+  const [customers, setCustomers] = useState(cached?.customers ?? [])
   const [selectedCustomer, setSelectedCustomer] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!cached)
   const [error, setError] = useState('')
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(savedQuery.search ?? '')
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [locationFilter, setLocationFilter] = useState('')
-  const [productFilters, setProductFilters] = useState([])
-  const [currencyFilter, setCurrencyFilter] = useState('')
-  const [datePeriod, setDatePeriod] = useState('daily')
-  const [dateRange, setDateRange] = useState(() => rangeForPeriod('daily'))
-  const [dateFilterEnabled, setDateFilterEnabled] = useState(false)
-  const [locationOptions, setLocationOptions] = useState([])
-  const [productOptions, setProductOptions] = useState([])
-  const [currencyOptions, setCurrencyOptions] = useState([])
-  const [customersHasMore, setCustomersHasMore] = useState(false)
+  const [locationFilter, setLocationFilter] = useState(savedQuery.locationFilter ?? '')
+  const [productFilters, setProductFilters] = useState(savedQuery.productFilters ?? [])
+  const [currencyFilter, setCurrencyFilter] = useState(savedQuery.currencyFilter ?? '')
+  const [datePeriod, setDatePeriod] = useState(savedQuery.datePeriod ?? 'daily')
+  const [dateRange, setDateRange] = useState(() => savedQuery.dateRange ?? rangeForPeriod('daily'))
+  const [dateFilterEnabled, setDateFilterEnabled] = useState(savedQuery.dateFilterEnabled ?? false)
+  const [locationOptions, setLocationOptions] = useState(cached?.locationOptions ?? [])
+  const [productOptions, setProductOptions] = useState(cached?.productOptions ?? [])
+  const [currencyOptions, setCurrencyOptions] = useState(cached?.currencyOptions ?? [])
+  const [customersHasMore, setCustomersHasMore] = useState(cached?.customersHasMore ?? false)
   const [loadingMoreCustomers, setLoadingMoreCustomers] = useState(false)
   const [loadingCustomerOrders, setLoadingCustomerOrders] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0)
+  const loadedNoticeQueryRef = useRef(
+    Array.isArray(cached?.notices)
+      ? `${savedQuery.noticeDateFrom ?? ''}|${savedQuery.noticeDateTo ?? ''}`
+      : null,
+  )
+  const appliedNoticeRefreshRef = useRef(0)
+
+  function rememberCustomers(patch) {
+    savedRef.current = { ...savedRef.current, ...patch }
+    commit(savedRef.current, {
+      sectionTab,
+      search,
+      locationFilter,
+      productFilters,
+      currencyFilter,
+      datePeriod,
+      dateRange,
+      dateFilterEnabled,
+      noticeDateFrom,
+      noticeDateTo,
+    })
+  }
+
+  useRegisterSectionRefresh(() => {
+    setRefreshKey((current) => current + 1)
+    setNoticesRefresh((current) => current + 1)
+  })
 
   useEffect(() => {
+    if (skipInitialRef.current) return undefined
     let cancelled = false
+    const markRefresh = refreshKey > 0 || customers.length > 0
+    let started = false
+    if (markRefresh) beginSectionRefresh('seller', 'customers')
     const timer = window.setTimeout(async () => {
+      started = true
       try {
         setError('')
         const data = await fetchStoreCustomers(getSellerToken(), {
@@ -386,20 +425,32 @@ export default function SellerCustomers() {
         setLocationOptions(data.location_options ?? [])
         setProductOptions(data.product_options ?? [])
         setCurrencyOptions(data.currency_options ?? [])
+        rememberCustomers({
+          customers: data.items,
+          customersHasMore: data.has_more,
+          locationOptions: data.location_options ?? [],
+          productOptions: data.product_options ?? [],
+          currencyOptions: data.currency_options ?? [],
+        })
       } catch (cause) {
         if (!cancelled) setError(getUserFacingMessage(cause, 'No se pudo cargar la lista de clientes.'))
       } finally {
         if (!cancelled) setLoading(false)
+        if (markRefresh) endSectionRefresh('seller', 'customers')
       }
     }, search ? 250 : 0)
-    const refresh = () => setRefreshKey((current) => current + 1)
-    window.addEventListener(SELLER_ORDERS_REFRESH_EVENT, refresh)
     return () => {
       cancelled = true
       window.clearTimeout(timer)
-      window.removeEventListener(SELLER_ORDERS_REFRESH_EVENT, refresh)
+      if (markRefresh && !started) endSectionRefresh('seller', 'customers')
     }
   }, [search, locationFilter, productFilters, currencyFilter, dateRange, dateFilterEnabled, refreshKey])
+
+  useEffect(() => {
+    const refresh = () => setRefreshKey((current) => current + 1)
+    window.addEventListener(SELLER_ORDERS_REFRESH_EVENT, refresh)
+    return () => window.removeEventListener(SELLER_ORDERS_REFRESH_EVENT, refresh)
+  }, [])
 
   async function loadMoreCustomers() {
     if (loadingMoreCustomers || !customersHasMore) return
@@ -415,8 +466,10 @@ export default function SellerCustomers() {
         date_from: dateFilterEnabled ? isoDate(dateRange?.from) : '',
         date_to: dateFilterEnabled ? isoDate(dateRange?.to) : '',
       })
-      setCustomers((current) => [...current, ...data.items])
+      const next = [...customers, ...data.items]
+      setCustomers(next)
       setCustomersHasMore(data.has_more)
+      rememberCustomers({ customers: next, customersHasMore: data.has_more })
     } catch (cause) {
       setError(getUserFacingMessage(cause, 'No se pudieron cargar más clientes.'))
     } finally {
@@ -454,8 +507,13 @@ export default function SellerCustomers() {
 
   useEffect(() => {
     if (sectionTab !== 'notices') return undefined
+    const queryKey = `${noticeDateFrom}|${noticeDateTo}`
+    const pull = noticesRefresh !== appliedNoticeRefreshRef.current
+    if (!pull && loadedNoticeQueryRef.current === queryKey) return undefined
+    appliedNoticeRefreshRef.current = noticesRefresh
     let cancelled = false
-    setNoticesLoading(true)
+    if (pull) beginSectionRefresh('seller', 'customers')
+    else if (loadedNoticeQueryRef.current !== queryKey) setNoticesLoading(true)
     ;(async () => {
       try {
         const data = await fetchStoreCustomerNotices(getSellerToken(), {
@@ -465,25 +523,31 @@ export default function SellerCustomers() {
           dateTo: noticeDateTo,
         })
         if (cancelled) return
-        setNotices(data.items ?? [])
+        const items = data.items ?? []
+        setNotices(items)
         setNoticesHasMore(Boolean(data.has_more))
+        loadedNoticeQueryRef.current = queryKey
+        rememberCustomers({ notices: items, noticesHasMore: Boolean(data.has_more) })
         setError('')
       } catch (cause) {
         if (!cancelled) setError(getUserFacingMessage(cause, 'No se pudieron cargar los avisos enviados.'))
       } finally {
         if (!cancelled) setNoticesLoading(false)
+        if (pull) endSectionRefresh('seller', 'customers')
       }
     })()
     return () => { cancelled = true }
-  }, [sectionTab, noticesRefresh])
+  }, [sectionTab, noticesRefresh, noticeDateFrom, noticeDateTo])
 
   async function loadMoreNotices() {
     if (loadingMoreNotices || !noticesHasMore) return
     setLoadingMoreNotices(true)
     try {
       const data = await fetchStoreCustomerNotices(getSellerToken(), { offset: notices.length, limit: NOTICE_PAGE })
-      setNotices((current) => [...current, ...(data.items ?? [])])
+      const next = [...notices, ...(data.items ?? [])]
+      setNotices(next)
       setNoticesHasMore(Boolean(data.has_more))
+      rememberCustomers({ notices: next, noticesHasMore: Boolean(data.has_more) })
     } catch (cause) {
       setError(getUserFacingMessage(cause, 'No se pudieron cargar más avisos.'))
     } finally {

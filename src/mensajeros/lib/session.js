@@ -1,3 +1,5 @@
+import { clearRoleSections } from '../../session/sectionStore'
+
 const TOKEN_KEY = 'pala_jaba_mensajero_token'
 const PROFILE_KEY = 'pala_jaba_mensajero_profile'
 const SETUP_KEY = 'pala_jaba_mensajero_setup'
@@ -27,6 +29,7 @@ export function updateMensajeroProfile(mensajero) {
 export function clearMensajeroSession() {
   localStorage.removeItem(TOKEN_KEY)
   localStorage.removeItem(PROFILE_KEY)
+  clearRoleSections('mensajero')
 }
 
 export function isMensajeroAuthenticated() {

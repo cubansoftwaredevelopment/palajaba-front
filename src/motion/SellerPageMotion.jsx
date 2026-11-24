@@ -1,5 +1,7 @@
 import { AnimatePresence, PresenceContext, motion, useReducedMotion } from 'framer-motion'
 import { useOutlet, useLocation } from 'react-router-dom'
+import { usePullToRefresh } from '../components/usePullToRefresh'
+import { useSectionRefresh } from '../session/useSectionRefresh'
 import { stepShift } from './presets'
 
 const reducedShift = {
@@ -17,6 +19,8 @@ export function useStepShift() {
 export default function SellerPageMotion({ context, fill = false, scroll = false, contentClassName = '' }) {
   const location = useLocation()
   const outlet = useOutlet(context)
+  const refreshSection = useSectionRefresh()
+  const { handlers: pullHandlers } = usePullToRefresh(scroll ? refreshSection : null)
   const { reduced, shift } = useStepShift()
   const frameClass = fill
     ? 'absolute inset-0 overflow-hidden'
@@ -37,6 +41,7 @@ export default function SellerPageMotion({ context, fill = false, scroll = false
           key={location.pathname}
           className={`${reduced ? '' : 'screen-step'} ${pageClass}`}
           {...shift}
+          {...(scroll ? pullHandlers : {})}
         >
           {contentClassName ? <div className={contentClassName}>{page}</div> : page}
         </motion.div>

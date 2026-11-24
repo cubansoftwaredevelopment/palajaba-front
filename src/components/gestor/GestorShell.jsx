@@ -1,4 +1,7 @@
 import { Link } from 'react-router-dom'
+import SectionRefreshMascot from '../SectionRefreshMascot'
+import { usePullToRefresh } from '../usePullToRefresh'
+import { useSectionRefreshing } from '../../session/useSectionSnapshot'
 import Logo from '../Logo'
 
 export default function GestorShell({
@@ -7,8 +10,11 @@ export default function GestorShell({
   title,
   subtitle,
   onLogout,
+  onPullRefresh = null,
   children,
 }) {
+  const { handlers: pullHandlers } = usePullToRefresh(onPullRefresh)
+  const refreshing = useSectionRefreshing(onPullRefresh ? 'gestor' : null, onPullRefresh ? 'panel' : null)
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
       <div
@@ -57,7 +63,8 @@ export default function GestorShell({
         </div>
       </header>
 
-      <div className="page-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y">
+      <div className="page-scroll relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-y-contain touch-pan-y" {...(onPullRefresh ? pullHandlers : {})}>
+        <SectionRefreshMascot active={refreshing} />
         <div className="mx-auto w-full max-w-lg px-4 pt-5 pb-[max(1.25rem,var(--safe-bottom))] sm:px-5 sm:pt-6 sm:pb-[max(1.5rem,var(--safe-bottom))]">
           {children}
         </div>

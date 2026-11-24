@@ -1,4 +1,5 @@
 import { useContext } from 'react'
+import { usePullToRefresh } from '../../components/usePullToRefresh'
 import { Link } from 'react-router-dom'
 import { BuyerDisplayCurrencyContext } from '../context.js'
 import BuyerCurrencyTag from './BuyerCurrencyTag'
@@ -24,6 +25,7 @@ export default function BuyerShell({
   flushBottom = false,
   flushTop = false,
   footer = null,
+  onPullRefresh = null,
   children,
 }) {
   const showBackLink = Boolean(backTo || onBack) && !headerStart
@@ -33,6 +35,7 @@ export default function BuyerShell({
   const currencyContext = useContext(BuyerDisplayCurrencyContext)
   const showCurrencyTag = marketplaceHub && !isSellerPreview && Boolean(currencyContext)
   const sellerBrowsing = isSellerBrowsingMarketplace() && !isSellerPreview
+  const { handlers: pullHandlers } = usePullToRefresh(onPullRefresh)
   const pageFooter = Boolean(footer)
   const scrollPaddingClass = pageFooter
     ? ''
@@ -108,7 +111,7 @@ export default function BuyerShell({
       {showCurrencyTag && !flushTop ? <BuyerCurrencyTag /> : null}
 
       <div className="relative z-0 min-h-0 flex-1">
-      <div className="page-scroll buyer-scroll h-full overflow-y-auto overscroll-y-contain touch-pan-y">
+      <div className="page-scroll buyer-scroll h-full overflow-y-auto overscroll-y-contain touch-pan-y" {...(onPullRefresh ? pullHandlers : {})}>
         <div className={`mx-auto w-full max-w-md px-5 sm:px-6 lg:max-w-5xl lg:px-10 ${flushTop ? 'pt-0' : 'pt-4 lg:pt-8'} ${flushBottom || pageFooter ? 'flex min-h-full flex-col' : ''} ${scrollPaddingClass}`}>
           {children}
           {pageFooter ? <div className={`mt-auto ${footerPaddingClass}`}>{footer}</div> : null}

@@ -22,6 +22,9 @@ import {
   updateSellerOrder,
 } from '../../lib/api'
 import { getSellerToken } from '../../lib/sellerAuth'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { SELLER_LIVE_POLL_MS } from '../../live/constants'
 import { SELLER_ORDERS_REFRESH_EVENT } from '../../lib/sellerOrdersRefresh'
 import { getUserFacingMessage } from '../../lib/userFacingError'
@@ -104,18 +107,20 @@ export default function SellerOrders() {
   const readOnly = useSellerReadOnly()
   const [searchParams, setSearchParams] = useSearchParams()
   const orderSearchTarget = searchParams.get('search')?.trim() ?? ''
-  const [orders, setOrders] = useState([])
-  const [ordersHasMore, setOrdersHasMore] = useState(false)
-  const [orderStatusCounts, setOrderStatusCounts] = useState({ pending: 0, completed: 0 })
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'orders')
+  const cachedOrders = snapshot?.data
+  const [orders, setOrders] = useState(cachedOrders?.items ?? [])
+  const [ordersHasMore, setOrdersHasMore] = useState(cachedOrders?.hasMore ?? false)
+  const [orderStatusCounts, setOrderStatusCounts] = useState(cachedOrders?.counts ?? { pending: 0, completed: 0 })
   const [loadingMoreOrders, setLoadingMoreOrders] = useState(false)
-  const loadedOrdersCount = useRef(0)
-  const [loading, setLoading] = useState(true)
+  const loadedOrdersCount = useRef(cachedOrders?.loadedCount ?? cachedOrders?.items?.length ?? 0)
+  const [loading, setLoading] = useState(!cachedOrders)
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState('pending')
   const [tabDirection, setTabDirection] = useState(1)
   const [tabMotion, setTabMotion] = useState(false)
   const reducedMotion = useReducedMotion()
-  const [tabInitialized, setTabInitialized] = useState(false)
+  const [tabInitialized, setTabInitialized] = useState(Boolean(cachedOrders))
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [saving, setSaving] = useState(false)
   const [cancelling, setCancelling] = useState(false)
@@ -186,8 +191,21 @@ export default function SellerOrders() {
   }, [loadingMoreOrders, ordersHasMore])
 
   useEffect(() => {
+    if (skipInitialRef.current) return
     loadOrders()
   }, [loadOrders])
+
+  useEffect(() => {
+    if (loading && orders.length === 0) return
+    commit({
+      items: orders,
+      hasMore: ordersHasMore,
+      counts: orderStatusCounts,
+      loadedCount: loadedOrdersCount.current,
+    })
+  }, [orders, ordersHasMore, orderStatusCounts, loading, commit])
+
+  useRegisterSectionRefresh(() => runSectionRefresh('seller', 'orders', () => loadOrders({ silent: true })))
 
   useEffect(() => {
     function refreshSilently() {

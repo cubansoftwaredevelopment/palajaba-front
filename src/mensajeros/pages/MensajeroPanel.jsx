@@ -17,6 +17,10 @@ import MensajeroProfile from '../components/MensajeroProfile'
 import MensajeroRouteView from '../components/MensajeroRouteView'
 import { clearMensajeroSession, getMensajeroProfile, updateMensajeroProfile } from '../lib/session'
 import { startMensajeroPush } from '../../live/utils'
+import SectionRefreshMascot from '../../components/SectionRefreshMascot'
+import { usePullToRefresh } from '../../components/usePullToRefresh'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useSectionRefreshing, useSectionSnapshot } from '../../session/useSectionSnapshot'
 
 const PANEL_TABS = [
   { id: 'pending', label: 'Por hacer' },
@@ -79,9 +83,10 @@ export default function MensajeroPanel() {
   const [section, setSection] = useState('work')
   const [direction, setDirection] = useState(1)
   const [motionOn, setMotionOn] = useState(false)
-  const [from, setFrom] = useState('')
-  const [to, setTo] = useState('')
-  const [data, setData] = useState(null)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('mensajero', 'summary')
+  const [from, setFrom] = useState(snapshot?.query?.from ?? '')
+  const [to, setTo] = useState(snapshot?.query?.to ?? '')
+  const [data, setData] = useState(snapshot?.data ?? null)
   const [error, setError] = useState('')
   const [batch, setBatch] = useState(null)
   const [doneBatch, setDoneBatch] = useState(null)
@@ -95,13 +100,15 @@ export default function MensajeroPanel() {
         end: to ? `${to}T23:59:59` : undefined,
       })
       setData(summary)
+      commit(summary, { from, to })
       setError('')
     } catch (err) {
       setError(err.message)
     }
-  }, [from, to])
+  }, [from, to, commit])
 
   useEffect(() => {
+    if (skipInitialRef.current) return undefined
     let cancelled = false
     fetchMensajeroSummary({
       start: from ? `${from}T00:00:00` : undefined,
@@ -109,12 +116,20 @@ export default function MensajeroPanel() {
     }).then((summary) => {
       if (cancelled) return
       setData(summary)
+      commit(summary, { from, to })
       setError('')
     }).catch((err) => {
       if (!cancelled) setError(err.message)
     })
     return () => { cancelled = true }
-  }, [from, to])
+  }, [from, to, commit])
+
+  const refreshSummary = useCallback(
+    () => runSectionRefresh('mensajero', 'summary', () => load()),
+    [load],
+  )
+  const { handlers: pullHandlers } = usePullToRefresh(refreshSummary)
+  const summaryRefreshing = useSectionRefreshing('mensajero', 'summary')
 
   useEffect(() => {
     startMensajeroPush().catch(() => {})
@@ -148,10 +163,13 @@ export default function MensajeroPanel() {
   }
 
   function replaceBatch(next) {
-    setData((current) => current ? {
-      ...current,
-      batches: (current.batches || []).map((item) => item.id === next.id ? next : item),
-    } : current)
+    if (!data) return
+    const updated = {
+      ...data,
+      batches: (data.batches || []).map((item) => item.id === next.id ? next : item),
+    }
+    setData(updated)
+    commit(updated, { from, to })
     setBatch((current) => current?.id === next.id ? next : current)
   }
 
@@ -216,7 +234,8 @@ export default function MensajeroPanel() {
           </div>
         </div>
       </header>
-      <main className={`${sellerPageWrap} mx-auto min-h-0 w-full flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-[calc(5.5rem+var(--safe-bottom))]`}>
+      <main className={`${sellerPageWrap} mx-auto min-h-0 w-full flex-1 overflow-y-auto overscroll-y-contain px-4 py-4 pb-[calc(5.5rem+var(--safe-bottom))]`} {...pullHandlers}>
+        <SectionRefreshMascot active={summaryRefreshing} />
         {error ? <p className="mb-3 text-sm font-semibold text-red-700">{error}</p> : null}
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div key={batch ? `route-${batch.id}` : section} className={stepClass} {...shift}>

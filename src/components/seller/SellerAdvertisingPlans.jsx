@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 
 import { ADVERTISING_TAGLINE, getAdvertisingPlans } from '../../constants/advertisingPlans'
 import { checkoutAdvertisingPlan, fetchAdvertisingPlans } from '../../lib/api'
@@ -49,16 +50,20 @@ function formatUsd(amount) {
 
 export default function SellerAdvertisingPlans({ profile }) {
   const fallbackPlans = getAdvertisingPlans().map(toUiPlan)
-  const [plans, setPlans] = useState(fallbackPlans)
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'profile-advertising')
+  const [plans, setPlans] = useState(snapshot?.data ?? fallbackPlans)
   const [hiringId, setHiringId] = useState(null)
   const [errorToast, setErrorToast] = useState(null)
 
   useEffect(() => {
+    if (skipInitialRef.current && snapshot?.data) return undefined
     let cancelled = false
     fetchAdvertisingPlans()
       .then((data) => {
         if (cancelled || !Array.isArray(data?.plans)) return
-        setPlans(data.plans.map(toUiPlan))
+        const next = data.plans.map(toUiPlan)
+        setPlans(next)
+        commit(next)
       })
       .catch(() => {})
     return () => {
