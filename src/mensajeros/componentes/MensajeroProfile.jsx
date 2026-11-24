@@ -69,8 +69,13 @@ export default function MensajeroProfile({ profile, onChange }) {
     if (saving) return
     setError('')
     setMessage('')
+    const cleanedPlate = plate.trim()
     if (!vehicleType) {
       setError('Elige un tipo de vehículo.')
+      return
+    }
+    if (!cleanedPlate) {
+      setError('Escribe la chapa del vehículo.')
       return
     }
     if (photos.length < 1) {
@@ -86,7 +91,7 @@ export default function MensajeroProfile({ profile, onChange }) {
     try {
       const payload = {
         vehicleType,
-        plate,
+        plate: cleanedPlate,
         files: photos.filter((item) => item.file).map((item) => item.file),
         keepUrls: photos.filter((item) => item.url).map((item) => item.url),
       }
@@ -210,7 +215,19 @@ export default function MensajeroProfile({ profile, onChange }) {
           value={vehicleType}
           onChange={setVehicleType}
         />
-        <input className={sellerInput} name="plate" placeholder="Matrícula" value={plate} onChange={(event) => setPlate(event.target.value)} />
+        <div>
+          <p className="text-xs font-semibold text-brand-green">Chapa</p>
+          <p className="mt-0.5 text-xs text-brand-carmelita/70">Obligatoria.</p>
+          <input
+            className={`${sellerInput} mt-2`}
+            name="plate"
+            placeholder="Chapa"
+            required
+            aria-required="true"
+            value={plate}
+            onChange={(event) => setPlate(event.target.value)}
+          />
+        </div>
         <div>
           <p className="text-xs font-semibold text-brand-green">Fotos del vehículo</p>
           <p className="mt-0.5 text-xs text-brand-carmelita/70">Obligatorio. De 1 a 5 fotos.</p>
