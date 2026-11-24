@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { adminAlertError, adminFocusRing, adminSection, adminSubtle } from '../../components/admin/adminStyles'
-import AdminPillSelect from '../../components/admin/AdminPillSelect'
-import LoadingState from '../../components/ui/LoadingState'
-import { clearAdminToken, getAdminToken } from '../../lib/adminAuth'
+import { adminAlertError, adminFocusRing, adminSection, adminSubtle } from '../../admin/componentes/adminStyles.js'
+import AdminPillSelect from '../../admin/componentes/AdminPillSelect.jsx'
+import LoadingState from '../../shared/componentes/LoadingState.jsx'
+import { clearAdminToken, getAdminToken } from '../../admin/utils/adminAuth.js'
 import { fetchAdminProducts } from '../api.js'
-import { getUserFacingMessage, isSessionError } from '../../lib/userFacingError'
+import { getUserFacingMessage, isSessionError } from '../../shared/utils/userFacingError.js'
 
 const PAGE_SIZE = 25
 

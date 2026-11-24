@@ -16,7 +16,7 @@ import {
   toggleProductId,
   validateCheckoutPhonesSelection,
   validateGestorUsername,
-} from '../../src/lib/sellerGestores.js'
+} from '../../src/seller/utils/sellerGestores.js'
 
 test('normalizeGestorUsername recorta y pasa a minúsculas', () => {
   assert.equal(normalizeGestorUsername('  PePe_01 '), 'pepe_01')

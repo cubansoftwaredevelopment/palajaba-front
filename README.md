@@ -87,7 +87,7 @@ Cualquier URL bajo **`VITE_SITE_URL`** (SITE_URL del front) puede abrir la app n
 | iOS Associated Domains | `ios/App/App/App.entitlements` → `applinks:<host>` del mismo `VITE_SITE_URL` |
 | Android association | `public/.well-known/assetlinks.json` → se sirve en `{SITE_URL}/.well-known/assetlinks.json` |
 | iOS association | `public/.well-known/apple-app-site-association` → `{SITE_URL}/.well-known/apple-app-site-association` |
-| JS bridge | `src/lib/nativeDeepLinks.js` (solo acepta el hostname de `VITE_SITE_URL`) |
+| JS bridge | `src/appReleases/utils/nativeDeepLinks.js` (solo acepta el hostname de `VITE_SITE_URL`) |
 
 ### Android: fingerprint SHA256
 

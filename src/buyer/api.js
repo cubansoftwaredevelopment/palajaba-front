@@ -1,4 +1,4 @@
-import { request } from '../lib/api.js'
+import { request } from '../api/client.js'
 
 export {
   addCustomerAddress,

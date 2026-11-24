@@ -1,78 +1,87 @@
 import { useEffect } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import RouteMotion, { isBuyerMotionPath } from './motion/RouteMotion'
-import BootSplash from './components/BootSplash'
-import ScrollToTopButton from './components/ScrollToTopButton'
-import CustomerNoticeToasts from './buyer/components/CustomerNoticeToasts'
-import AdminAuthenticatedLayout from './components/admin/AdminAuthenticatedLayout'
-import RouteError from './components/RouteError'
-import SellerRoute from './components/SellerRoute'
-import SellerLayout from './components/seller/SellerLayout'
-import WelcomeGate from './pages/WelcomeGate'
+import BootSplash from './shared/componentes/BootSplash.jsx'
+import ScrollToTopButton from './shared/componentes/ScrollToTopButton.jsx'
+import CustomerNoticeToasts from './buyer/componentes/CustomerNoticeToasts.jsx'
+import AdminAuthenticatedLayout from './admin/componentes/AdminAuthenticatedLayout.jsx'
+import RouteError from './shared/componentes/RouteError.jsx'
+import SellerRoute from './seller/componentes/SellerRoute.jsx'
+import SellerLayout from './seller/componentes/SellerLayout.jsx'
+import WelcomeGate from './onboarding/pages/WelcomeGate.jsx'
 import Login from './auth/pages/Login'
 import CreateAccount from './auth/pages/CreateAccount'
 import ForgotPassword from './auth/pages/ForgotPassword'
 import ForgotPasswordOtp from './auth/pages/ForgotPasswordOtp'
 import ForgotPasswordNew from './auth/pages/ForgotPasswordNew'
-import SellerGeneral from './pages/seller/SellerGeneral'
+import SellerGeneral from './seller/pages/SellerGeneral.jsx'
 import SellerStats from './SellerStatistics/pages/SellerStats'
 import SellerCatalog from './products/pages/SellerCatalog'
 import SellerCatalogPreview from './products/pages/SellerCatalogPreview'
-import SellerOrders from './pages/seller/SellerOrders'
-import SellerCustomers from './pages/seller/SellerCustomers'
-import SellerNotifications from './pages/seller/SellerNotifications'
-import SellerGestores from './pages/seller/SellerGestores'
-import { MensajeroLogin, MensajeroPanel, MensajeroRouteGuard, MensajeroSetup, SellerMensajeros } from './mensajeros'
-import SellerProfile from './pages/seller/SellerProfile'
-import GestorRoute from './components/gestor/GestorRoute'
-import GestorLogin from './pages/gestor/GestorLogin'
-import GestorSetup from './pages/gestor/GestorSetup'
-import GestorPanel from './pages/gestor/GestorPanel'
-import SellerCompleteProfile from './pages/SellerCompleteProfile'
+import SellerOrders from './seller/pages/SellerOrders.jsx'
+import SellerCustomers from './seller/pages/SellerCustomers.jsx'
+import SellerNotifications from './seller/pages/SellerNotifications.jsx'
+import SellerGestores from './seller/pages/SellerGestores.jsx'
+import SellerMensajeros from './mensajeros/pages/SellerMensajeros.jsx'
+import MensajeroLogin from './mensajeros/pages/MensajeroLogin.jsx'
+import MensajeroSetup from './mensajeros/pages/MensajeroSetup.jsx'
+import MensajeroPanel from './mensajeros/pages/MensajeroPanel.jsx'
+import MensajeroRouteGuard from './mensajeros/componentes/MensajeroRouteGuard.jsx'
+import SellerProfile from './seller/pages/SellerProfile.jsx'
+import GestorRoute from './gestor/componentes/GestorRoute.jsx'
+import GestorLogin from './gestor/pages/GestorLogin.jsx'
+import GestorSetup from './gestor/pages/GestorSetup.jsx'
+import GestorPanel from './gestor/pages/GestorPanel.jsx'
+import SellerCompleteProfile from './seller/pages/SellerCompleteProfile.jsx'
 import RegisterEntry from './auth/pages/RegisterEntry'
 import RegisterForm from './auth/pages/RegisterForm'
 import RegisterOtp from './auth/pages/RegisterOtp'
 import RegisterPlan from './auth/pages/RegisterPlan'
 import RegisterPayment from './auth/pages/RegisterPayment'
 import RegisterSuccess from './auth/pages/RegisterSuccess'
-import AdminLogin from './pages/AdminLogin'
-import AdminDashboard from './pages/AdminDashboard'
-import AdminStats from './AdminStatistics/pages/AdminStats'
-import AdminInbox from './pages/AdminInbox'
-import AdminDisputes from './pages/AdminDisputes'
+import AdminLogin from './admin/pages/AdminLogin.jsx'
+import AdminDashboard from './admin/pages/AdminDashboard.jsx'
+import AdminStats from './admin/pages/AdminStats'
+import AdminInbox from './admin/pages/AdminInbox.jsx'
+import AdminDisputes from './admin/pages/AdminDisputes.jsx'
 import AdminProducts from './products/pages/AdminProducts'
-import AdminBanners from './pages/AdminBanners'
+import AdminBanners from './admin/pages/AdminBanners.jsx'
 import AdminApps from './appReleases/pages/AdminApps'
-import AdminDiscountCodes from './pages/AdminDiscountCodes'
-import AdminSettings from './pages/AdminSettings'
-import AdminFinance from './pages/AdminFinance'
-import RejectSellerMarketplace from './buyer/components/RejectSellerMarketplace'
+import AdminDiscountCodes from './admin/pages/AdminDiscountCodes.jsx'
+import AdminSettings from './admin/pages/AdminSettings.jsx'
+import AdminFinance from './admin/pages/AdminFinance.jsx'
+import RejectSellerMarketplace from './buyer/componentes/RejectSellerMarketplace.jsx'
 import BuyerJabaLayout from './layouts/BuyerJabaLayout'
-import BuyerCartPage from './buyer/components/BuyerJabaPanel'
-import { BuyerDisplayCurrencyProvider, BuyerJabaProvider } from './buyer/context.js'
+import BuyerCartPage from './buyer/componentes/BuyerJabaPanel.jsx'
+import { BuyerDisplayCurrencyProvider, BuyerJabaProvider } from './buyer/context/context.js'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './buyer/pages/BuyerHome'
 import BuyerCategoryPage from './buyer/pages/BuyerCategoryPage'
 import BuyerBusinessesPage from './buyer/pages/BuyerBusinessesPage'
-import { BUYER_BUSINESSES_SECTION_ENABLED } from './buyer/constants.js'
+import { BUYER_BUSINESSES_SECTION_ENABLED } from './buyer/utils/constants.js'
 import BuyerSelectMunicipality from './buyer/pages/BuyerSelectMunicipality'
 import BuyerSelectProvince from './buyer/pages/BuyerSelectProvince'
 import CustomerRegister from './buyer/pages/CustomerRegister'
-import CustomerAccount from './customer/pages/CustomerAccount'
+import CustomerAccountLayout from './customer/pages/CustomerAccountLayout'
+import CustomerProfilePage from './customer/pages/CustomerProfilePage'
+import CustomerOrdersPage from './customer/pages/CustomerOrdersPage'
+import CustomerFavoritesPage from './customer/pages/CustomerFavoritesPage'
+import CustomerAddressesPage from './customer/pages/CustomerAddressesPage'
+import CustomerNoticesPage from './customer/pages/CustomerNoticesPage'
 import CustomerPasswordReset from './buyer/pages/CustomerPasswordReset'
-import CustomerRoute from './buyer/components/CustomerRoute'
-import PublicStoreRoute from './buyer/components/PublicStoreRoute'
-import RedirectLegacyStoreRoute from './buyer/components/RedirectLegacyStoreRoute'
+import CustomerRoute from './buyer/componentes/CustomerRoute.jsx'
+import PublicStoreRoute from './buyer/componentes/PublicStoreRoute.jsx'
+import RedirectLegacyStoreRoute from './buyer/componentes/RedirectLegacyStoreRoute.jsx'
 import DownloadAppPage from './appReleases/pages/DownloadAppPage'
-import PlatformFaq from './pages/PlatformFaq'
-import PlatformPrivacy from './pages/PlatformPrivacy'
-import PlatformTerms from './pages/PlatformTerms'
-import QvaPayReturn from './pages/QvaPayReturn'
-import AppReleasePromptGate from './appReleases/components/AppReleasePromptGate'
-import AppDevicePresence from './lib/appDevicePresence'
-import { NativeDeepLinkBridge } from './lib/nativeDeepLinks'
-import { disableBuyerLocationPersistence } from './lib/buyerLocation'
-import { markFrontendReady } from './lib/frontendReady'
+import PlatformFaq from './platform/pages/PlatformFaq.jsx'
+import PlatformPrivacy from './platform/pages/PlatformPrivacy.jsx'
+import PlatformTerms from './platform/pages/PlatformTerms.jsx'
+import QvaPayReturn from './subscriptions/pages/QvaPayReturn.jsx'
+import AppReleasePromptGate from './appReleases/componentes/AppReleasePromptGate.jsx'
+import AppDevicePresence from './appReleases/componentes/AppDevicePresence.jsx'
+import { NativeDeepLinkBridge } from './appReleases/utils/nativeDeepLinks.js'
+import { disableBuyerLocationPersistence } from './buyer/utils/buyerLocation.js'
+import { markFrontendReady } from './shared/utils/frontendReady.js'
 import { startAnonymousNativePush } from './live/utils'
 
 if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vista') === 'preview') {
@@ -153,7 +162,27 @@ const router = createBrowserRouter([
       { path: 'login', element: <Login /> },
       { path: 'cliente/registro', element: <CustomerRegister /> },
       { path: 'cliente/recuperar', element: <CustomerPasswordReset /> },
-      { path: 'cliente/*', element: <CustomerRoute><BuyerDisplayCurrencyProvider><BuyerJabaProvider><CustomerAccount /></BuyerJabaProvider></BuyerDisplayCurrencyProvider></CustomerRoute> },
+      {
+        path: 'cliente',
+        element: (
+          <CustomerRoute>
+            <BuyerDisplayCurrencyProvider>
+              <BuyerJabaProvider>
+                <CustomerAccountLayout />
+              </BuyerJabaProvider>
+            </BuyerDisplayCurrencyProvider>
+          </CustomerRoute>
+        ),
+        children: [
+          { index: true, element: <CustomerProfilePage /> },
+          { path: 'perfil', element: <CustomerProfilePage /> },
+          { path: 'pedidos', element: <CustomerOrdersPage /> },
+          { path: 'favoritos', element: <CustomerFavoritesPage /> },
+          { path: 'direcciones', element: <CustomerAddressesPage /> },
+          { path: 'avisos', element: <CustomerNoticesPage /> },
+          { path: '*', element: <Navigate to="/cliente/perfil" replace /> },
+        ],
+      },
       { path: 'recuperar', element: <ForgotPassword /> },
       { path: 'recuperar/codigo', element: <ForgotPasswordOtp /> },
       { path: 'recuperar/nueva', element: <ForgotPasswordNew /> },

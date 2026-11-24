@@ -1,0 +1,128 @@
+import { useEffect, useState } from 'react'
+import { CATALOG_CATEGORY_SUGGESTIONS } from '../utils/catalog.js'
+import {
+  sellerBtnPrimary,
+  sellerBtnSecondary,
+  sellerCharCounter,
+  sellerChip,
+  sellerModalBody,
+  sellerModalFooter,
+  sellerModalInput,
+  sellerLabel,
+  sellerModalTitle,
+} from '../../seller/componentes/sellerStyles.js'
+import { createCatalogCategory } from '../api.js'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
+import { getSellerToken } from '../../seller/utils/sellerAuth.js'
+import SellerModalPortal from '../../seller/componentes/SellerModalPortal.jsx'
+import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
+
+export default function CreateCatalogCategoryModal({ initialName = '', onClose: requestClose, onCreated }) {
+  const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
+  const [name, setName] = useState(initialName)
+  const [loading, setLoading] = useState(false)
+  const { showError, toastNode } = useFormErrorToast({ aboveNav: true, layerClassName: '!z-[260]' })
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    showError('')
+
+    const trimmed = name.trim()
+    if (trimmed.length < 2) {
+      showError('Escribe un nombre de al menos 2 caracteres.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const token = getSellerToken()
+      const category = await createCatalogCategory(token, { name: trimmed })
+      onCreated(category)
+    } catch (err) {
+      showError(getUserFacingMessage(err, 'No se pudo crear la categoría.'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <SellerModalPortal>
+      <SellerMotionSheet
+        onClose={onClose}
+        closing={closing}
+        sheetProps={sheetProps}
+        labelledBy="create-catalog-category-title"
+      >
+          <div className="shrink-0 border-b border-brand-green/8 px-5 py-4">
+            <h2 id="create-catalog-category-title" className={sellerModalTitle}>
+              Nueva categoría
+            </h2>
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <div className={sellerModalBody}>
+              <label htmlFor="catalog-category-name" className={sellerLabel}>
+                Nombre de la categoría
+              </label>
+              <input
+                id="catalog-category-name"
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  showError('')
+                }}
+                maxLength={60}
+                placeholder="Ej.: Ferretería"
+                className={`mt-1.5 ${sellerModalInput}`}
+                autoComplete="off"
+              />
+              <p className={`mt-1 ${sellerCharCounter}`}>{name.length}/60</p>
+
+              <p className="mt-3 text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-brand-carmelita/75">
+                Ideas rápidas
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {CATALOG_CATEGORY_SUGGESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => {
+                      setName(suggestion)
+                      showError('')
+                    }}
+                    className={sellerChip(name === suggestion)}
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={`${sellerModalFooter} grid grid-cols-2 gap-2`}>
+              <button type="button" onClick={onClose} disabled={loading} className={sellerBtnSecondary}>
+                Cancelar
+              </button>
+              <button type="submit" disabled={loading} className={sellerBtnPrimary}>
+                {loading ? 'Creando…' : 'Crear categoría'}
+              </button>
+            </div>
+          </form>
+      </SellerMotionSheet>
+      {toastNode}
+    </SellerModalPortal>
+  )
+}

@@ -7,7 +7,7 @@ import {
   isValidQvaPayEvidenceContent,
   qvaPayInvoiceAmounts,
   QVAPAY_EVIDENCE_WARNING,
-} from '../../src/lib/qvapayEvidence.js'
+} from '../../src/subscriptions/utils/qvapayEvidence.js'
 
 test('evidencia bloquea reenvío mientras el cliente debe responder', () => {
   assert.equal(canSendQvaPayEvidence({ payment_status: 'paid', evidence: { status: 'pending' } }), false)

@@ -11,7 +11,7 @@ import {
   isProfileHubPanel,
   openProfilePanel,
   resolveProfileMenuAction,
-} from '../../src/lib/sellerProfileHub.js'
+} from '../../src/seller/utils/sellerProfileHub.js'
 
 test('getProfileMenuSections agrupa General y Cuenta sin solapes', () => {
   const sections = getProfileMenuSections()

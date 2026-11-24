@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
-import BuyerHeaderSearch from '../components/BuyerHeaderSearch'
-import BuyerLocationDisplay from '../components/BuyerLocationDisplay'
-import BuyerProductCard from '../components/BuyerProductCard'
-import BuyerShell from '../components/BuyerShell'
+import BuyerHeaderSearch from '../componentes/BuyerHeaderSearch.jsx'
+import BuyerLocationDisplay from '../componentes/BuyerLocationDisplay.jsx'
+import BuyerProductCard from '../componentes/BuyerProductCard.jsx'
+import BuyerShell from '../componentes/BuyerShell.jsx'
 import {
   buyerCategorySectionTitle,
   buyerHomeSections,
   buyerProductGrid,
-} from '../components/buyerStyles'
-import LoadingState from '../../components/ui/LoadingState'
-import StatePanel from '../../components/ui/StatePanel'
-import { BuyerDisplayedLocationProvider } from '../context.js'
-import { useBuyerDisplayCurrency } from '../context.js'
-import { DEAD_MASCOT, LOADING_MASCOT } from '../../constants/branding'
+} from '../componentes/buyerStyles.js'
+import LoadingState from '../../shared/componentes/LoadingState.jsx'
+import StatePanel from '../../shared/componentes/StatePanel.jsx'
+import { BuyerDisplayedLocationProvider } from '../context/context.js'
+import { useBuyerDisplayCurrency } from '../context/context.js'
+import { DEAD_MASCOT, LOADING_MASCOT } from '../../shared/utils/branding.js'
 import { fetchMarketplaceCategoryProducts } from '../api.js'
 import { fetchCategories } from '../../products/api.js'
 import {
@@ -21,9 +21,9 @@ import {
   getAdditionalMunicipalities,
   getBuyerLocation,
   hasCompleteBuyerLocation,
-} from '../../lib/buyerLocation'
-import { resolveMarketplaceCategory } from '../../lib/marketplaceCategory'
-import { resolveUserFacingError } from '../../lib/userFacingError'
+} from '../utils/buyerLocation.js'
+import { resolveMarketplaceCategory } from '../utils/marketplaceCategory.js'
+import { resolveUserFacingError } from '../../shared/utils/userFacingError.js'
 import { readMatchingSnapshot, useSectionSnapshot } from '../../session/useSectionSnapshot'
 
 const PAGE_SIZE = 20

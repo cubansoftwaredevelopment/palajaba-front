@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { isSavedMarketplaceOrder } from '../../src/lib/marketplaceOrder.js'
+import { isSavedMarketplaceOrder } from '../../src/buyer/utils/marketplaceOrder.js'
 
 test('acepta pedido guardado con id y status', () => {
   assert.equal(

@@ -1,4 +1,4 @@
-import { request } from '../lib/api'
+import { request } from '../api/client.js'
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` }

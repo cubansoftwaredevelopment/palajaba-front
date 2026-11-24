@@ -1,6 +1,6 @@
 import { AnimatePresence, PresenceContext, motion, useReducedMotion } from 'framer-motion'
 import { useOutlet, useLocation } from 'react-router-dom'
-import { usePullToRefresh } from '../components/usePullToRefresh'
+import { usePullToRefresh } from '../shared/componentes/usePullToRefresh.js'
 import { useSectionRefresh } from '../session/useSectionRefresh'
 import { stepShift } from './presets'
 

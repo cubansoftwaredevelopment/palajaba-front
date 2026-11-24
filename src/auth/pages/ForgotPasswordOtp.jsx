@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import AuthHeader from '../components/AuthHeader'
-import AuthShell from '../components/AuthShell'
-import Button from '../../components/Button'
-import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
+import AuthHeader from '../componentes/AuthHeader.jsx'
+import AuthShell from '../componentes/AuthShell.jsx'
+import Button from '../../shared/componentes/Button.jsx'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import {
   alertErrorClass,
   hintClass,
   inputClass,
   labelClass,
-} from '../components/formStyles'
+} from '../componentes/formStyles.js'
 import { confirmPasswordResetOtp, resendPasswordResetOtp } from '../api.js'
-import { getUserFacingMessage } from '../../lib/userFacingError'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 import {
   applySmsFailFromError,
   expiryMs,
@@ -19,7 +19,7 @@ import {
   getSmsCooldownUntil,
   smsFailUserMessage,
   useCountdown,
-} from '../context.js'
+} from '../context/context.js'
 
 function CodeField({ id, label, hint, value, onChange }) {
   return (

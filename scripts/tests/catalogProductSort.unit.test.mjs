@@ -6,7 +6,7 @@ import {
   getProductSortModeLabel,
   productPriceInCup,
   sortProductsForPreview,
-} from '../../src/lib/productPriceSort.js'
+} from '../../src/products/context/context.js'
 
 const cupPerUnit = { CUP: 1, USD: 655, EUR: 750, MLC: 440 }
 

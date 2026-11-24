@@ -8,7 +8,7 @@ import {
   getProductSearchStatus,
   inferManualOrderPaymentCurrency,
   validateManualOrderDraft,
-} from '../../src/lib/sellerManualOrder.js'
+} from '../../src/seller/utils/sellerManualOrder.js'
 
 const catalog = {
   categories: [

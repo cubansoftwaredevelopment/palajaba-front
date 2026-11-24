@@ -14,26 +14,26 @@ import {
   isPickupFulfillment,
   toApiDelivery,
   validatePickupForm,
-} from '../../src/lib/buyerDelivery.js'
+} from '../../src/buyer/utils/buyerDelivery.js'
 import {
   CHECKOUT_INVALID_PAYLOAD,
   runStoreCheckout,
-} from '../../src/lib/runStoreCheckout.js'
+} from '../../src/buyer/utils/runStoreCheckout.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const panelSource = readFileSync(
-  join(__dirname, '../../src/buyer/components/BuyerJabaPanel.jsx'),
+  join(__dirname, '../../src/buyer/componentes/BuyerJabaPanel.jsx'),
   'utf8',
 )
 const contextSource = readFileSync(
-  join(__dirname, '../../src/buyer/context.js'),
+  join(__dirname, '../../src/buyer/context/context.js'),
   'utf8',
 )
 const pickupModalSource = readFileSync(
-  join(__dirname, '../../src/buyer/components/BuyerPickupCheckoutModal.jsx'),
+  join(__dirname, '../../src/buyer/componentes/BuyerPickupCheckoutModal.jsx'),
   'utf8',
 )
-const whatsappSource = readFileSync(join(__dirname, '../../src/lib/whatsappOrder.js'), 'utf8')
+const whatsappSource = readFileSync(join(__dirname, '../../src/orders/utils/whatsappOrder.js'), 'utf8')
 
 const basePayload = {
   storeId: 'store-1',
@@ -47,7 +47,7 @@ test('flujo integrado: panel usa CTAs domicilio/recogida y no selector de moneda
   assert.match(panelSource, /Recoger en la tienda/)
   assert.match(panelSource, /El costo de entrega se coordina directamente con la tienda/)
   assert.match(panelSource, /requestPickupCheckout/)
-  assert.match(panelSource, /window\.confirm/)
+  assert.match(panelSource, /ClearStoreModal/)
   assert.match(panelSource, /TrashIcon/)
   assert.match(panelSource, /buyerJabaStickySummary/)
   assert.match(panelSource, /groups\.length >= 3/)

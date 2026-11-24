@@ -1,4 +1,4 @@
-import { request } from '../lib/api'
+import { request } from '../api/client.js'
 import { subscriptionCheckoutPayload } from './qvapay.js'
 
 function authHeaders(token) {
@@ -115,4 +115,18 @@ export function renewRegistration(
     method: 'POST',
     headers: authHeaders(token),
   })
+}
+
+export function fetchAdvertisingPlans() {
+  return request("/api/platform/advertising-plans");
+}
+
+export function checkoutAdvertisingPlan(token, planId) {
+  return request("/api/advertising/checkout", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ plan_id: planId }),
+  });
 }

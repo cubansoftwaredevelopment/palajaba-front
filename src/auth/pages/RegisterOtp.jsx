@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import AuthHeader from '../components/AuthHeader'
-import AuthShell from '../components/AuthShell'
-import { authFormWrap, authPageIntro } from '../components/authStyles'
-import RegisterProgress from '../components/RegisterProgress'
-import Button from '../../components/Button'
-import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
+import AuthHeader from '../componentes/AuthHeader.jsx'
+import AuthShell from '../componentes/AuthShell.jsx'
+import { authFormWrap, authPageIntro } from '../componentes/authStyles.js'
+import RegisterProgress from '../componentes/RegisterProgress.jsx'
+import Button from '../../shared/componentes/Button.jsx'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import {
   alertErrorClass,
   hintClass,
   inputClass,
   labelClass,
-} from '../components/formStyles'
+} from '../componentes/formStyles.js'
 import { confirmRegisterOtp, resendRegisterOtp } from '../api.js'
-import { setSellerSession } from '../../lib/sellerAuth'
-import { getRegisterSteps } from '../constants.js'
+import { setSellerSession } from '../../seller/utils/sellerAuth.js'
+import { getRegisterSteps } from '../utils/constants.js'
 import {
   applySmsFailFromError,
   expiryMs,
@@ -22,8 +22,8 @@ import {
   getSmsCooldownUntil,
   smsFailUserMessage,
   useCountdown,
-} from '../context.js'
-import { getUserFacingMessage } from '../../lib/userFacingError'
+} from '../context/context.js'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 
 function CodeField({ id, label, hint, value, onChange }) {
   return (

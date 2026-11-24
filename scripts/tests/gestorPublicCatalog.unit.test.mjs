@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { buildDirectBuyCheckoutPayload } from '../../src/lib/buyerJaba.js'
-import { storeGestorPublicPath, isReservedStoreSlug } from '../../src/lib/storeSlug.js'
-import { computeGestorDisplayPrice } from '../../src/lib/gestorCatalog.js'
+import { buildDirectBuyCheckoutPayload } from '../../src/buyer/utils/buyerJaba.js'
+import { storeGestorPublicPath, isReservedStoreSlug } from '../../src/seller/utils/storeSlug.js'
+import { computeGestorDisplayPrice } from '../../src/gestor/utils/gestorCatalog.js'
 
 test('buildDirectBuyCheckoutPayload incluye gestor y teléfono del producto', () => {
   const payload = buildDirectBuyCheckoutPayload({

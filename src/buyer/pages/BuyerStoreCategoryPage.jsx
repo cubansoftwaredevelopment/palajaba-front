@@ -1,33 +1,33 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
-import CatalogThemeScope from '../../components/catalog/CatalogThemeScope'
-import BuyerStoreServiceFooter from '../components/BuyerStoreServiceFooter'
-import BuyerHeaderSearch from '../components/BuyerHeaderSearch'
-import { BuyerStoreIdentity } from '../components/BuyerStoreHeader'
-import BuyerMarketplaceNav from '../components/BuyerMarketplaceNav'
-import BuyerProductCard from '../components/BuyerProductCard'
-import BuyerShell from '../components/BuyerShell'
+import CatalogThemeScope from '../../products/componentes/CatalogThemeScope.jsx'
+import BuyerStoreServiceFooter from '../componentes/BuyerStoreServiceFooter.jsx'
+import BuyerHeaderSearch from '../componentes/BuyerHeaderSearch.jsx'
+import { BuyerStoreIdentity } from '../componentes/BuyerStoreHeader.jsx'
+import BuyerMarketplaceNav from '../componentes/BuyerMarketplaceNav.jsx'
+import BuyerProductCard from '../componentes/BuyerProductCard.jsx'
+import BuyerShell from '../componentes/BuyerShell.jsx'
 import {
   buyerCategorySectionTitle,
   buyerHomeSections,
   buyerProductGrid,
-} from '../components/buyerStyles'
-import LoadingState from '../../components/ui/LoadingState'
-import StatePanel from '../../components/ui/StatePanel'
-import { BuyerDisplayedLocationProvider } from '../context.js'
-import { useBuyerDisplayCurrency } from '../context.js'
-import { DEAD_MASCOT, LOADING_MASCOT } from '../../constants/branding'
+} from '../componentes/buyerStyles.js'
+import LoadingState from '../../shared/componentes/LoadingState.jsx'
+import StatePanel from '../../shared/componentes/StatePanel.jsx'
+import { BuyerDisplayedLocationProvider } from '../context/context.js'
+import { useBuyerDisplayCurrency } from '../context/context.js'
+import { DEAD_MASCOT, LOADING_MASCOT } from '../../shared/utils/branding.js'
 import {
   fetchMarketplaceGestorStoreCatalog,
   fetchMarketplaceGestorStoreCategoryProducts,
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
 } from '../../products/api.js'
-import { normalizeCatalogTheme } from '../../lib/catalogThemes'
-import { resolveMarketplaceCategory } from '../../lib/marketplaceCategory'
-import { getAdditionalMunicipalities } from '../../lib/buyerLocation'
-import { storeGestorPublicPath, storePublicPath } from '../../lib/storeSlug'
-import { resolveUserFacingError } from '../../lib/userFacingError'
+import { normalizeCatalogTheme } from '../../products/utils/constants.js'
+import { resolveMarketplaceCategory } from '../utils/marketplaceCategory.js'
+import { getAdditionalMunicipalities } from '../utils/buyerLocation.js'
+import { storeGestorPublicPath, storePublicPath } from '../../seller/utils/storeSlug.js'
+import { resolveUserFacingError } from '../../shared/utils/userFacingError.js'
 import { usePublicStoreLocation } from './usePublicStoreLocation'
 
 const PAGE_SIZE = 20

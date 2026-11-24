@@ -8,17 +8,17 @@ import {
   PLAN_GESTOR_FEATURES,
   canAddGestor,
   maxGestoresForPlan,
-} from '../../src/lib/gestorPlanLimits.js'
+} from '../../src/gestor/utils/gestorPlanLimits.js'
 import {
   PROFILE_PANEL_IDS,
   getProfileMenuSections,
   isProfileFormPanel,
   openProfilePanel,
   resolveProfileMenuAction,
-} from '../../src/lib/sellerProfileHub.js'
+} from '../../src/seller/utils/sellerProfileHub.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-const planSource = readFileSync(join(__dirname, '../../src/subscriptions/constants.js'), 'utf8')
+const planSource = readFileSync(join(__dirname, '../../src/subscriptions/utils/constants.js'), 'utf8')
 
 /**
  * Simula crear gestores hasta el tope del plan Básico.

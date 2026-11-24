@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { afterEach, test } from 'node:test'
 
-import { buildMarketplaceVisitPayload, recordMarketplaceVisit } from '../../src/lib/marketplaceVisit.js'
+import { buildMarketplaceVisitPayload, recordMarketplaceVisit } from '../../src/buyer/utils/marketplaceVisit.js'
 
 const originalFetch = globalThis.fetch
 

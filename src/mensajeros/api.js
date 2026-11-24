@@ -1,8 +1,8 @@
-import { ApiError, parseApiErrorDetail, request } from '../lib/api'
-import { downloadBlob } from '../lib/downloadFile'
-import { getCustomerToken } from '../lib/customerAuth'
-import { getMensajeroToken } from './lib/session'
-import { getSellerToken } from '../lib/sellerAuth'
+import { ApiError, parseApiErrorDetail, request } from '../api/client.js'
+import { downloadBlob } from '../shared/utils/downloadFile.js'
+import { getCustomerToken } from '../customer/utils/customerAuth.js'
+import { getMensajeroToken } from './utils/session.js'
+import { getSellerToken } from '../seller/utils/sellerAuth.js'
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` }

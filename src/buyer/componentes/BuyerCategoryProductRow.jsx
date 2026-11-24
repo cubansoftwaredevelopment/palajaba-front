@@ -1,0 +1,307 @@
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
+import { LOADING_MASCOT } from '../../shared/utils/branding.js'
+import { animateScrollLeft } from '../../shared/utils/smoothScroll.js'
+import BuyerProductCard from './BuyerProductCard.jsx'
+import StoreMark from './StoreMark.jsx'
+import {
+  buyerCategorySectionTitle,
+  buyerProductRow,
+  buyerProductRowArrow,
+  buyerProductRowArrowLeft,
+  buyerProductRowFade,
+  buyerProductRowFadeLeft,
+  buyerProductRowItem,
+  buyerProductRowWrap,
+} from './buyerStyles.js'
+
+const HORIZONTAL_BATCH = 5
+const SCROLL_EDGE_THRESHOLD = 20
+
+function getScrollStep(container) {
+  const firstItem = container.querySelector('[data-product-item]')
+  if (!firstItem) return Math.round(container.clientWidth * 0.72)
+  const gap = Number.parseFloat(getComputedStyle(container).columnGap || getComputedStyle(container).gap || '12')
+  return firstItem.offsetWidth + (Number.isFinite(gap) ? gap : 12)
+}
+
+export default function BuyerCategoryProductRow({ section, loadMore, href, storePhotoUrl = '', storeName = '', enterFrom = null }) {
+  const scrollRef = useRef(null)
+  const sentinelRef = useRef(null)
+  const loadingRef = useRef(false)
+  const animatingRef = useRef(false)
+  const cancelScrollRef = useRef(null)
+
+  const [products, setProducts] = useState(section.products)
+  const [visibleCount, setVisibleCount] = useState(() =>
+    Math.min(HORIZONTAL_BATCH, section.products?.length ?? 0),
+  )
+  const [hasMore, setHasMore] = useState(section.has_more)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [error, setError] = useState('')
+  const [canScrollRight, setCanScrollRight] = useState(false)
+  const [canScrollLeft, setCanScrollLeft] = useState(false)
+  const visibleCountRef = useRef(visibleCount)
+  const holdUntilLeaveRef = useRef(false)
+  visibleCountRef.current = visibleCount
+
+  const updateScrollState = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const maxScroll = el.scrollWidth - el.clientWidth
+    setCanScrollRight(el.scrollLeft < maxScroll - SCROLL_EDGE_THRESHOLD)
+    setCanScrollLeft(el.scrollLeft > SCROLL_EDGE_THRESHOLD)
+  }, [])
+
+  useEffect(() => {
+    const next = section.products || []
+    setProducts((current) => {
+      if (current.length === next.length && current.every((item, index) => item.id === next[index]?.id)) return current
+      return next
+    })
+    setHasMore(section.has_more)
+    setVisibleCount((count) => {
+      const floor = Math.min(HORIZONTAL_BATCH, next.length)
+      if (count >= floor && count <= next.length) return count
+      return floor
+    })
+  }, [section.category_id, section.products, section.has_more])
+
+  useEffect(() => {
+    setError('')
+    holdUntilLeaveRef.current = false
+  }, [section.category_id])
+
+  useEffect(() => {
+    updateScrollState()
+    const el = scrollRef.current
+    if (!el) return undefined
+
+    el.addEventListener('scroll', updateScrollState, { passive: true })
+    const observer = new ResizeObserver(updateScrollState)
+    observer.observe(el)
+
+    return () => {
+      el.removeEventListener('scroll', updateScrollState)
+      observer.disconnect()
+      cancelScrollRef.current?.()
+    }
+  }, [products.length, updateScrollState])
+
+  const loadMoreProducts = useCallback(async () => {
+    if (loadingRef.current || !hasMore || !loadMore) return
+
+    loadingRef.current = true
+    setLoadingMore(true)
+    setError('')
+
+    try {
+      const data = await loadMore(products.length)
+
+      let added = 0
+      setProducts((current) => {
+        const seen = new Set(current.map((item) => item.id))
+        const nextItems = data.products.filter((item) => !seen.has(item.id))
+        added = nextItems.length
+        return [...current, ...nextItems]
+      })
+      setVisibleCount((count) => count + added)
+      setHasMore(data.has_more)
+    } catch (err) {
+      setError(getUserFacingMessage(err, 'No pudimos cargar más productos. Inténtalo de nuevo.'))
+    } finally {
+      loadingRef.current = false
+      setLoadingMore(false)
+    }
+  }, [hasMore, loadMore, products.length])
+
+  const requestNextCards = useCallback(() => {
+    if (visibleCountRef.current < products.length) {
+      setVisibleCount((count) => Math.min(products.length, count + HORIZONTAL_BATCH))
+      return
+    }
+    loadMoreProducts()
+  }, [loadMoreProducts, products.length])
+
+  useEffect(() => {
+    const root = scrollRef.current
+    const sentinel = sentinelRef.current
+    const hasPending = visibleCount < products.length || hasMore
+    if (!root || !sentinel || !hasPending) return undefined
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const hit = Boolean(entries[0]?.isIntersecting)
+        if (!hit) {
+          holdUntilLeaveRef.current = false
+          return
+        }
+        if (holdUntilLeaveRef.current || loadingRef.current) return
+        if (root.scrollLeft <= SCROLL_EDGE_THRESHOLD) return
+        holdUntilLeaveRef.current = true
+        requestNextCards()
+      },
+      { root, rootMargin: '0px', threshold: 0 },
+    )
+
+    observer.observe(sentinel)
+    return () => observer.disconnect()
+  }, [hasMore, products.length, requestNextCards, visibleCount])
+
+  const animateRow = useCallback(
+    (direction) => {
+      const el = scrollRef.current
+      if (!el || animatingRef.current) return
+
+      const step = getScrollStep(el)
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth)
+      const delta = direction === 'next' ? step : -step
+      const target = Math.max(0, Math.min(maxScroll, el.scrollLeft + delta))
+
+      animatingRef.current = true
+      cancelScrollRef.current?.()
+
+      cancelScrollRef.current = animateScrollLeft(el, target, {
+        onComplete: () => {
+          animatingRef.current = false
+          updateScrollState()
+
+          if (
+            direction === 'next' &&
+            el.scrollLeft >= maxScroll - SCROLL_EDGE_THRESHOLD &&
+            (visibleCountRef.current < products.length || hasMore)
+          ) {
+            requestNextCards()
+          }
+        },
+      })
+    },
+    [hasMore, products.length, requestNextCards, updateScrollState],
+  )
+
+  const visibleProducts = products.slice(0, visibleCount)
+  const hasPending = visibleCount < products.length || hasMore
+  const showScrollRight = canScrollRight || hasPending
+  const showScrollLeft = canScrollLeft
+  const storeMark = storePhotoUrl || storeName ? (
+    <StoreMark photoUrl={storePhotoUrl} storeName={storeName} />
+  ) : null
+
+  if (!products.length) return null
+
+  return (
+    <section className="min-w-0" aria-labelledby={`buyer-category-${section.category_id}`}>
+      <h2 id={`buyer-category-${section.category_id}`} className="mb-3">
+        {href ? (
+          <Link
+            to={href}
+            state={{
+              categoryId: section.category_id,
+              categoryName: section.category_name,
+            }}
+            aria-label={`Ver todos los productos de ${section.category_name}`}
+            className={`${buyerCategorySectionTitle} inline-flex max-w-full items-center gap-2 transition-colors hover:text-[#4d7026]`}
+          >
+            {storeMark}
+            <span className="truncate">{section.category_name}</span>
+            <span
+              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-brand-green/20 bg-brand-green/8 text-brand-green"
+              aria-hidden="true"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </span>
+          </Link>
+        ) : (
+          <span className={`${buyerCategorySectionTitle} inline-flex max-w-full items-center gap-2`}>
+            {storeMark}
+            <span className="truncate">{section.category_name}</span>
+          </span>
+        )}
+      </h2>
+
+      <div className={buyerProductRowWrap}>
+        <div
+          ref={scrollRef}
+          className={`${buyerProductRow} ${showScrollLeft ? 'lg:pl-12' : ''} ${showScrollRight ? 'pr-12' : ''}`}
+        >
+          {visibleProducts.map((product, index) => (
+            <div key={product.id} data-product-item className={buyerProductRowItem}>
+              <BuyerProductCard
+                product={product}
+                compact
+                enterIndex={enterFrom == null ? null : enterFrom + index}
+              />
+            </div>
+          ))}
+
+          {hasPending ? (
+            <div
+              ref={sentinelRef}
+              className="flex w-16 shrink-0 items-center justify-center"
+              aria-hidden={!loadingMore}
+            >
+              {loadingMore ? (
+                <img
+                  src={LOADING_MASCOT.src}
+                  alt=""
+                  className="h-14 w-14 animate-levitate object-contain sm:h-10 sm:w-10"
+                  width={56}
+                  height={56}
+                  decoding="async"
+                />
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        {showScrollLeft ? (
+          <>
+            <div className={`${buyerProductRowFadeLeft} hidden lg:block`} aria-hidden="true" />
+            <button
+              type="button"
+              onClick={() => animateRow('prev')}
+              className={`${buyerProductRowArrowLeft} hidden lg:flex`}
+              aria-label={`Ver anteriores en ${section.category_name}`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </button>
+          </>
+        ) : null}
+
+        {showScrollRight ? (
+          <>
+            <div className={`${buyerProductRowFade} hidden lg:block`} aria-hidden="true" />
+            <button
+              type="button"
+              onClick={() => animateRow('next')}
+              className={buyerProductRowArrow}
+              aria-label={`Ver más en ${section.category_name}`}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" aria-hidden>
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </button>
+          </>
+        ) : null}
+      </div>
+
+      {error ? (
+        <div className="mt-2 flex items-center gap-3">
+          <p className="text-xs text-brand-carmelita/85">{error}</p>
+          <button
+            type="button"
+            onClick={loadMoreProducts}
+            className="text-xs font-semibold text-brand-green underline-offset-2 hover:underline"
+          >
+            Reintentar
+          </button>
+        </div>
+      ) : null}
+    </section>
+  )
+}

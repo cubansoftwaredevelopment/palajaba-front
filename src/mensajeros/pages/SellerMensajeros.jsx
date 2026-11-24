@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
-import ConfirmModal from '../../components/ConfirmModal'
-import SearchBar from '../../buyer/components/SearchBar'
-import FilterModal from '../../components/filters/FilterModal'
-import SellerModalPortal from '../../components/seller/SellerModalPortal'
-import SellerPageHeader from '../../components/seller/SellerPageHeader'
+import ConfirmModal from '../../shared/componentes/ConfirmModal.jsx'
+import SearchBar from '../../buyer/componentes/SearchBar.jsx'
+import FilterModal from '../../shared/componentes/FilterModal.jsx'
+import SellerModalPortal from '../../seller/componentes/SellerModalPortal.jsx'
+import SellerPageHeader from '../../seller/componentes/SellerPageHeader.jsx'
 import {
   sellerBtnPrimary,
   sellerBtnSecondary,
@@ -14,16 +14,16 @@ import {
   sellerModalTitle,
   sellerPageWrap,
   sellerSection,
-} from '../../components/seller/sellerStyles'
-import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
-import { getUserFacingMessage } from '../../lib/userFacingError'
-import { getSellerToken } from '../../lib/sellerAuth'
+} from '../../seller/componentes/sellerStyles.js'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
+import { getSellerToken } from '../../seller/utils/sellerAuth.js'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import { createSellerMensajero, deleteSellerMensajero, fetchSellerMensajeros, updateSellerMensajero } from '../api'
 import { runSectionRefresh } from '../../session/sectionStore'
 import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
 import { useSectionSnapshot } from '../../session/useSectionSnapshot'
-import { VEHICLE_TYPES, vehicleLabel } from '../constants'
+import { VEHICLE_TYPES, vehicleLabel } from '../utils/constants.js'
 
 const SEARCH_HINTS = ['buscar por nombre', 'buscar por apellido']
 

@@ -9,7 +9,7 @@ import {
   formatGestorUsage,
   gestorLimitFeatureLabel,
   maxGestoresForPlan,
-} from '../../src/lib/gestorPlanLimits.js'
+} from '../../src/gestor/utils/gestorPlanLimits.js'
 
 test('plan Básico limita a 10 gestores; Pro a 25; Premium ilimitado', () => {
   assert.equal(STANDARD_GESTOR_LIMIT, 10)

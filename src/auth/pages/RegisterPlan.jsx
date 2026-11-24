@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import Button from '../../components/Button'
-import { BILLING_LABELS } from '../../constants/admin.js'
-import { usePlanPricing } from '../../lib/usePlanPricing'
+import Button from '../../shared/componentes/Button.jsx'
+import { BILLING_LABELS } from '../../admin/utils/admin.js'
+import { usePlanPricing } from '../../subscriptions/utils/usePlanPricing.js'
 import {
   BILLING_PERIOD_ORDER,
   formatPlanPriceLabel,
   PLAN_TIERS,
   TRIAL_PLAN,
-} from '../../subscriptions/constants.js'
-import AuthHeader from '../components/AuthHeader'
-import AuthShell from '../components/AuthShell'
-import RegisterProgress from '../components/RegisterProgress'
-import { getRegisterSteps } from '../constants.js'
+} from '../../subscriptions/utils/constants.js'
+import AuthHeader from '../componentes/AuthHeader.jsx'
+import AuthShell from '../componentes/AuthShell.jsx'
+import RegisterProgress from '../componentes/RegisterProgress.jsx'
+import { getRegisterSteps } from '../utils/constants.js'
 
 function PlanSelectionMark({ selected }) {
   return (

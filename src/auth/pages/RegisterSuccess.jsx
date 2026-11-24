@@ -1,9 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import AuthCard from '../components/AuthCard'
-import AuthShell from '../components/AuthShell'
-import { authCenteredBlock } from '../components/authStyles'
-import Button from '../../components/Button'
-import Logo from '../../components/Logo'
+import AuthCard from '../componentes/AuthCard.jsx'
+import AuthShell from '../componentes/AuthShell.jsx'
+import { authCenteredBlock } from '../componentes/authStyles.js'
+import Button from '../../shared/componentes/Button.jsx'
+import Logo from '../../shared/componentes/Logo.jsx'
 
 export default function RegisterSuccess() {
   const navigate = useNavigate()

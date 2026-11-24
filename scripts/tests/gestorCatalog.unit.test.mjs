@@ -14,13 +14,13 @@ import {
   areAllGestorProductsSelected,
   applyMarginToAllGestorProducts,
   setAllGestorProductsSelected,
-} from '../../src/lib/gestorCatalog.js'
+} from '../../src/gestor/utils/gestorCatalog.js'
 import {
   gestorLoginPath,
   gestorPanelPath,
   gestorSetupPath,
-} from '../../src/lib/gestorAuth.js'
-import { isReservedStoreSlug } from '../../src/lib/storeSlug.js'
+} from '../../src/gestor/utils/gestorAuth.js'
+import { isReservedStoreSlug } from '../../src/seller/utils/storeSlug.js'
 
 test('computeGestorDisplayPrice suma base + margen', () => {
   assert.equal(computeGestorDisplayPrice(100, 25), 125)

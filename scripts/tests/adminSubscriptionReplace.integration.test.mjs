@@ -8,15 +8,15 @@ import {
   needsGestorKeepPicker,
   simulateAdminPlanReplace,
   toggleKeepGestorId,
-} from '../../src/subscriptions/context.js'
-import { STANDARD_GESTOR_LIMIT } from '../../src/lib/gestorPlanLimits.js'
+} from '../../src/subscriptions/context/context.js'
+import { STANDARD_GESTOR_LIMIT } from '../../src/gestor/utils/gestorPlanLimits.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const modalSource = readFileSync(
-  join(__dirname, '../../src/subscriptions/components/SubscriptionModal.jsx'),
+  join(__dirname, '../../src/subscriptions/componentes/SubscriptionModal.jsx'),
   'utf8',
 )
-const planSource = readFileSync(join(__dirname, '../../src/subscriptions/constants.js'), 'utf8')
+const planSource = readFileSync(join(__dirname, '../../src/subscriptions/utils/constants.js'), 'utf8')
 
 function makeGestores(count, { inactive = 0 } = {}) {
   const gestores = []
@@ -86,7 +86,7 @@ test('flujo integrado: tienda en Prueba puede pasar a Básico, Pro o Premium', (
 })
 
 test('flujo integrado: el modal admin usa el módulo de reemplazo', () => {
-  assert.match(modalSource, /from '\.\.\/context\.js'/)
+  assert.match(modalSource, /from '\.\.\/context\/context\.js'/)
   assert.match(modalSource, /needsGestorKeepPicker/)
   assert.match(modalSource, /buildReplaceSubscriptionBody/)
   assert.match(modalSource, /toggleKeepGestorId/)

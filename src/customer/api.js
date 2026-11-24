@@ -1,5 +1,6 @@
-import { request } from '../lib/api.js'
-import { getCustomerProfile, getCustomerToken, updateCustomerProfile } from '../lib/customerAuth.js'
+import { ApiError, getApiBase, parseApiErrorDetail, request } from '../api/client.js'
+import { downloadBlob } from '../shared/utils/downloadFile.js'
+import { getCustomerProfile, getCustomerToken, updateCustomerProfile } from './utils/customerAuth.js'
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` }
@@ -128,4 +129,40 @@ export function uploadCustomerPhoto(token, file) {
   const formData = new FormData()
   formData.append('photo', file)
   return request('/api/customers/me/profile-photo', { method: 'POST', headers: authHeaders(token), body: formData })
+}
+
+async function downloadAuthorizedPdf(token, path, fallbackName) {
+  const response = await fetch(`${getApiBase()}${path}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    const parsed = parseApiErrorDetail(data.detail);
+    throw new ApiError(parsed.message, {
+      code: parsed.code,
+      data: parsed.data,
+    });
+  }
+
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename="([^"]+)"/);
+  await downloadBlob(blob, match?.[1] ?? fallbackName, "application/pdf");
+}
+
+function orderDocumentPath(base, orderId, kind) {
+  const id = encodeURIComponent(orderId);
+  if (kind === "evidence") return `${base}/${id}/evidence.pdf`;
+  return `${base}/${id}/agreements/${encodeURIComponent(kind)}.pdf`;
+}
+
+export function downloadCustomerOrderDocument(token, orderId, kind) {
+  return downloadAuthorizedPdf(
+    token,
+    orderDocumentPath("/api/customers/me/orders", orderId, kind),
+    `${kind}-${String(orderId).slice(-6)}.pdf`,
+  );
 }

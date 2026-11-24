@@ -3,7 +3,7 @@ import test from 'node:test'
 
 /**
  * Copia la lógica pura de deepLinkPathFromUrl para unit test sin Capacitor.
- * Mantener alineada con src/lib/nativeDeepLinks.js
+ * Mantener alineada con src/appReleases/utils/nativeDeepLinks.js
  */
 function deepLinkPathFromUrl(urlString, siteHostname) {
   if (!urlString || !siteHostname) return null

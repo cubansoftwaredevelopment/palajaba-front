@@ -5,7 +5,7 @@ import {
   getTrendPresentation,
   resolveComparisonForGranularity,
   resolveRevenueSeriesComparisons,
-} from '../../src/lib/sellerStatsTrend.js'
+} from '../../src/SellerStatistics/utils/sellerStatsTrend.js'
 
 function simulateProductsSoldResponse(granularity) {
   const comparisons = {

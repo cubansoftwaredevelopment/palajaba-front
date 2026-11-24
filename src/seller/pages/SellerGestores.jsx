@@ -1,0 +1,727 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useOutletContext } from 'react-router-dom'
+import ConfirmModal from '../../shared/componentes/ConfirmModal.jsx'
+import SellerPageHeader from '../componentes/SellerPageHeader.jsx'
+import SellerSuccessAlert from '../componentes/SellerSuccessAlert.jsx'
+import Checkbox from '../../shared/componentes/Checkbox.jsx'
+import LoadingState from '../../shared/componentes/LoadingState.jsx'
+import StatePanel from '../../shared/componentes/StatePanel.jsx'
+import { formatPrice } from '../../shared/utils/money.js'
+import { featurePlanTier, getSellerPlan } from '../../subscriptions/utils/constants.js'
+import {
+  createSellerGestor,
+  deleteSellerGestor,
+  fetchSellerGestorCatalogAccess,
+  fetchSellerGestorCheckoutPhones,
+  fetchSellerGestorNetworkProducts,
+  fetchSellerGestores,
+  updateSellerGestorCatalogAccess,
+  updateSellerGestorCheckoutPhones,
+} from '../../seller/api.js'
+import {
+  canAddGestor,
+  formatGestorUsage,
+  maxGestoresForPlan,
+} from '../../gestor/utils/gestorPlanLimits.js'
+import { getSellerToken } from '../utils/sellerAuth.js'
+import { runSectionRefresh } from '../../session/sectionStore'
+import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
+import { useSectionSnapshot } from '../../session/useSectionSnapshot'
+import { useSellerReadOnly } from '../componentes/sellerReadOnly.js'
+import {
+  areAllProductsSelected,
+  buildCatalogAccessPayload,
+  buildCheckoutPhonesPayload,
+  catalogAccessDirty,
+  checkoutPhonesDirty,
+  deriveSelectionFromAccess,
+  gestorEligibleForCheckoutPhone,
+  gestorSetupStatus,
+  isGestorActive,
+  selectAllProductIds,
+  toggleGestorCheckoutId,
+  toggleProductId,
+  validateCheckoutPhonesSelection,
+  validateGestorUsername,
+} from '../utils/sellerGestores.js'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
+import { gestorLoginPath } from '../../gestor/utils/gestorAuth.js'
+import { getPublicSiteOrigin, resolveStoreSlug } from '../utils/storeShare.js'
+import {
+  sellerAlertError,
+  sellerBtnPrimary,
+  sellerBtnPrimaryCompact,
+  sellerBtnSecondary,
+  sellerChoice,
+  sellerHint,
+  sellerInput,
+  sellerPageWrap,
+  sellerSection,
+  sellerSectionGap,
+} from '../componentes/sellerStyles.js'
+
+const DeleteIcon = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+    <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+    <path d="M10 11v6M14 11v6" />
+  </svg>
+)
+
+const PeopleIcon = (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+)
+
+export default function SellerGestores() {
+  const readOnly = useSellerReadOnly()
+  const { profile } = useOutletContext()
+  const storeSlug = resolveStoreSlug(profile)
+  const loginUrl = storeSlug
+    ? `${getPublicSiteOrigin()}${gestorLoginPath(storeSlug)}`
+    : ''
+  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'gestores')
+  const cached = snapshot?.data
+  const restoredAccess = cached
+    ? deriveSelectionFromAccess(cached.access, cached.products)
+    : { mode: 'selected', selectedIds: [] }
+  const [gestores, setGestores] = useState(cached?.list ?? [])
+  const [products, setProducts] = useState(cached?.products ?? [])
+  const [savedAccess, setSavedAccess] = useState(cached?.access ?? null)
+  const [accessMode, setAccessMode] = useState(restoredAccess.mode)
+  const [selectedIds, setSelectedIds] = useState(restoredAccess.selectedIds)
+  const [loading, setLoading] = useState(!cached)
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+
+  const [newUsername, setNewUsername] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+
+  const [gestorToDelete, setGestorToDelete] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const [savingAccess, setSavingAccess] = useState(false)
+  const [accessError, setAccessError] = useState('')
+
+  const [savedCheckoutIds, setSavedCheckoutIds] = useState(cached?.checkoutIds ?? [])
+  const [checkoutIds, setCheckoutIds] = useState(cached?.checkoutIds ?? [])
+  const [savedIncludeStorePhone, setSavedIncludeStorePhone] = useState(cached?.includeStore ?? true)
+  const [includeStorePhone, setIncludeStorePhone] = useState(cached?.includeStore ?? true)
+  const [savingCheckoutPhones, setSavingCheckoutPhones] = useState(false)
+  const [checkoutPhonesError, setCheckoutPhonesError] = useState('')
+  const [copiedLoginUrl, setCopiedLoginUrl] = useState(false)
+
+  const loadAll = useCallback(async () => {
+    setLoading((current) => current && !cached)
+    setError('')
+    try {
+      const token = getSellerToken()
+      const [list, access, networkProducts, checkoutPhones] = await Promise.all([
+        fetchSellerGestores(token),
+        fetchSellerGestorCatalogAccess(token),
+        fetchSellerGestorNetworkProducts(token),
+        fetchSellerGestorCheckoutPhones(token),
+      ])
+      setGestores(list)
+      setProducts(networkProducts)
+      setSavedAccess(access)
+      const derived = deriveSelectionFromAccess(access, networkProducts)
+      setAccessMode(derived.mode)
+      setSelectedIds(derived.selectedIds)
+      const ids = Array.isArray(checkoutPhones?.gestor_ids)
+        ? checkoutPhones.gestor_ids.map(String)
+        : []
+      const includeStore = checkoutPhones?.include_store_phone !== false
+      setSavedCheckoutIds(ids)
+      setCheckoutIds(ids)
+      setSavedIncludeStorePhone(includeStore)
+      setIncludeStorePhone(includeStore)
+      commit({
+        list,
+        products: networkProducts,
+        access,
+        checkoutIds: ids,
+        includeStore,
+      })
+    } catch (err) {
+      setGestores([])
+      setProducts([])
+      setSavedCheckoutIds([])
+      setCheckoutIds([])
+      setSavedIncludeStorePhone(true)
+      setIncludeStorePhone(true)
+      setError(getUserFacingMessage(err, 'No pudimos cargar tus gestores. Inténtalo de nuevo.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [commit])
+
+  useEffect(() => {
+    if (skipInitialRef.current) return
+    loadAll()
+  }, [loadAll])
+
+  useRegisterSectionRefresh(() => runSectionRefresh('seller', 'gestores', () => loadAll()))
+
+  useEffect(() => {
+    if (loading || error) return
+    commit({
+      list: gestores,
+      products,
+      access: savedAccess,
+      checkoutIds: savedCheckoutIds,
+      includeStore: savedIncludeStorePhone,
+    })
+  }, [loading, error, gestores, products, savedAccess, savedCheckoutIds, savedIncludeStorePhone, commit])
+
+  const draftAccess = useMemo(
+    () => buildCatalogAccessPayload(accessMode, selectedIds),
+    [accessMode, selectedIds],
+  )
+
+  const accessIsDirty = useMemo(
+    () => catalogAccessDirty(savedAccess, draftAccess),
+    [savedAccess, draftAccess],
+  )
+
+  const checkoutPhonesIsDirty = useMemo(
+    () =>
+      checkoutPhonesDirty(
+        { gestor_ids: savedCheckoutIds, include_store_phone: savedIncludeStorePhone },
+        { gestor_ids: checkoutIds, include_store_phone: includeStorePhone },
+      ),
+    [savedCheckoutIds, checkoutIds, savedIncludeStorePhone, includeStorePhone],
+  )
+
+  const eligibleCheckoutGestores = useMemo(
+    () => gestores.filter(gestorEligibleForCheckoutPhone),
+    [gestores],
+  )
+
+  const allSelected = areAllProductsSelected(products, selectedIds)
+
+  const planTier = featurePlanTier(profile)
+  const planName = getSellerPlan(profile).name
+  const gestorLimit = maxGestoresForPlan(planTier)
+  const activeGestorCount = gestores.filter(isGestorActive).length
+  const atGestorLimit = !canAddGestor(planTier, activeGestorCount)
+  const gestorUsageLabel = formatGestorUsage(planTier, activeGestorCount)
+
+  async function handleCreate(e) {
+    e.preventDefault()
+    setCreateError('')
+    if (atGestorLimit) {
+      setCreateError(
+        gestorLimit == null
+          ? 'No pudimos crear el gestor.'
+          : `El plan ${planName} permite hasta ${gestorLimit} gestores. Pasa a Premium para gestores ilimitados.`,
+      )
+      return
+    }
+    const validated = validateGestorUsername(newUsername)
+    if (!validated.ok) {
+      setCreateError(validated.message)
+      return
+    }
+
+    setCreating(true)
+    try {
+      const token = getSellerToken()
+      const created = await createSellerGestor(token, validated.username)
+      setGestores((prev) => [...prev, created].sort((a, b) => a.username.localeCompare(b.username)))
+      setNewUsername('')
+      setSuccessMessage(`Gestor «${created.username}» creado. Comparte su enlace cuando esté listo.`)
+    } catch (err) {
+      setCreateError(getUserFacingMessage(err, 'No pudimos crear el gestor. Inténtalo de nuevo.'))
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!gestorToDelete) return
+    setDeleting(true)
+    try {
+      const token = getSellerToken()
+      await deleteSellerGestor(token, gestorToDelete.id)
+      const deletedId = String(gestorToDelete.id)
+      setGestores((prev) => prev.filter((g) => g.id !== gestorToDelete.id))
+      setCheckoutIds((prev) => prev.filter((id) => id !== deletedId))
+      setSavedCheckoutIds((prev) => prev.filter((id) => id !== deletedId))
+      setSuccessMessage(`Gestor «${gestorToDelete.username}» eliminado.`)
+      setGestorToDelete(null)
+    } catch (err) {
+      setError(getUserFacingMessage(err, 'No pudimos eliminar el gestor. Inténtalo de nuevo.'))
+      setGestorToDelete(null)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  function handleToggleCheckoutPhone(gestorId) {
+    setCheckoutPhonesError('')
+    setCheckoutIds((prev) => toggleGestorCheckoutId(prev, gestorId))
+  }
+
+  function handleToggleStorePhone() {
+    setCheckoutPhonesError('')
+    setIncludeStorePhone((prev) => !prev)
+  }
+
+  async function handleSaveCheckoutPhones() {
+    setCheckoutPhonesError('')
+    const validation = validateCheckoutPhonesSelection(checkoutIds, includeStorePhone)
+    if (!validation.ok) {
+      setCheckoutPhonesError(validation.message)
+      return
+    }
+    setSavingCheckoutPhones(true)
+    try {
+      const token = getSellerToken()
+      const payload = buildCheckoutPhonesPayload(checkoutIds, includeStorePhone)
+      const updated = await updateSellerGestorCheckoutPhones(token, payload)
+      const ids = Array.isArray(updated?.gestor_ids) ? updated.gestor_ids.map(String) : []
+      const includeStore = updated?.include_store_phone !== false
+      setSavedCheckoutIds(ids)
+      setCheckoutIds(ids)
+      setSavedIncludeStorePhone(includeStore)
+      setIncludeStorePhone(includeStore)
+      setSuccessMessage('Teléfonos de venta actualizados.')
+    } catch (err) {
+      setCheckoutPhonesError(
+        getUserFacingMessage(err, 'No pudimos guardar los teléfonos. Inténtalo de nuevo.'),
+      )
+    } finally {
+      setSavingCheckoutPhones(false)
+    }
+  }
+
+  function handleModeChange(mode) {
+    setAccessError('')
+    setAccessMode(mode)
+    if (mode === 'all') {
+      setSelectedIds(selectAllProductIds(products))
+    }
+  }
+
+  function handleToggleProduct(productId) {
+    setAccessError('')
+    setAccessMode('selected')
+    setSelectedIds((prev) => toggleProductId(prev, productId))
+  }
+
+  function handleSelectAll() {
+    setAccessError('')
+    if (allSelected && accessMode === 'selected') {
+      setSelectedIds([])
+      return
+    }
+    setAccessMode('all')
+    setSelectedIds(selectAllProductIds(products))
+  }
+
+  async function handleSaveAccess() {
+    setAccessError('')
+    setSavingAccess(true)
+    try {
+      const token = getSellerToken()
+      const payload = buildCatalogAccessPayload(accessMode, selectedIds)
+      const updated = await updateSellerGestorCatalogAccess(token, payload)
+      setSavedAccess(updated)
+      const networkProducts = await fetchSellerGestorNetworkProducts(token)
+      setProducts(networkProducts)
+      const derived = deriveSelectionFromAccess(updated, networkProducts)
+      setAccessMode(derived.mode)
+      setSelectedIds(derived.selectedIds)
+      setSuccessMessage('Productos de la red actualizados.')
+    } catch (err) {
+      setAccessError(getUserFacingMessage(err, 'No pudimos guardar la selección. Inténtalo de nuevo.'))
+    } finally {
+      setSavingAccess(false)
+    }
+  }
+
+  async function handleCopyLoginUrl() {
+    if (!loginUrl) return
+    try {
+      await navigator.clipboard.writeText(loginUrl)
+      setCopiedLoginUrl(true)
+      window.setTimeout(() => setCopiedLoginUrl(false), 2000)
+    } catch {
+      setSuccessMessage(`Enlace de acceso: ${loginUrl}`)
+    }
+  }
+
+  if (loading) {
+    return (
+      <section className={`${sellerPageWrap}`}>
+        <LoadingState label="Cargando gestores…" />
+      </section>
+    )
+  }
+
+  if (error && gestores.length === 0 && products.length === 0 && !savedAccess) {
+    return (
+      <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
+        <SellerPageHeader
+          eyebrow="Tu red"
+          title="Gestores"
+          subtitle="Administra quién puede revender tus productos."
+        />
+        <StatePanel
+          variant="seller"
+          title="No se pudo cargar"
+          message={error}
+          serviceError
+          onRetry={loadAll}
+        />
+      </section>
+    )
+  }
+
+  return (
+    <section className={`${sellerPageWrap} ${sellerSectionGap}`}>
+      <SellerPageHeader
+        eyebrow="Tu red"
+        subtitle="Crea usuarios para tu red de venta y elige qué productos pueden ofrecer."
+      />
+
+      <SellerSuccessAlert message={successMessage} onDismiss={() => setSuccessMessage('')} />
+
+      {error ? (
+        <p className={sellerAlertError} role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      <div className={sellerSection}>
+        <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">
+          Acceso de tus gestores
+        </h3>
+        <p className={`mt-1 ${sellerHint}`}>
+          Comparte este enlace para que entren a su cuenta (primer ingreso o login).
+        </p>
+        {loginUrl ? (
+          <div className="mt-4 rounded-2xl border border-brand-green/12 bg-brand-green/[0.04] px-3.5 py-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-carmelita/80">
+              URL de acceso
+            </p>
+            <p className="mt-1.5 break-all font-display text-sm font-bold text-brand-green">
+              {loginUrl}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleCopyLoginUrl}
+                className={`${sellerBtnSecondary} !w-auto sm:min-w-[9rem]`}
+              >
+                {copiedLoginUrl ? 'Copiado' : 'Copiar enlace'}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className={`mt-4 ${sellerHint}`}>
+            No pudimos generar el enlace. Verifica que tu tienda tenga nombre en el perfil.
+          </p>
+        )}
+      </div>
+
+      <div className={sellerSection}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">Tus gestores</h3>
+          <p className="text-xs font-semibold text-brand-carmelita/85">{gestorUsageLabel}</p>
+        </div>
+        <p className={`mt-1 ${sellerHint}`}>
+          Solo necesitas el usuario. Ellos completan contraseña y teléfono en su primer ingreso.
+          {gestorLimit == null
+            ? ' Tu plan Premium permite gestores ilimitados.'
+            : ` El plan ${planName} permite hasta ${gestorLimit}.`}
+        </p>
+
+        {atGestorLimit ? (
+          <p className={`mt-4 ${sellerAlertError}`} role="status">
+            Alcanzaste el máximo de {gestorLimit} gestores del plan {planName}. Pasa a Premium para
+            gestores ilimitados.
+          </p>
+        ) : null}
+
+        <form onSubmit={handleCreate} className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-start">
+          <div className="min-w-0 flex-1">
+            <label htmlFor="gestor-username" className="sr-only">
+              Usuario del gestor
+            </label>
+            <input
+              id="gestor-username"
+              type="text"
+              autoComplete="off"
+              spellCheck={false}
+              maxLength={32}
+              placeholder="usuario_gestor"
+              value={newUsername}
+              onChange={(e) => {
+                setCreateError('')
+                setNewUsername(e.target.value)
+              }}
+              className={sellerInput}
+              disabled={readOnly || creating || atGestorLimit}
+            />
+            {createError ? (
+              <p className="mt-1.5 text-xs text-brand-carmelita" role="alert">
+                {createError}
+              </p>
+            ) : (
+              <p className={`mt-1.5 ${sellerHint}`}>Letras minúsculas, números, _ y - (2–32 caracteres).</p>
+            )}
+          </div>
+          <button
+            type="submit"
+            disabled={readOnly || creating || atGestorLimit || !newUsername.trim()}
+            className={sellerBtnPrimaryCompact}
+          >
+            {creating ? 'Creando…' : 'Agregar'}
+          </button>
+        </form>
+
+        {gestores.length === 0 ? (
+          <div className="mt-5 flex flex-col items-center py-4 text-center">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-yellow/20 text-brand-green">
+              {PeopleIcon}
+            </div>
+            <p className="text-sm font-semibold text-brand-green">Aún no tienes gestores</p>
+            <p className={`mt-1 max-w-xs ${sellerHint}`}>
+              Agrega el primero con un usuario. Después podrás compartir su enlace de catálogo.
+            </p>
+          </div>
+        ) : (
+          <ul className="mt-4 divide-y divide-brand-green/8" aria-label="Lista de gestores">
+            {gestores.map((gestor) => {
+              const status = gestorSetupStatus(gestor)
+              return (
+                <li key={gestor.id} className="flex items-center gap-3 py-3 first:pt-1 last:pb-0">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-brand-green">@{gestor.username}</p>
+                    <p className={`mt-0.5 ${sellerHint}`}>
+                      {status.label}
+                      {gestor.phone ? ` · ${gestor.phone}` : ''}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setGestorToDelete(gestor)}
+                    disabled={readOnly}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-carmelita/10 active:text-brand-carmelita disabled:opacity-40"
+                    aria-label={`Eliminar gestor ${gestor.username}`}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+                      <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v6M14 11v6" />
+                    </svg>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      <div className={sellerSection}>
+        <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">
+          Teléfonos para ventas de la tienda
+        </h3>
+        <p className={`mt-1 ${sellerHint}`}>
+          Elige qué números aparecen cuando alguien compra en tu catálogo. Puedes ocultar el del
+          negocio y dejar solo gestores. El pedido siempre se guarda en tu negocio.
+        </p>
+
+        <ul className="mt-4 space-y-1" aria-label="Teléfonos para ventas">
+          <li>
+            <label className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 transition-colors touch-manipulation active:bg-brand-green/5">
+              <Checkbox checked={includeStorePhone} disabled={readOnly} onChange={handleToggleStorePhone} />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-brand-green">
+                  Número del negocio
+                </span>
+                <span className={`block ${sellerHint}`}>
+                  {profile?.phone ? profile.phone : 'Tu teléfono de perfil'}
+                </span>
+              </span>
+            </label>
+          </li>
+          {eligibleCheckoutGestores.map((gestor) => {
+            const checked = checkoutIds.includes(String(gestor.id))
+            return (
+              <li key={gestor.id}>
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 transition-colors touch-manipulation active:bg-brand-green/5">
+                  <Checkbox checked={checked} disabled={readOnly} onChange={() => handleToggleCheckoutPhone(gestor.id)} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-brand-green">
+                      @{gestor.username}
+                    </span>
+                    <span className={`block ${sellerHint}`}>{gestor.phone}</span>
+                  </span>
+                </label>
+              </li>
+            )
+          })}
+        </ul>
+
+        {eligibleCheckoutGestores.length === 0 ? (
+          <p className={`mt-3 ${sellerHint}`}>
+            Cuando un gestor complete su registro con teléfono, podrás habilitarlo aquí.
+          </p>
+        ) : null}
+
+        {checkoutPhonesError ? (
+          <p className={`mt-3 ${sellerAlertError}`} role="alert">
+            {checkoutPhonesError}
+          </p>
+        ) : null}
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={handleSaveCheckoutPhones}
+            disabled={readOnly || !checkoutPhonesIsDirty || savingCheckoutPhones}
+            className={sellerBtnPrimary}
+          >
+            {savingCheckoutPhones ? 'Guardando…' : 'Guardar teléfonos de venta'}
+          </button>
+        </div>
+      </div>
+
+      <div className={sellerSection}>
+        <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">
+          Productos para la red
+        </h3>
+        <p className={`mt-1 ${sellerHint}`}>
+          Define qué productos de tu catálogo pueden elegir tus gestores.
+        </p>
+
+        <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Modo de acceso">
+          <button
+            type="button"
+            className={sellerChoice(accessMode === 'all')}
+            disabled={readOnly}
+            onClick={() => handleModeChange('all')}
+          >
+            Todos
+          </button>
+          <button
+            type="button"
+            className={sellerChoice(accessMode === 'selected')}
+            disabled={readOnly}
+            onClick={() => handleModeChange('selected')}
+          >
+            Solo seleccionados
+          </button>
+        </div>
+
+        {products.length === 0 ? (
+          <p className={`mt-4 ${sellerHint}`}>
+            Todavía no tienes productos en el catálogo. Créalos en Catálogo para habilitarlos aquí.
+          </p>
+        ) : (
+          <>
+            {accessMode === 'selected' ? (
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <p className={sellerHint}>
+                  {selectedIds.length} de {products.length} seleccionados
+                </p>
+                <button
+                  type="button"
+                  onClick={handleSelectAll}
+                  disabled={readOnly}
+                  className="text-xs font-semibold text-brand-green touch-manipulation active:text-brand-green/80 disabled:opacity-40"
+                >
+                  {allSelected ? 'Quitar todos' : 'Seleccionar todos'}
+                </button>
+              </div>
+            ) : (
+              <p className={`mt-3 ${sellerHint}`}>Toda tu red puede ofrecer cualquier producto de tu catálogo.</p>
+            )}
+
+            <ul className="mt-3 max-h-[22rem] space-y-1 overflow-y-auto overscroll-y-contain pr-0.5" aria-label="Productos del catálogo">
+              {products.map((product) => {
+                const checked = accessMode === 'all' || selectedIds.includes(String(product.product_id))
+                const disabled = accessMode === 'all'
+                return (
+                  <li key={product.product_id}>
+                    <label
+                      className={`flex cursor-pointer items-center gap-3 rounded-xl px-2 py-2.5 transition-colors touch-manipulation ${
+                        disabled ? 'opacity-80' : 'active:bg-brand-green/5'
+                      }`}
+                    >
+                      <Checkbox
+                        checked={checked}
+                        disabled={disabled || readOnly}
+                        onChange={() => handleToggleProduct(product.product_id)}
+                      />
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt=""
+                          className="h-10 w-10 shrink-0 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-green/8 text-brand-carmelita/50">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <circle cx="8.5" cy="8.5" r="1.5" />
+                            <path d="m21 15-5-5L5 21" />
+                          </svg>
+                        </span>
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-brand-green">{product.name}</span>
+                        <span className={`block ${sellerHint}`}>
+                          {formatPrice(product.base_price, product.base_currency)}
+                          {!product.is_available ? ' · No disponible' : ''}
+                        </span>
+                      </span>
+                    </label>
+                  </li>
+                )
+              })}
+            </ul>
+          </>
+        )}
+
+        {accessError ? (
+          <p className={`mt-3 ${sellerAlertError}`} role="alert">
+            {accessError}
+          </p>
+        ) : null}
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={handleSaveAccess}
+            disabled={readOnly || !accessIsDirty || savingAccess || products.length === 0}
+            className={sellerBtnPrimary}
+          >
+            {savingAccess ? 'Guardando…' : 'Guardar productos de la red'}
+          </button>
+        </div>
+      </div>
+
+      {gestorToDelete ? (
+        <ConfirmModal
+          title={`¿Eliminar a @${gestorToDelete.username}?`}
+          confirmLabel={deleting ? 'Eliminando…' : 'Sí, eliminar'}
+          cancelLabel="Cancelar"
+          confirmVariant="tertiary"
+          icon={DeleteIcon}
+          onClose={() => {
+            if (!deleting) setGestorToDelete(null)
+          }}
+          onConfirm={() => {
+            if (!deleting) handleConfirmDelete()
+          }}
+        />
+      ) : null}
+    </section>
+  )
+}

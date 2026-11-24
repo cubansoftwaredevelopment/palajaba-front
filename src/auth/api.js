@@ -1,4 +1,4 @@
-import { ApiError, request } from '../lib/api'
+import { ApiError, request } from '../api/client.js'
 
 function authHeaders(token) {
   return { Authorization: `Bearer ${token}` }

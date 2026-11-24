@@ -8,8 +8,8 @@ import {
   PLATFORM_PRIVACY_DELETE_HASH,
   PLATFORM_PRIVACY_PATH,
   PLATFORM_PRIVACY_SECTIONS,
-} from '../../src/lib/platformPrivacy.js'
-import { PLATFORM_TERMS_SECTIONS } from '../../src/lib/platformTerms.js'
+} from '../../src/platform/utils/platformPrivacy.js'
+import { PLATFORM_TERMS_SECTIONS } from '../../src/platform/utils/platformTerms.js'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -43,10 +43,10 @@ test('los términos remiten a /privacidad#eliminar-cuenta y a la conservación d
 test('el front expone DELETE de cuenta para cliente y tienda', () => {
   const customerApi = readSrc('src/customer/api.js')
   const sellerApi = readSrc('src/auth/api.js')
-  const customerPage = readSrc('src/customer/pages/CustomerAccount.jsx')
-  const sellerPage = readSrc('src/components/seller/SellerAdvancedProfileSettings.jsx')
+  const customerPage = readSrc('src/customer/pages/CustomerProfilePage.jsx')
+  const sellerPage = readSrc('src/seller/componentes/SellerAdvancedProfileSettings.jsx')
   const appRoutes = readSrc('src/App.jsx')
-  const footer = readSrc('src/buyer/components/BuyerFeedFooter.jsx')
+  const footer = readSrc('src/buyer/componentes/BuyerFeedFooter.jsx')
 
   assert.match(customerApi, /export function deleteCustomerAccount/)
   assert.match(customerApi, /method:\s*'DELETE'/)

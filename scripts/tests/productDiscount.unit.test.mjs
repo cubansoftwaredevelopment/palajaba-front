@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { productDiscountPercent, productSaleAmount } from '../../src/products/context.js'
+import { productDiscountPercent, productSaleAmount } from '../../src/products/context/context.js'
 
 test('productSaleAmount aplica el % sobre el precio base', () => {
   assert.equal(productDiscountPercent({ discount_percent: 20 }), 20)

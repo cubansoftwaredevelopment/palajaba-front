@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { buildMarketplaceVisitPayload } from '../../src/lib/marketplaceVisit.js'
+import { buildMarketplaceVisitPayload } from '../../src/buyer/utils/marketplaceVisit.js'
 
 test('buildMarketplaceVisitPayload requiere provincia y municipio', () => {
   assert.equal(buildMarketplaceVisitPayload({ provinceId: 'la-habana' }), null)

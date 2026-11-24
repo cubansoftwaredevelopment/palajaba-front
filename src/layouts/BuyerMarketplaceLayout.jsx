@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import BuyerMarketplaceNav from '../buyer/components/BuyerMarketplaceNav'
+import BuyerMarketplaceNav from '../buyer/componentes/BuyerMarketplaceNav.jsx'
 
 const LAST_MARKETPLACE_LOCATION_KEY = 'pala_jaba_last_marketplace_location'
 

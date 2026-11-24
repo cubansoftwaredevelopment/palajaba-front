@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 
-import CatalogThemePickerModal from '../components/CatalogThemePickerModal'
-import CatalogThemeScope from '../components/CatalogThemeScope'
-import BuyerCategoryProductRow from '../../buyer/components/BuyerCategoryProductRow'
-import BuyerLoginButton from '../../buyer/components/BuyerLoginButton'
-import BuyerShell from '../../buyer/components/BuyerShell'
-import BuyerStoreProfileHeader from '../../buyer/components/BuyerStoreProfileHeader'
-import BuyerStoreServiceFooter from '../../buyer/components/BuyerStoreServiceFooter'
-import { buyerHomeSections } from '../../buyer/components/buyerStyles'
-import StatePanel from '../../components/ui/StatePanel'
-import { useSellerReadOnly } from '../../components/seller/sellerReadOnly'
-import LoadingState from '../../components/ui/LoadingState'
-import { BuyerDisplayCurrencyProvider, useBuyerDisplayCurrency } from '../../buyer/context.js'
-import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
-import { BuyerJabaProvider } from '../../buyer/context.js'
+import CatalogThemePickerModal from '../componentes/CatalogThemePickerModal.jsx'
+import CatalogThemeScope from '../componentes/CatalogThemeScope.jsx'
+import BuyerCategoryProductRow from '../../buyer/componentes/BuyerCategoryProductRow.jsx'
+import BuyerLoginButton from '../../buyer/componentes/BuyerLoginButton.jsx'
+import BuyerShell from '../../buyer/componentes/BuyerShell.jsx'
+import BuyerStoreProfileHeader from '../../buyer/componentes/BuyerStoreProfileHeader.jsx'
+import BuyerStoreServiceFooter from '../../buyer/componentes/BuyerStoreServiceFooter.jsx'
+import { buyerHomeSections } from '../../buyer/componentes/buyerStyles.js'
+import StatePanel from '../../shared/componentes/StatePanel.jsx'
+import { useSellerReadOnly } from '../../seller/componentes/sellerReadOnly.js'
+import LoadingState from '../../shared/componentes/LoadingState.jsx'
+import { BuyerDisplayCurrencyProvider, useBuyerDisplayCurrency } from '../../buyer/context/context.js'
+import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../seller/utils/sellerProductsRefresh.js'
+import { BuyerJabaProvider } from '../../buyer/context/context.js'
 import {
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
@@ -24,15 +24,15 @@ import {
   DEFAULT_CATALOG_THEME,
   normalizeCatalogPalette,
   normalizeCatalogTheme,
-} from '../../lib/catalogThemes'
-import { sellerHasFullStoreCustomization } from '../../subscriptions/constants.js'
-import { resolveStoreSlug } from '../../lib/storeShare'
-import { getSellerToken } from '../../lib/sellerAuth'
+} from '../utils/constants.js'
+import { sellerHasFullStoreCustomization } from '../../subscriptions/utils/constants.js'
+import { resolveStoreSlug } from '../../seller/utils/storeShare.js'
+import { getSellerToken } from '../../seller/utils/sellerAuth.js'
 import { runSectionRefresh } from '../../session/sectionStore'
 import { useSectionSnapshot } from '../../session/useSectionSnapshot'
-import { resolveUserFacingError } from '../../lib/userFacingError'
-import { getUserFacingMessage } from '../../lib/userFacingError'
-import { sellerFocusRing } from '../../components/seller/sellerStyles'
+import { resolveUserFacingError } from '../../shared/utils/userFacingError.js'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
+import { sellerFocusRing } from '../../seller/componentes/sellerStyles.js'
 
 const PAGE_SIZE = 5
 

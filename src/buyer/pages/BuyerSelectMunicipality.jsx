@@ -1,21 +1,21 @@
 import { useMemo, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import AuthHeader from '../../components/auth/AuthHeader'
-import BuyerLocationProgress from '../components/BuyerLocationProgress'
-import BuyerShell from '../components/BuyerShell'
-import MunicipalityPickerRow from '../components/MunicipalityPickerRow'
+import AuthHeader from '../../auth/componentes/AuthHeader.jsx'
+import BuyerLocationProgress from '../componentes/BuyerLocationProgress.jsx'
+import BuyerShell from '../componentes/BuyerShell.jsx'
+import MunicipalityPickerRow from '../componentes/MunicipalityPickerRow.jsx'
 import {
   buyerContextChip,
   buyerList,
   buyerPageIntro,
   buyerSearchInput,
-} from '../components/buyerStyles'
-import { MARKETPLACE_LABEL } from '../../constants/branding'
-import { getProvinceById } from '../../constants/cubaLocations'
-import { getAdditionalMunicipalities, getBuyerLocation, setAdditionalMunicipalities, setBuyerMunicipality } from '../../lib/buyerLocation'
-import Button from '../../components/Button'
-import Checkbox from '../../components/ui/Checkbox'
-import { municipalityMatchesQuery } from '../../lib/municipalityDisplay'
+} from '../componentes/buyerStyles.js'
+import { MARKETPLACE_LABEL } from '../../shared/utils/branding.js'
+import { getProvinceById } from '../../shared/utils/cubaLocations.js'
+import { getAdditionalMunicipalities, getBuyerLocation, setAdditionalMunicipalities, setBuyerMunicipality } from '../utils/buyerLocation.js'
+import Button from '../../shared/componentes/Button.jsx'
+import Checkbox from '../../shared/componentes/Checkbox.jsx'
+import { municipalityMatchesQuery } from '../../shared/utils/municipalityDisplay.js'
 
 export default function BuyerSelectMunicipality() {
   const navigate = useNavigate()

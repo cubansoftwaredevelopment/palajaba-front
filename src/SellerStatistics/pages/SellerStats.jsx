@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 
-import SellerPageHeader from '../../components/seller/SellerPageHeader'
-import AdminDateRangeControls from '../../components/admin/AdminDateRangeControls'
-import SellerStatsPremiumPreview from '../../components/seller/SellerStatsPremiumPreview'
-import { sellerHasStatistics } from '../../constants/plan'
-import { PROFILE_PANEL_IDS } from '../../lib/sellerProfileHub'
-import { sellerAlertError, sellerPageWrap, sellerSectionGap } from '../../components/seller/sellerStyles'
-import { getSellerToken } from '../../lib/sellerAuth'
+import SellerPageHeader from '../../seller/componentes/SellerPageHeader.jsx'
+import AdminDateRangeControls from '../../admin/componentes/AdminDateRangeControls.jsx'
+import SellerStatsPremiumPreview from '../../seller/componentes/SellerStatsPremiumPreview.jsx'
+import { sellerHasStatistics } from '../../subscriptions/utils/constants.js'
+import { PROFILE_PANEL_IDS } from '../../seller/utils/sellerProfileHub.js'
+import { sellerAlertError, sellerPageWrap, sellerSectionGap } from '../../seller/componentes/sellerStyles.js'
+import { getSellerToken } from '../../seller/utils/sellerAuth.js'
 import { beginSectionRefresh, endSectionRefresh } from '../../session/sectionStore'
 import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
 import { useSectionSnapshot } from '../../session/useSectionSnapshot'
-import { getUserFacingMessage } from '../../lib/userFacingError'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 import {
   fetchSellerDeliveredOrders,
   fetchSellerHighViewsLowSales,
@@ -23,13 +23,13 @@ import {
   fetchSellerTraffic,
   fetchSellerViewsByZone,
 } from '../api'
-import SellerHighViewsLowSales from '../components/SellerHighViewsLowSales'
-import SellerProductConversionChart from '../components/SellerProductConversionChart'
-import SellerRevenueCharts from '../components/SellerRevenueCharts'
-import SellerSeriesChart from '../components/SellerSeriesChart'
-import SellerStatsKpis from '../components/SellerStatsKpis'
-import SellerTopSold from '../components/SellerTopSold'
-import SellerViewsByZone from '../components/SellerViewsByZone'
+import SellerHighViewsLowSales from '../componentes/SellerHighViewsLowSales.jsx'
+import SellerProductConversionChart from '../componentes/SellerProductConversionChart.jsx'
+import SellerRevenueCharts from '../componentes/SellerRevenueCharts.jsx'
+import SellerSeriesChart from '../componentes/SellerSeriesChart.jsx'
+import SellerStatsKpis from '../componentes/SellerStatsKpis.jsx'
+import SellerTopSold from '../componentes/SellerTopSold.jsx'
+import SellerViewsByZone from '../componentes/SellerViewsByZone.jsx'
 import { granularityForRange, isoDate, rangeForPeriod } from '../utils'
 
 const EMPTY_BUNDLE = {

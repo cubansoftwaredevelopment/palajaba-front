@@ -15,7 +15,7 @@ import {
   CHECKOUT_SAVE_FAILED_MESSAGE,
   CHECKOUT_WHATSAPP_FAILED_MESSAGE,
   runStoreCheckout,
-} from '../../src/lib/runStoreCheckout.js'
+} from '../../src/buyer/utils/runStoreCheckout.js'
 
 const basePayload = {
   storeId: 'store-1',

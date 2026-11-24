@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import BuyerAdditionalMunicipalitiesFilter from '../components/BuyerAdditionalMunicipalitiesFilter'
-import BuyerBusinessCard from '../components/BuyerBusinessCard'
-import BuyerLocationDisplay from '../components/BuyerLocationDisplay'
+import BuyerAdditionalMunicipalitiesFilter from '../componentes/BuyerAdditionalMunicipalitiesFilter.jsx'
+import BuyerBusinessCard from '../componentes/BuyerBusinessCard.jsx'
+import BuyerLocationDisplay from '../componentes/BuyerLocationDisplay.jsx'
 import BuyerMarketplaceSearch, {
   BuyerBusinessSearchResults,
   useMarketplaceSearchActive,
-} from '../components/BuyerMarketplaceSearch'
-import BuyerShell from '../components/BuyerShell'
-import StatePanel from '../../components/ui/StatePanel'
-import LoadingState from '../../components/ui/LoadingState'
-import DeadState from '../../components/ui/DeadState'
-import Button from '../../components/Button'
-import { BUSINESSES_LABEL, LOADING_MASCOT } from '../../constants/branding'
-import { buyerBusinessList } from '../components/buyerStyles'
+} from '../componentes/BuyerMarketplaceSearch.jsx'
+import BuyerShell from '../componentes/BuyerShell.jsx'
+import StatePanel from '../../shared/componentes/StatePanel.jsx'
+import LoadingState from '../../shared/componentes/LoadingState.jsx'
+import DeadState from '../../shared/componentes/DeadState.jsx'
+import Button from '../../shared/componentes/Button.jsx'
+import { BUSINESSES_LABEL, LOADING_MASCOT } from '../../shared/utils/branding.js'
+import { buyerBusinessList } from '../componentes/buyerStyles.js'
 import { fetchMarketplaceBusinesses, fetchMarketplaceFeed } from '../api.js'
 import {
   getAdditionalMunicipalities,
@@ -22,9 +22,9 @@ import {
   hasCompleteBuyerLocation,
   setAdditionalMunicipalities,
   setMarketplaceCategoryFilter,
-} from '../../lib/buyerLocation'
-import { useBuyerDisplayCurrency } from '../context.js'
-import { resolveUserFacingError } from '../../lib/userFacingError'
+} from '../utils/buyerLocation.js'
+import { useBuyerDisplayCurrency } from '../context/context.js'
+import { resolveUserFacingError } from '../../shared/utils/userFacingError.js'
 
 const BUSINESS_SEARCH_HINTS = [
   'buscar negocios en tu municipio',

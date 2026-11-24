@@ -1,0 +1,54 @@
+import { Link } from 'react-router-dom'
+import Checkbox from './Checkbox.jsx'
+import { PLATFORM_PRIVACY_PATH } from '../../platform/utils/platformPrivacy.js'
+import { PLATFORM_TERMS_PATH } from '../../platform/utils/platformTerms.js'
+
+const linkClass = 'font-semibold underline underline-offset-2'
+
+export function PlatformTermsAnchor({ className = '', children = 'Términos y condiciones' }) {
+  return (
+    <a href={PLATFORM_TERMS_PATH} className={`${linkClass} text-brand-green ${className}`} target="_blank" rel="noreferrer">
+      {children}
+    </a>
+  )
+}
+
+export function PlatformPrivacyAnchor({ className = '', children = 'Política de privacidad' }) {
+  return (
+    <a href={PLATFORM_PRIVACY_PATH} className={`${linkClass} text-brand-green ${className}`} target="_blank" rel="noreferrer">
+      {children}
+    </a>
+  )
+}
+
+export default function PlatformTermsLink({ className = '' }) {
+  return (
+    <Link to={PLATFORM_TERMS_PATH} className={className}>
+      Términos y condiciones
+    </Link>
+  )
+}
+
+export function AcceptPlatformTerms({ id, checked, onChange }) {
+  return (
+    <div className="flex items-start gap-3">
+      <Checkbox id={id} checked={checked} onChange={onChange} className="mt-0.5" />
+      <p className="text-sm leading-relaxed text-brand-carmelita">
+        <label htmlFor={id} className="cursor-pointer">He leído y acepto los</label>{' '}
+        <PlatformTermsAnchor>Términos y condiciones</PlatformTermsAnchor>.
+      </p>
+    </div>
+  )
+}
+
+export function AcceptPlatformPrivacy({ id, checked, onChange }) {
+  return (
+    <div className="flex items-start gap-3">
+      <Checkbox id={id} checked={checked} onChange={onChange} className="mt-0.5" />
+      <p className="text-sm leading-relaxed text-brand-carmelita">
+        <label htmlFor={id} className="cursor-pointer">He leído y acepto la</label>{' '}
+        <PlatformPrivacyAnchor>Política de privacidad</PlatformPrivacyAnchor>.
+      </p>
+    </div>
+  )
+}

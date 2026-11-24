@@ -1,13 +1,13 @@
 import { useNavigate } from 'react-router-dom'
-import AuthHeader from '../../components/auth/AuthHeader'
-import BuyerLocationProgress from '../components/BuyerLocationProgress'
-import BuyerShell from '../components/BuyerShell'
-import ProvincePickerRow from '../components/ProvincePickerRow'
-import { buyerList, buyerPageIntro } from '../components/buyerStyles'
-import { MARKETPLACE_LABEL } from '../../constants/branding'
-import { CUBA_PROVINCES } from '../../constants/cubaLocations'
-import { hasCompleteBuyerLocation, setBuyerProvince } from '../../lib/buyerLocation'
-import { getSellerReturnPath, isSellerBrowsingMarketplace } from '../../lib/sellerMarketplaceNav'
+import AuthHeader from '../../auth/componentes/AuthHeader.jsx'
+import BuyerLocationProgress from '../componentes/BuyerLocationProgress.jsx'
+import BuyerShell from '../componentes/BuyerShell.jsx'
+import ProvincePickerRow from '../componentes/ProvincePickerRow.jsx'
+import { buyerList, buyerPageIntro } from '../componentes/buyerStyles.js'
+import { MARKETPLACE_LABEL } from '../../shared/utils/branding.js'
+import { CUBA_PROVINCES } from '../../shared/utils/cubaLocations.js'
+import { hasCompleteBuyerLocation, setBuyerProvince } from '../utils/buyerLocation.js'
+import { getSellerReturnPath, isSellerBrowsingMarketplace } from '../../seller/utils/sellerMarketplaceNav.js'
 
 export default function BuyerSelectProvince() {
   const navigate = useNavigate()

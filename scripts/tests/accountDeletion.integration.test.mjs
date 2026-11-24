@@ -5,8 +5,8 @@ import {
   PLATFORM_PRIVACY_DELETE_HASH,
   PLATFORM_PRIVACY_PATH,
   PLATFORM_PRIVACY_SECTIONS,
-} from '../../src/lib/platformPrivacy.js'
-import { PLATFORM_TERMS_SECTIONS } from '../../src/lib/platformTerms.js'
+} from '../../src/platform/utils/platformPrivacy.js'
+import { PLATFORM_TERMS_SECTIONS } from '../../src/platform/utils/platformTerms.js'
 
 /**
  * Simula el copy que Play Console y la UI deben poder enlazar

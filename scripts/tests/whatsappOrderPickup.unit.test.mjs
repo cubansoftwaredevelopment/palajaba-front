@@ -14,8 +14,8 @@ import {
   validateDeliveryContact,
   validateDeliveryForm,
   validatePickupForm,
-} from '../../src/lib/buyerDelivery.js'
-import { buildOpenStreetMapUrl } from '../../src/lib/openStreetMap.js'
+} from '../../src/buyer/utils/buyerDelivery.js'
+import { buildOpenStreetMapUrl } from '../../src/map/utils/openStreetMap.js'
 
 test('validatePickupForm exige nombre y teléfono de 8 dígitos', () => {
   assert.equal(

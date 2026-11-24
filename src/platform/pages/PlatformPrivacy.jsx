@@ -1,0 +1,33 @@
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
+import AuthShell from '../../auth/componentes/AuthShell.jsx'
+import LegalDocument from '../../shared/componentes/LegalDocument.jsx'
+import { PLATFORM_PRIVACY_SECTIONS, PLATFORM_PRIVACY_VERSION } from '../utils/platformPrivacy.js'
+
+function returnPath(state) {
+  const returnTo = state?.returnTo
+  if (typeof returnTo !== 'string' || !returnTo.startsWith('/') || returnTo.startsWith('//')) return ''
+  return returnTo
+}
+
+export default function PlatformPrivacy() {
+  const location = useLocation()
+  const returnTo = returnPath(location.state)
+
+  useEffect(() => {
+    const hash = String(location.hash || '').replace(/^#/, '')
+    if (!hash) return
+    const node = document.getElementById(hash)
+    if (node) node.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [location.hash])
+
+  return (
+    <AuthShell backTo={returnTo || '/'} backLabel={returnTo ? 'Volver' : 'Inicio'} contentWidth="narrow">
+      <LegalDocument
+        title="Política de privacidad"
+        version={PLATFORM_PRIVACY_VERSION}
+        sections={PLATFORM_PRIVACY_SECTIONS}
+      />
+    </AuthShell>
+  )
+}

@@ -1,19 +1,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PresenceContext } from "framer-motion";
 import { Navigate } from "react-router-dom";
-import BuyerAssortmentHints from "../components/BuyerAssortmentHints";
-import BuyerBannerCarousel from "../components/BuyerBannerCarousel";
-import BuyerSharedEntry from "../components/BuyerSharedEntry";
-import BuyerCategoryProductRow from "../components/BuyerCategoryProductRow";
-import BuyerHeaderSearch from "../components/BuyerHeaderSearch";
-import BuyerLocationDisplay from "../components/BuyerLocationDisplay";
-import { MARKETPLACE_CATEGORY_EVENT } from "../components/BuyerMarketplaceNav";
-import { BuyerSearchResults } from "../components/BuyerMarketplaceSearch";
-import BuyerFeedFooter from "../components/BuyerFeedFooter";
-import BuyerShell from "../components/BuyerShell";
-import StatePanel from "../../components/ui/StatePanel";
-import LoadingState from "../../components/ui/LoadingState";
-import { buyerHomeSections } from "../components/buyerStyles";
+import BuyerAssortmentHints from "../componentes/BuyerAssortmentHints.jsx";
+import BuyerBannerCarousel from "../componentes/BuyerBannerCarousel.jsx";
+import BuyerSharedEntry from "../componentes/BuyerSharedEntry.jsx";
+import BuyerCategoryProductRow from "../componentes/BuyerCategoryProductRow.jsx";
+import BuyerHeaderSearch from "../componentes/BuyerHeaderSearch.jsx";
+import BuyerLocationDisplay from "../componentes/BuyerLocationDisplay.jsx";
+import { MARKETPLACE_CATEGORY_EVENT } from "../componentes/BuyerMarketplaceNav.jsx";
+import { BuyerSearchResults } from "../componentes/BuyerMarketplaceSearch.jsx";
+import BuyerFeedFooter from "../componentes/BuyerFeedFooter.jsx";
+import BuyerShell from "../componentes/BuyerShell.jsx";
+import StatePanel from "../../shared/componentes/StatePanel.jsx";
+import LoadingState from "../../shared/componentes/LoadingState.jsx";
+import { buyerHomeSections } from "../componentes/buyerStyles.js";
 import {
   fetchMarketplaceAvailabilityHints,
   fetchMarketplaceCategoryProducts,
@@ -27,22 +27,22 @@ import {
   getMarketplaceCategoryFilter,
   setMarketplaceCategoryFilter,
   applySharedZoneFromSearch,
-} from "../../lib/buyerLocation";
+} from "../utils/buyerLocation.js";
 import {
   getMunicipalityById,
   getProvinceById,
-} from "../../constants/cubaLocations";
-import { marketplaceCategoryPath } from "../../lib/marketplaceCategory";
-import { recordMarketplaceVisit } from "../../lib/marketplaceVisit";
-import { BuyerDisplayedLocationProvider } from "../context.js";
-import { useBuyerDisplayCurrency } from "../context.js";
-import { resolveUserFacingError } from "../../lib/userFacingError";
+} from "../../shared/utils/cubaLocations.js";
+import { marketplaceCategoryPath } from "../utils/marketplaceCategory.js";
+import { recordMarketplaceVisit } from "../utils/marketplaceVisit.js";
+import { BuyerDisplayedLocationProvider } from "../context/context.js";
+import { useBuyerDisplayCurrency } from "../context/context.js";
+import { resolveUserFacingError } from "../../shared/utils/userFacingError.js";
 import {
   DEAD_MASCOT,
   LOADING_MASCOT,
   MARKETPLACE_LABEL,
-} from "../../constants/branding";
-import { markFrontendReady } from "../../lib/frontendReady";
+} from "../../shared/utils/branding.js";
+import { markFrontendReady } from "../../shared/utils/frontendReady.js";
 import { readMatchingSnapshot, useSectionSnapshot } from "../../session/useSectionSnapshot";
 
 const ROW_PAGE_SIZE = 5;

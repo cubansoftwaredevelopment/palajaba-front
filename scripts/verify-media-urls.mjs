@@ -4,7 +4,7 @@
  * Uso (desde frontend/):
  *   node scripts/verify-media-urls.mjs
  */
-import { optimizeCloudinaryUrl } from '../src/lib/mediaCloudinary.js'
+import { optimizeCloudinaryUrl } from '../src/shared/utils/mediaCloudinary.js'
 
 const SAMPLE_URL =
   'https://res.cloudinary.com/demo/image/upload/v1710000000/pala-jaba/products/item.jpg'

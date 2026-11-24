@@ -5,7 +5,7 @@ import {
   hasCompleteBuyerLocation,
   readSharedZoneFromSearch,
   setBuyerLocation,
-} from '../../lib/buyerLocation'
+} from '../utils/buyerLocation.js'
 
 function businessAreaToLocation(area) {
   if (!area?.province_id || !area?.municipality_id) return null

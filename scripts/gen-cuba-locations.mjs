@@ -330,7 +330,7 @@ export function getMunicipalityById(provinceId, municipalityId) {
 }
 `
 
-writeFileSync(join(__dirname, '../src/constants/cubaLocations.js'), output, 'utf8')
+writeFileSync(join(__dirname, '../src/shared/utils/cubaLocations.js'), output, 'utf8')
 
 const municipalityMap = Object.fromEntries(
   provinces.map((province) => [

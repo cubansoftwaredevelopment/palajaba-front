@@ -1,0 +1,683 @@
+import { useCallback, useEffect, useId, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import AdminButton from '../componentes/AdminButton.jsx'
+import AdminSelect from '../componentes/AdminSelect.jsx'
+import {
+  adminAlertError,
+  adminAlertSuccess,
+  adminCard,
+  adminInput,
+  adminLabel,
+  adminMuted,
+  adminSection,
+  adminSubtle,
+} from '../componentes/adminStyles.js'
+import { fetchAdminSettings, sendAdminSmtpTest, updateAdminSettings } from '../api.js'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
+import { getUserFacingMessage, isSessionError } from '../../shared/utils/userFacingError.js'
+import { clearAdminToken, getAdminToken } from '../utils/adminAuth.js'
+import { PHONE_PREFIX, formatPhoneDigits, getPhoneDigits } from '../../shared/utils/phone.js'
+import LoadingState from '../../shared/componentes/LoadingState.jsx'
+import { BILLING_LABELS, PLAN_TIER_LABELS } from '../utils/admin.js'
+import { DISPLAY_CURRENCIES } from '../../shared/utils/currencies.js'
+import {
+  BILLING_PERIOD_ORDER,
+  DEFAULT_PLAN_PRICES,
+  PLAN_DISPLAY_CURRENCY,
+  PLAN_TIER_ORDER,
+  formatPlanAmount,
+  normalizePlanPrices,
+} from '../../subscriptions/utils/constants.js'
+import {
+  ADVERTISING_PLAN_IDS,
+  ADVERTISING_PLAN_LABELS,
+  DEFAULT_ADVERTISING_PRICES,
+} from '../../subscriptions/utils/advertisingPlans.js'
+import { convertBetweenCurrencies } from '../../shared/utils/displayPrice.js'
+import { areExchangeRatesAvailable, getCupPerUnit, loadExchangeRates } from '../../shared/utils/exchangeRates.js'
+
+const fieldShell =
+  'flex min-h-12 overflow-hidden rounded-xl border border-zinc-800/90 bg-zinc-900/70 transition-colors focus-within:border-brand-green/35 focus-within:ring-2 focus-within:ring-brand-green/15'
+
+function newAdminRow(email = '', phone = '') {
+  return {
+    key: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    email,
+    phone,
+  }
+}
+
+function adminsFromSettings(data) {
+  if (Array.isArray(data?.admins) && data.admins.length) {
+    return data.admins.map((admin) => newAdminRow(admin.email ?? '', admin.phone ?? ''))
+  }
+  if (data?.admin_email || data?.admin_phone) {
+    return [newAdminRow(data.admin_email ?? '', data.admin_phone ?? '')]
+  }
+  return [newAdminRow()]
+}
+
+const amountInputClass =
+  'min-w-0 flex-1 border-0 bg-transparent px-4 py-3 text-base tabular-nums text-zinc-100 placeholder:text-zinc-600 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+
+function pricesToForm(planPrices) {
+  const normalized = normalizePlanPrices(planPrices)
+  return PLAN_TIER_ORDER.reduce((tiers, tier) => {
+    tiers[tier] = BILLING_PERIOD_ORDER.reduce((periods, period) => {
+      periods[period] = {
+        amount: String(normalized[tier][period].amount),
+        currency: normalized[tier][period].currency,
+      }
+      return periods
+    }, {})
+    return tiers
+  }, {})
+}
+
+function parseAmount(value) {
+  const amount = Number(String(value).trim().replace(',', '.'))
+  if (!Number.isFinite(amount) || amount < 0) return null
+  return amount
+}
+
+function cupPreview(amount, currency, cupPerUnit) {
+  if (currency === PLAN_DISPLAY_CURRENCY) {
+    return formatPlanAmount(Math.round(amount), PLAN_DISPLAY_CURRENCY)
+  }
+  if (!areExchangeRatesAvailable()) return null
+  const converted = convertBetweenCurrencies(amount, currency, PLAN_DISPLAY_CURRENCY, cupPerUnit)
+  if (converted == null) return null
+  return formatPlanAmount(converted, PLAN_DISPLAY_CURRENCY)
+}
+
+function PlanPriceField({ label, value, onChange, cupPerUnit }) {
+  const amountId = useId()
+  const currencyId = useId()
+  const amount = parseAmount(value.amount)
+  const preview = amount == null ? null : cupPreview(amount, value.currency, cupPerUnit)
+
+  return (
+    <div className="rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-3.5">
+      <div className="flex items-center justify-between gap-3">
+        <label htmlFor={amountId} className="text-sm font-medium text-zinc-200">
+          {label}
+        </label>
+        {preview ? (
+          <span className="rounded-full border border-brand-green/20 bg-brand-green/10 px-2 py-0.5 text-[0.65rem] font-semibold tabular-nums text-brand-green">
+            ≈ {preview}
+          </span>
+        ) : (
+          <span className={`text-[0.65rem] ${adminMuted}`}>En CUP al publicar</span>
+        )}
+      </div>
+      <div className={`${fieldShell} mt-2.5`}>
+        <input
+          id={amountId}
+          type="number"
+          min="0"
+          step="0.01"
+          inputMode="decimal"
+          value={value.amount}
+          onChange={(event) => onChange({ ...value, amount: event.target.value })}
+          className={amountInputClass}
+          placeholder="0"
+          required
+        />
+        <label htmlFor={currencyId} className="sr-only">
+          Moneda de {label}
+        </label>
+        <AdminSelect
+          id={currencyId}
+          variant="plain"
+          className="w-[6.25rem] shrink-0"
+          ariaLabel={`Moneda de ${label}`}
+          value={value.currency}
+          onChange={(currency) => onChange({ ...value, currency })}
+          options={DISPLAY_CURRENCIES.map((currency) => ({ value: currency.code, label: currency.code }))}
+        />
+      </div>
+    </div>
+  )
+}
+
+export default function AdminSettings() {
+  const navigate = useNavigate()
+  const [phoneDigits, setPhoneDigits] = useState('')
+  const [admins, setAdmins] = useState(() => [newAdminRow()])
+  const [advertisingPrices, setAdvertisingPrices] = useState(() => ({
+    'ads-10': String(DEFAULT_ADVERTISING_PRICES['ads-10']),
+    'ads-20': String(DEFAULT_ADVERTISING_PRICES['ads-20']),
+    'ads-30': String(DEFAULT_ADVERTISING_PRICES['ads-30']),
+  }))
+  const [planPrices, setPlanPrices] = useState(() => pricesToForm(DEFAULT_PLAN_PRICES))
+  const [transactionFeePercent, setTransactionFeePercent] = useState('0')
+  const [qvapayPlanDiscountPercent, setQvapayPlanDiscountPercent] = useState('0')
+  const [cupPerUnit, setCupPerUnit] = useState(() => getCupPerUnit())
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [smtpTestEmail, setSmtpTestEmail] = useState('')
+  const [smtpTesting, setSmtpTesting] = useState(false)
+  const { showError, toastNode } = useFormErrorToast({ variant: 'admin' })
+
+  const loadSettings = useCallback(async () => {
+    setError('')
+    setError('')
+    setLoading(true)
+    try {
+      const token = getAdminToken()
+      const [data] = await Promise.all([
+        fetchAdminSettings(token),
+        loadExchangeRates().catch(() => null),
+      ])
+      setPhoneDigits(data.renewal_contact_phone ?? '')
+      setAdmins(adminsFromSettings(data))
+      setAdvertisingPrices({
+        'ads-10': String(
+          data.advertising_prices?.['ads-10']?.amount
+            ?? data.advertising_prices?.ads_10?.amount
+            ?? DEFAULT_ADVERTISING_PRICES['ads-10'],
+        ),
+        'ads-20': String(
+          data.advertising_prices?.['ads-20']?.amount
+            ?? data.advertising_prices?.ads_20?.amount
+            ?? DEFAULT_ADVERTISING_PRICES['ads-20'],
+        ),
+        'ads-30': String(
+          data.advertising_prices?.['ads-30']?.amount
+            ?? data.advertising_prices?.ads_30?.amount
+            ?? DEFAULT_ADVERTISING_PRICES['ads-30'],
+        ),
+      })
+      setPlanPrices(pricesToForm(data.plan_prices ?? DEFAULT_PLAN_PRICES))
+      setTransactionFeePercent(String(data.transaction_fee_percent ?? 0))
+      setQvapayPlanDiscountPercent(String(data.qvapay_plan_discount_percent ?? 0))
+      setCupPerUnit(getCupPerUnit())
+    } catch (err) {
+      if (isSessionError(err)) {
+        clearAdminToken()
+        navigate('/admin', { replace: true })
+        return
+      }
+      setError(getUserFacingMessage(err, 'No pudimos cargar la configuración.'))
+    } finally {
+      setLoading(false)
+    }
+  }, [navigate])
+
+  useEffect(() => {
+    loadSettings()
+  }, [loadSettings])
+
+  function updatePrice(tier, period, next) {
+    setPlanPrices((current) => ({
+      ...current,
+      [tier]: {
+        ...current[tier],
+        [period]: next,
+      },
+    }))
+  }
+
+  async function handleSubmit(event) {
+    event.preventDefault()
+    showError('')
+    setSuccess('')
+
+    if (phoneDigits.length !== 8) {
+      showError('Indica un teléfono cubano de 8 dígitos.')
+      return
+    }
+
+    const parsedAdmins = []
+    for (const admin of admins) {
+      const email = admin.email.trim()
+      const phone = admin.phone.trim()
+      if (!email && !phone) {
+        showError('Completa el correo y el teléfono de cada administrador.')
+        return
+      }
+      if (!email || !phone) {
+        showError('Cada administrador necesita correo y teléfono.')
+        return
+      }
+      parsedAdmins.push({ email, phone })
+    }
+    if (!parsedAdmins.length) {
+      showError('Agrega al menos un administrador.')
+      return
+    }
+
+    const parsedAds = {}
+    for (const planId of ADVERTISING_PLAN_IDS) {
+      const amount = parseAmount(advertisingPrices[planId])
+      if (amount == null) {
+        showError('Cada precio de publicidad debe ser un número mayor o igual a 0.')
+        return
+      }
+      parsedAds[planId] = { amount }
+    }
+
+    const parsedFee = parseAmount(transactionFeePercent)
+    if (parsedFee == null || parsedFee > 100) {
+      showError('La tarifa por transacción debe estar entre 0 y 100.')
+      return
+    }
+    const parsedPlanDiscount = parseAmount(qvapayPlanDiscountPercent)
+    if (parsedPlanDiscount == null || parsedPlanDiscount > 100) {
+      showError('El descuento de los planes por QvaPay debe estar entre 0 y 100.')
+      return
+    }
+
+    const parsedPrices = {}
+    for (const tier of PLAN_TIER_ORDER) {
+      parsedPrices[tier] = {}
+      for (const period of BILLING_PERIOD_ORDER) {
+        const amount = parseAmount(planPrices[tier][period].amount)
+        if (amount == null) {
+          showError('Cada precio debe ser un número mayor o igual a 0.')
+          return
+        }
+        parsedPrices[tier][period] = {
+          amount,
+          currency: planPrices[tier][period].currency,
+        }
+      }
+    }
+
+    setSaving(true)
+    try {
+      const token = getAdminToken()
+      const updated = await updateAdminSettings(token, {
+        renewal_contact_phone: phoneDigits,
+        transaction_fee_percent: parsedFee,
+        qvapay_plan_discount_percent: parsedPlanDiscount,
+        plan_prices: parsedPrices,
+        advertising_prices: parsedAds,
+        admins: parsedAdmins,
+      })
+      setPhoneDigits(updated.renewal_contact_phone ?? phoneDigits)
+      setAdmins(adminsFromSettings(updated))
+      setAdvertisingPrices({
+        'ads-10': String(updated.advertising_prices?.['ads-10']?.amount ?? parsedAds['ads-10'].amount),
+        'ads-20': String(updated.advertising_prices?.['ads-20']?.amount ?? parsedAds['ads-20'].amount),
+        'ads-30': String(updated.advertising_prices?.['ads-30']?.amount ?? parsedAds['ads-30'].amount),
+      })
+      setPlanPrices(pricesToForm(updated.plan_prices ?? parsedPrices))
+      setTransactionFeePercent(String(updated.transaction_fee_percent ?? parsedFee))
+      setQvapayPlanDiscountPercent(String(updated.qvapay_plan_discount_percent ?? parsedPlanDiscount))
+      setSuccess('Configuración guardada.')
+    } catch (err) {
+      showError(getUserFacingMessage(err, 'No pudimos guardar la configuración.'))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleSmtpTest() {
+    const email = smtpTestEmail.trim()
+    if (!email || !email.includes('@')) {
+      showError('Escribe un correo para la prueba.')
+      return
+    }
+    showError('')
+    setSuccess('')
+    setSmtpTesting(true)
+    try {
+      await sendAdminSmtpTest(getAdminToken(), email)
+      setSuccess(`Correo de prueba enviado a ${email}.`)
+    } catch (err) {
+      if (isSessionError(err)) {
+        clearAdminToken()
+        navigate('/admin', { replace: true })
+        return
+      }
+      showError(getUserFacingMessage(err, 'No pudimos enviar el correo de prueba.'))
+    } finally {
+      setSmtpTesting(false)
+    }
+  }
+
+  return (
+    <div className={adminSection}>
+      {success && (
+        <p className={`mb-4 ${adminAlertSuccess}`} role="status">
+          {success}
+        </p>
+      )}
+
+      {error && (
+        <p className={`mb-4 ${adminAlertError}`} role="alert">
+          {error}
+        </p>
+      )}
+
+      {loading ? (
+        <LoadingState variant="admin" message="Cargando configuración…" />
+      ) : (
+        <form onSubmit={handleSubmit} className="mx-auto flex max-w-6xl flex-col gap-4 pb-20">
+          <div className="grid gap-4 md:grid-cols-2 md:items-start">
+            <div className="flex flex-col gap-4">
+            <section className={adminCard}>
+              <div className="mb-4">
+                <h2 className="text-sm font-semibold text-zinc-100">Precios de marketing</h2>
+                <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                  Montos en USD. La factura es el precio del plan.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {ADVERTISING_PLAN_IDS.map((planId) => (
+                  <div key={planId} className="rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-3.5">
+                    <label htmlFor={`ads-${planId}`} className="text-sm font-medium text-zinc-200">
+                      {ADVERTISING_PLAN_LABELS[planId]}
+                    </label>
+                    <div className={`${fieldShell} mt-2.5`}>
+                      <input
+                        id={`ads-${planId}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        value={advertisingPrices[planId]}
+                        onChange={(event) =>
+                          setAdvertisingPrices((current) => ({
+                            ...current,
+                            [planId]: event.target.value,
+                          }))
+                        }
+                        className={amountInputClass}
+                        placeholder="0"
+                        required
+                      />
+                      <span className="flex shrink-0 items-center px-3 text-sm font-semibold text-zinc-400">
+                        USD
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-3.5">
+                <h3 className="text-sm font-semibold text-zinc-100">Renovaciones</h3>
+                <p className={`mt-1.5 mb-3 text-sm leading-relaxed ${adminSubtle}`}>
+                  Este número recibe los mensajes de WhatsApp cuando un vendedor quiere renovar su plan.
+                </p>
+                <label htmlFor="renewal-contact-phone" className={adminLabel}>
+                  Teléfono
+                  <span className="text-orange-300" aria-hidden="true">
+                    {' '}
+                    *
+                  </span>
+                </label>
+                <div className={fieldShell}>
+                  <span className="flex shrink-0 items-center border-r border-zinc-800/90 bg-zinc-950/40 px-3 text-sm font-semibold text-zinc-300">
+                    {PHONE_PREFIX}
+                  </span>
+                  <input
+                    id="renewal-contact-phone"
+                    type="tel"
+                    inputMode="numeric"
+                    value={formatPhoneDigits(phoneDigits)}
+                    onChange={(event) => setPhoneDigits(getPhoneDigits(event.target.value))}
+                    className={`${adminInput} min-h-12 rounded-none border-0 bg-transparent focus:ring-0`}
+                    placeholder="5 123 4567"
+                    autoComplete="tel-national"
+                    required
+                  />
+                </div>
+                <p className={`mt-2 text-xs ${adminMuted}`}>
+                  Obligatorio para que «Renovar plan» abra WhatsApp con un mensaje listo.
+                </p>
+              </div>
+            </section>
+
+            <section className={adminCard}>
+              <h2 className="text-sm font-semibold text-zinc-100">Tarifa por transacción</h2>
+              <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                Porcentaje sobre productos y domicilio en cada factura QvaPay nueva.
+              </p>
+              <label htmlFor="transaction-fee-percent" className={`${adminLabel} mt-4`}>
+                Porcentaje
+              </label>
+              <div className={`${fieldShell} max-w-[11rem]`}>
+                <input
+                  id="transaction-fee-percent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={transactionFeePercent}
+                  onChange={(event) => setTransactionFeePercent(event.target.value)}
+                  className={amountInputClass}
+                  required
+                />
+                <span className="flex shrink-0 items-center px-3 text-sm font-semibold text-zinc-400">%</span>
+              </div>
+            </section>
+
+            <section className={adminCard}>
+              <h2 className="text-sm font-semibold text-zinc-100">Descuento de planes por QvaPay</h2>
+              <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                Porcentaje que se resta al precio del plan cuando el pago es por QvaPay.
+              </p>
+              <label htmlFor="qvapay-plan-discount" className={`${adminLabel} mt-4`}>
+                Porcentaje
+              </label>
+              <div className={`${fieldShell} max-w-[11rem]`}>
+                <input
+                  id="qvapay-plan-discount"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  inputMode="decimal"
+                  value={qvapayPlanDiscountPercent}
+                  onChange={(event) => setQvapayPlanDiscountPercent(event.target.value)}
+                  className={amountInputClass}
+                  required
+                />
+                <span className="flex shrink-0 items-center px-3 text-sm font-semibold text-zinc-400">%</span>
+              </div>
+            </section>
+            </div>
+
+            <div className="flex flex-col gap-4">
+            <section className={adminCard}>
+              <h2 className="text-sm font-semibold text-zinc-100">Administradores</h2>
+              <p className={`mt-1.5 mb-4 text-sm leading-relaxed ${adminSubtle}`}>
+                Reciben el aviso por SMS cuando un vendedor paga un plan de publicidad (solo números
+                +53).
+              </p>
+              <div className="flex flex-col gap-3">
+                {admins.map((admin, index) => (
+                  <article
+                    key={admin.key}
+                    className="rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-3.5"
+                  >
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-zinc-200">
+                        Administrador {index + 1}
+                      </p>
+                      {admins.length > 1 ? (
+                        <AdminButton
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          onClick={() =>
+                            setAdmins((current) => current.filter((item) => item.key !== admin.key))
+                          }
+                        >
+                          Quitar
+                        </AdminButton>
+                      ) : null}
+                    </div>
+                    <div className="grid gap-4">
+                      <div>
+                        <label htmlFor={`admin-email-${admin.key}`} className={adminLabel}>
+                          Correo
+                          <span className="text-orange-300" aria-hidden="true">
+                            {' '}
+                            *
+                          </span>
+                        </label>
+                        <input
+                          id={`admin-email-${admin.key}`}
+                          type="email"
+                          value={admin.email}
+                          onChange={(event) =>
+                            setAdmins((current) =>
+                              current.map((item) =>
+                                item.key === admin.key
+                                  ? { ...item, email: event.target.value }
+                                  : item,
+                              ),
+                            )
+                          }
+                          className={`${adminInput} min-h-12`}
+                          placeholder="admin@palajaba.com"
+                          autoComplete="email"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`admin-phone-${admin.key}`} className={adminLabel}>
+                          Teléfono
+                          <span className="text-orange-300" aria-hidden="true">
+                            {' '}
+                            *
+                          </span>
+                        </label>
+                        <input
+                          id={`admin-phone-${admin.key}`}
+                          type="tel"
+                          value={admin.phone}
+                          onChange={(event) =>
+                            setAdmins((current) =>
+                              current.map((item) =>
+                                item.key === admin.key
+                                  ? { ...item, phone: event.target.value }
+                                  : item,
+                              ),
+                            )
+                          }
+                          className={`${adminInput} min-h-12`}
+                          placeholder="+53 5 123 4567"
+                          autoComplete="tel"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <AdminButton
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="mt-3 w-full sm:w-auto"
+                onClick={() => setAdmins((current) => [...current, newAdminRow()])}
+              >
+                Añadir administrador
+              </AdminButton>
+            </section>
+
+            <section className={adminCard}>
+              <h2 className="text-sm font-semibold text-zinc-100">Prueba de correo</h2>
+              <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                Envía un mensaje a la dirección que escribas para comprobar que el SMTP funciona.
+              </p>
+              <label htmlFor="smtp-test-email" className={`${adminLabel} mt-4`}>
+                Correo
+              </label>
+              <input
+                id="smtp-test-email"
+                type="email"
+                value={smtpTestEmail}
+                onChange={(event) => setSmtpTestEmail(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault()
+                    handleSmtpTest()
+                  }
+                }}
+                className={`${adminInput} min-h-12`}
+                placeholder="correo@ejemplo.com"
+                autoComplete="email"
+              />
+              <div className="mt-3 flex flex-wrap gap-2">
+                {admins.map((admin, index) =>
+                  admin.email.trim() ? (
+                    <AdminButton
+                      key={admin.key}
+                      type="button"
+                      variant="secondary"
+                      size="xs"
+                      onClick={() => setSmtpTestEmail(admin.email.trim())}
+                    >
+                      Administrador {index + 1}
+                    </AdminButton>
+                  ) : null,
+                )}
+              </div>
+              <AdminButton
+                type="button"
+                size="sm"
+                className="mt-3"
+                disabled={smtpTesting || !smtpTestEmail.trim()}
+                onClick={handleSmtpTest}
+              >
+                {smtpTesting ? 'Enviando…' : 'Probar'}
+              </AdminButton>
+            </section>
+            </div>
+          </div>
+
+          <section className={adminCard}>
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold text-zinc-100">Precios de los planes</h2>
+              <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                Escribe el monto y elige la moneda. El vendedor siempre lo ve convertido a CUP.
+              </p>
+            </div>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {PLAN_TIER_ORDER.map((tier) => (
+                <article
+                  key={tier}
+                  className="rounded-2xl border border-zinc-800/80 bg-zinc-900/35 p-4"
+                >
+                  <h3 className="text-base font-semibold text-zinc-50">
+                    Plan {PLAN_TIER_LABELS[tier]}
+                  </h3>
+                  <div className="mt-3 flex flex-col gap-3">
+                    {BILLING_PERIOD_ORDER.map((period) => (
+                      <PlanPriceField
+                        key={period}
+                        label={BILLING_LABELS[period]}
+                        value={planPrices[tier][period]}
+                        onChange={(next) => updatePrice(tier, period, next)}
+                        cupPerUnit={cupPerUnit}
+                      />
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <div className="pointer-events-none fixed right-4 bottom-[max(1.25rem,var(--safe-bottom))] z-30 sm:right-6 lg:right-8">
+            <AdminButton
+              type="submit"
+              className="pointer-events-auto !w-auto min-w-[12.5rem] shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
+              disabled={saving || phoneDigits.length !== 8}
+            >
+              {saving ? 'Guardando…' : 'Guardar configuración'}
+            </AdminButton>
+          </div>
+        </form>
+      )}
+      {toastNode}
+    </div>
+  )
+}

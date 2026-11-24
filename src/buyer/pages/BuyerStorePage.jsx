@@ -1,35 +1,35 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import CatalogThemeScope from "../../components/catalog/CatalogThemeScope";
-import BuyerCategoryProductRow from "../components/BuyerCategoryProductRow";
-import BuyerHeaderSearch from "../components/BuyerHeaderSearch";
-import { BuyerStoreIdentity } from "../components/BuyerStoreHeader";
-import BuyerMarketplaceNav from "../components/BuyerMarketplaceNav";
-import BuyerShell from "../components/BuyerShell";
-import BuyerStoreProfileHeader from "../components/BuyerStoreProfileHeader";
-import BuyerStoreServiceFooter from "../components/BuyerStoreServiceFooter";
-import StatePanel from "../../components/ui/StatePanel";
-import LoadingState from "../../components/ui/LoadingState";
-import DeadState from "../../components/ui/DeadState";
-import { DEAD_MASCOT, MARKETPLACE_LABEL } from "../../constants/branding";
-import { DISPLAY_CURRENCIES } from "../../constants/currencies";
-import Button from "../../components/Button";
+import CatalogThemeScope from "../../products/componentes/CatalogThemeScope.jsx";
+import BuyerCategoryProductRow from "../componentes/BuyerCategoryProductRow.jsx";
+import BuyerHeaderSearch from "../componentes/BuyerHeaderSearch.jsx";
+import { BuyerStoreIdentity } from "../componentes/BuyerStoreHeader.jsx";
+import BuyerMarketplaceNav from "../componentes/BuyerMarketplaceNav.jsx";
+import BuyerShell from "../componentes/BuyerShell.jsx";
+import BuyerStoreProfileHeader from "../componentes/BuyerStoreProfileHeader.jsx";
+import BuyerStoreServiceFooter from "../componentes/BuyerStoreServiceFooter.jsx";
+import StatePanel from "../../shared/componentes/StatePanel.jsx";
+import LoadingState from "../../shared/componentes/LoadingState.jsx";
+import DeadState from "../../shared/componentes/DeadState.jsx";
+import { DEAD_MASCOT, MARKETPLACE_LABEL } from "../../shared/utils/branding.js";
+import { DISPLAY_CURRENCIES } from "../../shared/utils/currencies.js";
+import Button from "../../shared/componentes/Button.jsx";
 import {
   fetchMarketplaceGestorStoreCatalog,
   fetchMarketplaceGestorStoreCategoryProducts,
   fetchMarketplaceStoreCatalog,
   fetchMarketplaceStoreCategoryProducts,
 } from "../../products/api.js";
-import { BuyerDisplayedLocationProvider } from "../context.js";
-import { useBuyerDisplayCurrency } from "../context.js";
-import { normalizeCatalogTheme } from "../../lib/catalogThemes";
-import { storeCategoryPath } from "../../lib/marketplaceCategory";
-import { validateGestorUsername } from "../../lib/sellerGestores";
-import { recordStoreProfileView } from "../../lib/storeProfileView";
-import { setStoreCheckoutPhones } from "../../lib/storeCheckoutPhones";
-import { getAdditionalMunicipalities } from "../../lib/buyerLocation";
-import { storeGestorPublicPath, storePublicPath } from "../../lib/storeSlug";
-import { resolveUserFacingError } from "../../lib/userFacingError";
+import { BuyerDisplayedLocationProvider } from "../context/context.js";
+import { useBuyerDisplayCurrency } from "../context/context.js";
+import { normalizeCatalogTheme } from "../../products/utils/constants.js";
+import { storeCategoryPath } from "../utils/marketplaceCategory.js";
+import { validateGestorUsername } from "../../seller/utils/sellerGestores.js";
+import { recordStoreProfileView } from "../../seller/utils/storeProfileView.js";
+import { setStoreCheckoutPhones } from "../../seller/utils/storeCheckoutPhones.js";
+import { getAdditionalMunicipalities } from "../utils/buyerLocation.js";
+import { storeGestorPublicPath, storePublicPath } from "../../seller/utils/storeSlug.js";
+import { resolveUserFacingError } from "../../shared/utils/userFacingError.js";
 import { usePublicStoreLocation } from "./usePublicStoreLocation";
 import { readMatchingSnapshot, useSectionSnapshot } from "../../session/useSectionSnapshot";
 

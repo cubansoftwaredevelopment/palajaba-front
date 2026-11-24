@@ -1,4 +1,4 @@
-import { ApiError, parseApiErrorDetail, request } from '../lib/api.js'
+import { ApiError, parseApiErrorDetail, request } from '../api/client.js'
 
 function getApiBase() {
   if (import.meta.env.DEV) return ''
@@ -120,4 +120,11 @@ export function resolveAppReleaseFileUrl(releaseId) {
   if (!releaseId) return null
   const path = `/api/marketplace/app-releases/${encodeURIComponent(releaseId)}/file`
   return import.meta.env.DEV ? path : `${getApiBase()}${path}`
+}
+
+export function recordAppDevicePresence(payload) {
+  return request("/api/marketplace/devices/presence", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }

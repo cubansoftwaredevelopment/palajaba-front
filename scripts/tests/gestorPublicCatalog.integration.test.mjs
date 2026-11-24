@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { buildDirectBuyCheckoutPayload } from '../../src/lib/buyerJaba.js'
-import { computeGestorDisplayPrice } from '../../src/lib/gestorCatalog.js'
+import { buildDirectBuyCheckoutPayload } from '../../src/buyer/utils/buyerJaba.js'
+import { computeGestorDisplayPrice } from '../../src/gestor/utils/gestorCatalog.js'
 
 /**
  * Simula catálogo gestor → jaba → payload de pedido (sin red).

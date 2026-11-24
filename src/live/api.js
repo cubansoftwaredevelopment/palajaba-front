@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core'
-import { getSellerToken } from '../lib/sellerAuth'
+import { getSellerToken } from '../seller/utils/sellerAuth.js'
 
 function isNativeApp() {
   return Capacitor.isNativePlatform()

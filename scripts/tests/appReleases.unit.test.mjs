@@ -4,7 +4,7 @@ import { test } from 'node:test'
 import {
   shouldShowDownloadPrompt,
   shouldShowUpdatePrompt,
-} from '../../src/appReleases/lib/prompt.js'
+} from '../../src/appReleases/utils/prompt.js'
 
 test('shouldShowDownloadPrompt solo fuera de la app nativa', () => {
   assert.equal(shouldShowDownloadPrompt(false), true)

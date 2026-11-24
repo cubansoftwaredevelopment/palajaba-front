@@ -8,8 +8,8 @@ import {
   gestorProductsDirty,
   toggleGestorProductSelection,
   updateGestorProductMargin,
-} from '../../src/lib/gestorCatalog.js'
-import { validateGestorUsername } from '../../src/lib/sellerGestores.js'
+} from '../../src/gestor/utils/gestorCatalog.js'
+import { validateGestorUsername } from '../../src/seller/utils/sellerGestores.js'
 
 /**
  * Simula login → drafts → guardar márgenes (sin red).

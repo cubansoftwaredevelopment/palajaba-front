@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import AuthHeader from '../../components/auth/AuthHeader'
-import PasswordField from '../../components/auth/PasswordField'
-import Button from '../../components/Button'
-import { hintClass } from '../../components/auth/formStyles'
-import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
-import MensajeroEntrySheet from '../components/MensajeroEntrySheet'
+import AuthHeader from '../../auth/componentes/AuthHeader.jsx'
+import PasswordField from '../../auth/componentes/PasswordField.jsx'
+import Button from '../../shared/componentes/Button.jsx'
+import { hintClass } from '../../auth/componentes/formStyles.js'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
+import MensajeroEntrySheet from '../componentes/MensajeroEntrySheet.jsx'
 import { mensajeroLogin } from '../api'
 import {
   isMensajeroAuthenticated,
@@ -13,7 +13,7 @@ import {
   mensajeroSetupPath,
   setMensajeroSession,
   setMensajeroSetup,
-} from '../lib/session'
+} from '../utils/session.js'
 
 export default function MensajeroLogin() {
   const { alias } = useParams()

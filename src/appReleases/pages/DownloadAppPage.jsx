@@ -1,22 +1,22 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import Logo from '../../components/Logo'
-import { BRAND_NAME } from '../../constants/branding'
+import Logo from '../../shared/componentes/Logo.jsx'
+import { BRAND_NAME } from '../../shared/utils/branding.js'
 import {
   androidDownloadFallbackHref,
   isInNativeApp,
   loadMainAppReleases,
   releaseFileHref,
   startAppReleaseDownload,
-} from '../lib/releases.js'
-import { isNativeAppShell } from '../../lib/nativeApp'
+} from '../utils/releases.js'
+import { isNativeAppShell } from '../utils/nativeApp.js'
 import {
   APP_FEATURES,
   APP_HEADLINE,
   APP_INSTALL_HINT,
   APP_LOGO,
   APP_TAGLINE,
-} from '../constants.js'
+} from '../utils/constants.js'
 
 const downloadButtonClass =
   'inline-flex w-full min-h-12 items-center justify-center gap-2.5 rounded-full bg-brand-green px-6 py-3.5 text-sm font-semibold text-brand-white shadow-[0_8px_24px_rgba(89,128,44,0.32)] transition-all duration-200 touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/25 focus-visible:ring-offset-2 focus-visible:ring-offset-brand-white sm:hover:-translate-y-px sm:hover:bg-[#4d7026]'

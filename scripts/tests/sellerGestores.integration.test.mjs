@@ -9,7 +9,7 @@ import {
   selectAllProductIds,
   toggleProductId,
   validateGestorUsername,
-} from '../../src/lib/sellerGestores.js'
+} from '../../src/seller/utils/sellerGestores.js'
 
 /**
  * Simula el flujo del panel: crear username válido → elegir productos → payload PUT.

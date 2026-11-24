@@ -5,7 +5,7 @@ import {
   BUYER_PRODUCT_CARD_ACTIONS,
   getBuyerProductCardContentFlags,
   resolveBuyerProductStorePath,
-} from '../../src/lib/buyerProductCardView.js'
+} from '../../src/buyer/utils/buyerProductCardView.js'
 import {
   buyerProductActions,
   buyerProductBtnBuy,
@@ -17,7 +17,7 @@ import {
   buyerProductRow,
   buyerProductRowItem,
   buyerProductStore,
-} from '../../src/components/buyer/buyerStyles.js'
+} from '../../src/buyer/componentes/buyerStyles.js'
 
 test('getBuyerProductCardContentFlags oculta domicilio en la tarjeta', () => {
   const flags = getBuyerProductCardContentFlags()

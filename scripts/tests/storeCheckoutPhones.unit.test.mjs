@@ -5,7 +5,7 @@ import {
   _resetStoreCheckoutPhonesForTests,
   getStoreCheckoutPhones,
   setStoreCheckoutPhones,
-} from '../../src/lib/storeCheckoutPhones.js'
+} from '../../src/seller/utils/storeCheckoutPhones.js'
 
 test('setStoreCheckoutPhones guarda y filtra opciones inválidas', () => {
   _resetStoreCheckoutPhonesForTests()

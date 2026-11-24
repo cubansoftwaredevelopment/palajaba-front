@@ -8,7 +8,7 @@ import {
   isProfileFormPanel,
   openProfilePanel,
   resolveProfileMenuAction,
-} from '../../src/lib/sellerProfileHub.js'
+} from '../../src/seller/utils/sellerProfileHub.js'
 
 /**
  * Simula la navegación del hub Mi cuenta sin montar React.

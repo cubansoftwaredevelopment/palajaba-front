@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { areaKey, productServiceAreas, selectedProductSalesAreas } from '../../src/lib/businessArea.js'
+import { areaKey, productServiceAreas, selectedProductSalesAreas } from '../../src/shared/utils/businessArea.js'
 
 const profile = {
   offers_delivery: true,

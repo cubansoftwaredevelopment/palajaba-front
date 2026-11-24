@@ -7,7 +7,7 @@ import {
   getAdvertisingPlan,
   getAdvertisingPlanHireLabel,
   getAdvertisingPlans,
-} from '../../src/constants/advertisingPlans.js'
+} from '../../src/subscriptions/utils/advertisingPlans.js'
 
 test('getAdvertisingPlans expone la lista contratables', () => {
   const plans = getAdvertisingPlans()

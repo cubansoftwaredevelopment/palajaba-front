@@ -6,7 +6,7 @@ import {
   getTrendPresentation,
   resolveComparisonForGranularity,
   resolveRevenueSeriesComparisons,
-} from '../../src/lib/sellerStatsTrend.js'
+} from '../../src/SellerStatistics/utils/sellerStatsTrend.js'
 
 test('formatChangePercent agrega signo y una decimal', () => {
   assert.equal(formatChangePercent(5.4), '+5,4%')

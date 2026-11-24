@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { notificationAudienceDetails, notificationAudienceDisplay } from '../../src/constants/admin.js'
+import { notificationAudienceDetails, notificationAudienceDisplay } from '../../src/admin/utils/admin.js'
 import {
   buildAdminNotificationPayload,
   matchesStoreQuery,
   smsSendCountLabel,
-} from '../../src/lib/adminNotificationStores.js'
+} from '../../src/admin/utils/adminNotificationStores.js'
 
 test('notificationAudienceDisplay muestra tienda en envíos single', () => {
   assert.equal(

@@ -14,7 +14,7 @@ import {
   paletteFromTheme,
   paletteToCssVars,
   parseHexColor,
-} from '../../src/lib/catalogThemes.js'
+} from '../../src/products/utils/constants.js'
 
 test('normalizeCatalogTheme usa default para valores desconocidos', () => {
   assert.equal(normalizeCatalogTheme(null), 'default')

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import AdminButton from '../../components/admin/AdminButton'
-import AdminModal from '../../components/admin/AdminModal'
-import ConfirmDialog from '../../components/admin/ConfirmDialog'
+import AdminButton from '../../admin/componentes/AdminButton.jsx'
+import AdminModal from '../../admin/componentes/AdminModal.jsx'
+import ConfirmDialog from '../../admin/componentes/ConfirmDialog.jsx'
 import {
   adminAlertError,
   adminAlertSuccess,
@@ -13,18 +13,18 @@ import {
   adminMuted,
   adminSection,
   adminSubtle,
-} from '../../components/admin/adminStyles'
-import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
+} from '../../admin/componentes/adminStyles.js'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import {
   createAdminAppRelease,
   deleteAdminAppRelease,
   fetchAdminAppReleases,
   setAdminAppReleaseMain,
 } from '../api.js'
-import { formatDateTime } from '../../lib/dates'
-import { getUserFacingMessage, isSessionError } from '../../lib/userFacingError'
-import { clearAdminToken, getAdminToken } from '../../lib/adminAuth'
-import LoadingState from '../../components/ui/LoadingState'
+import { formatDateTime } from '../../shared/utils/dates.js'
+import { getUserFacingMessage, isSessionError } from '../../shared/utils/userFacingError.js'
+import { clearAdminToken, getAdminToken } from '../../admin/utils/adminAuth.js'
+import LoadingState from '../../shared/componentes/LoadingState.jsx'
 
 const PLATFORMS = [
   { id: 'android', label: 'Android', accept: '.apk,application/vnd.android.package-archive', ext: '.apk' },

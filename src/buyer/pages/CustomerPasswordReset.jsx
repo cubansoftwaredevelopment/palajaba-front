@@ -1,20 +1,20 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import AuthCard from '../../auth/components/AuthCard'
-import AuthHeader from '../../auth/components/AuthHeader'
-import AuthShell from '../../auth/components/AuthShell'
-import Button from '../../components/Button'
-import PasswordField from '../../auth/components/PasswordField'
-import PhoneField from '../../auth/components/PhoneField'
-import { hintClass, inputClass } from '../../auth/components/formStyles'
-import { useFormErrorToast } from '../../components/ui/useFormErrorToast'
+import AuthCard from '../../auth/componentes/AuthCard.jsx'
+import AuthHeader from '../../auth/componentes/AuthHeader.jsx'
+import AuthShell from '../../auth/componentes/AuthShell.jsx'
+import Button from '../../shared/componentes/Button.jsx'
+import PasswordField from '../../auth/componentes/PasswordField.jsx'
+import PhoneField from '../../auth/componentes/PhoneField.jsx'
+import { hintClass, inputClass } from '../../auth/componentes/formStyles.js'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import {
   completeCustomerPasswordReset,
   confirmCustomerPasswordReset,
   resendCustomerPasswordReset,
   startCustomerPasswordReset,
 } from '../api.js'
-import { getUserFacingMessage } from '../../lib/userFacingError'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 
 const TITLES = {
   phone: ['Recuperar acceso de cliente', 'Indica el teléfono de tu cuenta. Te enviaremos un código por SMS.'],

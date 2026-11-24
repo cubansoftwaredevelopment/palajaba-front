@@ -8,15 +8,15 @@ import {
   BUYER_PRODUCT_CARD_ACTIONS,
   getBuyerProductCardContentFlags,
   resolveBuyerProductStorePath,
-} from '../../src/lib/buyerProductCardView.js'
+} from '../../src/buyer/utils/buyerProductCardView.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const cardSource = readFileSync(
-  join(__dirname, '../../src/components/buyer/BuyerProductCard.jsx'),
+  join(__dirname, '../../src/buyer/componentes/BuyerProductCard.jsx'),
   'utf8',
 )
 const detailSource = readFileSync(
-  join(__dirname, '../../src/components/buyer/BuyerProductDetailModal.jsx'),
+  join(__dirname, '../../src/buyer/componentes/BuyerProductDetailModal.jsx'),
   'utf8',
 )
 
@@ -56,9 +56,9 @@ test('flujo integrado: producto sin domicilio no muestra badge en card', () => {
 })
 
 test('flujo integrado: la card pone el nombre antes que el precio', () => {
-  const bodyStart = cardSource.indexOf('className={buyerProductBody}')
+  const bodyStart = cardSource.indexOf('buyerProductBody')
   assert.ok(bodyStart > 0)
-  const bodySlice = cardSource.slice(bodyStart, bodyStart + 250)
+  const bodySlice = cardSource.slice(bodyStart, bodyStart + 400)
   const nameIdx = bodySlice.indexOf('buyerProductName')
   const priceIdx = bodySlice.indexOf('buyerProductPrice')
   assert.ok(nameIdx >= 0)

@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import AuthCard from '../components/AuthCard'
-import AuthHeader from '../components/AuthHeader'
-import AuthShell from '../components/AuthShell'
+import AuthCard from '../componentes/AuthCard.jsx'
+import AuthHeader from '../componentes/AuthHeader.jsx'
+import AuthShell from '../componentes/AuthShell.jsx'
 
 export default function CreateAccount() {
   const location = useLocation()

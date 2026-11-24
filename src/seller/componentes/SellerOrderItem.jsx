@@ -1,0 +1,157 @@
+import { isCustomerPaidOrder } from '../../orders/utils/orderStatus.js'
+import { formatOrderDateTime } from '../../shared/utils/dates.js'
+import { formatPrice } from '../../shared/utils/money.js'
+import SellerEvidenceCountdown from './SellerEvidenceCountdown.jsx'
+import { sellerFocusRing } from './sellerStyles.js'
+
+function formatSubtotals(subtotals = [], paymentCurrency = null) {
+  if (paymentCurrency) {
+    const total = subtotals.find((entry) => entry.currency === paymentCurrency)
+    if (total) return formatPrice(total.amount, paymentCurrency)
+  }
+  if (!subtotals.length) return '—'
+  return subtotals.map((entry) => formatPrice(entry.amount, entry.currency)).join(' + ')
+}
+
+function ChevronIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+      <path d="m9 18 6-6-6-6" />
+    </svg>
+  )
+}
+
+export default function SellerOrderItem({ order, variant = 'pending', onOpen, selecting = false, selected = false, onLongPress, onToggle }) {
+  const itemCount = order.items.reduce((total, item) => total + item.quantity, 0)
+  const isPending = variant === 'pending'
+  const evidence = order.payment_method === 'qvapay' ? order.qvapay?.evidence : null
+  const evidenceStatus = evidence?.status
+  const isCancelled = order.status === 'cancelled'
+  const customerPaid = isCustomerPaidOrder(order)
+  const evidenceLabel = isCancelled ? null : evidenceStatus === 'pending'
+    ? 'Evidencia enviada'
+    : evidenceStatus === 'rejected' ? 'Evidencia rechazada' : null
+  const orderCode = order.id.slice(-6).toUpperCase()
+  const totalLabel = formatSubtotals(order.subtotals, order.payment_currency)
+  const buyerName = order.buyer_name || order.delivery?.recipient_name || 'Comprador'
+  const buyerPhone = order.buyer_phone || order.delivery?.phone_primary
+
+  function handleActivate() {
+    if (selecting) {
+      onToggle?.(order)
+      return
+    }
+    onOpen(order)
+  }
+
+  function handlePointerDown() {
+    if (selecting || !onLongPress) return undefined
+    const timer = window.setTimeout(() => onLongPress(order), 450)
+    const clear = () => window.clearTimeout(timer)
+    window.addEventListener('pointerup', clear, { once: true })
+    window.addEventListener('pointercancel', clear, { once: true })
+    return undefined
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault()
+      handleActivate()
+    }
+  }
+
+  return (
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={handleActivate}
+      onPointerDown={handlePointerDown}
+      onKeyDown={handleKeyDown}
+      className={`group flex w-full cursor-pointer text-left transition-colors [touch-action:pan-y] active:bg-black/[0.03] ${sellerFocusRing}`}
+    >
+      <span className="flex min-w-0 flex-1 flex-col py-3.5">
+        <span className="flex items-start justify-between gap-3">
+          <span className="min-w-0">
+            <span className="flex flex-wrap items-center gap-2">
+              {selecting ? (
+                <span className={`grid h-5 w-5 place-items-center rounded-md border text-[0.7rem] font-bold ${selected ? 'border-brand-green bg-brand-green text-brand-white' : 'border-brand-green/30 text-transparent'}`} aria-hidden>✓</span>
+              ) : null}
+              <span className="font-display text-sm font-bold text-brand-green">
+                #{orderCode}
+              </span>
+              {customerPaid ? (
+                <span className="rounded-full bg-brand-green/10 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.05em] text-brand-green">
+                  Pagado
+                </span>
+              ) : null}
+              {evidenceLabel ? (
+                <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.035em] ${evidenceStatus === 'rejected' ? 'bg-red-100 text-red-800' : 'bg-amber-100 text-amber-900'}`}>
+                  <span aria-hidden="true" className={`flex h-3.5 w-3.5 items-center justify-center rounded-full text-[0.6rem] font-extrabold leading-none text-white ${evidenceStatus === 'rejected' ? 'bg-red-700' : 'bg-amber-700'}`}>!</span>
+                  {evidenceLabel}
+                </span>
+              ) : isCancelled ? (
+                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.05em] text-red-800">
+                  Cancelado
+                </span>
+              ) : isPending ? (
+                customerPaid ? null : (
+                <span className="rounded-full bg-brand-yellow/20 px-2 py-0.5 text-[0.58rem] font-bold uppercase tracking-[0.05em] text-brand-carmelita">
+                  Requiere acción
+                </span>
+                )
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-brand-green/10 px-2 py-0.5 text-[0.58rem] font-bold text-brand-green">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" aria-hidden>
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                  Realizada
+                </span>
+              )}
+            </span>
+            <span className="mt-1 block text-xs text-brand-carmelita/80">
+              {isCancelled
+                ? `Cancelado ${formatOrderDateTime(order.updated_at)}`
+                : isPending
+                  ? `Recibido ${formatOrderDateTime(order.created_at)}`
+                  : `Completada ${formatOrderDateTime(order.completed_at ?? order.updated_at)}`}
+            </span>
+            {evidenceStatus === 'pending' ? (
+              <SellerEvidenceCountdown deadline={evidence?.deadline} label="Restan:" className="mt-1 block text-xs font-semibold text-amber-800" />
+            ) : null}
+            <span className="mt-1.5 block truncate text-xs font-semibold text-brand-carmelita">
+              {buyerName}
+            </span>
+            {buyerPhone ? (
+              <span className="mt-0.5 block text-xs text-brand-green">{buyerPhone}</span>
+            ) : null}
+          </span>
+
+          <span
+            className={`shrink-0 text-brand-carmelita/45 transition-transform group-active:translate-x-0.5 lg:group-hover:translate-x-0.5 ${
+              isPending ? 'text-brand-carmelita/55' : ''
+            }`}
+          >
+            <ChevronIcon />
+          </span>
+        </span>
+
+        <span className="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
+          <span className="rounded-lg bg-brand-green/[0.06] px-2 py-1 font-medium text-brand-carmelita/90">
+            {itemCount} {itemCount === 1 ? 'producto' : 'productos'}
+          </span>
+          <span className="font-bold text-brand-green">{totalLabel}</span>
+          {order.payment_currency ? (
+            <span className="rounded-full border border-brand-green/12 px-2 py-0.5 font-semibold text-brand-green/90">
+              {order.payment_currency}
+            </span>
+          ) : null}
+          {order.delivery_requested ? (
+            <span className="rounded-full bg-brand-green/[0.08] px-2 py-0.5 font-semibold text-brand-green">
+              Domicilio
+            </span>
+          ) : null}
+        </span>
+      </span>
+    </article>
+  )
+}

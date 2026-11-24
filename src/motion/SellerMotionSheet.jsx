@@ -1,5 +1,5 @@
-import { useDismissibleModal } from '../buyer/components/useOrderModalPresence'
-import { sellerModalOverlay, sellerModalSheet } from '../components/seller/sellerStyles'
+import { useDismissibleModal } from '../buyer/componentes/useOrderModalPresence.js'
+import { sellerModalOverlay, sellerModalSheet } from '../seller/componentes/sellerStyles.js'
 import BuyerMotionFrame from './BuyerMotionFrame'
 import { useSheetExitMs } from './presets'
 

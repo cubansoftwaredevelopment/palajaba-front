@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { getSellerNavItems, sellerHasGestores } from '../../src/lib/planAccess.js'
+import { getSellerNavItems, sellerHasGestores } from '../../src/subscriptions/utils/planAccess.js'
 
 test('sellerHasGestores solo con flag activo', () => {
   assert.equal(sellerHasGestores(null), false)

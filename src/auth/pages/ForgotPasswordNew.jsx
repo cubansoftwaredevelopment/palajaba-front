@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import AuthCard from '../components/AuthCard'
-import AuthHeader from '../components/AuthHeader'
-import AuthShell from '../components/AuthShell'
-import PasswordField from '../components/PasswordField'
-import Button from '../../components/Button'
+import AuthCard from '../componentes/AuthCard.jsx'
+import AuthHeader from '../componentes/AuthHeader.jsx'
+import AuthShell from '../componentes/AuthShell.jsx'
+import PasswordField from '../componentes/PasswordField.jsx'
+import Button from '../../shared/componentes/Button.jsx'
 import { completePasswordReset } from '../api.js'
-import { getUserFacingMessage } from '../../lib/userFacingError'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 
 export default function ForgotPasswordNew() {
   const navigate = useNavigate()

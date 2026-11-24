@@ -7,9 +7,9 @@ import {
   listActiveGestores,
   needsGestorKeepPicker,
   toggleKeepGestorId,
-} from '../../src/subscriptions/context.js'
-import { STANDARD_GESTOR_LIMIT } from '../../src/lib/gestorPlanLimits.js'
-import { gestorSetupStatus, isGestorActive } from '../../src/lib/sellerGestores.js'
+} from '../../src/subscriptions/context/context.js'
+import { STANDARD_GESTOR_LIMIT } from '../../src/gestor/utils/gestorPlanLimits.js'
+import { gestorSetupStatus, isGestorActive } from '../../src/seller/utils/sellerGestores.js'
 
 const twelveGestores = Array.from({ length: 12 }, (_, index) => ({
   id: `g${index}`,
