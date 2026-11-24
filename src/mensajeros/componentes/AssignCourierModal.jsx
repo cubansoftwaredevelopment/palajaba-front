@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import SellerFilterDropdown from '../../seller/componentes/SellerFilterDropdown.jsx'
 import SellerModalPortal from '../../seller/componentes/SellerModalPortal.jsx'
-import SubscriptionDatePicker from '../../shared/componentes/SubscriptionDatePicker.jsx'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import {
   sellerBtnPrimary,
@@ -17,20 +16,8 @@ import { assignMensajeroBatch, fetchSellerMensajeros } from '../api'
 import { FEE_CURRENCIES, vehicleLabel } from '../utils/constants.js'
 import { getSellerToken } from '../../seller/utils/sellerAuth.js'
 
-const TIME_OPTIONS = Array.from({ length: 33 }, (_, index) => {
-  const total = 6 * 60 + index * 30
-  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`
-})
-
 function canPayQvapay(order, messenger) {
   return order.payment_method === 'qvapay' && order.delivery_price != null && messenger?.qvapay_verified
-}
-
-function atTime(date, time) {
-  const [hours, minutes] = time.split(':').map(Number)
-  const next = new Date(date)
-  next.setHours(hours, minutes, 0, 0)
-  return next
 }
 
 export default function AssignCourierModal({ orders, onClose: requestClose, onDone }) {
@@ -38,10 +25,6 @@ export default function AssignCourierModal({ orders, onClose: requestClose, onDo
   const [messengers, setMessengers] = useState([])
   const [messengerId, setMessengerId] = useState('')
   const [step, setStep] = useState('list')
-  const [startDate, setStartDate] = useState(null)
-  const [endDate, setEndDate] = useState(null)
-  const [startTime, setStartTime] = useState('08:00')
-  const [endTime, setEndTime] = useState('18:00')
   const [fees, setFees] = useState(() => Object.fromEntries(orders.map((order) => [order.id, {
     pay_via: 'other',
     fee_amount: '',
@@ -78,16 +61,6 @@ export default function AssignCourierModal({ orders, onClose: requestClose, onDo
       setError('Elige un mensajero.')
       return
     }
-    if (!startDate || !endDate || !startTime || !endTime) {
-      setError('Elige el inicio y el fin de la ruta.')
-      return
-    }
-    const windowStart = atTime(startDate, startTime)
-    const windowEnd = atTime(endDate, endTime)
-    if (windowEnd <= windowStart) {
-      setError('El fin tiene que ser después del inicio.')
-      return
-    }
     if (orders.some((order) => order.payment_method === 'qvapay' && order.qvapay?.payment_status !== 'paid')) {
       setError('El cliente todavía no pagó este pedido por QvaPay.')
       return
@@ -100,8 +73,6 @@ export default function AssignCourierModal({ orders, onClose: requestClose, onDo
     try {
       await assignMensajeroBatch(getSellerToken(), {
         mensajero_id: messengerId,
-        window_start: windowStart.toISOString(),
-        window_end: windowEnd.toISOString(),
         orders: orders.map((order) => ({
           order_id: order.id,
           pay_via: fees[order.id].pay_via,
@@ -164,16 +135,6 @@ export default function AssignCourierModal({ orders, onClose: requestClose, onDo
                 value={messengerId}
                 onChange={setMessengerId}
               />
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-brand-green">Inicio</p>
-                <SubscriptionDatePicker value={startDate} onChange={(next) => next && setStartDate(next)} caption="Inicio" />
-                <SellerFilterDropdown label="Hora de inicio" placeholder="Hora" options={TIME_OPTIONS} value={startTime} onChange={setStartTime} />
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs font-semibold text-brand-green">Fin</p>
-                <SubscriptionDatePicker value={endDate} onChange={(next) => next && setEndDate(next)} minDate={startDate || undefined} caption="Fin" />
-                <SellerFilterDropdown label="Hora de fin" placeholder="Hora" options={TIME_OPTIONS} value={endTime} onChange={setEndTime} />
-              </div>
               {orders.map((order) => {
                 const fee = fees[order.id]
                 const qvapay = canPayQvapay(order, messenger)

@@ -3,6 +3,17 @@ import { NETWORK_ERROR_CODE } from '../../api/client.js'
 import { pushMensajeroPoint } from '../api'
 import { clearOfflineLocationNotice, showOfflineLocationNotice } from './offlineLocationNotice.js'
 
+const MIN_PIN_METERS = 15
+
+function metersBetween(origin, destination) {
+  const lat1 = origin.lat * Math.PI / 180
+  const lat2 = destination.lat * Math.PI / 180
+  const dlat = lat2 - lat1
+  const dlon = (destination.lng - origin.lng) * Math.PI / 180
+  const h = Math.sin(dlat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dlon / 2) ** 2
+  return 2 * 6371000 * Math.asin(Math.min(1, Math.sqrt(h)))
+}
+
 function lostNetwork(error) {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) return true
   if (error?.code === NETWORK_ERROR_CODE) return true
@@ -27,26 +38,31 @@ export function useRouteTelemetry(batchId, active, onPoint) {
     if (!active || !batchId) return undefined
     let stopped = false
     let lastSent = 0
+    let lastPin = null
     let background = null
     let clearTimer = () => {}
 
     async function send(coords) {
       if (stopped || !coords || coords.lat == null || coords.lng == null) return
+      const location = { lat: coords.lat, lng: coords.lng }
+      if (lastPin && metersBetween(lastPin, location) < MIN_PIN_METERS) return
       const now = Date.now()
       if (now - lastSent < 2500) return
+      const previousPin = lastPin
+      lastPin = location
       lastSent = now
-      const location = { lat: coords.lat, lng: coords.lng }
-      onPointRef.current?.(location)
       try {
-        await pushMensajeroPoint(batchId, {
+        const result = await pushMensajeroPoint(batchId, {
           client_id: crypto.randomUUID(),
           lat: location.lat,
           lng: location.lng,
           accuracy: coords.accuracy ?? null,
           recorded_at: new Date().toISOString(),
         })
+        if (!result?.skipped) onPointRef.current?.(location)
         await clearOfflineLocationNotice()
       } catch (error) {
+        lastPin = previousPin
         if (lostNetwork(error)) void showOfflineLocationNotice()
       }
     }

@@ -8,7 +8,6 @@ import Logo from '../../shared/componentes/Logo.jsx'
 import SellerLogoutModal from '../../seller/componentes/SellerLogoutModal.jsx'
 import SellerNotificationToast from '../../seller/componentes/SellerNotificationToast.jsx'
 import { sellerBtnPrimary, sellerBtnSecondary, sellerFocusRing, sellerHeader, sellerHeaderInner, sellerPageWrap } from '../../seller/componentes/sellerStyles.js'
-import { formatOrderDateTime } from '../../shared/utils/dates.js'
 import { fetchMensajeroMe, fetchMensajeroSummary, markMensajeroNoticeRead, startMensajeroBatch } from '../api'
 import CompletedRouteModal from '../componentes/CompletedRouteModal.jsx'
 import EvidenceGallery from '../componentes/EvidenceGallery.jsx'
@@ -277,7 +276,6 @@ export default function MensajeroPanel() {
                           {unread ? <span className="rounded-full bg-brand-carmelita px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-[0.04em] text-brand-white">Nueva</span> : null}
                           <h2 className="text-sm font-bold text-brand-green">{item.status === 'in_progress' ? 'Ruta en curso' : 'Mensajería asignada'}</h2>
                         </div>
-                        {item.window_start ? <p className="mt-1 text-xs text-brand-carmelita/70">{formatOrderDateTime(item.window_start)} – {formatOrderDateTime(item.window_end)}</p> : null}
                         <ul className="mt-3 space-y-2">
                           {(item.orders || []).map((order) => (
                             <li key={order.id} className="rounded-xl bg-brand-white/80 px-3 py-2 text-sm text-brand-carmelita">

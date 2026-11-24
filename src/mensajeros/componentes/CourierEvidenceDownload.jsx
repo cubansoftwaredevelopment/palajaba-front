@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 import { downloadMensajeroEvidence, downloadSellerCourierEvidence } from '../api'
 
 function DownloadIcon() {
@@ -22,7 +23,7 @@ export default function CourierEvidenceDownload({ orderId, role = 'mensajero' })
       if (role === 'seller') await downloadSellerCourierEvidence(orderId)
       else await downloadMensajeroEvidence(orderId)
     } catch (err) {
-      setError(err.message || 'No se pudo descargar la evidencia.')
+      setError(getUserFacingMessage({ message: err?.message }, 'No pudimos descargar el PDF de la evidencia.'))
     } finally {
       setBusy(false)
     }

@@ -1,4 +1,5 @@
 import { ApiError, parseApiErrorDetail, request } from '../api/client.js'
+import { getUserFacingMessage } from '../shared/utils/userFacingError.js'
 import { downloadBlob } from '../shared/utils/downloadFile.js'
 import { getCustomerToken } from '../customer/utils/customerAuth.js'
 import { getMensajeroToken } from './utils/session.js'
@@ -119,7 +120,11 @@ async function downloadPdf(path, token, fallbackName) {
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
     const parsed = parseApiErrorDetail(data.detail)
-    throw new ApiError(parsed.message, { code: parsed.code, data: parsed.data, status: response.status })
+    const message = getUserFacingMessage(
+      { message: parsed.message },
+      'No pudimos descargar el PDF de la evidencia.',
+    )
+    throw new ApiError(message, { code: parsed.code, data: parsed.data, status: response.status })
   }
   const blob = await response.blob()
   const disposition = response.headers.get('Content-Disposition') ?? ''
