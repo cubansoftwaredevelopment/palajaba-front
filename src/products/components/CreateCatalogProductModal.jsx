@@ -11,6 +11,7 @@ import { getSellerToken } from '../../lib/sellerAuth'
 
 import CategoryAutocomplete from '../../components/seller/CategoryAutocomplete'
 import SellerSelect from '../../components/seller/SellerSelect'
+import { STOCK_UNITS } from '../../lib/marketplaceProduct'
 import Checkbox from '../../components/ui/Checkbox'
 import SellerModalPortal from '../../components/seller/SellerModalPortal'
 import SellerNotificationToast from '../../components/seller/SellerNotificationToast'
@@ -74,6 +75,24 @@ function samePrice(input, original) {
 
   return parsed === original
 
+}
+
+function sameStock(input, original) {
+  const parsed = Number.parseInt(String(input).trim(), 10)
+  const stored = original == null || original === '' ? 100 : Number(original)
+  return Number.isInteger(parsed) && parsed === stored
+}
+
+function sameMeasure(amount, unit, originalAmount, originalUnit) {
+  const currentUnit = unit || 'U'
+  const storedUnit = originalUnit || 'U'
+  if (currentUnit !== storedUnit) return false
+  if (currentUnit === 'U') return true
+  const parsed = Number.parseFloat(String(amount ?? '').trim().replace(',', '.'))
+  const current = Number.isFinite(parsed) && parsed > 0 ? parsed : null
+  const storedRaw = originalAmount == null || originalAmount === '' ? null : Number(originalAmount)
+  const stored = Number.isFinite(storedRaw) && storedRaw > 0 ? storedRaw : null
+  return current === stored
 }
 
 const MAX_PRODUCT_IMAGES = 6
@@ -176,6 +195,16 @@ export default function CreateCatalogProductModal({
   const [viewOnly, setViewOnly] = useState(product?.view_only ?? false)
 
   const [isAvailable, setIsAvailable] = useState(product?.is_available ?? true)
+
+  const [stockQuantity, setStockQuantity] = useState(
+    product?.stock_quantity != null ? String(product.stock_quantity) : '100',
+  )
+
+  const [stockUnit, setStockUnit] = useState(product?.stock_unit || 'U')
+
+  const [unitAmount, setUnitAmount] = useState(
+    product?.unit_amount != null ? String(product.unit_amount) : '',
+  )
 
   const zoneOptions = useMemo(
     () => productServiceAreas(profile),
@@ -385,6 +414,10 @@ export default function CreateCatalogProductModal({
 
       isAvailable !== product.is_available ||
 
+      !sameStock(stockQuantity, product.stock_quantity) ||
+
+      !sameMeasure(unitAmount, stockUnit, product.unit_amount, product.stock_unit) ||
+
       photosChanged(photos, product) ||
 
       !sameStringArray(acceptedCurrencies, product.accepted_currencies) ||
@@ -423,6 +456,12 @@ export default function CreateCatalogProductModal({
     viewOnly,
 
     isAvailable,
+
+    stockQuantity,
+
+    stockUnit,
+
+    unitAmount,
 
     photos,
 
@@ -581,6 +620,24 @@ export default function CreateCatalogProductModal({
     formData.append('view_only', String(viewOnly))
 
     formData.append('is_available', String(isAvailable))
+
+    const parsedStock = Number.parseInt(String(stockQuantity).trim(), 10)
+    if (!Number.isInteger(parsedStock) || parsedStock < 0) {
+      showError('El stock debe ser un número entero, 0 o más.')
+      return
+    }
+    formData.append('stock_quantity', String(parsedStock))
+    formData.append('stock_unit', stockUnit || 'U')
+    if ((stockUnit || 'U') !== 'U') {
+      const parsedAmount = Number.parseFloat(String(unitAmount).trim().replace(',', '.'))
+      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        showError('Indica el número de la unidad de medida, por ejemplo 900 ml.')
+        return
+      }
+      formData.append('unit_amount', String(parsedAmount))
+    } else {
+      formData.append('unit_amount', '')
+    }
 
     const frontalIndex = Math.max(0, photos.findIndex((photo) => photo.isFrontal))
 
@@ -991,28 +1048,79 @@ export default function CreateCatalogProductModal({
 
             </div>
 
-            {allowProductDiscount ? (
-              <div className="mt-4">
-                <label htmlFor="catalog-product-discount" className={sellerLabel}>
-                  Descuento
+            <div className={`mt-4 grid gap-2 ${allowProductDiscount ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              <div>
+                <label htmlFor="catalog-product-stock" className={sellerLabel}>
+                  Stock
                 </label>
                 <input
-                  id="catalog-product-discount"
+                  id="catalog-product-stock"
                   type="number"
                   min="0"
-                  max="99"
                   step="1"
                   inputMode="numeric"
-                  value={discountPercent}
-                  onChange={(event) => setDiscountPercent(event.target.value)}
-                  placeholder="0"
+                  value={stockQuantity}
+                  onChange={(event) => setStockQuantity(event.target.value)}
+                  placeholder="100"
                   className={`mt-1.5 ${sellerModalInput}`}
                 />
-                <p className={`mt-1 ${sellerHint}`}>
-                  Porcentaje opcional (1–99). Disponible en Pro y Premium. El precio base se muestra tachado en el feed.
-                </p>
               </div>
-            ) : null}
+              {allowProductDiscount ? (
+                <div>
+                  <label htmlFor="catalog-product-discount" className={sellerLabel}>
+                    Descuento en %
+                  </label>
+                  <input
+                    id="catalog-product-discount"
+                    type="number"
+                    min="0"
+                    max="99"
+                    step="1"
+                    inputMode="numeric"
+                    value={discountPercent}
+                    onChange={(event) => setDiscountPercent(event.target.value)}
+                    placeholder="10 %"
+                    className={`mt-1.5 ${sellerModalInput}`}
+                  />
+                </div>
+              ) : null}
+            </div>
+            <div className={`mt-4 grid gap-2 ${stockUnit === 'U' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+              {stockUnit !== 'U' ? (
+                <div>
+                  <label htmlFor="catalog-product-unit-amount" className={sellerLabel}>
+                    Medida
+                  </label>
+                  <input
+                    id="catalog-product-unit-amount"
+                    type="number"
+                    min="0"
+                    step="any"
+                    inputMode="decimal"
+                    value={unitAmount}
+                    onChange={(event) => setUnitAmount(event.target.value)}
+                    placeholder="900"
+                    className={`mt-1.5 ${sellerModalInput}`}
+                  />
+                </div>
+              ) : null}
+              <div>
+                <label htmlFor="catalog-product-unit" className={sellerLabel}>
+                  Unidad
+                </label>
+                <div className="mt-1.5">
+                  <SellerSelect
+                    id="catalog-product-unit"
+                    modal
+                    dropdownZIndex={210}
+                    value={stockUnit}
+                    onChange={setStockUnit}
+                    options={STOCK_UNITS}
+                  />
+                </div>
+              </div>
+            </div>
+      
 
             {alternateCurrencies.length > 0 && (
 

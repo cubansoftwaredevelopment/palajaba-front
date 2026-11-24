@@ -1,5 +1,13 @@
 import { useEffect, useRef } from 'react'
+import { NETWORK_ERROR_CODE } from '../../lib/api'
 import { pushMensajeroPoint } from '../api'
+import { clearOfflineLocationNotice, showOfflineLocationNotice } from './offlineLocationNotice'
+
+function lostNetwork(error) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) return true
+  if (error?.code === NETWORK_ERROR_CODE) return true
+  return error instanceof TypeError
+}
 
 async function readPosition() {
   const { Geolocation } = await import('@capacitor/geolocation')
@@ -37,8 +45,9 @@ export function useRouteTelemetry(batchId, active, onPoint) {
           accuracy: coords.accuracy ?? null,
           recorded_at: new Date().toISOString(),
         })
-      } catch {
-        /* el sync manager reintenta si no hubo respuesta */
+        await clearOfflineLocationNotice()
+      } catch (error) {
+        if (lostNetwork(error)) void showOfflineLocationNotice()
       }
     }
 
@@ -81,11 +90,26 @@ export function useRouteTelemetry(batchId, active, onPoint) {
       clearTimer = () => window.clearInterval(timer)
     }
 
+    function onOffline() {
+      void showOfflineLocationNotice()
+    }
+    function onOnline() {
+      void clearOfflineLocationNotice()
+    }
+    window.addEventListener('offline', onOffline)
+    window.addEventListener('online', onOnline)
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      void showOfflineLocationNotice()
+    }
+
     begin()
 
     return () => {
       stopped = true
       clearTimer()
+      window.removeEventListener('offline', onOffline)
+      window.removeEventListener('online', onOnline)
+      void clearOfflineLocationNotice()
       background?.stop?.().catch(() => {})
     }
   }, [active, batchId])

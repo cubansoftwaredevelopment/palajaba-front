@@ -1,3 +1,4 @@
+import { productStock } from './marketplaceProduct.js'
 import { productSaleAmount } from './productDiscount.js'
 
 export function flattenCatalogProducts(catalog) {
@@ -55,13 +56,17 @@ export function getProductSearchStatus({
 }
 
 export function createManualOrderLineItem(product, quantity = 1) {
+  const stock = productStock(product)
+  const requested = Math.max(1, Number(quantity) || 1)
   return {
     product_id: product.id,
     name: product.name,
-    quantity: Math.min(99, Math.max(1, Number(quantity) || 1)),
+    quantity: Math.min(stock.quantity || 1, requested),
     unit_price: productSaleAmount(product),
     currency: product.base_currency,
-    stock_quantity: product.stock_quantity ?? null,
+    stock_quantity: stock.quantity,
+    stock_unit: stock.unit,
+    unit_amount: product.unit_amount ?? null,
   }
 }
 
@@ -109,14 +114,12 @@ export function validateManualOrderDraft(lineItems, productsById = {}) {
     }
 
     const quantity = Number(item.quantity)
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) {
-      return `La cantidad de «${item.name}» debe estar entre 1 y 99.`
-    }
-
     const product = productsById[item.product_id]
-    const stockLimit = product?.stock_quantity ?? item.stock_quantity
-    if (stockLimit != null && quantity > stockLimit) {
-      return `Stock insuficiente para «${item.name}».`
+    const stockLimit = product ? productStock(product).quantity : (item.stock_quantity ?? 100)
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > stockLimit) {
+      return stockLimit < 1
+        ? `«${item.name}» está agotado.`
+        : `Stock insuficiente para «${item.name}». Quedan ${stockLimit}.`
     }
   }
 

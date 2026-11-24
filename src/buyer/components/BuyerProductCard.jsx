@@ -13,7 +13,7 @@ import {
 } from '../../lib/buyerProductCardView'
 import { productDiscountPercent, resolveDisplayPrices } from '../../lib/displayPrice'
 import { resolveMediaUrl } from '../../lib/media'
-import { isProductPurchasable, isProductSoldOut } from '../../lib/marketplaceProduct'
+import { isProductPurchasable, isProductSoldOut, productStockLabel } from '../../lib/marketplaceProduct'
 import BuyerProductDetailModal from './BuyerProductDetailModal'
 import BuyerShareSheet, { BuyerShareButton } from './BuyerShareSheet'
 import { buildProductShareMessage, buildProductShareUrl } from '../../lib/buyerShare'
@@ -209,6 +209,9 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
                 prices={displayPrices}
                 priceClassName={`${buyerProductPrice} !mt-0`}
               />
+              <p className="mt-0.5 text-[0.68rem] font-semibold text-brand-carmelita">
+                Stock: {productStockLabel(product)}
+              </p>
           </button>
 
           {product.store?.store_name && storePath ? (

@@ -1,4 +1,5 @@
 import { getJabaItems, replaceJabaItems } from './buyerJaba'
+import { productStock } from './marketplaceProduct'
 import { getAdditionalMunicipalities } from './buyerLocation'
 import { syncBuyerJaba } from '../buyer/api.js'
 
@@ -6,6 +7,7 @@ const ZONE_REMOVAL_REASONS = new Set(['out_of_zone', 'store_unavailable'])
 let syncGeneration = 0
 
 function jabaItemFromApiProduct(product, quantity, previousItem = null) {
+  const stock = productStock(product)
   const next = {
     id: product.id,
     name: product.name,
@@ -18,7 +20,10 @@ function jabaItemFromApiProduct(product, quantity, previousItem = null) {
     store_id: product.store?.id,
     store_name: product.store?.store_name,
     store_phone: product.store?.phone ?? null,
-    quantity: Math.max(1, quantity ?? 1),
+    stock_quantity: stock.quantity,
+    stock_unit: stock.unit,
+    unit_amount: product.unit_amount ?? null,
+    quantity: Math.min(stock.quantity || 1, Math.max(1, quantity ?? 1)),
   }
 
   // Conservar precio/teléfono/atribución del gestor tras sync del catálogo del negocio.

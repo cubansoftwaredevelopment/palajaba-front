@@ -16,6 +16,7 @@ import BuyerJabaSuggestions from './BuyerJabaSuggestions'
 import BuyerMarketplaceNav from './BuyerMarketplaceNav'
 import LoadingState from '../../components/ui/LoadingState'
 import { allItemsOfferDelivery, resolveStorePhone } from '../../lib/buyerJaba'
+import { productStockLabel } from '../../lib/marketplaceProduct'
 import { resolveDisplayPrice } from '../../lib/displayPrice'
 import { formatPrice } from '../../lib/money'
 import { resolveMediaUrl } from '../../lib/media'
@@ -331,6 +332,9 @@ function StoreGroup({
                       {item.name}
                     </p>
                     <p className="mt-0.5 text-xs font-bold text-brand-green">{display.label}</p>
+                    <p className="mt-0.5 text-[0.68rem] font-semibold text-brand-carmelita">
+                      Stock: {productStockLabel(item)}
+                    </p>
 
                     <div className="mt-2 flex items-center gap-1">
                       <button
@@ -348,7 +352,8 @@ function StoreGroup({
                       <button
                         type="button"
                         onClick={() => onSetQuantity(item.id, qty + 1)}
-                        className={buyerJabaQtyBtn}
+                        disabled={qty >= (item.stock_quantity ?? 100)}
+                        className={`${buyerJabaQtyBtn} disabled:opacity-40`}
                         aria-label={`Agregar uno de ${item.name}`}
                       >
                         +

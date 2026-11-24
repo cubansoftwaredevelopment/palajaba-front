@@ -8,6 +8,7 @@ import { getUserFacingMessage } from '../../lib/userFacingError'
 import { SELLER_PRODUCTS_REFRESH_EVENT } from '../../lib/sellerProductsRefresh'
 import { formatPrice } from '../../lib/money'
 import { productDiscountPercent, productSaleAmount } from '../../lib/displayPrice'
+import { productStockLabel } from '../../lib/marketplaceProduct'
 import {
   buildManualOrderPayload,
   createManualOrderLineItem,
@@ -367,7 +368,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                               </span>
                               <span className="mt-0.5 block text-xs text-brand-carmelita/80">
                                 {product.category_name}
-                                {product.stock_quantity != null ? ` · Stock: ${product.stock_quantity}` : ''}
+                                {` · Stock: ${productStockLabel(product)}`}
                               </span>
                             </span>
                             <span className="shrink-0 text-xs font-semibold text-brand-green">
@@ -403,7 +404,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                           <p className="truncate text-sm font-semibold text-brand-green">{item.name}</p>
                           <p className="mt-0.5 text-xs text-brand-carmelita/80">
                             {formatPrice(item.unit_price, item.currency)}
-                            {item.stock_quantity != null ? ` · Stock: ${item.stock_quantity}` : ''}
+                            {` · Stock: ${productStockLabel(item)}`}
                           </p>
                         </div>
                         <button
@@ -420,7 +421,7 @@ export default function SellerManualOrderModal({ onClose: requestClose, onCreate
                         </span>
                         <QuantityStepper
                           value={item.quantity}
-                          max={item.stock_quantity ?? 99}
+                          max={item.stock_quantity ?? 100}
                           onChange={(quantity) => handleQuantityChange(item.product_id, quantity)}
                         />
                       </div>

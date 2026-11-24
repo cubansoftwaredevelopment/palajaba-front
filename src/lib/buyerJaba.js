@@ -1,3 +1,5 @@
+import { productStock } from './marketplaceProduct'
+
 const STORAGE_KEY = 'pala-jaba-buyer-jaba'
 export const JABA_CHANGE_EVENT = 'buyer-jaba-change'
 
@@ -108,6 +110,7 @@ export function allItemsOfferDelivery(items = []) {
 
 function normalizeProduct(product) {
   const hasGestor = Boolean(product?.gestor_id)
+  const stock = productStock(product)
   return {
     id: product.id,
     name: product.name,
@@ -122,13 +125,16 @@ function normalizeProduct(product) {
     store_phone: product.store?.phone ?? null,
     gestor_id: hasGestor ? product.gestor_id : null,
     gestor_username: hasGestor ? product.gestor_username ?? null : null,
+    stock_quantity: stock.quantity,
+    stock_unit: stock.unit,
+    unit_amount: product.unit_amount ?? null,
     quantity: 1,
   }
 }
 
 /** Checkout directo desde «Comprar»: solo este producto, sin usar el resto de la jaba. */
 export function buildDirectBuyCheckoutPayload(product) {
-  if (product?.is_available === false) return null
+  if (product?.is_available === false || productStock(product).quantity <= 0) return null
 
   const storeId = product.store?.id
   if (!storeId) return null
@@ -146,13 +152,21 @@ export function buildDirectBuyCheckoutPayload(product) {
 }
 
 export function addToJaba(product) {
-  if (product?.is_available === false) return getJabaCount()
+  if (product?.is_available === false || productStock(product).quantity <= 0) return getJabaCount()
 
   const items = readJaba()
   const existing = items.find((item) => item.id === product.id)
   const hasGestor = Boolean(product?.gestor_id)
 
   if (existing) {
+    const stock = productStock(product)
+    existing.stock_quantity = stock.quantity
+    existing.stock_unit = stock.unit
+    existing.unit_amount = product.unit_amount ?? null
+    if ((existing.quantity ?? 1) >= stock.quantity) {
+      writeJaba(items)
+      return getJabaCount()
+    }
     existing.quantity = (existing.quantity ?? 1) + 1
     if (product.store?.phone) existing.store_phone = product.store.phone
     if (product.store?.store_name) existing.store_name = product.store.store_name
@@ -193,7 +207,12 @@ export function setJabaItemQuantity(productId, quantity) {
   const item = items.find((entry) => entry.id === productId)
   if (!item) return getJabaCount()
 
-  item.quantity = nextQuantity
+  const cap = Number.isFinite(Number(item.stock_quantity)) ? Number(item.stock_quantity) : 100
+  if (cap <= 0) {
+    writeJaba(items.filter((entry) => entry.id !== productId))
+    return getJabaCount()
+  }
+  item.quantity = Math.min(nextQuantity, cap)
   writeJaba(items)
   return getJabaCount()
 }

@@ -3,6 +3,7 @@ import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionShee
 import ProductPhotoGallery from '../../buyer/components/ProductPhotoGallery'
 import { productDiscountPercent, productSaleAmount } from '../context.js'
 import { formatPrice } from '../../lib/money'
+import { productMeasureLabel, productStock } from '../../lib/marketplaceProduct'
 import {
   sellerBtnPrimary,
   sellerBtnSecondary,
@@ -144,6 +145,12 @@ export default function CatalogProductDetailModal({
             <DetailRow label="Domicilio">{product.offers_delivery ? 'Sí' : 'No'}</DetailRow>
             <DetailRow label="Solo vista">{product.view_only ? 'Sí' : 'No'}</DetailRow>
             <DetailRow label="Disponible">{product.is_available ? 'Sí' : 'No'}</DetailRow>
+            <DetailRow label="Stock">{productStock(product).quantity}</DetailRow>
+            {productMeasureLabel(product) ? (
+              <DetailRow label="Medida">{productMeasureLabel(product)}</DetailRow>
+            ) : (
+              <DetailRow label="Unidad">{productStock(product).unit}</DetailRow>
+            )}
           </dl>
         </div>
 

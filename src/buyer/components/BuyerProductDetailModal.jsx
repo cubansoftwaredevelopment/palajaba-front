@@ -13,7 +13,7 @@ import { productSaleAmount } from '../../lib/productDiscount'
 import { formatPrice } from '../../lib/money'
 
 import { resolveMediaUrl } from '../../lib/media'
-import { isProductPurchasable, isProductSoldOut, getProductPickupDisplay } from '../../lib/marketplaceProduct'
+import { isProductPurchasable, isProductSoldOut, getProductPickupDisplay, productStockLabel } from '../../lib/marketplaceProduct'
 import { recordProductPopularity } from '../../lib/productPopularity'
 
 import BuyerModalPortal from './BuyerModalPortal'
@@ -350,6 +350,10 @@ export default function BuyerProductDetailModal({
                 {product.name}
 
               </h2>
+
+              <p className="mt-1 text-sm font-semibold text-brand-carmelita">
+                Stock: {productStockLabel(product)}
+              </p>
 
               {pickup.requiresPickup ? (
                 <p className={`${buyerProductPickupHint} mt-2 text-sm`}>
