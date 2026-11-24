@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { PresenceContext, motion, useReducedMotion } from 'framer-motion'
 import { backdropFade, detailSpring, dialogSpring, sheetSpring } from './presets'
 
@@ -46,7 +47,7 @@ export default function BuyerMotionFrame({
   children,
 }) {
   const reduced = useReducedMotion()
-  const { offset = 0, dragging = false, style: _ignoredStyle, ...pointer } = sheetProps ?? {}
+  const { offset = 0, dragging = false, style: _ignoredStyle, ref: sheetRef, ...pointer } = sheetProps ?? {}
   const spec = PANEL[variant] ?? PANEL.sheet
   const dragY = offset > 0 ? offset : 0
   const instant = Boolean(reduced || dragging)
@@ -55,16 +56,28 @@ export default function BuyerMotionFrame({
   const Panel = PANEL_TAG[panelAs] ?? motion.div
   const Overlay = OVERLAY_TAG[overlayAs] ?? motion.div
   const closed = closing ? 'pointer-events-none' : ''
+  const [settled, setSettled] = useState(Boolean(reduced))
+  const moving = closing || dragging || dragY > 0
+
+  useEffect(() => {
+    if (moving) setSettled(false)
+  }, [moving])
 
   const panel = (
     <Panel
       {...pointer}
       {...panelProps}
-      className={`${panelClassName} ${closed}`}
+      ref={(node) => {
+        if (typeof sheetRef === 'function') sheetRef(node)
+      }}
+      className={`${panelClassName} ${closed} ${settled && !moving ? 'sheet-at-rest' : ''}`}
       style={STILL}
       initial={reduced ? false : spec.hidden}
       animate={panelAnimate}
       transition={instant ? { duration: 0 } : spec.spring}
+      onAnimationComplete={() => {
+        if (!closing && dragY === 0 && !dragging) setSettled(true)
+      }}
     >
       {children}
     </Panel>

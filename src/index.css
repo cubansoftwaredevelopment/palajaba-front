@@ -992,3 +992,7 @@ button.jaba-remove-btn:active:not(:disabled) {
 .map-allows-page-scroll .leaflet-container {
   touch-action: pan-y pinch-zoom;
 }
+
+.sheet-at-rest {
+  transform: none !important;
+}
