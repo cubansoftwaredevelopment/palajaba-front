@@ -8,6 +8,7 @@ import {
   buyerJabaWhatsAppBtn,
 } from './buyerStyles.js'
 import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence.js'
+import BuyerModalPortal from './BuyerModalPortal.jsx'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useSheetExitMs } from '../../motion/presets'
 
@@ -51,6 +52,7 @@ export default function BuyerPhoneCheckoutModal({
   }
 
   return (
+    <BuyerModalPortal>
     <BuyerMotionFrame
       closing={closing}
       sheetProps={sheetProps}
@@ -123,5 +125,6 @@ export default function BuyerPhoneCheckoutModal({
           </button>
         </div>
     </BuyerMotionFrame>
+    </BuyerModalPortal>
   )
 }

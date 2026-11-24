@@ -13,7 +13,7 @@ const SUPPORT_MESSAGE = 'Hola, necesito ayuda con Pa\' La Jaba.'
 const QVAPAY_REGISTER_URL = 'https://www.qvapay.com/register'
 const FAQ_PATH = '/preguntas'
 
-const headingClass = 'font-script text-3xl leading-[1.15] text-brand-carmelita'
+const headingClass = 'py-1 font-script text-3xl leading-[1.35] text-brand-carmelita'
 const linkClass = 'block py-1.5 text-left text-[0.95rem] leading-snug text-brand-carmelita transition-colors touch-manipulation hover:text-brand-green focus-visible:outline-none focus-visible:text-brand-green'
 
 function placeLine(location) {

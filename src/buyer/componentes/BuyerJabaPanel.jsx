@@ -13,7 +13,6 @@ import { useBuyerDisplayCurrency } from '../context/context.js'
 import { useBuyerJaba } from '../context/context.js'
 import BuyerShell from './BuyerShell.jsx'
 import BuyerJabaSuggestions from './BuyerJabaSuggestions.jsx'
-import BuyerMarketplaceNav from './BuyerMarketplaceNav.jsx'
 import LoadingState from '../../shared/componentes/LoadingState.jsx'
 import { allItemsOfferDelivery, resolveStorePhone } from '../utils/buyerJaba.js'
 import { productStockLabel } from '../../products/utils/marketplaceProduct.js'
@@ -652,7 +651,6 @@ export default function BuyerCartPage() {
           <BuyerJabaSuggestions />
         </div>
     </BuyerShell>
-    <BuyerMarketplaceNav />
     {pendingRemoval ? (
       <ClearStoreModal
         title={pendingRemoval.title}

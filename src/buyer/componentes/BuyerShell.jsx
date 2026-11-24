@@ -45,7 +45,7 @@ export default function BuyerShell({
         : buyerMarketplaceScrollPadding
       : flushBottom
         ? ''
-        : 'pb-[max(2rem,var(--safe-bottom))] lg:pb-10'
+        : buyerMarketplaceScrollPadding
   const footerPaddingClass = marketplaceHub
     ? sellerBrowsing
       ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'

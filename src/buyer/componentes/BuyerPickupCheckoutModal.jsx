@@ -21,6 +21,7 @@ import {
 } from './buyerStyles.js'
 import CheckoutStoreAgreements from './CheckoutStoreAgreements.jsx'
 import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence.js'
+import BuyerModalPortal from './BuyerModalPortal.jsx'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useSheetExitMs } from '../../motion/presets'
 
@@ -127,6 +128,7 @@ export default function BuyerPickupCheckoutModal({
   }
 
   return (
+    <BuyerModalPortal>
     <BuyerMotionFrame
       split
       overlayAs="button"
@@ -208,5 +210,6 @@ export default function BuyerPickupCheckoutModal({
         </form>
         {toastNode}
     </BuyerMotionFrame>
+    </BuyerModalPortal>
   )
 }

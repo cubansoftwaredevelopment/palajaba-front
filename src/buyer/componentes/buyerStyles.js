@@ -307,7 +307,7 @@ export const buyerDeliveryOverlay =
   'fixed inset-0 z-[90] bg-brand-green/25 backdrop-blur-[2px]'
 
 export const buyerDeliveryModal =
-  'fixed inset-x-0 bottom-0 top-auto z-[100] flex w-full max-h-[min(92dvh,42rem)] flex-col rounded-t-[1.75rem] rounded-b-none border border-b-0 border-brand-green/10 bg-brand-white shadow-[0_-12px_40px_rgba(89,128,44,0.18)] sm:inset-x-auto sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:w-[min(24rem,calc(100vw-2rem))] sm:max-h-[min(88dvh,40rem)] sm:rounded-3xl sm:border-b sm:shadow-[0_16px_48px_rgba(89,128,44,0.2)] sm:-translate-x-1/2 sm:-translate-y-1/2 lg:w-[26rem]'
+  'fixed inset-x-0 bottom-0 top-auto z-[100] flex w-full max-h-[calc(100dvh-0.75rem)] flex-col rounded-t-[1.75rem] rounded-b-none border border-b-0 border-brand-green/10 bg-brand-white shadow-[0_-12px_40px_rgba(89,128,44,0.18)] sm:inset-x-auto sm:left-1/2 sm:top-1/2 sm:bottom-auto sm:w-[min(24rem,calc(100vw-2rem))] sm:max-h-[min(88dvh,40rem)] sm:rounded-3xl sm:border-b sm:shadow-[0_16px_48px_rgba(89,128,44,0.2)] sm:-translate-x-1/2 sm:-translate-y-1/2 lg:bottom-auto lg:w-[26rem]'
 
 export const buyerDeliveryModalHeader =
   'shrink-0 border-b border-brand-green/8 px-5 py-4'
@@ -316,7 +316,7 @@ export const buyerDeliveryModalBody =
   'min-h-0 flex-1 overflow-y-auto overscroll-y-contain px-5 py-4'
 
 export const buyerDeliveryModalFooter =
-  'shrink-0 flex flex-col gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]'
+  'shrink-0 flex flex-col gap-2 border-t border-brand-green/8 bg-brand-white px-5 pt-3 pb-[max(0.75rem,var(--safe-bottom))]'
 
 export const buyerDeliveryFieldLabel =
   'mb-1 block text-xs font-semibold text-brand-green sm:text-sm'
@@ -376,7 +376,7 @@ export function buyerMarketplaceNavItem(isActive) {
 }
 
 export const buyerMarketplaceScrollPadding =
-  'pb-[calc(5rem+var(--safe-bottom))] lg:pb-[calc(5.25rem+var(--safe-bottom))]'
+  'pb-[calc(var(--buyer-nav-space)+0.5rem)]'
 
 export const buyerProductDetailStickyPriceLabel =
   'text-[0.62rem] font-semibold uppercase tracking-[0.06em] text-brand-carmelita/70'

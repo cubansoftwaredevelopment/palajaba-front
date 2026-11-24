@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Navigate, useNavigate } from 'react-router-dom'
 import AuthHeader from '../../auth/componentes/AuthHeader.jsx'
 import BuyerLocationProgress from '../componentes/BuyerLocationProgress.jsx'
@@ -119,7 +120,7 @@ export default function BuyerSelectMunicipality() {
         </label>
       </div>
 
-      <div className={`animate-fade-in ${buyerList}`}>
+      <div className={`animate-fade-in pb-[3.25rem] ${buyerList}`}>
         {municipalities.length === 0 ? (
           <p className="rounded-2xl border border-brand-green/10 bg-brand-white px-4 py-5 text-center text-sm text-brand-carmelita/85 lg:col-span-2">
             No hay municipios con ese nombre.
@@ -135,14 +136,17 @@ export default function BuyerSelectMunicipality() {
           ))
         )}
       </div>
-      <Button
-        type="button"
-        className="sticky bottom-[max(0.75rem,var(--safe-bottom))] mt-4"
-        disabled={selectedIds.length === 0}
-        onClick={confirmSelection}
-      >
-        Ver en el marketplace
-      </Button>
+      {createPortal(
+        <Button
+          type="button"
+          className="buyer-marketplace-cta shadow-[0_10px_28px_rgba(89,128,44,0.28)]"
+          disabled={selectedIds.length === 0}
+          onClick={confirmSelection}
+        >
+          Ver en el marketplace
+        </Button>,
+        document.body,
+      )}
     </BuyerShell>
   )
 }

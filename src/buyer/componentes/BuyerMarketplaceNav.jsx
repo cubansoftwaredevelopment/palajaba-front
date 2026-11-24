@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { matchPath, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { fetchMarketplaceFeed } from '../api.js'
 import { fetchRenewalContactPhone } from '../../subscriptions/api.js'
@@ -442,7 +441,7 @@ export default function BuyerMarketplaceNav({
           onClick={openHelp}
           aria-label="Ayuda"
           className="fixed right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-brand-green text-white shadow-[0_8px_24px_rgba(89,128,44,0.28)] touch-manipulation disabled:opacity-40"
-          style={{ bottom: 'calc(4.75rem + var(--safe-bottom))' }}
+          style={{ bottom: 'calc(var(--buyer-nav-space) + 0.65rem)' }}
         >
           <WhatsAppMark jumping={helpJumping} size={26} />
         </button>
@@ -466,5 +465,5 @@ export default function BuyerMarketplaceNav({
     </>
   )
 
-  return createPortal(menu, document.body)
+  return menu
 }

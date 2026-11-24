@@ -20,6 +20,7 @@
 :root {
   --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
   --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --buyer-nav-space: calc(4.5rem + var(--safe-bottom));
 }
 
 @theme {
@@ -959,6 +960,25 @@ button:active:not(:disabled) {
   transform: scale(0.96);
 }
 
+.buyer-marketplace-cta {
+  position: fixed;
+  z-index: 40;
+  right: 1.25rem;
+  bottom: calc(var(--buyer-nav-space) + 0.5rem);
+  left: 1.25rem;
+  width: auto;
+  max-width: 28rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 1024px) {
+  .buyer-marketplace-cta {
+    right: max(2.5rem, calc(50% - 32rem));
+    left: max(2.5rem, calc(50% - 32rem));
+    max-width: none;
+  }
+}
+
 button.jaba-qty-btn:active:not(:disabled) {
   transform: scale(0.86);
   background: #e5e9dd;
@@ -991,8 +1011,4 @@ button.jaba-remove-btn:active:not(:disabled) {
 
 .map-allows-page-scroll .leaflet-container {
   touch-action: pan-y pinch-zoom;
-}
-
-.sheet-at-rest {
-  transform: none !important;
 }

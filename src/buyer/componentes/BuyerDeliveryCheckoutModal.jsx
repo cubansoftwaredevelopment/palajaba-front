@@ -18,6 +18,7 @@ import { getCustomerProfile } from '../../customer/utils/customerAuth.js'
 import { customerHasQvaPayUsername } from '../../customer/api.js'
 import CheckoutStoreAgreements from './CheckoutStoreAgreements.jsx'
 import { useOrderModalPresence, useSwipeDownSheet } from './useOrderModalPresence.js'
+import BuyerModalPortal from './BuyerModalPortal.jsx'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
 import { useSheetExitMs } from '../../motion/presets'
 import {
@@ -237,7 +238,7 @@ export default function BuyerDeliveryCheckoutModal({
   const secondaryPhone = formatContact(form.phone_secondary)
 
   return (
-    <>
+    <BuyerModalPortal>
     <BuyerMotionFrame
       split
       overlayAs="button"
@@ -470,6 +471,6 @@ export default function BuyerDeliveryCheckoutModal({
         </form>
     </BuyerMotionFrame>
     {toastNode}
-    </>
+    </BuyerModalPortal>
   )
 }
