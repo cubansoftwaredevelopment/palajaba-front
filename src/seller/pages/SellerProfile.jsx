@@ -43,7 +43,7 @@ import {
 import CustomerQvaPayPrompt from '../../customer/componentes/CustomerQvaPayPrompt.jsx'
 import { resolveUserFacingError } from '../../shared/utils/userFacingError.js'
 import SellerNotificationToast from '../componentes/SellerNotificationToast.jsx'
-import { validateImageFile } from '../../shared/utils/imageUpload.js'
+import { prepareUploadImage } from '../../shared/utils/imageUpload.js'
 import {
   dedupeDeliveryAreas,
   sameBusinessArea,
@@ -285,7 +285,7 @@ export default function SellerProfile() {
     event.target.value = ''
     if (!file) return
 
-    const validation = validateImageFile(file)
+    const validation = await prepareUploadImage(file)
     if (!validation.ok) {
       showFormError(validation.message)
       return
@@ -296,7 +296,7 @@ export default function SellerProfile() {
     setPhotoUploading(true)
     try {
       const token = getSellerToken()
-      const updated = await uploadSellerProfilePhoto(token, file)
+      const updated = await uploadSellerProfilePhoto(token, validation.file)
       setPhotoUrl(updated.profile_photo_url)
       updateSellerProfileCache(updated)
       await refreshProfile()

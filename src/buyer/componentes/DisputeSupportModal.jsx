@@ -4,6 +4,7 @@ import { buyerDeliveryModal, buyerDeliveryModalBody, buyerDeliveryModalFooter, b
 import { useSwipeDownSheet } from './useOrderModalPresence.js'
 import { openExternalUrl } from '../../appReleases/utils/nativeApp.js'
 import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
+import { prepareUploadImage } from '../../shared/utils/imageUpload.js'
 
 const MAX_IMAGES = 6
 
@@ -39,22 +40,26 @@ export default function DisputeSupportModal({ open, onClose, onSubmit, whatsappU
     onClose()
   }
 
-  function addImages(event) {
+  async function addImages(event) {
     const selected = Array.from(event.target.files || [])
     event.target.value = ''
     if (!selected.length) return
-    setImages((current) => {
-      const room = MAX_IMAGES - current.length
-      const next = selected.slice(0, room).map((file) => ({
-        id: `${file.name}-${file.lastModified}-${Math.random()}`,
-        file,
-        preview: URL.createObjectURL(file),
-      }))
-      return [...current, ...next]
-    })
-    if (images.length + selected.length > MAX_IMAGES) {
-      showError(`Puedes adjuntar hasta ${MAX_IMAGES} imágenes.`)
+    const room = MAX_IMAGES - images.length
+    if (selected.length > room) showError(`Puedes adjuntar hasta ${MAX_IMAGES} imágenes.`)
+    const prepared = []
+    for (const file of selected.slice(0, Math.max(0, room))) {
+      const result = await prepareUploadImage(file)
+      if (!result.ok) {
+        showError(result.message)
+        continue
+      }
+      prepared.push({
+        id: `${result.file.name}-${result.file.lastModified}-${Math.random()}`,
+        file: result.file,
+        preview: URL.createObjectURL(result.file),
+      })
     }
+    if (prepared.length) setImages((current) => [...current, ...prepared].slice(0, MAX_IMAGES))
   }
 
   function removeImage(id) {

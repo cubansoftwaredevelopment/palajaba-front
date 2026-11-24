@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import ConfirmModal from '../../shared/componentes/ConfirmModal.jsx'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
+import { IMAGE_TOO_LARGE_MESSAGE, prepareUploadImage } from '../../shared/utils/imageUpload.js'
 import SellerFilterDropdown from '../../seller/componentes/SellerFilterDropdown.jsx'
 import { sellerBtnPrimary, sellerBtnSecondary, sellerInput } from '../../seller/componentes/sellerStyles.js'
 import { addMensajeroVehicle, deleteMensajeroVehicle, updateMensajeroVehicle, uploadMensajeroPhoto } from '../api'
@@ -33,17 +35,32 @@ export default function MensajeroProfile({ profile, onChange }) {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const { showError, toastNode } = useFormErrorToast()
+
+  function reportImageError(message) {
+    if (message === IMAGE_TOO_LARGE_MESSAGE || String(message || '').includes('pesa demasiado')) {
+      showError(IMAGE_TOO_LARGE_MESSAGE)
+      return
+    }
+    setError(message)
+  }
 
   async function onPhoto(event) {
     const file = event.target.files?.[0]
+    event.target.value = ''
     if (!file) return
     setError('')
+    const prepared = await prepareUploadImage(file)
+    if (!prepared.ok) {
+      reportImageError(prepared.message)
+      return
+    }
     try {
-      const next = await uploadMensajeroPhoto(file)
+      const next = await uploadMensajeroPhoto(prepared.file)
       updateMensajeroProfile(next)
       onChange(next)
     } catch (err) {
-      setError(err.message)
+      reportImageError(err.message)
     }
   }
 
@@ -84,7 +101,7 @@ export default function MensajeroProfile({ profile, onChange }) {
       clearPhotos()
       setMessage(wasEditing ? 'Vehículo actualizado.' : 'Vehículo guardado.')
     } catch (err) {
-      setError(err.message)
+      reportImageError(err.message)
     } finally {
       setSaving(false)
     }
@@ -100,25 +117,31 @@ export default function MensajeroProfile({ profile, onChange }) {
     setPhotoKey((value) => value + 1)
   }
 
-  function addPhotos(event) {
+  async function addPhotos(event) {
     const incoming = Array.from(event.target.files || [])
     event.target.value = ''
     if (!incoming.length) return
-    setPhotos((current) => {
-      const room = 5 - current.length
-      if (room <= 0) {
-        setError('Puedes subir hasta 5 fotos del vehículo.')
-        return current
+    const room = 5 - photos.length
+    if (room <= 0) {
+      setError('Puedes subir hasta 5 fotos del vehículo.')
+      return
+    }
+    if (incoming.length > room) setError('Puedes subir hasta 5 fotos del vehículo.')
+    else setError('')
+    const added = []
+    for (const file of incoming.slice(0, room)) {
+      const prepared = await prepareUploadImage(file)
+      if (!prepared.ok) {
+        reportImageError(prepared.message)
+        continue
       }
-      if (incoming.length > room) setError('Puedes subir hasta 5 fotos del vehículo.')
-      else setError('')
-      const added = incoming.slice(0, room).map((file) => ({
-        id: `${file.name}-${file.lastModified}-${Math.random()}`,
-        file,
-        preview: URL.createObjectURL(file),
-      }))
-      return [...current, ...added]
-    })
+      added.push({
+        id: `${prepared.file.name}-${prepared.file.lastModified}-${Math.random()}`,
+        file: prepared.file,
+        preview: URL.createObjectURL(prepared.file),
+      })
+    }
+    if (added.length) setPhotos((current) => [...current, ...added].slice(0, 5))
   }
 
   function removePhoto(id) {
@@ -167,6 +190,7 @@ export default function MensajeroProfile({ profile, onChange }) {
 
   return (
     <div className="space-y-4">
+      {toastNode}
       <div className="flex items-center gap-3">
         <label className="group relative z-10 block h-16 w-16 shrink-0 cursor-pointer" aria-label="Cambiar foto de perfil">
           {profile.profile_photo_url ? <img src={resolveMediaUrl(profile.profile_photo_url)} alt="" className="h-16 w-16 rounded-full object-cover" /> : <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-green/10 font-display text-xl font-bold text-brand-carmelita">{profile.first_name?.[0]}</span>}

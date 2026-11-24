@@ -25,6 +25,7 @@ import SellerEvidenceCountdown from './SellerEvidenceCountdown.jsx'
 import { canSendQvaPayEvidence } from '../../subscriptions/utils/qvapayEvidence.js'
 import { openSellerOrderDispute, uploadSellerDisputeImage, uploadSellerRefundImage } from '../../auth/api.js'
 import { quoteRefund } from '../../orders/utils/refundQuote.js'
+import { prepareUploadImage } from '../../shared/utils/imageUpload.js'
 import DisputeSupportModal from '../../buyer/componentes/DisputeSupportModal.jsx'
 import Checkbox from '../../shared/componentes/Checkbox.jsx'
 import { downloadSellerOrderDocument } from '../../seller/api.js'
@@ -389,18 +390,24 @@ export default function SellerOrderDetailModal({
     if (window.confirm('¿Rechazar esta solicitud de pago y cancelar el pedido?')) onQvaReject?.()
   }
 
-  function addRefundImages(event) {
+  async function addRefundImages(event) {
     const selected = Array.from(event.target.files || [])
     event.target.value = ''
-    setRefundImages((current) => {
-      const room = 6 - current.length
-      const next = selected.slice(0, Math.max(0, room)).map((file) => ({
-        id: `${file.name}-${file.lastModified}-${Math.random()}`,
-        file,
-        preview: URL.createObjectURL(file),
-      }))
-      return [...current, ...next]
-    })
+    const room = 6 - refundImages.length
+    const prepared = []
+    for (const file of selected.slice(0, Math.max(0, room))) {
+      const result = await prepareUploadImage(file)
+      if (!result.ok) {
+        showError(result.message)
+        continue
+      }
+      prepared.push({
+        id: `${result.file.name}-${result.file.lastModified}-${Math.random()}`,
+        file: result.file,
+        preview: URL.createObjectURL(result.file),
+      })
+    }
+    if (prepared.length) setRefundImages((current) => [...current, ...prepared].slice(0, 6))
   }
 
   async function submitRefund(event) {

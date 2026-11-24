@@ -21,7 +21,7 @@ import {
   replaceAdminBannerImage,
   updateAdminBanner,
 } from '../api.js'
-import { validateImageFile } from '../../shared/utils/imageUpload.js'
+import { prepareUploadImage } from '../../shared/utils/imageUpload.js'
 import { resolveMediaUrl } from '../../shared/utils/media.js'
 import { getUserFacingMessage, isSessionError } from '../../shared/utils/userFacingError.js'
 import { clearAdminToken, getAdminToken } from '../utils/adminAuth.js'
@@ -192,7 +192,7 @@ export default function AdminBanners() {
     setComposerOpen(true)
   }
 
-  function handleFileChange(event) {
+  async function handleFileChange(event) {
     const selectedFile = event.target.files?.[0]
     setFileError('')
     setPreview('')
@@ -200,15 +200,16 @@ export default function AdminBanners() {
       setFile(null)
       return
     }
-    const validation = validateImageFile(selectedFile)
+    const validation = await prepareUploadImage(selectedFile)
     if (!validation.ok) {
-      setFileError(validation.message)
+      if (String(validation.message).includes('pesa demasiado')) setToast(validation.message)
+      else setFileError(validation.message)
       setFile(null)
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
-    setFile(selectedFile)
-    setPreview(URL.createObjectURL(selectedFile))
+    setFile(validation.file)
+    setPreview(URL.createObjectURL(validation.file))
   }
 
   function selectBanner(item) {

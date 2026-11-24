@@ -5,6 +5,8 @@ import { clearCustomerSession, updateCustomerProfile } from '../utils/customerAu
 import { normalizedPhoneDigits, sectionClass } from '../utils/constants.js'
 import { resolveMediaUrl } from '../../shared/utils/media.js'
 import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
+import { IMAGE_TOO_LARGE_MESSAGE, prepareUploadImage } from '../../shared/utils/imageUpload.js'
 import AccountDeleteModal from '../../shared/componentes/AccountDeleteModal.jsx'
 import SellerLogoutModal from '../../seller/componentes/SellerLogoutModal.jsx'
 import CustomerQvaPayPrompt from '../componentes/CustomerQvaPayPrompt.jsx'
@@ -57,6 +59,7 @@ export default function CustomerProfilePage() {
   const [profileMessage, setProfileMessage] = useState('')
   const [profileError, setProfileError] = useState('')
   const [photoUploading, setPhotoUploading] = useState(false)
+  const { showError, toastNode } = useFormErrorToast()
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
@@ -104,14 +107,22 @@ export default function CustomerProfilePage() {
     const file = event.target.files?.[0]
     event.target.value = ''
     if (!file || photoUploading) return
+    const prepared = await prepareUploadImage(file)
+    if (!prepared.ok) {
+      if (prepared.message === IMAGE_TOO_LARGE_MESSAGE) showError(prepared.message)
+      else setError(prepared.message)
+      return
+    }
     setPhotoUploading(true)
     setError('')
     try {
-      const next = await uploadCustomerPhoto(token, file)
+      const next = await uploadCustomerPhoto(token, prepared.file)
       setProfile(next)
       updateCustomerProfile(next)
     } catch (cause) {
-      setError(getUserFacingMessage(cause, 'No pudimos actualizar la foto.'))
+      const message = getUserFacingMessage(cause, 'No pudimos actualizar la foto.')
+      if (String(message).includes('pesa demasiado')) showError(IMAGE_TOO_LARGE_MESSAGE)
+      else setError(message)
     } finally {
       setPhotoUploading(false)
     }
@@ -198,6 +209,7 @@ export default function CustomerProfilePage() {
 
   return (
     <>
+      {toastNode}
       <CustomerQvaPayPrompt
         open={showQvaPayPrompt}
         onAddUser={() => {

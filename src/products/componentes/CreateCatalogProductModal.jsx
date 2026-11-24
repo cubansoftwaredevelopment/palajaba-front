@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchCatalogCurrencies, fetchCategories } from '../api.js'
 import ProductSalesZonesField from './ProductSalesZonesField.jsx'
 import { areaKey, productServiceAreas, selectedProductSalesAreas } from '../../shared/utils/businessArea.js'
-import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../shared/utils/imageUpload.js'
+import { IMAGE_UPLOAD_HINT, prepareUploadImage } from '../../shared/utils/imageUpload.js'
 
 import { resolveMediaUrl } from '../../shared/utils/media.js'
 
@@ -473,7 +473,7 @@ export default function CreateCatalogProductModal({
 
 
 
-  function handlePhotoChange(event) {
+  async function handlePhotoChange(event) {
     const files = [...(event.target.files ?? [])]
     event.target.value = ''
     if (files.length === 0) return
@@ -481,7 +481,7 @@ export default function CreateCatalogProductModal({
     let rejected = false
     const next = []
     for (const file of files) {
-      const validation = validateImageFile(file)
+      const validation = await prepareUploadImage(file)
       if (!validation.ok) {
         rejected = true
         showError(validation.message)
@@ -490,8 +490,8 @@ export default function CreateCatalogProductModal({
       next.push({
         key: crypto.randomUUID(),
         existingId: null,
-        file,
-        preview: URL.createObjectURL(file),
+        file: validation.file,
+        preview: URL.createObjectURL(validation.file),
         isFrontal: false,
       })
     }

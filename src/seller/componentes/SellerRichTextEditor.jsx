@@ -7,7 +7,7 @@ import { Link } from '@tiptap/extension-link'
 import TextAlign from '@tiptap/extension-text-align'
 import LoadingState from '../../shared/componentes/LoadingState.jsx'
 import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
-import { validateImageFile } from '../../shared/utils/imageUpload.js'
+import { prepareUploadImage } from '../../shared/utils/imageUpload.js'
 import { EMPTY_STORE_PAGE, normalizeStoreLink } from '../utils/storePages.js'
 import ResizableImage from './resizableImage.js'
 
@@ -195,7 +195,7 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
 
   const insertImage = useCallback(async (file) => {
     if (!file || !editor) return
-    const validation = validateImageFile(file)
+    const validation = await prepareUploadImage(file)
     if (!validation.ok) {
       showError(validation.message)
       return
@@ -203,7 +203,7 @@ export default function SellerRichTextEditor({ content, onChange, uploadImage, p
     setUploading('uploading')
     showError('')
     try {
-      const result = await uploadImage(file)
+      const result = await uploadImage(validation.file)
       editor.chain().focus().setImage({ src: result.url, alt: imageAlt, width: 100 }).run()
     } catch (cause) {
       showError(cause?.message || 'No pudimos subir la imagen.')

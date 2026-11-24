@@ -31,7 +31,7 @@ import {
   uploadSellerProfilePhoto,
 } from '../../auth/api.js'
 import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
-import { IMAGE_UPLOAD_HINT, validateImageFile } from '../../shared/utils/imageUpload.js'
+import { IMAGE_UPLOAD_HINT, prepareUploadImage } from '../../shared/utils/imageUpload.js'
 import { dedupeDeliveryAreas } from '../../shared/utils/businessArea.js'
 import { getSellerToken, updateSellerProfileCache } from '../utils/sellerAuth.js'
 import { socialLinksError, socialLinksFromProfile, socialLinksPayload } from '../utils/socialLinks.js'
@@ -64,7 +64,7 @@ export default function SellerCompleteProfile() {
     event.target.value = ''
     if (!file) return
 
-    const validation = validateImageFile(file)
+    const validation = await prepareUploadImage(file)
     if (!validation.ok) {
       showError(validation.message)
       return
@@ -74,7 +74,7 @@ export default function SellerCompleteProfile() {
     setPhotoUploading(true)
     try {
       const token = getSellerToken()
-      const updated = await uploadSellerProfilePhoto(token, file)
+      const updated = await uploadSellerProfilePhoto(token, validation.file)
       setPhotoUrl(updated.profile_photo_url)
       updateSellerProfileCache(updated)
     } catch (err) {

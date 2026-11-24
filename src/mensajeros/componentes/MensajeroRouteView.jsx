@@ -4,6 +4,8 @@ import AppLocationMap from '../../map/componentes/AppLocationMap.jsx'
 import SellerFilterDropdown from '../../seller/componentes/SellerFilterDropdown.jsx'
 import { sellerBtnPrimary, sellerInput } from '../../seller/componentes/sellerStyles.js'
 import { submitMensajeroEvidence } from '../api'
+import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
+import { IMAGE_TOO_LARGE_MESSAGE, prepareUploadImage } from '../../shared/utils/imageUpload.js'
 import { useRouteTelemetry } from '../utils/useRouteTelemetry.js'
 import OrderCourierCost from './OrderCourierCost.jsx'
 import { vehicleLabel } from '../utils/constants.js'
@@ -89,6 +91,7 @@ export default function MensajeroRouteView({ batch, vehicles, onBack, onStart, o
   const [orderId, setOrderId] = useState(openOrders[0]?.id || '')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const { showError, toastNode } = useFormErrorToast()
   const [points, setPoints] = useState(batch.points || [])
   const km = points.length > 1 ? trailKm(points) : (Number(batch.km) || 0)
   const running = batch.status === 'in_progress'
@@ -119,14 +122,37 @@ export default function MensajeroRouteView({ batch, vehicles, onBack, onStart, o
       setPreviews([])
       onChanged()
     } catch (err) {
-      setError(err.message)
+      if (String(err.message || '').includes('pesa demasiado')) showError(IMAGE_TOO_LARGE_MESSAGE)
+      else setError(err.message)
     } finally {
       setBusy(false)
     }
   }
 
+  async function addEvidencePhotos(event) {
+    const incoming = Array.from(event.target.files || [])
+    event.target.value = ''
+    const prepared = []
+    for (const file of incoming) {
+      const result = await prepareUploadImage(file)
+      if (!result.ok) {
+        if (result.message === IMAGE_TOO_LARGE_MESSAGE) showError(result.message)
+        else setError(result.message)
+        continue
+      }
+      prepared.push(result.file)
+    }
+    if (!prepared.length) return
+    setFiles(prepared)
+    setPreviews((current) => {
+      current.forEach((url) => URL.revokeObjectURL(url))
+      return prepared.map((file) => URL.createObjectURL(file))
+    })
+  }
+
   return (
     <section>
+      {toastNode}
       <AppLocationMap
         collapsedHeight="33dvh"
         onBack={onBack}
@@ -163,14 +189,7 @@ export default function MensajeroRouteView({ batch, vehicles, onBack, onStart, o
                 accept="image/jpeg,image/png,image/webp"
                 multiple
                 className="hidden"
-                onChange={(event) => {
-                  const next = Array.from(event.target.files || [])
-                  setFiles(next)
-                  setPreviews((current) => {
-                    current.forEach((url) => URL.revokeObjectURL(url))
-                    return next.map((file) => URL.createObjectURL(file))
-                  })
-                }}
+                onChange={addEvidencePhotos}
               />
             </label>
           </div>

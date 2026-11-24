@@ -3,7 +3,7 @@ import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerHint, sel
 import { deleteSellerStoreBanner, updateSellerStoreBanner, uploadSellerStoreBanner } from '../../seller/api.js'
 import { BACKGROUND_UPLOAD_EVENT, consumeUploadResults, forgetUploadResult, startBackgroundFormUpload } from '../../products/utils/backgroundUpload.js'
 import { fetchSellerProfile } from '../../auth/api'
-import { validateImageFile, IMAGE_UPLOAD_HINT } from '../../shared/utils/imageUpload.js'
+import { prepareUploadImage, IMAGE_UPLOAD_HINT } from '../../shared/utils/imageUpload.js'
 import { resolveMediaUrl } from '../../shared/utils/media.js'
 import { getSellerToken, updateSellerProfileCache } from '../utils/sellerAuth.js'
 import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
@@ -63,7 +63,7 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
     event.target.value = ''
     if (!file) return
 
-    const validation = validateImageFile(file)
+    const validation = await prepareUploadImage(file)
     if (!validation.ok) {
       showError(validation.message)
       return
@@ -76,7 +76,7 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
       const started = await startBackgroundFormUpload({
         token: getSellerToken(),
         path: '/api/auth/me/store-banners',
-        files: [{ file, fieldName: 'photo' }],
+        files: [{ file: validation.file, fieldName: 'photo' }],
         notificationTitle: 'Subiendo banner',
         kind: 'store_banner',
       })
