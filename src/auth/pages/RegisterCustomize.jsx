@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import RegisterProgress from '../componentes/RegisterProgress.jsx'
 import PlanCustomizeView from '../../subscriptions/componentes/PlanCustomizeView.jsx'
 import { createCustomPlanCheckout, fetchCustomPlanCheckout } from '../../subscriptions/api.js'
@@ -7,6 +7,7 @@ import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.js
 
 export default function RegisterCustomize() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
 
   function continueWithPurchase(purchaseId, billing) {
@@ -23,7 +24,13 @@ export default function RegisterCustomize() {
   return (
     <>
       <PlanCustomizeView
-        backTo="/registro/planes"
+        onBack={() => {
+          if (location.key !== 'default') {
+            navigate(-1)
+            return
+          }
+          navigate('/registro/planes')
+        }}
         progress={<RegisterProgress currentStep={1} steps={getRegisterSteps('custom')} className="mx-auto mb-4 w-full max-w-sm lg:mb-6" />}
         showError={showError}
         onPay={({ billing, plugins, paymentMethod, transferId }) => createCustomPlanCheckout({

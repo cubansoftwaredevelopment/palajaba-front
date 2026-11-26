@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../../shared/componentes/Button.jsx'
 import PlanCustomizeView from '../../subscriptions/componentes/PlanCustomizeView.jsx'
 import { createPluginAddonCheckout, fetchSubscriptionQvaPayCheckout } from '../../subscriptions/api.js'
@@ -7,7 +7,6 @@ import { normalizeBillingPeriod } from '../../subscriptions/utils/constants.js'
 import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import { fetchSellerProfile } from '../../auth/api.js'
 import { getSellerProfile, getSellerToken } from '../utils/sellerAuth.js'
-import { PROFILE_PANEL_IDS } from '../utils/sellerProfileHub.js'
 
 function formatDate(value) {
   if (!value) return 'la fecha de vencimiento de tu plan'
@@ -18,6 +17,7 @@ function formatDate(value) {
 
 export default function SellerPlanCustomize() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [profile, setProfile] = useState(() => getSellerProfile())
   const [statusMessage, setStatusMessage] = useState('')
@@ -42,14 +42,18 @@ export default function SellerPlanCustomize() {
 
   const billing = normalizeBillingPeriod(profile?.billing_period)
 
-  function goToPlan() {
-    navigate('/tienda/perfil', { state: { panel: PROFILE_PANEL_IDS.plan } })
+  function goBack() {
+    if (location.key !== 'default') {
+      navigate(-1)
+      return
+    }
+    navigate('/tienda/perfil')
   }
 
   return (
     <>
       <PlanCustomizeView
-        onBack={goToPlan}
+        onBack={goBack}
         eyebrow="Tu plan"
         title="Personalización de plan"
         description="Elige las funciones y revisa cada precio en USD y CUP."
