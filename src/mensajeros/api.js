@@ -105,6 +105,7 @@ export function pushMensajeroPoint(batchId, point) {
     headers: authHeaders(getMensajeroToken()),
     body: JSON.stringify(point),
     clientId: point.client_id,
+    syncSkip: true,
   })
 }
 

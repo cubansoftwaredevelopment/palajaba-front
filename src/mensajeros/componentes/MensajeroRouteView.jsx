@@ -6,9 +6,21 @@ import { sellerBtnPrimary, sellerInput } from '../../seller/componentes/sellerSt
 import { submitMensajeroEvidence } from '../api'
 import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import { IMAGE_TOO_LARGE_MESSAGE, prepareUploadImage } from '../../shared/utils/imageUpload.js'
-import { useRouteTelemetry } from '../utils/useRouteTelemetry.js'
 import OrderCourierCost from './OrderCourierCost.jsx'
 import { vehicleLabel } from '../utils/constants.js'
+
+function mergeTrail(server, pending) {
+  const trail = (server || []).filter((point) => point?.lat != null && point?.lng != null)
+  const seen = new Set(trail.map((point) => `${Number(point.lat).toFixed(5)},${Number(point.lng).toFixed(5)}`))
+  for (const point of pending || []) {
+    if (point?.lat == null || point?.lng == null) continue
+    const key = `${Number(point.lat).toFixed(5)},${Number(point.lng).toFixed(5)}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    trail.push(point)
+  }
+  return trail
+}
 
 function trailKm(points) {
   let total = 0
@@ -82,7 +94,7 @@ function SlideToStart({ disabled, onStart }) {
   )
 }
 
-export default function MensajeroRouteView({ batch, vehicles, onBack, onStart, onChanged }) {
+export default function MensajeroRouteView({ batch, vehicles, onBack, onStart, onChanged, liveFix = null, pendingPoints = [] }) {
   const [vehicleId, setVehicleId] = useState(batch.vehicle_id || vehicles[0]?.id || '')
   const [note, setNote] = useState('')
   const [files, setFiles] = useState([])
@@ -92,17 +104,11 @@ export default function MensajeroRouteView({ batch, vehicles, onBack, onStart, o
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const { showError, toastNode } = useFormErrorToast()
-  const [points, setPoints] = useState(batch.points || [])
+  const points = mergeTrail(batch.points, pendingPoints)
+  const pin = liveFix || points[points.length - 1] || null
   const km = points.length > 1 ? trailKm(points) : (Number(batch.km) || 0)
   const running = batch.status === 'in_progress'
   const finished = batch.status === 'completed'
-  useRouteTelemetry(batch.id, running, (point) => {
-    setPoints((current) => {
-      const last = current[current.length - 1]
-      if (last && last.lat === point.lat && last.lng === point.lng) return current
-      return [...current, point]
-    })
-  })
 
   useEffect(() => () => { previews.forEach((url) => URL.revokeObjectURL(url)) }, [previews])
 
@@ -158,7 +164,8 @@ export default function MensajeroRouteView({ batch, vehicles, onBack, onStart, o
         onBack={onBack}
         points={points}
         pins={pins}
-        current={points[points.length - 1] || null}
+        liveFollow={running}
+        current={pin ? { ...pin, live: Boolean(liveFix) } : null}
       />
       <ul className="mt-3 space-y-2">
         {(batch.orders || []).map((order) => (

@@ -16,6 +16,7 @@ import MensajeroProfile from '../componentes/MensajeroProfile.jsx'
 import MensajeroRouteView from '../componentes/MensajeroRouteView.jsx'
 import MensajeroOnboardingSheet from '../componentes/MensajeroOnboardingSheet.jsx'
 import { clearMensajeroOnboarding, clearMensajeroSession, getMensajeroProfile, needsMensajeroOnboarding, updateMensajeroProfile } from '../utils/session.js'
+import { useRouteTelemetry } from '../utils/useRouteTelemetry.js'
 import { startMensajeroPush } from '../../live/utils'
 import SectionRefreshMascot from '../../shared/componentes/SectionRefreshMascot.jsx'
 import { usePullToRefresh } from '../../shared/componentes/usePullToRefresh.js'
@@ -93,6 +94,8 @@ export default function MensajeroPanel() {
   const [doneBatch, setDoneBatch] = useState(null)
   const [toasts, setToasts] = useState([])
   const toastedRef = useRef(false)
+  const [liveFix, setLiveFix] = useState(null)
+  const [pendingPoints, setPendingPoints] = useState([])
 
   const load = useCallback(async () => {
     try {
@@ -156,6 +159,16 @@ export default function MensajeroPanel() {
   }, [])
 
   const allBatches = data?.batches || []
+  const runningBatch = allBatches.find((item) => item.status === 'in_progress') || (batch?.status === 'in_progress' ? batch : null)
+  const seedRef = useRouteTelemetry(runningBatch?.id || '', Boolean(runningBatch), {
+    onFix: setLiveFix,
+    onPending: setPendingPoints,
+    onClosed: () => { load() },
+  })
+  seedRef.current = runningBatch?.points?.[runningBatch.points.length - 1] || null
+  useEffect(() => {
+    setLiveFix(null)
+  }, [runningBatch?.id])
   const notices = allBatches.filter((item) => item.status !== 'completed')
   const unreadNotices = notices.filter((item) => !item.notice_read_at)
 
@@ -266,6 +279,8 @@ export default function MensajeroPanel() {
                 onBack={closeBatch}
                 onStart={begin}
                 onChanged={async () => { await load(); closeBatch() }}
+                liveFix={batch.id === runningBatch?.id ? liveFix : null}
+                pendingPoints={batch.id === runningBatch?.id ? pendingPoints : []}
               />
             ) : section === 'notices' ? (
               notices.length ? (

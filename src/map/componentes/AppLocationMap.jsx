@@ -54,6 +54,7 @@ export default function AppLocationMap({
   courier = null,
   collapsedHeight = '12rem',
   fullscreen = false,
+  liveFollow = false,
   onLocate = null,
   onCourierClick = null,
   onBack = null,
@@ -62,16 +63,18 @@ export default function AppLocationMap({
   const mapRef = useRef(null)
   const mapInstance = useRef(null)
   const layers = useRef([])
+  const liveMarker = useRef(null)
+  const centeredLive = useRef(false)
   const [expanded, setExpanded] = useState(false)
   const [leaving, setLeaving] = useState(false)
   const [inlineFade, setInlineFade] = useState(false)
   const [located, setLocated] = useState(null)
   const [locating, setLocating] = useState(false)
   const [locateError, setLocateError] = useState('')
-  const here = located || current
+  const here = liveFollow ? (current || located) : (located || current)
   const routeKey = JSON.stringify({
     destination: destination?.lat != null ? [destination.lat, destination.lng, destination.label || '', destination.customer_photo_url || ''] : null,
-    here: here?.lat != null ? [here.lat, here.lng] : null,
+    here: liveFollow ? null : (here?.lat != null ? [here.lat, here.lng] : null),
     points: points.map((point) => [point.lat, point.lng]),
     pins: pins.map((pin) => [pin.lat, pin.lng, pin.label || '']),
     courier: courier?.lat != null ? [courier.lat, courier.lng, courier.profilePhoto || '', courier.vehiclePhoto || ''] : null,
@@ -99,6 +102,8 @@ export default function AppLocationMap({
     observer.observe(node)
     return () => {
       observer.disconnect()
+      liveMarker.current = null
+      centeredLive.current = false
       map.remove()
       mapInstance.current = null
       layers.current = []
@@ -137,7 +142,7 @@ export default function AppLocationMap({
       marker.on('click', () => onCourierClick?.())
       next.push(marker)
     }
-    if (here?.lat != null && here?.lng != null) {
+    if (!liveFollow && here?.lat != null && here?.lng != null) {
       next.push(L.marker([here.lat, here.lng], { icon: buyerMapMarkerIcon, title: 'Ubicación actual' }).addTo(map))
     }
     layers.current = next
@@ -147,12 +152,28 @@ export default function AppLocationMap({
       if (pin?.lat != null && pin?.lng != null) bounds.push([pin.lat, pin.lng])
     }
     if (courier?.lat != null && courier?.lng != null) bounds.push([courier.lat, courier.lng])
-    if (here?.lat != null && here?.lng != null) bounds.push([here.lat, here.lng])
-    if (bounds.length > 1) map.fitBounds(bounds, { padding: [28, 28] })
-    else if (bounds.length === 1) map.setView(bounds[0], 15)
+    if (!liveFollow && here?.lat != null && here?.lng != null) bounds.push([here.lat, here.lng])
+    if (!liveFollow && bounds.length > 1) map.fitBounds(bounds, { padding: [28, 28] })
+    else if (!liveFollow && bounds.length === 1) map.setView(bounds[0], 15)
     const timer = window.setTimeout(() => map.invalidateSize(), 60)
     return () => window.clearTimeout(timer)
-  }, [routeKey, expanded])
+  }, [routeKey, expanded, liveFollow])
+
+  useEffect(() => {
+    if (!liveFollow) return undefined
+    const map = mapInstance.current
+    if (!map || here?.lat == null || here?.lng == null) return undefined
+    if (!liveMarker.current) {
+      liveMarker.current = L.marker([here.lat, here.lng], { icon: buyerMapMarkerIcon, title: 'Ubicación actual' }).addTo(map)
+    } else {
+      liveMarker.current.setLatLng([here.lat, here.lng])
+    }
+    if (here.live && !centeredLive.current) {
+      centeredLive.current = true
+      map.setView([here.lat, here.lng], 16)
+    }
+    return undefined
+  }, [liveFollow, here, expanded, fullscreen])
 
   useEffect(() => {
     if (!fullscreen || !expanded) return undefined
@@ -186,7 +207,8 @@ export default function AppLocationMap({
     setLocating(true)
     try {
       const point = await getCurrentMapPosition()
-      setLocated(point)
+      if (!liveFollow) setLocated(point)
+      centeredLive.current = true
       mapInstance.current?.setView([point.lat, point.lng], 16)
       await onLocate?.(point)
     } catch (error) {
@@ -253,11 +275,11 @@ export default function AppLocationMap({
         disabled={locating}
         aria-label={locating ? 'Buscando ubicación' : 'Usar mi ubicación'}
         title={locating ? 'Buscando ubicación…' : 'Usar mi ubicación'}
-        className={`${controlClass} bottom-3 right-3`}
+        className={`${controlClass} right-3 bottom-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))]`}
       >
         <svg viewBox="0 0 24 24" className={`h-5 w-5 ${locating ? 'animate-pulse' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3" /><circle cx="12" cy="12" r="8" /></svg>
       </button>
-      {locateError ? <p role="alert" className="absolute bottom-3 left-3 z-[1000] max-w-[70%] rounded-lg bg-white/95 px-3 py-2 text-xs text-red-700 shadow">{locateError}</p> : null}
+      {locateError ? <p role="alert" className="absolute left-3 z-[1000] max-w-[70%] rounded-lg bg-white/95 px-3 py-2 text-xs text-red-700 shadow bottom-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))]">{locateError}</p> : null}
     </motion.div>
   )
 
