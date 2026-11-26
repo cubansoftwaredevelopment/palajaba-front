@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 
+import BillingPeriodTabs from './BillingPeriodTabs.jsx'
+import CountingAmount from './CountingAmount.jsx'
+import PlanPriceBlock from './PlanPriceBlock.jsx'
 import { BILLING_LABELS } from '../../admin/utils/admin.js'
 import {
-  BILLING_PERIOD_ORDER,
   canUpgradePlan,
-  formatPlanPriceLabel,
   getSellerPlan,
   normalizeBillingPeriod,
   PLAN_TIERS,
@@ -111,7 +112,7 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
   const paidPlanActive = !isTrial && !subscriptionInactive
   const [billing, setBilling] = useState(currentBilling)
   const [selectedPlanId, setSelectedPlanId] = useState(null)
-  const { getPlanPrice, getPlanPeriodSavings, formatPlanAmount, cupPerUnit, qvapayPlanDiscountPercent } = usePlanPricing()
+  const { getPlanPrice, getPlanPeriodSavings, cupPerUnit, qvapayPlanDiscountPercent } = usePlanPricing()
   const currentPlanName = currentPlan.name
   const planOptions = PLAN_TIER_ORDER.map((tierId) => PLAN_TIERS[tierId])
 
@@ -132,28 +133,7 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
       </p>
 
       {planOptions.length > 0 ? (
-        <div
-          className="flex rounded-full border border-brand-green/15 bg-brand-white p-1"
-          role="radiogroup"
-          aria-label="Periodo de facturación"
-        >
-          {BILLING_PERIOD_ORDER.map((period) => (
-            <button
-              key={period}
-              type="button"
-              role="radio"
-              aria-checked={billing === period}
-              onClick={() => setBilling(period)}
-              className={`flex-1 rounded-full px-2 py-2 text-xs font-semibold transition-all sm:px-3 sm:text-sm ${
-                billing === period
-                  ? 'bg-brand-green text-brand-white shadow-sm'
-                  : 'text-brand-green sm:hover:bg-brand-yellow/15'
-              }`}
-            >
-              {BILLING_LABELS[period]}
-            </button>
-          ))}
-        </div>
+        <BillingPeriodTabs value={billing} onChange={setBilling} />
       ) : null}
 
       {planOptions.length === 0 ? (
@@ -200,28 +180,20 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
                   ) : null}
                 </div>
 
-                <p className="mt-2 font-display text-3xl font-bold leading-none tracking-tight text-brand-green">
-                  {formatPlanPriceLabel(price, formatPlanAmount)}
-                  <span className="ml-1 text-sm font-semibold text-brand-carmelita/80">
-                    /{price.label}
-                  </span>
-                </p>
-                {usdEquivalent != null ? (
-                  <p className="mt-1 text-sm font-semibold text-brand-green/80">
-                    ≈ {usdEquivalent.toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD/{price.label}
-                  </p>
-                ) : null}
-                {usdEquivalent != null && qvapayPlanDiscountPercent > 0 ? (
-                  <p className="mt-1 text-xs font-semibold text-brand-green">
-                    Con QvaPay: {(Math.round(usdEquivalent * (100 - qvapayPlanDiscountPercent)) / 100).toLocaleString('es', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
-                  </p>
-                ) : null}
+                <PlanPriceBlock
+                  price={price}
+                  usdEquivalent={usdEquivalent}
+                  qvapayUsd={usdEquivalent != null && qvapayPlanDiscountPercent > 0
+                    ? Math.round(usdEquivalent * (100 - qvapayPlanDiscountPercent)) / 100
+                    : null}
+                  heroClassName="mt-2 font-display text-3xl leading-none tracking-tight"
+                />
                 <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/90">
                   {tier.description}
                 </p>
                 {savings != null && savings > 0 ? (
                   <p className="mt-1.5 text-xs font-medium text-brand-green">
-                    Ahorra {formatPlanAmount(savings)} frente al mensual.
+                    Ahorra <CountingAmount value={savings} currency="CUP" fractionDigits={Number.isInteger(savings) ? 0 : 2} /> frente al mensual.
                   </p>
                 ) : null}
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import ConfirmModal from '../../shared/componentes/ConfirmModal.jsx'
 import SearchBar from '../../buyer/componentes/SearchBar.jsx'
 import FilterModal from '../../shared/componentes/FilterModal.jsx'
@@ -24,6 +25,8 @@ import { runSectionRefresh } from '../../session/sectionStore'
 import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
 import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { VEHICLE_TYPES, vehicleLabel } from '../utils/constants.js'
+import { sellerHasMensajeros } from '../../subscriptions/utils/constants.js'
+import { PROFILE_PANEL_IDS } from '../../seller/utils/sellerProfileHub.js'
 
 const SEARCH_HINTS = ['buscar por nombre', 'buscar por apellido']
 
@@ -135,6 +138,9 @@ function CreateMensajeroModal({ messenger = null, onClose: requestClose, onCreat
 }
 
 export default function SellerMensajeros() {
+  const { profile } = useOutletContext()
+  const navigate = useNavigate()
+  const enabled = sellerHasMensajeros(profile)
   const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'mensajeros')
   const [items, setItems] = useState(snapshot?.data ?? [])
   const [search, setSearch] = useState(snapshot?.query?.search ?? '')
@@ -154,12 +160,15 @@ export default function SellerMensajeros() {
   }, [search, vehicleType, commit])
 
   useEffect(() => {
-    if (skipInitialRef.current) return undefined
+    if (!enabled || skipInitialRef.current) return undefined
     const timer = window.setTimeout(() => { load().catch((err) => setError(err.message)) }, 200)
     return () => window.clearTimeout(timer)
-  }, [load])
+  }, [enabled, load])
 
-  useRegisterSectionRefresh(() => runSectionRefresh('seller', 'mensajeros', () => load().catch((err) => setError(err.message))))
+  useRegisterSectionRefresh(() => {
+    if (!enabled) return undefined
+    return runSectionRefresh('seller', 'mensajeros', () => load().catch((err) => setError(err.message)))
+  })
 
   async function confirmDelete() {
     if (!toDelete || deleting) return
@@ -175,6 +184,28 @@ export default function SellerMensajeros() {
     } finally {
       setDeleting(false)
     }
+  }
+
+  if (!enabled) {
+    return (
+      <div className={sellerPageWrap}>
+        <SellerPageHeader eyebrow="Mensajeros" subtitle="Asigna entregas a domicilio con tu equipo." />
+        <section className={`${sellerSection} px-5 py-6 text-center`}>
+          <p className="text-xs font-bold uppercase tracking-[0.08em] text-brand-green">Pro y Premium</p>
+          <h2 className="mt-2 font-display text-xl font-bold text-brand-green">Mensajeros en tu tienda</h2>
+          <p className="mt-2 text-sm leading-relaxed text-brand-carmelita/85">
+            Crea mensajeros, asígnales pedidos y sigue la ruta. Está incluido en los planes Pro y Premium, y durante la prueba.
+          </p>
+          <button
+            type="button"
+            className={`${sellerBtnPrimary} mt-4`}
+            onClick={() => navigate('/tienda/perfil', { state: { panel: PROFILE_PANEL_IDS.plan } })}
+          >
+            Mejorar plan
+          </button>
+        </section>
+      </div>
+    )
   }
 
   return (

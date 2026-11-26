@@ -47,7 +47,6 @@ export const PLAN_TIERS = {
       'Catálogos a tu medida',
       'Pedidos directos a Whatsapp',
       'Control total de tus ganancias',
-      'Impresión de tickets para mensajeros',
       QVAPAY_ESCROW_FEATURE,
       PLAN_GESTOR_FEATURES.standard,
     ],
@@ -59,6 +58,7 @@ export const PLAN_TIERS = {
     description: 'Estadísticas, banners y más visibilidad para hacer crecer tu tienda.',
     features: [
       'Todo lo del plan Básico',
+      'Mensajeros para tus entregas',
       'Estadísticas de tu tienda',
       PLAN_GESTOR_FEATURES.pro,
       'Banners de tu tienda',
@@ -247,6 +247,12 @@ export function featurePlanTier(profileOrTier) {
   if (tier === 'pro' || tier === 'premium') return tier
   if (profileOrTier.is_trial) return 'pro'
   return 'standard'
+}
+
+export function sellerHasMensajeros(profile) {
+  if (typeof profile?.has_mensajeros === 'boolean') return profile.has_mensajeros
+  const tier = featurePlanTier(profile)
+  return tier === 'pro' || tier === 'premium'
 }
 
 export function sellerHasStatistics(profile) {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useSearchParams } from 'react-router-dom'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
 import SearchBar from '../../buyer/componentes/SearchBar.jsx'
 import { monthPageShift } from '../../motion/presets'
 import SellerEmptyState from '../componentes/SellerEmptyState.jsx'
@@ -32,6 +32,7 @@ import { rangeForPeriod } from '../../admin/componentes/AdminDateRangeControls.j
 import { acceptSellerQvaPayOrder, refundSellerQvaPayOrder, rejectSellerQvaPayOrder, submitSellerOrderEvidence } from '../../auth/api.js'
 import FilterModal from '../../shared/componentes/FilterModal.jsx'
 import AssignCourierModal from '../../mensajeros/componentes/AssignCourierModal.jsx'
+import { sellerHasMensajeros } from '../../subscriptions/utils/constants.js'
 import { clearedDateFilter, countActiveFilters } from '../../shared/componentes/filterState.js'
 
 const SELLER_ORDERS_PAGE_SIZE = 15
@@ -104,6 +105,8 @@ const EmptyOrdersIcon = (
 )
 
 export default function SellerOrders() {
+  const { profile } = useOutletContext()
+  const canAssignCouriers = sellerHasMensajeros(profile)
   const readOnly = useSellerReadOnly()
   const [searchParams, setSearchParams] = useSearchParams()
   const orderSearchTarget = searchParams.get('search')?.trim() ?? ''
@@ -555,7 +558,7 @@ export default function SellerOrders() {
             </div>
           ) : null}
 
-          {activeTab === 'pending' ? (
+          {activeTab === 'pending' && canAssignCouriers ? (
             <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
               {selectingOrders ? (
                 <button type="button" className="min-h-10 rounded-full border border-brand-green/20 px-4 text-sm font-semibold text-brand-green" onClick={() => { setSelectingOrders(false); setSelectedOrderIds([]); setAssignNotice('') }}>Cancelar</button>
@@ -617,6 +620,7 @@ export default function SellerOrders() {
                 selecting={selectingOrders && activeTab === 'pending'}
                 selected={selectedOrderIds.includes(order.id)}
                 onLongPress={(item) => {
+                  if (!canAssignCouriers) return
                   if (item.payment_method === 'qvapay' && item.qvapay?.payment_status !== 'paid') {
                     setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
                     return
@@ -627,6 +631,7 @@ export default function SellerOrders() {
                   setSelectedOrderIds((current) => current.includes(item.id) ? current : [...current, item.id])
                 }}
                 onToggle={(item) => {
+                  if (!canAssignCouriers) return
                   if (item.payment_method === 'qvapay' && item.qvapay?.payment_status !== 'paid') {
                     setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
                     return
