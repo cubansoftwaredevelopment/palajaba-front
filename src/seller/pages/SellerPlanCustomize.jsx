@@ -8,6 +8,14 @@ import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.js
 import { fetchSellerProfile } from '../../auth/api.js'
 import { getSellerProfile, getSellerToken } from '../utils/sellerAuth.js'
 
+function ownedPluginIds(profile) {
+  const access = profile?.plugin_access
+  if (!access) return []
+  return Object.entries(access)
+    .filter(([, value]) => value == null || Number(value) > 0)
+    .map(([id]) => id)
+}
+
 function formatDate(value) {
   if (!value) return 'la fecha de vencimiento de tu plan'
   const date = new Date(value)
@@ -58,6 +66,7 @@ export default function SellerPlanCustomize() {
         title="Personalización de plan"
         description="Elige las funciones y revisa cada precio en USD y CUP."
         initialBilling={billing}
+        ownedPluginIds={ownedPluginIds(profile)}
         billingLocked
         cupButtonLabel="Confirmar transferencia"
         paidButtonLabel="Ya pagué"

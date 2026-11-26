@@ -42,6 +42,7 @@ export default function PlanCustomizeView({
   onContinue,
   showError = () => {},
   statusMessage = '',
+  ownedPluginIds = [],
 }) {
   const { pluginPrices, cupPerUnit, qvapayPlanDiscountPercent } = usePlanPricing()
   const [billing, setBilling] = useState(initialBilling)
@@ -87,9 +88,27 @@ export default function PlanCustomizeView({
     scroller.scrollTo({ top: Math.max(0, top - 16), behavior: 'smooth' })
   }, [checkingOut])
 
+  function ownsPlugin(id) {
+    return ownedPluginIds.includes(id)
+  }
+
+  function customersReady(source) {
+    return ownsPlugin('customers') || Number(source?.customers || 0) > 0
+  }
+
   function setQuantity(plugin, next) {
     const quantity = plugin.quantity ? Math.max(0, next) : (next > 0 ? 1 : 0)
-    setBasket((current) => ({ ...current, [plugin.id]: quantity }))
+    if (plugin.id === 'customer_notices' && quantity > 0 && !customersReady(basket)) {
+      showError('Agrega Clientes antes de elegir Avisos a clientes.')
+      return
+    }
+    setBasket((current) => {
+      const nextBasket = { ...current, [plugin.id]: quantity }
+      if (plugin.id === 'customers' && quantity === 0 && !ownsPlugin('customers')) {
+        nextBasket.customer_notices = 0
+      }
+      return nextBasket
+    })
     setCheckout(null)
   }
 
@@ -182,6 +201,9 @@ export default function PlanCustomizeView({
                   <p className="font-semibold text-brand-green">{plugin.label}</p>
                   <p className="text-sm text-brand-carmelita/80">{moneyUsd(plugin.baseUsd)}{plugin.quantity ? ' por unidad' : ''}</p>
                   <p className="text-xs font-semibold text-brand-carmelita/60">{moneyCup(plugin.baseUsd, rate)}{plugin.quantity ? ' por unidad' : ''}</p>
+                  {plugin.id === 'customer_notices' && !customersReady(basket) ? (
+                    <p className="mt-1 text-xs font-semibold text-brand-carmelita/70">Requiere Clientes</p>
+                  ) : null}
                 </div>
                 {plugin.quantity ? (
                   <div className="ml-auto flex shrink-0 items-center gap-2">
