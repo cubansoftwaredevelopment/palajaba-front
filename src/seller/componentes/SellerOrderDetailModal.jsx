@@ -677,7 +677,7 @@ export default function SellerOrderDetailModal({
                 </div>
                 <div className="pt-2">
                   <p className="mb-1.5 font-semibold text-brand-green">Ruta del pedido</p>
-                  <OrderRouteMap orderId={order.id} role="seller" />
+                  <OrderRouteMap orderId={order.id} role="seller" fullscreen />
                 </div>
                 {order.mensajeria && order.mensajeria.status === 'assigned' && !order.mensajeria.route_started ? (
                   <CancelAssignmentButton orderId={order.id} onDone={onAssignmentCancelled} />

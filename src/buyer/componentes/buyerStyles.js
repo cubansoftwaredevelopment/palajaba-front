@@ -186,7 +186,7 @@ export const buyerJabaBadge =
 export const buyerJabaBadgePulse = `${buyerJabaBadge} animate-jaba-badge-bump`
 
 export const buyerJabaToastShell =
-  'pointer-events-none fixed inset-x-0 bottom-[max(1.25rem,var(--safe-bottom))] z-[85] flex justify-center px-4'
+  'pointer-events-none fixed inset-x-0 bottom-[max(1.25rem,var(--safe-bottom))] z-[320] flex justify-center px-4'
 
 export const buyerJabaToastCard =
   'pointer-events-none w-[min(22rem,calc(100vw-2rem))] rounded-2xl border border-brand-green/15 bg-brand-white px-4 py-3 text-center text-sm font-semibold leading-snug text-brand-green shadow-[0_12px_32px_rgba(89,128,44,0.18)]'

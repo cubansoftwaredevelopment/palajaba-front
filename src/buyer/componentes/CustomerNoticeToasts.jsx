@@ -5,6 +5,7 @@ import { BRAND_NAME } from '../../shared/utils/branding.js'
 import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerToken, isCustomerAuthenticated } from '../../customer/utils/customerAuth.js'
 import { connectCustomerEvents } from '../../live/utils'
 import { isBuyerMotionPath } from '../../motion/RouteMotion'
+import { CUSTOMER_ORDERS_CHANGED_EVENT } from '../../customer/utils/constants.js'
 import { CUSTOMER_NOTICES_EVENT, ensureCustomerNotices, upsertCustomerNotice } from './BuyerHeaderTools.jsx'
 
 function asToast(notification) {
@@ -67,6 +68,8 @@ export default function CustomerNoticeToasts() {
         upsertCustomerNotice(notification)
         push([notification])
         window.dispatchEvent(new Event(CUSTOMER_NOTICES_EVENT))
+      }, () => {
+        window.dispatchEvent(new Event(CUSTOMER_ORDERS_CHANGED_EVENT))
       })
     }
 

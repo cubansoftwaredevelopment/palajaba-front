@@ -19,6 +19,14 @@ export function getPublicSiteOrigin() {
   return ''
 }
 
+/** En `npm run dev` abierto en localhost, el enlace debe usar este mismo origen. */
+export function getDevBrowserOrigin() {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return ''
+  const host = window.location?.hostname
+  if (host !== 'localhost' && host !== '127.0.0.1') return ''
+  return window.location.origin || ''
+}
+
 export function getStoreCatalogUrl(profile) {
   const slug = resolveStoreSlug(profile)
   const path = storePublicPath(slug)

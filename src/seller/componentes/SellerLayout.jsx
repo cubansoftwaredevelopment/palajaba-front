@@ -255,7 +255,8 @@ export default function SellerLayout() {
     ['clientes', 'customers'],
     ['estadisticas', 'statistics'],
   ].filter(([, key]) => pluginLocked(profile, key)).map(([id]) => id)
-  const readOnly = profile?.subscription_active === false
+  const paymentUnderReview = profile?.subscription_active === false && !profile?.subscription_ends_at
+  const readOnly = profile?.subscription_active === false && !(onCompletePage && paymentUnderReview)
 
   const fillPage = isCatalogPage || isCatalogPreview
 
@@ -268,6 +269,7 @@ export default function SellerLayout() {
         planName={getSellerPlan(profile).name}
         billingLabel={BILLING_LABELS[profile?.billing_period] ?? BILLING_LABELS.monthly}
         subscriptionActive={profile.subscription_active}
+        subscriptionNotice={onCompletePage && paymentUnderReview ? 'Tu pago está en verificación. Completa tu tienda; el catálogo se activa cuando se apruebe.' : ''}
         onLogout={() => setShowLogoutConfirm(true)}
         onNotifications={openNotifications}
         notificationsActive={location.pathname === '/tienda/notificaciones'}

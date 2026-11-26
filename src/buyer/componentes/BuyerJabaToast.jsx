@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, useReducedMotion } from 'framer-motion'
 import { buyerJabaToastCard, buyerJabaToastCardWarning, buyerJabaToastShell } from './buyerStyles.js'
 
@@ -24,9 +25,9 @@ export default function BuyerJabaToast({ toast, onDone }) {
     return () => window.clearTimeout(doneTimer)
   }, [leaving, onDone, reduced, toast])
 
-  if (!toast) return null
+  if (!toast || typeof document === 'undefined') return null
 
-  return (
+  return createPortal(
     <div className={buyerJabaToastShell} aria-live="polite" aria-atomic="true">
       <motion.div
         role={toast.tone === 'warning' ? 'alert' : 'status'}
@@ -37,6 +38,7 @@ export default function BuyerJabaToast({ toast, onDone }) {
       >
         {toast.message}
       </motion.div>
-    </div>
+    </div>,
+    document.body,
   )
 }

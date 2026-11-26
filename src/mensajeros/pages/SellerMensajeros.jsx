@@ -26,7 +26,8 @@ import { useRegisterSectionRefresh } from '../../session/useSectionRefresh'
 import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import { VEHICLE_TYPES, vehicleLabel } from '../utils/constants.js'
 import { sellerHasMensajeros } from '../../subscriptions/utils/constants.js'
-import { guardPlugin } from '../../subscriptions/utils/planPluginGate.js'
+import { guardPlugin, pluginCap } from '../../subscriptions/utils/planPluginGate.js'
+import { MENSAJEROS_QUOTA_MESSAGE } from '../../subscriptions/utils/planPlugins.js'
 
 const SEARCH_HINTS = ['buscar por nombre', 'buscar por apellido']
 
@@ -205,7 +206,16 @@ export default function SellerMensajeros() {
           }}
         />
       </div>
-      <button type="button" className={`${sellerBtnPrimary} mb-4 max-w-xs`} onClick={() => { if (!guardPlugin(profile, 'mensajeros', navigate)) setOpen(true) }}>Agregar mensajero</button>
+      <button type="button" className={`${sellerBtnPrimary} mb-4 max-w-xs`} onClick={() => {
+        if (guardPlugin(profile, 'mensajeros', navigate)) return
+        const cap = pluginCap(profile, 'mensajeros')
+        if (cap != null && items.length >= cap) {
+          setError(MENSAJEROS_QUOTA_MESSAGE)
+          return
+        }
+        setError('')
+        setOpen(true)
+      }}>Agregar mensajero</button>
       {error ? <p className="mb-3 text-sm font-semibold text-red-700">{error}</p> : null}
       <ul className="space-y-2">
         {items.map((item) => (

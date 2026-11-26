@@ -43,6 +43,9 @@ export default function PlanCustomizeView({
   showError = () => {},
   statusMessage = '',
   ownedPluginIds = [],
+  ownedQuantities = {},
+  unlimitedPluginIds = [],
+  planName = '',
 }) {
   const { pluginPrices, cupPerUnit, qvapayPlanDiscountPercent } = usePlanPricing()
   const [billing, setBilling] = useState(initialBilling)
@@ -55,14 +58,22 @@ export default function PlanCustomizeView({
   const [loading, setLoading] = useState(false)
   const checkoutRef = useRef(null)
 
+  function ownedCount(id) {
+    const value = Number(ownedQuantities?.[id] || 0)
+    return Number.isFinite(value) && value > 0 ? value : 0
+  }
+
   const lines = useMemo(() => PLAN_PLUGINS.map((plugin) => {
-    const count = Number(basket[plugin.id] || 0)
+    const extra = Number(basket[plugin.id] || 0)
+    const owned = plugin.quantity ? Math.max(0, Number(ownedQuantities?.[plugin.id] || 0)) : 0
     return {
       ...plugin,
-      count,
+      count: extra,
+      shown: plugin.quantity ? owned + extra : extra,
+      owned,
       baseUsd: pluginUnitUsd(pluginPrices, plugin.id),
     }
-  }), [basket, pluginPrices])
+  }), [basket, ownedQuantities, pluginPrices])
 
   const chosen = lines.filter((line) => line.count > 0)
   const totalUsd = chosen.reduce((sum, line) => sum + pluginPeriodUsd(pluginPrices, line.id, billing, line.count), 0)
@@ -96,8 +107,16 @@ export default function PlanCustomizeView({
     return ownsPlugin('customers') || Number(source?.customers || 0) > 0
   }
 
+  function isUnlimited(id) {
+    return unlimitedPluginIds.includes(id)
+  }
+
   function setQuantity(plugin, next) {
-    const quantity = plugin.quantity ? Math.max(0, next) : (next > 0 ? 1 : 0)
+    if (isUnlimited(plugin.id)) return
+    if (!plugin.quantity && (ownsPlugin(plugin.id) || ownedCount(plugin.id) > 0)) return
+    const owned = plugin.quantity ? ownedCount(plugin.id) : 0
+    const shown = plugin.quantity ? Math.max(owned, next) : (next > 0 ? 1 : 0)
+    const quantity = plugin.quantity ? shown - owned : shown
     if (plugin.id === 'customer_notices' && quantity > 0 && !customersReady(basket)) {
       showError('Agrega Clientes antes de elegir Avisos a clientes.')
       return
@@ -199,21 +218,51 @@ export default function PlanCustomizeView({
               <li key={plugin.id} className="flex w-[78%] max-w-[18rem] shrink-0 snap-start flex-row items-center justify-between gap-3 rounded-2xl border border-brand-green/12 bg-brand-white p-4 lg:w-auto lg:max-w-none lg:shrink">
                 <div className="min-w-0">
                   <p className="font-semibold text-brand-green">{plugin.label}</p>
-                  <p className="text-sm text-brand-carmelita/80">{moneyUsd(plugin.baseUsd)}{plugin.quantity ? ' por unidad' : ''}</p>
-                  <p className="text-xs font-semibold text-brand-carmelita/60">{moneyCup(plugin.baseUsd, rate)}{plugin.quantity ? ' por unidad' : ''}</p>
+                  {isUnlimited(plugin.id) ? (
+                    <p className="text-xs font-semibold uppercase tracking-wide text-brand-green/80">Plan {planName}</p>
+                  ) : (
+                    <>
+                      <p className="text-sm text-brand-carmelita/80">{moneyUsd(plugin.baseUsd)}{plugin.quantity ? ' por unidad' : ''}</p>
+                      <p className="text-xs font-semibold text-brand-carmelita/60">{moneyCup(plugin.baseUsd, rate)}{plugin.quantity ? ' por unidad' : ''}</p>
+                      {plugin.owned > 0 ? (
+                        <p className="text-xs font-semibold uppercase tracking-wide text-brand-green/80">Plan {planName}</p>
+                      ) : null}
+                    </>
+                  )}
                   {plugin.id === 'customer_notices' && !customersReady(basket) ? (
                     <p className="mt-1 text-xs font-semibold text-brand-carmelita/70">Requiere Clientes</p>
                   ) : null}
                 </div>
-                {plugin.quantity ? (
+                {isUnlimited(plugin.id) ? (
+                  <span className="ml-auto shrink-0 text-sm font-semibold text-brand-green">Ilimitado</span>
+                ) : plugin.quantity ? (
                   <div className="ml-auto flex shrink-0 items-center gap-2">
-                    <button type="button" className="h-9 w-9 rounded-full border border-brand-green/20 font-bold text-brand-green" onClick={() => setQuantity(plugin, plugin.count - 1)} aria-label={`Quitar ${plugin.label}`}>−</button>
-                    <span className="w-6 text-center font-semibold tabular-nums text-brand-green">{plugin.count}</span>
-                    <button type="button" className="h-9 w-9 rounded-full bg-brand-green font-bold text-brand-white" onClick={() => setQuantity(plugin, plugin.count + 1)} aria-label={`Agregar ${plugin.label}`}>+</button>
+                    <button
+                      type="button"
+                      className={`h-9 w-9 rounded-full border font-bold ${plugin.shown <= plugin.owned ? 'cursor-not-allowed border-zinc-200 text-zinc-300' : 'border-brand-green/20 text-brand-green'}`}
+                      onClick={() => setQuantity(plugin, plugin.shown - 1)}
+                      disabled={plugin.shown <= plugin.owned}
+                      aria-label={`Quitar ${plugin.label}`}
+                    >
+                      −
+                    </button>
+                    <span className="w-6 text-center font-semibold tabular-nums text-brand-green">{plugin.shown}</span>
+                    <button type="button" className="h-9 w-9 rounded-full bg-brand-green font-bold text-brand-white" onClick={() => setQuantity(plugin, plugin.shown + 1)} aria-label={`Agregar ${plugin.label}`}>+</button>
                   </div>
                 ) : (
-                  <button type="button" className={`ml-auto shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${plugin.count ? 'bg-brand-green/10 text-brand-green' : 'bg-brand-green text-brand-white'}`} onClick={() => setQuantity(plugin, plugin.count ? 0 : 1)}>
-                    {plugin.count ? 'Quitar' : 'Agregar'}
+                  <button
+                    type="button"
+                    disabled={ownsPlugin(plugin.id)}
+                    className={`ml-auto shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
+                      ownsPlugin(plugin.id)
+                        ? 'cursor-not-allowed bg-zinc-200 text-zinc-400'
+                        : plugin.count
+                          ? 'bg-brand-green/10 text-brand-green'
+                          : 'bg-brand-green text-brand-white'
+                    }`}
+                    onClick={() => setQuantity(plugin, plugin.count ? 0 : 1)}
+                  >
+                    {ownsPlugin(plugin.id) || !plugin.count ? 'Agregar' : 'Quitar'}
                   </button>
                 )}
               </li>

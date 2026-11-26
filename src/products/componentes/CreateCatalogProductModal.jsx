@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { guardPlugin } from '../../subscriptions/utils/planPluginGate.js'
+import { guardPlugin, pluginCap } from '../../subscriptions/utils/planPluginGate.js'
+import { DISCOUNTS_QUOTA_MESSAGE } from '../../subscriptions/utils/planPlugins.js'
 
 import { fetchCatalogCurrencies, fetchCategories } from '../api.js'
 import ProductSalesZonesField from './ProductSalesZonesField.jsx'
@@ -605,8 +606,17 @@ export default function CreateCatalogProductModal({
       showError('El descuento debe ser un porcentaje entre 1 y 99.')
       return
     }
-    if (Number.isInteger(parsedDiscount) && parsedDiscount > 0 && guardPlugin(profile, 'discounts', navigate) && !allowProductDiscount) {
-      return
+    const alreadyDiscounted = Number(product?.discount_percent) > 0
+    if (Number.isInteger(parsedDiscount) && parsedDiscount > 0 && !alreadyDiscounted) {
+      if (guardPlugin(profile, 'discounts', navigate) && !allowProductDiscount) return
+      const cap = pluginCap(profile, 'discounts')
+      const used = localCategories.reduce((sum, category) => (
+        sum + (category.products || []).filter((item) => Number(item.discount_percent) > 0).length
+      ), 0)
+      if (cap != null && used >= cap) {
+        showError(DISCOUNTS_QUOTA_MESSAGE)
+        return
+      }
     }
     formData.append('discount_percent', Number.isInteger(parsedDiscount) && parsedDiscount > 0 ? String(parsedDiscount) : '')
 

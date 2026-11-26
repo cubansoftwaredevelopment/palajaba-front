@@ -169,6 +169,11 @@ export default function BuyerDeliveryCheckoutModal({
       return
     }
 
+    if (paymentMethod !== 'qvapay' && shownCheckout.whatsappOrdersEnabled === false) {
+      showError('Esta tienda solo acepta pagos por QvaPay.')
+      return
+    }
+
     if (paymentMethod === 'qvapay' && !agreements.ready) {
       showError('Acepta las condiciones de la tienda para pagar por QvaPay.')
       return
@@ -403,20 +408,15 @@ export default function BuyerDeliveryCheckoutModal({
                 ) : null}
                 {pickup ? null : (
                   <p className="mt-3 text-xs text-brand-carmelita">
-                    {point ? 'El punto del mapa se envía por WhatsApp.' : 'Sin punto en el mapa.'}
+                    {point
+                      ? (shownCheckout.whatsappOrdersEnabled === false
+                        ? 'El punto del mapa se guarda con el pedido.'
+                        : 'El punto del mapa se envía por WhatsApp.')
+                      : 'Sin punto en el mapa.'}
                   </p>
                 )}
               </div>
             ) : null}
-
-            <div className={step === 3 ? 'mt-4' : 'hidden'}>
-              <CheckoutStoreAgreements
-                storeId={shownCheckout.storeId}
-                storeSlug={shownCheckout.storeSlug}
-                pages={shownCheckout.storePages}
-                onChange={setAgreements}
-              />
-            </div>
           </div>
 
           <div className={buyerDeliveryModalFooter}>
@@ -443,11 +443,18 @@ export default function BuyerDeliveryCheckoutModal({
 
             {step === 3 ? (
               <div className="flex w-full flex-col gap-2">
-                {shownCheckout.qvapayEnabled ? (
+                <CheckoutStoreAgreements
+                  storeId={shownCheckout.storeId}
+                  storeSlug={shownCheckout.storeSlug}
+                  pages={shownCheckout.storePages}
+                  contactAllowed={shownCheckout.whatsappOrdersEnabled !== false}
+                  onChange={setAgreements}
+                />
+                {shownCheckout.qvapayEnabled || shownCheckout.whatsappOrdersEnabled === false ? (
                   <>
                     <button
                       type="button"
-                      disabled={checkoutSubmitting || !agreements.ready}
+                      disabled={checkoutSubmitting}
                       onClick={(event) => handleSubmit(event, 'qvapay')}
                       className={`${buyerJabaPrimaryBtn} w-full px-3 text-center leading-tight`}
                     >
@@ -456,6 +463,7 @@ export default function BuyerDeliveryCheckoutModal({
                     <p className="text-center text-xs text-brand-carmelita/75">El dinero se libera a la tienda después de que aceptes la evidencia o venza el plazo de 48 horas.</p>
                   </>
                 ) : null}
+                {shownCheckout.whatsappOrdersEnabled === false ? null : (
                 <button
                   type="submit"
                   disabled={checkoutSubmitting}
@@ -464,6 +472,7 @@ export default function BuyerDeliveryCheckoutModal({
                   <WhatsAppIcon />
                   {checkoutSubmitting ? 'Registrando pedido…' : 'Contactar directamente a la tienda'}
                 </button>
+                )}
               </div>
             ) : null}
 

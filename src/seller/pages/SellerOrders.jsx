@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import SearchBar from '../../buyer/componentes/SearchBar.jsx'
@@ -9,6 +10,7 @@ import SellerOrderDetailModal from '../componentes/SellerOrderDetailModal.jsx'
 import SellerOrderItem from '../componentes/SellerOrderItem.jsx'
 import SellerOrdersGroup from '../componentes/SellerOrdersGroup.jsx'
 import SellerOrdersTabs from '../componentes/SellerOrdersTabs.jsx'
+import SellerNotificationToast from '../componentes/SellerNotificationToast.jsx'
 import SellerPageHeader from '../componentes/SellerPageHeader.jsx'
 import { useSellerReadOnly } from '../componentes/sellerReadOnly.js'
 import StatePanel from '../../shared/componentes/StatePanel.jsx'
@@ -131,6 +133,7 @@ export default function SellerOrders() {
   const [cancelling, setCancelling] = useState(false)
   const [downloading, setDownloading] = useState(null)
   const [saveError, setSaveError] = useState('')
+  const [notice, setNotice] = useState(null)
   const [manualOrderOpen, setManualOrderOpen] = useState(false)
   const [search, setSearch] = useState(() => orderSearchTarget)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -413,7 +416,10 @@ export default function SellerOrders() {
     try {
       await acceptSellerQvaPayOrder(getSellerToken(), selectedOrder.id, payload)
       await loadOrders({ silent: true })
-      window.alert('La factura QvaPay se envió al cliente.')
+      setNotice({
+        id: `${Date.now()}`,
+        title: 'La factura QvaPay se envió al cliente.',
+      })
     } catch (err) {
       setSaveError(getUserFacingMessage(err, 'No pudimos aceptar el pago QvaPay.'))
     } finally { setSaving(false) }
@@ -704,6 +710,18 @@ export default function SellerOrders() {
           onCreated={handleCreateManualOrder}
         />
       ) : null}
+
+      {notice && typeof document !== 'undefined'
+        ? createPortal(
+          <SellerNotificationToast
+            toast={notice}
+            placement="top"
+            className="!z-[320]"
+            onDone={() => setNotice(null)}
+          />,
+          document.body,
+        )
+        : null}
 
       {selectedOrder ? (
         <SellerOrderDetailModal

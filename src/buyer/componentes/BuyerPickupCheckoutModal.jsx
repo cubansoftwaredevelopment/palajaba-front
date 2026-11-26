@@ -110,6 +110,11 @@ export default function BuyerPickupCheckoutModal({
       phone_secondary: form.phone_secondary,
     })
 
+    if (paymentMethod !== 'qvapay' && shownCheckout.whatsappOrdersEnabled === false) {
+      showError('Esta tienda solo acepta pagos por QvaPay.')
+      return
+    }
+
     if (paymentMethod === 'qvapay' && !agreements.ready) {
       showError('Acepta las condiciones de la tienda para pagar por QvaPay.')
       return
@@ -184,28 +189,31 @@ export default function BuyerPickupCheckoutModal({
                 required={false}
               />
 
-              <CheckoutStoreAgreements
-                storeId={shownCheckout.storeId}
-                storeSlug={shownCheckout.storeSlug}
-                pages={shownCheckout.storePages}
-                onChange={setAgreements}
-              />
             </div>
           </div>
 
           <div className={`${buyerDeliveryModalFooter} flex-col`}>
-            {shownCheckout.qvapayEnabled ? (
+            <CheckoutStoreAgreements
+              storeId={shownCheckout.storeId}
+              storeSlug={shownCheckout.storeSlug}
+              pages={shownCheckout.storePages}
+              contactAllowed={shownCheckout.whatsappOrdersEnabled !== false}
+              onChange={setAgreements}
+            />
+            {shownCheckout.qvapayEnabled || shownCheckout.whatsappOrdersEnabled === false ? (
               <>
-                <button type="button" disabled={checkoutSubmitting || !agreements.ready} onClick={(event) => handleSubmit(event, 'qvapay')} className={buyerJabaPrimaryBtn}>
+                <button type="button" disabled={checkoutSubmitting} onClick={(event) => handleSubmit(event, 'qvapay')} className={buyerJabaPrimaryBtn}>
                   {checkoutSubmitting ? 'Enviando solicitud…' : 'Pagar por QvaPay'}
                 </button>
                 <p className="text-center text-xs text-brand-carmelita/75">El dinero se libera después de que aceptes la evidencia o venza el plazo de 48 horas.</p>
               </>
             ) : null}
+            {shownCheckout.whatsappOrdersEnabled === false ? null : (
             <button type="submit" disabled={checkoutSubmitting} className={buyerJabaWhatsAppBtn}>
               <WhatsAppIcon />
               {checkoutSubmitting ? 'Registrando pedido…' : 'Contactar directamente a la tienda'}
             </button>
+            )}
           </div>
         </form>
         {toastNode}

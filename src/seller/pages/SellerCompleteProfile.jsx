@@ -56,8 +56,8 @@ export default function SellerCompleteProfile() {
     profile?.business_area?.municipality_id ?? '',
   )
   const [deliveryAreas, setDeliveryAreas] = useState(profile?.delivery_areas ?? [])
+  const [loading, setLoading] = useState(false)
   const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
-  const [error, setError] = useState('')
 
   async function handlePhotoChange(event) {
     const file = event.target.files?.[0]

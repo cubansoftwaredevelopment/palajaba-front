@@ -1,10 +1,55 @@
 import { useState } from 'react'
-import { canUpgradePlan } from '../../subscriptions/utils/constants.js'
+import { canUpgradePlan, getSellerPlan } from '../../subscriptions/utils/constants.js'
+import { fixedCounterLabels, fixedCounterMap, includedUnlimitedPluginIds, PLAN_PLUGINS, pluginSelectionLabels, unlimitedPluginLabel } from '../../subscriptions/utils/planPlugins.js'
 import { parseApiDateTime } from '../../shared/utils/dates.js'
 import { getProfileHubSubtitle } from '../utils/sellerProfileHub.js'
 import { sellerFocusRing } from './sellerStyles.js'
 import PhotoLightbox from '../../shared/componentes/PhotoLightbox.jsx'
 import SellerProfileAvatarUpload from './SellerProfileAvatarUpload.jsx'
+
+function currentPlanLabels(profile) {
+  const merged = {}
+  for (const [key, value] of Object.entries(profile?.plan_plugins || {})) {
+    const qty = Number(value) || 0
+    if (qty > 0) merged[key] = qty
+  }
+  const expires = profile?.plugin_addons_expires_at ? new Date(profile.plugin_addons_expires_at) : null
+  const addonsLive = !expires || (!Number.isNaN(expires.getTime()) && expires > new Date())
+  if (addonsLive) {
+    for (const [key, value] of Object.entries(profile?.plugin_addons || {})) {
+      const qty = Number(value) || 0
+      if (qty > 0) merged[key] = (merged[key] || 0) + qty
+    }
+  }
+  return pluginSelectionLabels(merged)
+}
+
+function addonLabels(profile, skipIds = []) {
+  const expires = profile?.plugin_addons_expires_at ? new Date(profile.plugin_addons_expires_at) : null
+  const addonsLive = !expires || (!Number.isNaN(expires.getTime()) && expires > new Date())
+  if (!addonsLive) return []
+  const skip = new Set(skipIds)
+  const selected = {}
+  for (const [key, value] of Object.entries(profile?.plugin_addons || {})) {
+    if (skip.has(key)) continue
+    const qty = Number(value) || 0
+    if (qty > 0) selected[key] = qty
+  }
+  return pluginSelectionLabels(selected)
+}
+
+function FeatureList({ title, labels, waiting = false }) {
+  return (
+    <div className="mt-2">
+      <p className={`text-[0.65rem] font-semibold uppercase tracking-wide ${waiting ? 'text-amber-800' : 'text-brand-green/80'}`}>
+        {title}
+      </p>
+      <ul className="mt-1 space-y-0.5 text-xs text-brand-carmelita/90">
+        {labels.map((label) => <li key={label}>{label}</li>)}
+      </ul>
+    </div>
+  )
+}
 
 function EditPencilIcon() {
   return (
@@ -39,6 +84,28 @@ export default function SellerProfileHeroCard({
   const handleEdit = onEditClick ?? onPhotoClick
   const [photoOpen, setPhotoOpen] = useState(false)
   const showUpgrade = canUpgradePlan(profile) && typeof onUpgradeClick === 'function'
+  const planName = getSellerPlan(profile)?.name || 'Básico'
+  const unlimitedIds = profile?.plan_tier === 'custom' ? [] : includedUnlimitedPluginIds(profile)
+  const fixedTotals = profile?.plan_tier === 'custom' ? {} : fixedCounterMap(profile)
+  const unlimitedLabels = PLAN_PLUGINS
+    .filter((plugin) => unlimitedIds.includes(plugin.id))
+    .map((plugin) => unlimitedPluginLabel(plugin.label, planName))
+  const pluginLabels = profile?.plan_tier === 'custom'
+    ? currentPlanLabels(profile)
+    : [...unlimitedLabels, ...fixedCounterLabels(profile, planName), ...addonLabels(profile, [...unlimitedIds, ...Object.keys(fixedTotals)])]
+  const pendingSelection = { ...(profile?.pending_plan_upgrade?.plan_plugins || {}) }
+  for (const id of unlimitedIds) delete pendingSelection[id]
+  for (const id of Object.keys(fixedTotals)) {
+    const extra = Number(pendingSelection[id]) || 0
+    if (extra > 0) pendingSelection[id] = fixedTotals[id] + extra
+  }
+  const pendingUpgrade = profile?.pending_plan_upgrade?.payment_method === 'cup'
+    ? pluginSelectionLabels(pendingSelection).map((label) => {
+      const match = PLAN_PLUGINS.find((plugin) => label === plugin.label || label.startsWith(`${plugin.label} ×`))
+      if (!match || !fixedTotals[match.id]) return label
+      return `${label} · Plan ${planName}`
+    })
+    : []
 
   return (
     <div className="relative z-10 rounded-2xl border border-brand-green/10 bg-brand-white p-4 shadow-[0_8px_28px_rgba(89,128,44,0.12)] sm:p-5">
@@ -59,6 +126,15 @@ export default function SellerProfileHeroCard({
           <p className="mt-0.5 truncate text-xs text-brand-carmelita/80 sm:text-sm">{subtitle}</p>
           {endsLabel ? (
             <p className="mt-1.5 text-[0.7rem] font-semibold text-brand-green/85">{endsLabel}</p>
+          ) : null}
+          <p className="mt-2 text-[0.65rem] font-semibold uppercase tracking-wide text-brand-green/80">
+            Plan {planName}
+          </p>
+          {pluginLabels.length ? (
+            <FeatureList title="Plugins" labels={pluginLabels} />
+          ) : null}
+          {pendingUpgrade.length ? (
+            <FeatureList title="Mejoras por confirmar" labels={pendingUpgrade} waiting />
           ) : null}
           {showUpgrade ? (
             <button

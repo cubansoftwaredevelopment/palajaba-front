@@ -77,6 +77,13 @@ export function approvePluginAddon(token, purchaseId) {
   })
 }
 
+export function rejectPluginAddon(token, purchaseId) {
+  return request(`/api/admin/plugin-addons/${encodeURIComponent(purchaseId)}/reject`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
 export function fetchAdminSettings(token) {
   return request("/api/admin/settings", {
     headers: {

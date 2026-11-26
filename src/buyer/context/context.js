@@ -53,6 +53,7 @@ import BuyerJabaSyncAlert from '../componentes/BuyerJabaSyncAlert.jsx'
 import BuyerJabaToast from '../componentes/BuyerJabaToast.jsx'
 import BuyerCustomerLoginModal from '../componentes/BuyerCustomerLoginModal.jsx'
 import { clearCustomerSession, CUSTOMER_PURCHASE_REVOKED_MESSAGE, getCustomerProfile, getCustomerToken, isCustomerPurchaseRevoked, updateCustomerProfile } from '../../customer/utils/customerAuth.js'
+import { CUSTOMER_ORDERS_CHANGED_EVENT } from '../../customer/utils/constants.js'
 import CustomerQvaPayPrompt from '../../customer/componentes/CustomerQvaPayPrompt.jsx'
 import { dismissCustomerQvaPayPrompt } from '../../customer/api.js'
 
@@ -195,11 +196,12 @@ export function BuyerJabaProvider({ children }) {
       enrichedPayload = {
         ...payload,
         qvapayEnabled: Boolean(store?.qvapay_enabled),
+        whatsappOrdersEnabled: store?.whatsapp_orders_enabled !== false,
         storeSlug: store?.store_slug || '',
         storePages: store?.store_pages || {},
       }
     } catch {
-      enrichedPayload = { ...payload, qvapayEnabled: false }
+      enrichedPayload = { ...payload, qvapayEnabled: false, whatsappOrdersEnabled: true }
     }
     if (type === 'delivery') {
       setPickupCheckout(null)
@@ -342,16 +344,20 @@ export function BuyerJabaProvider({ children }) {
           return true
         }
         if (result.message) {
-          window.alert(result.message)
+          setJabaToast({ id: Date.now(), message: result.message, tone: 'warning' })
         }
         return false
       }
 
-      if (result.warning) {
-        window.alert(result.warning)
-      }
+      window.dispatchEvent(new Event(CUSTOMER_ORDERS_CHANGED_EVENT))
+
       if (paymentMethod === 'qvapay') {
-        window.alert('La solicitud de pago fue enviada a la tienda. Te avisaremos cuando acepte y comparta la factura QvaPay.')
+        setJabaToast({
+          id: Date.now(),
+          message: 'La solicitud de pago fue enviada a la tienda. Te avisaremos cuando acepte y comparta la factura QvaPay.',
+        })
+      } else if (result.warning) {
+        setJabaToast({ id: Date.now(), message: result.warning, tone: 'warning' })
       }
 
       return true
@@ -365,8 +371,12 @@ export function BuyerJabaProvider({ children }) {
       if (!payload?.items?.length || !payload.storePhone) return 'fail'
 
       if (delivery?.payment_method === 'qvapay') {
-        if (!payload.qvapayEnabled) return 'fail'
         return (await runWhatsAppCheckout(payload, delivery, 'qvapay')) ? 'done' : 'fail'
+      }
+
+      if (payload.whatsappOrdersEnabled === false) {
+        setJabaToast({ id: Date.now(), message: 'Esta tienda solo acepta pagos por QvaPay.', tone: 'warning' })
+        return 'fail'
       }
 
       // Catálogo de gestor: WhatsApp ya apunta al gestor; no mostrar selector.

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { motion, useReducedMotion } from 'framer-motion'
 import L from 'leaflet'
 import { buyerMapMarkerIcon, getCurrentMapPosition } from '../utils/sellerMap.js'
 import { resolveMediaUrl } from '../../shared/utils/media.js'
@@ -43,6 +44,8 @@ function courierPin(profileUrl, vehicleUrl) {
 
 const controlClass = 'absolute z-[1000] grid h-11 w-11 place-items-center rounded-xl border border-brand-green/15 bg-brand-white/95 text-brand-green shadow-lg backdrop-blur transition hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/40 disabled:opacity-60'
 
+const mapFade = { duration: 0.32, ease: [0.22, 1, 0.36, 1] }
+
 export default function AppLocationMap({
   destination = null,
   points = [],
@@ -55,10 +58,13 @@ export default function AppLocationMap({
   onCourierClick = null,
   onBack = null,
 }) {
+  const reduced = useReducedMotion()
   const mapRef = useRef(null)
   const mapInstance = useRef(null)
   const layers = useRef([])
   const [expanded, setExpanded] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const [inlineFade, setInlineFade] = useState(false)
   const [located, setLocated] = useState(null)
   const [locating, setLocating] = useState(false)
   const [locateError, setLocateError] = useState('')
@@ -149,16 +155,31 @@ export default function AppLocationMap({
   }, [routeKey, expanded])
 
   useEffect(() => {
-    if (!expanded || !fullscreen) return undefined
+    if (!fullscreen || !expanded) return undefined
     function onKey(event) {
       if (event.key !== 'Escape') return
       event.preventDefault()
       event.stopPropagation()
-      setExpanded(false)
+      if (reduced) {
+        setLeaving(false)
+        setExpanded(false)
+        return
+      }
+      setLeaving(true)
     }
     document.addEventListener('keydown', onKey, true)
     return () => document.removeEventListener('keydown', onKey, true)
-  }, [expanded, fullscreen])
+  }, [expanded, fullscreen, reduced])
+
+  useEffect(() => {
+    if (!leaving) return undefined
+    const timer = window.setTimeout(() => {
+      setInlineFade(true)
+      setLeaving(false)
+      setExpanded(false)
+    }, 320)
+    return () => window.clearTimeout(timer)
+  }, [leaving])
 
   async function locate() {
     setLocateError('')
@@ -175,11 +196,33 @@ export default function AppLocationMap({
     }
   }
 
-  const cover = fullscreen && expanded
-  const frame = (
-    <div
-      className={`${cover ? 'fixed inset-0 z-[280] h-[100dvh] w-screen rounded-none' : 'relative w-full rounded-2xl'} ${expanded ? '' : 'map-allows-page-scroll'} overflow-hidden border border-brand-green/12 bg-brand-white shadow-[0_2px_12px_rgba(89,128,44,0.06)]`}
-      style={cover ? undefined : { height: !fullscreen && expanded ? 'calc(100dvh - 5.5rem)' : collapsedHeight, borderRadius: !fullscreen && expanded ? 20 : 16 }}
+  const cover = fullscreen && (expanded || leaving)
+
+  function openCover() {
+    setInlineFade(false)
+    setLeaving(false)
+    setExpanded(true)
+  }
+
+  function closeCover() {
+    if (!fullscreen || reduced) {
+      setLeaving(false)
+      setExpanded(false)
+      return
+    }
+    setLeaving(true)
+  }
+
+  const frameClass = 'overflow-hidden border border-brand-green/12 bg-brand-white shadow-[0_2px_12px_rgba(89,128,44,0.06)]'
+  const frame = (isCover) => (
+    <motion.div
+      className={isCover
+        ? `fixed inset-0 z-[280] h-[100dvh] w-screen rounded-none ${frameClass}`
+        : `relative w-full rounded-2xl ${expanded ? '' : 'map-allows-page-scroll'} ${frameClass}`}
+      style={isCover ? undefined : { height: !fullscreen && expanded ? 'calc(100dvh - 5.5rem)' : collapsedHeight, borderRadius: !fullscreen && expanded ? 20 : 16 }}
+      initial={isCover ? (reduced ? false : { opacity: 0 }) : (inlineFade && !reduced ? { opacity: 0 } : false)}
+      animate={{ opacity: isCover && leaving ? 0 : 1 }}
+      transition={reduced ? { duration: 0 } : mapFade}
     >
       <div ref={mapRef} className="absolute inset-0" role="img" aria-label="Mapa de la ruta" />
       {onBack ? (
@@ -189,7 +232,11 @@ export default function AppLocationMap({
       ) : null}
       <button
         type="button"
-        onClick={() => setExpanded((value) => !value)}
+        onClick={() => {
+          if (leaving) return
+          if (expanded) closeCover()
+          else openCover()
+        }}
         aria-label={expanded ? 'Reducir mapa' : 'Ampliar mapa'}
         title={expanded ? 'Reducir mapa' : 'Ampliar mapa'}
         className={`${controlClass} right-3 top-3`}
@@ -211,9 +258,17 @@ export default function AppLocationMap({
         <svg viewBox="0 0 24 24" className={`h-5 w-5 ${locating ? 'animate-pulse' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3" /><circle cx="12" cy="12" r="8" /></svg>
       </button>
       {locateError ? <p role="alert" className="absolute bottom-3 left-3 z-[1000] max-w-[70%] rounded-lg bg-white/95 px-3 py-2 text-xs text-red-700 shadow">{locateError}</p> : null}
-    </div>
+    </motion.div>
   )
 
-  if (cover && typeof document !== 'undefined') return createPortal(frame, document.body)
-  return frame
+  if (cover && typeof document !== 'undefined') {
+    return (
+      <>
+        <div className={`w-full rounded-2xl ${frameClass}`} style={{ height: collapsedHeight }} aria-hidden="true" />
+        {createPortal(frame(true), document.body)}
+      </>
+    )
+  }
+
+  return frame(false)
 }

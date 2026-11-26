@@ -10,7 +10,7 @@ import { getAdditionalMunicipalities, getBuyerLocation, setMarketplaceCategoryFi
 import { marketplaceCategoryPath, resolveMarketplaceCategory, storeCategoryPath } from '../utils/marketplaceCategory.js'
 import { storeGestorPublicPath, storePublicPath } from '../../seller/utils/storeSlug.js'
 import { getSellerProfile, isSellerAuthenticated, SELLER_AUTH_CHANGE_EVENT } from '../../seller/utils/sellerAuth.js'
-import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerProfile, isCustomerAuthenticated } from '../../customer/utils/customerAuth.js'
+import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerProfile, getCustomerToken, isCustomerAuthenticated } from '../../customer/utils/customerAuth.js'
 import { resolveMediaUrl } from '../../shared/utils/media.js'
 import StoreMark from './StoreMark.jsx'
 import { buyerProductDetailBody, buyerProductDetailModal, buyerProductDetailOverlay } from './buyerStyles.js'
@@ -20,7 +20,9 @@ import { buildWhatsAppUrl } from '../../orders/utils/whatsappOrder.js'
 import { openExternalUrl } from '../../appReleases/utils/nativeApp.js'
 import { useDismissibleModal } from './useOrderModalPresence.js'
 import { setHelpFabPresent, setOptionsFabPresent } from '../../shared/utils/optionsFabVisibility.js'
+import { fetchCustomerOrders } from '../../customer/api.js'
 import { CUSTOMER_NAV } from '../../customer/componentes/customerNav.jsx'
+import { CUSTOMER_ORDERS_CHANGED_EVENT, isBuyerOrderProcessing } from '../../customer/utils/constants.js'
 
 export const MARKETPLACE_CATEGORY_EVENT = 'pala-jaba-marketplace-category'
 
@@ -182,6 +184,7 @@ export default function BuyerMarketplaceNav({
   const [helpJumping, setHelpJumping] = useState(false)
   const helpTimerRef = useRef(0)
   const [authTick, refreshAuthState] = useState(0)
+  const [paymentWarning, setPaymentWarning] = useState(false)
 
   useEffect(() => {
     const refresh = () => refreshAuthState((current) => current + 1)
@@ -210,6 +213,32 @@ export default function BuyerMarketplaceNav({
   useEffect(() => {
     setHelpFabPresent(isCustomerAuthenticated())
     return () => setHelpFabPresent(false)
+  }, [authTick])
+
+  useEffect(() => {
+    if (!isCustomerAuthenticated()) {
+      setPaymentWarning(false)
+      return undefined
+    }
+    let cancelled = false
+    async function loadProcessing() {
+      try {
+        const page = await fetchCustomerOrders(getCustomerToken(), { offset: 0, limit: 20 })
+        if (cancelled) return
+        const flagged = typeof page?.has_processing === 'boolean'
+          ? page.has_processing
+          : (page?.items || []).some(isBuyerOrderProcessing)
+        setPaymentWarning(flagged)
+      } catch {
+        if (!cancelled) setPaymentWarning(false)
+      }
+    }
+    loadProcessing()
+    window.addEventListener(CUSTOMER_ORDERS_CHANGED_EVENT, loadProcessing)
+    return () => {
+      cancelled = true
+      window.removeEventListener(CUSTOMER_ORDERS_CHANGED_EVENT, loadProcessing)
+    }
   }, [authTick])
 
   useEffect(() => {
@@ -409,7 +438,9 @@ export default function BuyerMarketplaceNav({
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     {item.icon}
                   </svg>
-                  {item.id === 'pedidos' && orderAttention ? (
+                  {item.id === 'pedidos' && paymentWarning ? (
+                    <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 text-[0.65rem] font-extrabold leading-none text-white" aria-label="Pagos por procesar">!</span>
+                  ) : item.id === 'pedidos' && orderAttention ? (
                     <span className="absolute right-0 top-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[0.65rem] font-extrabold leading-none text-white" aria-label="Pedidos que requieren atención">!</span>
                   ) : null}
                 </>

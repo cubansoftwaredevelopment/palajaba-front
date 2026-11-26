@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useOutletContext } from 'react-router-dom'
 import Button from '../../shared/componentes/Button.jsx'
 import PlanCustomizeView from '../../subscriptions/componentes/PlanCustomizeView.jsx'
 import { createPluginAddonCheckout, fetchSubscriptionQvaPayCheckout } from '../../subscriptions/api.js'
-import { normalizeBillingPeriod } from '../../subscriptions/utils/constants.js'
+import { getSellerPlan, normalizeBillingPeriod } from '../../subscriptions/utils/constants.js'
+import { fixedCounterMap, includedUnlimitedPluginIds } from '../../subscriptions/utils/planPlugins.js'
 import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import { fetchSellerProfile } from '../../auth/api.js'
 import { getSellerProfile, getSellerToken } from '../utils/sellerAuth.js'
@@ -16,6 +17,16 @@ function ownedPluginIds(profile) {
     .map(([id]) => id)
 }
 
+function ownedPluginQuantities(profile) {
+  if (profile?.plan_tier !== 'custom') return fixedCounterMap(profile)
+  const access = profile?.plugin_access || {}
+  return Object.fromEntries(
+    Object.entries(access)
+      .map(([id, value]) => [id, Number(value)])
+      .filter(([, value]) => Number.isFinite(value) && value > 0),
+  )
+}
+
 function formatDate(value) {
   if (!value) return 'la fecha de vencimiento de tu plan'
   const date = new Date(value)
@@ -26,6 +37,7 @@ function formatDate(value) {
 export default function SellerPlanCustomize() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { refreshProfile } = useOutletContext() || {}
   const { showError, toastNode } = useFormErrorToast({ aboveNav: true })
   const [profile, setProfile] = useState(() => getSellerProfile())
   const [statusMessage, setStatusMessage] = useState('')
@@ -67,6 +79,9 @@ export default function SellerPlanCustomize() {
         description="Elige las funciones y revisa cada precio en USD y CUP."
         initialBilling={billing}
         ownedPluginIds={ownedPluginIds(profile)}
+        ownedQuantities={ownedPluginQuantities(profile)}
+        unlimitedPluginIds={includedUnlimitedPluginIds(profile)}
+        planName={getSellerPlan(profile)?.name || ''}
         billingLocked
         cupButtonLabel="Confirmar transferencia"
         paidButtonLabel="Ya pagué"
@@ -93,10 +108,11 @@ export default function SellerPlanCustomize() {
           ...(paymentMethod === 'cup' ? { transfer_id: transferId } : {}),
         })}
         onRefresh={(purchaseId) => fetchSubscriptionQvaPayCheckout(getSellerToken(), purchaseId)}
-        onContinue={(_result, method) => {
+        onContinue={async (_result, method) => {
           setStatusMessage(method === 'cup'
             ? 'Recibimos el identificador. El complemento queda pendiente de confirmación.'
             : 'El complemento ya está en tu plan.')
+          if (method === 'cup') await refreshProfile?.()
         }}
       />
       {toastNode}

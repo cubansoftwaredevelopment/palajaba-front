@@ -31,7 +31,7 @@ function PolicyLink({ page, storeSlug }) {
   )
 }
 
-export default function CheckoutStoreAgreements({ storeId, storeSlug, pages, onChange }) {
+export default function CheckoutStoreAgreements({ storeId, storeSlug, pages, onChange, contactAllowed = true }) {
   const [resolvedPages, setResolvedPages] = useState(pages || null)
   const [slug, setSlug] = useState(storeSlug || '')
   const [accepted, setAccepted] = useState(false)
@@ -128,7 +128,11 @@ export default function CheckoutStoreAgreements({ storeId, storeSlug, pages, onC
         </div>
       ) : null}
       {!loading && !error ? (
-        <p className="mt-2 text-xs leading-relaxed text-brand-carmelita">Necesario para pagar por QvaPay. Puedes contactar a la tienda sin aceptarlo.</p>
+        <p className="mt-2 text-xs leading-relaxed text-brand-carmelita">
+          {contactAllowed
+            ? 'Necesario para pagar por QvaPay. Puedes contactar a la tienda sin aceptarlo.'
+            : 'Acepta las condiciones para pagar por QvaPay.'}
+        </p>
       ) : null}
     </div>
   )

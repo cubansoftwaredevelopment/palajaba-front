@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SectionRefreshMascot from '../../shared/componentes/SectionRefreshMascot.jsx'
 import { usePullToRefresh } from '../../shared/componentes/usePullToRefresh.js'
 import { useSectionRefreshing } from '../../session/useSectionSnapshot'
 import Logo from '../../shared/componentes/Logo.jsx'
+import SellerLogoutModal from '../../seller/componentes/SellerLogoutModal.jsx'
+import { sellerFocusRing } from '../../seller/componentes/sellerStyles.js'
 
 export default function GestorShell({
   backTo,
@@ -15,6 +18,7 @@ export default function GestorShell({
 }) {
   const { handlers: pullHandlers } = usePullToRefresh(onPullRefresh)
   const refreshing = useSectionRefreshing(onPullRefresh ? 'gestor' : null, onPullRefresh ? 'panel' : null)
+  const [logoutOpen, setLogoutOpen] = useState(false)
   return (
     <main className="relative flex h-dvh flex-col overflow-hidden bg-brand-white">
       <div
@@ -53,10 +57,15 @@ export default function GestorShell({
             {onLogout ? (
               <button
                 type="button"
-                onClick={onLogout}
-                className="rounded-full border border-brand-green/18 px-3 py-1.5 text-xs font-semibold text-brand-green touch-manipulation active:bg-brand-yellow/15"
+                onClick={() => setLogoutOpen(true)}
+                aria-label="Cerrar sesión"
+                className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-brand-carmelita/70 transition-colors touch-manipulation active:bg-brand-green/8 active:text-brand-green ${sellerFocusRing}`}
               >
-                Salir
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" x2="9" y1="12" y2="12" />
+                </svg>
               </button>
             ) : null}
           </div>
@@ -69,6 +78,15 @@ export default function GestorShell({
           {children}
         </div>
       </div>
+      {logoutOpen ? (
+        <SellerLogoutModal
+          onClose={() => setLogoutOpen(false)}
+          onConfirm={() => {
+            setLogoutOpen(false)
+            onLogout()
+          }}
+        />
+      ) : null}
     </main>
   )
 }

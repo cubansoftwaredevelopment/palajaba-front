@@ -47,7 +47,7 @@ import {
 } from '../utils/sellerGestores.js'
 import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 import { gestorLoginPath } from '../../gestor/utils/gestorAuth.js'
-import { getPublicSiteOrigin, resolveStoreSlug } from '../utils/storeShare.js'
+import { getDevBrowserOrigin, getPublicSiteOrigin, resolveStoreSlug } from '../utils/storeShare.js'
 import {
   sellerAlertError,
   sellerBtnPrimary,
@@ -68,6 +68,63 @@ const DeleteIcon = (
   </svg>
 )
 
+function setupStorageKey(profile) {
+  return `palajaba-gestor-setup:${profile?.store_slug || profile?.store_name || 'store'}`
+}
+
+function readSetupStep(profile, gestorCount) {
+  if (gestorCount === 0) return 'step1'
+  try {
+    if (sessionStorage.getItem(setupStorageKey(profile)) === 'step2') return 'step2'
+  } catch {
+    /* el navegador puede bloquear sessionStorage */
+  }
+  return 'done'
+}
+
+function writeSetupStep(profile, step) {
+  try {
+    const key = setupStorageKey(profile)
+    if (step === 'step2') sessionStorage.setItem(key, 'step2')
+    else sessionStorage.removeItem(key)
+  } catch {
+    /* el navegador puede bloquear sessionStorage */
+  }
+}
+
+function SetupStepBar({ step }) {
+  const items = [
+    { id: 1, label: 'Gestor' },
+    { id: 2, label: 'Red y teléfono' },
+  ]
+  return (
+    <ol className="flex gap-2" aria-label="Pasos para crear el primer gestor">
+      {items.map((item) => {
+        const current = step === item.id
+        const done = step > item.id
+        return (
+          <li
+            key={item.id}
+            className={`flex min-w-0 flex-1 items-center gap-2 rounded-2xl border px-3 py-2 text-sm font-semibold ${
+              current
+                ? 'border-brand-green/30 bg-brand-green/10 text-brand-green'
+                : done
+                  ? 'border-brand-green/15 bg-brand-white text-brand-green'
+                  : 'border-brand-green/10 bg-brand-white text-brand-carmelita/60'
+            }`}
+            aria-current={current ? 'step' : undefined}
+          >
+            <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs ${current || done ? 'bg-brand-green text-brand-white' : 'bg-brand-green/10 text-brand-carmelita/70'}`}>
+              {done ? '✓' : item.id}
+            </span>
+            <span className="truncate">{item.label}</span>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
 const PeopleIcon = (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -82,7 +139,7 @@ export default function SellerGestores() {
   const navigate = useNavigate()
   const storeSlug = resolveStoreSlug(profile)
   const loginUrl = storeSlug
-    ? `${getPublicSiteOrigin()}${gestorLoginPath(storeSlug)}`
+    ? `${getDevBrowserOrigin() || getPublicSiteOrigin()}${gestorLoginPath(storeSlug)}`
     : ''
   const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'gestores')
   const cached = snapshot?.data
@@ -101,6 +158,13 @@ export default function SellerGestores() {
   const [newUsername, setNewUsername] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
+  const [firstSetup, setFirstSetup] = useState(() => {
+    if (!cached) return null
+    return readSetupStep(profile, (cached.list ?? []).length)
+  })
+  const [setupUsername, setSetupUsername] = useState('')
+  const [savingSetup, setSavingSetup] = useState(false)
+  const [setupError, setSetupError] = useState('')
 
   const [gestorToDelete, setGestorToDelete] = useState(null)
   const [deleting, setDeleting] = useState(false)
@@ -141,6 +205,11 @@ export default function SellerGestores() {
       setCheckoutIds(ids)
       setSavedIncludeStorePhone(includeStore)
       setIncludeStorePhone(includeStore)
+      const nextSetup = list.length === 0 ? 'step1' : readSetupStep(profile, list.length)
+      setFirstSetup((current) => (current === 'step2' ? 'step2' : nextSetup))
+      if (nextSetup === 'step2') {
+        setSetupUsername((current) => current || list[0]?.username || '')
+      }
       commit({
         list,
         products: networkProducts,
@@ -159,7 +228,7 @@ export default function SellerGestores() {
     } finally {
       setLoading(false)
     }
-  }, [commit])
+  }, [commit, profile])
 
   useEffect(() => {
     if (skipInitialRef.current) return
@@ -212,6 +281,7 @@ export default function SellerGestores() {
   const activeGestorCount = gestores.filter(isGestorActive).length
   const atGestorLimit = gestorCap == null ? !canAddGestor(planTier, activeGestorCount) : activeGestorCount >= gestorCap
   const gestorUsageLabel = formatGestorUsage(planTier, activeGestorCount)
+  const showFirstSetup = firstSetup === 'step1' || firstSetup === 'step2'
 
   async function handleCreate(e) {
     e.preventDefault()
@@ -232,9 +302,18 @@ export default function SellerGestores() {
     try {
       const token = getSellerToken()
       const created = await createSellerGestor(token, validated.username)
+      const isFirst = gestores.length === 0
       setGestores((prev) => [...prev, created].sort((a, b) => a.username.localeCompare(b.username)))
       setNewUsername('')
-      setSuccessMessage(`Gestor «${created.username}» creado. Comparte su enlace cuando esté listo.`)
+      if (isFirst) {
+        writeSetupStep(profile, 'step2')
+        setSetupUsername(created.username)
+        setSetupError('')
+        setFirstSetup('step2')
+        setSuccessMessage('')
+      } else {
+        setSuccessMessage(`Gestor «${created.username}» creado. Comparte su enlace cuando esté listo.`)
+      }
     } catch (err) {
       setCreateError(getUserFacingMessage(err, 'No pudimos crear el gestor. Inténtalo de nuevo.'))
     } finally {
@@ -249,7 +328,13 @@ export default function SellerGestores() {
       const token = getSellerToken()
       await deleteSellerGestor(token, gestorToDelete.id)
       const deletedId = String(gestorToDelete.id)
-      setGestores((prev) => prev.filter((g) => g.id !== gestorToDelete.id))
+      const remaining = gestores.filter((g) => g.id !== gestorToDelete.id)
+      setGestores(remaining)
+      if (remaining.length === 0) {
+        writeSetupStep(profile, 'step1')
+        setSetupUsername('')
+        setFirstSetup('step1')
+      }
       setCheckoutIds((prev) => prev.filter((id) => id !== deletedId))
       setSavedCheckoutIds((prev) => prev.filter((id) => id !== deletedId))
       setSuccessMessage(`Gestor «${gestorToDelete.username}» eliminado.`)
@@ -345,6 +430,48 @@ export default function SellerGestores() {
     }
   }
 
+  async function handleFinishSetup() {
+    setSetupError('')
+    const validation = validateCheckoutPhonesSelection(checkoutIds, includeStorePhone)
+    if (!validation.ok) {
+      setSetupError(validation.message)
+      return
+    }
+    setSavingSetup(true)
+    try {
+      const token = getSellerToken()
+      const accessPayload = buildCatalogAccessPayload(accessMode, selectedIds)
+      const updatedAccess = await updateSellerGestorCatalogAccess(token, accessPayload)
+      setSavedAccess(updatedAccess)
+      const networkProducts = await fetchSellerGestorNetworkProducts(token)
+      setProducts(networkProducts)
+      const derived = deriveSelectionFromAccess(updatedAccess, networkProducts)
+      setAccessMode(derived.mode)
+      setSelectedIds(derived.selectedIds)
+      const updatedPhones = await updateSellerGestorCheckoutPhones(
+        token,
+        buildCheckoutPhonesPayload(checkoutIds, includeStorePhone),
+      )
+      const ids = Array.isArray(updatedPhones?.gestor_ids) ? updatedPhones.gestor_ids.map(String) : []
+      const includeStore = updatedPhones?.include_store_phone !== false
+      setSavedCheckoutIds(ids)
+      setCheckoutIds(ids)
+      setSavedIncludeStorePhone(includeStore)
+      setIncludeStorePhone(includeStore)
+      writeSetupStep(profile, 'done')
+      setFirstSetup('done')
+      setSuccessMessage(
+        setupUsername
+          ? `Gestor «${setupUsername}» creado. La red y el teléfono ya están listos.`
+          : 'La red y el teléfono ya están listos.',
+      )
+    } catch (err) {
+      setSetupError(getUserFacingMessage(err, 'No pudimos guardar la red. Inténtalo de nuevo.'))
+    } finally {
+      setSavingSetup(false)
+    }
+  }
+
   async function handleCopyLoginUrl() {
     if (!loginUrl) return
     try {
@@ -392,12 +519,24 @@ export default function SellerGestores() {
 
       <SellerSuccessAlert message={successMessage} onDismiss={() => setSuccessMessage('')} />
 
+      {showFirstSetup ? (
+        <div className={sellerSection}>
+          <SetupStepBar step={firstSetup === 'step2' ? 2 : 1} />
+          <p className={`mt-3 ${sellerHint}`}>
+            {firstSetup === 'step2'
+              ? `Gestor @${setupUsername || 'nuevo'} creado. Elige los productos de la red y el número de teléfono.`
+              : 'Primero crea el gestor. Después eliges qué puede vender y qué teléfono verán los clientes.'}
+          </p>
+        </div>
+      ) : null}
+
       {error ? (
         <p className={sellerAlertError} role="alert">
           {error}
         </p>
       ) : null}
 
+      {showFirstSetup ? null : (
       <div className={sellerSection}>
         <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">
           Acceso de tus gestores
@@ -429,7 +568,9 @@ export default function SellerGestores() {
           </p>
         )}
       </div>
+      )}
 
+      {firstSetup === 'step2' ? null : (
       <div className={sellerSection}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">Tus gestores</h3>
@@ -482,7 +623,7 @@ export default function SellerGestores() {
             disabled={readOnly || creating || !newUsername.trim()}
             className={sellerBtnPrimaryCompact}
           >
-            {creating ? 'Creando…' : 'Agregar'}
+            {creating ? 'Creando…' : firstSetup === 'step1' ? 'Continuar' : 'Agregar'}
           </button>
         </form>
 
@@ -527,10 +668,12 @@ export default function SellerGestores() {
           </ul>
         )}
       </div>
+      )}
 
+      {firstSetup === 'step1' ? null : (
       <div className={sellerSection}>
         <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">
-          Teléfonos para ventas de la tienda
+          {firstSetup === 'step2' ? 'Número de teléfono' : 'Teléfonos para ventas de la tienda'}
         </h3>
         <p className={`mt-1 ${sellerHint}`}>
           Elige qué números aparecen cuando alguien compra en tu catálogo. Puedes ocultar el del
@@ -581,6 +724,7 @@ export default function SellerGestores() {
           </p>
         ) : null}
 
+        {firstSetup === 'step2' ? null : (
         <div className="mt-4">
           <button
             type="button"
@@ -591,8 +735,11 @@ export default function SellerGestores() {
             {savingCheckoutPhones ? 'Guardando…' : 'Guardar teléfonos de venta'}
           </button>
         </div>
+        )}
       </div>
+      )}
 
+      {firstSetup === 'step1' ? null : (
       <div className={sellerSection}>
         <h3 className="font-display text-base font-bold text-brand-green sm:text-lg">
           Productos para la red
@@ -696,6 +843,23 @@ export default function SellerGestores() {
           </p>
         ) : null}
 
+        {firstSetup === 'step2' ? (
+          <div className="mt-4">
+            {setupError ? (
+              <p className={`mb-3 ${sellerAlertError}`} role="alert">
+                {setupError}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleFinishSetup}
+              disabled={readOnly || savingSetup}
+              className={sellerBtnPrimary}
+            >
+              {savingSetup ? 'Guardando…' : 'Terminar'}
+            </button>
+          </div>
+        ) : (
         <div className="mt-4">
           <button
             type="button"
@@ -706,7 +870,9 @@ export default function SellerGestores() {
             {savingAccess ? 'Guardando…' : 'Guardar productos de la red'}
           </button>
         </div>
+        )}
       </div>
+      )}
 
       {gestorToDelete ? (
         <ConfirmModal

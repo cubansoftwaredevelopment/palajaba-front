@@ -19,6 +19,12 @@ export function needsBuyerOrderAttention(order) {
     && ['pending', 'rejected'].includes(order.qvapay?.evidence?.status)
 }
 
+export function isBuyerOrderProcessing(order) {
+  return getBuyerOrderStatusLabel(order) === 'Por procesar'
+}
+
+export const CUSTOMER_ORDERS_CHANGED_EVENT = 'pala-jaba-customer-orders-changed'
+
 export function orderIsInRange(order, range) {
   if (!range?.from || !range?.to) return true
   const date = new Date(order.created_at)

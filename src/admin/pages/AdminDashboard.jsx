@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AdminAppDownloadsCell, { formatAppDownloadsText } from '../componentes/AdminAppDownloadsCell.jsx'
+import { CustomPlanFeaturesButton, CustomPlanFeaturesModal, customPlanFeatureLines, fixedPlanFeatureItem } from '../componentes/CustomPlanFeaturesButton.jsx'
 import AdminPillSelect from '../componentes/AdminPillSelect.jsx'
 import AdminSelect from '../componentes/AdminSelect.jsx'
 import ConfirmDialog from '../componentes/ConfirmDialog.jsx'
@@ -21,7 +22,10 @@ import {
 } from '../componentes/adminStyles.js'
 import { BILLING_LABELS, REJECTION_REASON, STATUS_LABELS } from '../utils/admin.js'
 import { getSellerPlan, isTrialSeller, normalizePlanTier } from '../../subscriptions/utils/constants.js'
+import { fixedCounterMap, includedUnlimitedPluginIds } from '../../subscriptions/utils/planPlugins.js'
 import { fetchRegistrations, rejectRegistration, deleteRegistration } from '../../auth/api.js'
+import { approvePluginAddon, rejectPluginAddon } from '../api.js'
+import StorePlanUpgradeCell from '../componentes/StorePlanUpgradeCell.jsx'
 import { formatDateTime } from '../../shared/utils/dates.js'
 import { formatPrice } from '../../shared/utils/money.js'
 import { usePlanPricing } from '../../subscriptions/utils/usePlanPricing.js'
@@ -108,7 +112,7 @@ function inCurrentMonth(value) {
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const { getPlanPrice } = usePlanPricing()
+  const { getPlanPrice, pluginPrices, cupPerUnit } = usePlanPricing()
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -122,6 +126,8 @@ export default function AdminDashboard() {
   const [paymentModal, setPaymentModal] = useState(null)
   const [rejectTarget, setRejectTarget] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [planFeatures, setPlanFeatures] = useState(null)
+  const [upgradeReview, setUpgradeReview] = useState(null)
   const [section, setSection] = useState('businesses')
 
   const loadRegistrations = useCallback(
@@ -167,6 +173,24 @@ export default function AdminDashboard() {
       handleMutationSuccess('Solicitud rechazada.')
     } catch (err) {
       setError(getUserFacingMessage(err, 'No pudimos completar la acción. Inténtalo de nuevo.'))
+    } finally {
+      setActionId(null)
+    }
+  }
+
+  async function decideUpgrade(approve) {
+    const purchaseId = upgradeReview?.plan_upgrade?.purchase_id
+    if (!purchaseId) return
+    setActionId(purchaseId)
+    try {
+      if (approve) await approvePluginAddon(getAdminToken(), purchaseId)
+      else await rejectPluginAddon(getAdminToken(), purchaseId)
+      setUpgradeReview(null)
+      handleMutationSuccess(approve ? 'Mejora aprobada.' : 'Mejora no aprobada.')
+    } catch (err) {
+      setError(getUserFacingMessage(err, approve
+        ? 'No pudimos aprobar la mejora. Inténtalo de nuevo.'
+        : 'No pudimos rechazar la mejora. Inténtalo de nuevo.'))
     } finally {
       setActionId(null)
     }
@@ -325,6 +349,7 @@ export default function AdminDashboard() {
                   <th className="px-3 py-2">Suscripción</th>
                   <th className="px-3 py-2">Aprobada</th>
                   <th className="px-3 py-2">Plan</th>
+                  <th className="px-3 py-2">Mejoras</th>
                   <th className="px-3 py-2">Tiempo de suscripción</th>
                   <th className="px-3 py-2">Pedidos pendientes / confirmados</th>
                   <th className="px-3 py-2">Gestores</th>
@@ -402,9 +427,11 @@ export default function AdminDashboard() {
                         { value: 'standard', label: 'Básico' },
                         { value: 'pro', label: 'Pro' },
                         { value: 'premium', label: 'Premium' },
+                        { value: 'custom', label: 'Personalizado' },
                       ]}
                     />
                   </th>
+                  <th className="px-2 py-2" />
                   <th className="px-2 py-2">
                     <AdminPillSelect
                       value={filters.billing === 'all' ? '' : filters.billing}
@@ -444,7 +471,7 @@ export default function AdminDashboard() {
               <tbody>
                 {pageItems.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                    <td colSpan={13} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                       Ningún negocio coincide con estos filtros.
                     </td>
                   </tr>
@@ -473,9 +500,30 @@ export default function AdminDashboard() {
                         {item.approved_at ? formatDateTime(item.approved_at) : '—'}
                       </td>
                       <td className="px-3 py-3 text-zinc-300">
-                        <div className="flex flex-wrap items-center gap-1.5">
+                        <div className="flex flex-col items-start gap-1.5">
                           <span>{getSellerPlan(item).name}</span>
+                          {item.plan_tier === 'custom' && customPlanFeatureLines(item, pluginPrices).length > 0 ? (
+                            <CustomPlanFeaturesButton
+                              count={customPlanFeatureLines(item, pluginPrices).length}
+                              onClick={() => setPlanFeatures(item)}
+                            />
+                          ) : null}
+                          {item.plan_tier !== 'custom' && customPlanFeatureLines(fixedPlanFeatureItem(item), pluginPrices).length > 0 ? (
+                            <CustomPlanFeaturesButton
+                              count={customPlanFeatureLines(fixedPlanFeatureItem(item), pluginPrices).length}
+                              onClick={() => setPlanFeatures(fixedPlanFeatureItem(item))}
+                            />
+                          ) : null}
                         </div>
+                      </td>
+                      <td className="px-3 py-3">
+                        <StorePlanUpgradeCell
+                          upgrade={item.plan_upgrade}
+                          store={item}
+                          planName={getSellerPlan(item).name}
+                          unlimitedIds={includedUnlimitedPluginIds(item)}
+                          onView={() => setUpgradeReview(item)}
+                        />
                       </td>
                       <td className="px-3 py-3 text-zinc-300">{subscriptionTime(item)}</td>
                       <td className="px-3 py-3 tabular-nums text-zinc-100">
@@ -568,6 +616,37 @@ export default function AdminDashboard() {
         </>
         ) : null}
       </main>
+
+      {upgradeReview ? (
+        <CustomPlanFeaturesModal
+          item={{
+            store_name: upgradeReview.store_name,
+            billing_period: upgradeReview.plan_upgrade?.billing_period,
+            plan_plugins: upgradeReview.plan_upgrade?.plan_plugins,
+            unlimited_plugins: includedUnlimitedPluginIds(upgradeReview),
+            fixed_counters: fixedCounterMap(upgradeReview),
+            plan_name: getSellerPlan(upgradeReview)?.name || '',
+          }}
+          pluginPrices={pluginPrices}
+          cupPerUsd={Number(cupPerUnit?.USD) || 0}
+          busy={actionId === upgradeReview.plan_upgrade?.purchase_id}
+          onApprove={() => decideUpgrade(true)}
+          onReject={() => decideUpgrade(false)}
+          onClose={() => {
+            if (actionId) return
+            setUpgradeReview(null)
+          }}
+        />
+      ) : null}
+
+      {planFeatures ? (
+        <CustomPlanFeaturesModal
+          item={planFeatures}
+          pluginPrices={pluginPrices}
+          cupPerUsd={Number(cupPerUnit?.USD) || 0}
+          onClose={() => setPlanFeatures(null)}
+        />
+      ) : null}
 
       {paymentModal && (
         <PaymentModal
