@@ -6,7 +6,7 @@ import Button from '../../shared/componentes/Button.jsx'
 import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import MensajeroEntrySheet from '../componentes/MensajeroEntrySheet.jsx'
 import { mensajeroSetup } from '../api'
-import { getMensajeroSetup, mensajeroLoginPath, mensajeroPanelPath, setMensajeroSession } from '../utils/session.js'
+import { getMensajeroSetup, markMensajeroOnboarding, mensajeroLoginPath, mensajeroPanelPath, setMensajeroSession } from '../utils/session.js'
 
 export default function MensajeroSetup() {
   const { alias } = useParams()
@@ -33,6 +33,7 @@ export default function MensajeroSetup() {
     try {
       const data = await mensajeroSetup({ setup_token: setup.setup_token, password })
       setMensajeroSession(data.access_token, data.mensajero)
+      markMensajeroOnboarding(data.mensajero?.id)
       navigate(mensajeroPanelPath(alias), { replace: true })
     } catch (error) {
       showError(error.message)

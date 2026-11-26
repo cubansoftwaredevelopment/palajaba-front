@@ -3,6 +3,7 @@ import { clearRoleSections } from '../../session/sectionStore'
 const TOKEN_KEY = 'pala_jaba_mensajero_token'
 const PROFILE_KEY = 'pala_jaba_mensajero_profile'
 const SETUP_KEY = 'pala_jaba_mensajero_setup'
+const ONBOARDING_KEY = 'pala_jaba_mensajero_onboarding'
 
 export function getMensajeroToken() {
   return localStorage.getItem(TOKEN_KEY)
@@ -24,6 +25,20 @@ export function setMensajeroSession(token, mensajero) {
 
 export function updateMensajeroProfile(mensajero) {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(mensajero))
+}
+
+export function markMensajeroOnboarding(mensajeroId) {
+  if (!mensajeroId) return
+  localStorage.setItem(ONBOARDING_KEY, String(mensajeroId))
+}
+
+export function needsMensajeroOnboarding(mensajeroId) {
+  if (!mensajeroId) return false
+  return localStorage.getItem(ONBOARDING_KEY) === String(mensajeroId)
+}
+
+export function clearMensajeroOnboarding() {
+  localStorage.removeItem(ONBOARDING_KEY)
 }
 
 export function clearMensajeroSession() {

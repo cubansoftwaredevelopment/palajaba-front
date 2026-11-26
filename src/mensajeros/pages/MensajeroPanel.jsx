@@ -14,7 +14,8 @@ import EvidenceGallery from '../componentes/EvidenceGallery.jsx'
 import OrderCourierCost from '../componentes/OrderCourierCost.jsx'
 import MensajeroProfile from '../componentes/MensajeroProfile.jsx'
 import MensajeroRouteView from '../componentes/MensajeroRouteView.jsx'
-import { clearMensajeroSession, getMensajeroProfile, updateMensajeroProfile } from '../utils/session.js'
+import MensajeroOnboardingSheet from '../componentes/MensajeroOnboardingSheet.jsx'
+import { clearMensajeroOnboarding, clearMensajeroSession, getMensajeroProfile, needsMensajeroOnboarding, updateMensajeroProfile } from '../utils/session.js'
 import { startMensajeroPush } from '../../live/utils'
 import SectionRefreshMascot from '../../shared/componentes/SectionRefreshMascot.jsx'
 import { usePullToRefresh } from '../../shared/componentes/usePullToRefresh.js'
@@ -77,6 +78,7 @@ export default function MensajeroPanel() {
   const navigate = useNavigate()
   const [logoutOpen, setLogoutOpen] = useState(false)
   const [profile, setProfile] = useState(getMensajeroProfile() || {})
+  const [welcomeOpen, setWelcomeOpen] = useState(() => needsMensajeroOnboarding(getMensajeroProfile()?.id))
   const reduced = useReducedMotion()
   const [tab, setTab] = useState('pending')
   const [section, setSection] = useState('work')
@@ -375,6 +377,16 @@ export default function MensajeroPanel() {
           onClose={() => {
             setDoneBatch(null)
             if (batch?.status === 'completed') closeBatch()
+          }}
+        />
+      ) : null}
+      {welcomeOpen ? (
+        <MensajeroOnboardingSheet
+          profile={profile}
+          onChange={(next) => { setProfile(next); updateMensajeroProfile(next) }}
+          onDone={() => {
+            clearMensajeroOnboarding()
+            setWelcomeOpen(false)
           }}
         />
       ) : null}

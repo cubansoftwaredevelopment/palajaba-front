@@ -453,6 +453,26 @@ export const buyerBusinessCardProductCount =
 export const buyerBusinessCardCatalogBtn =
   'mt-auto flex min-h-11 w-full items-center justify-center rounded-full bg-brand-green px-5 text-sm font-semibold text-brand-white shadow-[0_6px_20px_rgba(89,128,44,0.28)] transition-all touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green/30 lg:hover:-translate-y-px lg:hover:bg-[#4d7026]'
 
+export const buyerFeedStoreCard =
+  'flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-brand-green/10 bg-brand-white shadow-[0_3px_16px_rgba(89,128,44,0.07)] transition-shadow touch-manipulation sm:hover:shadow-[0_6px_22px_rgba(89,128,44,0.11)]'
+
+export const buyerFeedStoreImageWrap =
+  'relative aspect-square w-full overflow-hidden bg-brand-yellow/15'
+
+export const buyerFeedStoreImage =
+  'h-full w-full object-cover'
+
+export const buyerFeedStoreFallback =
+  'flex h-full w-full items-center justify-center bg-gradient-to-br from-brand-yellow/25 via-brand-white to-brand-green/[0.08] font-display text-2xl font-bold text-brand-carmelita/70'
+
+export const buyerFeedStoreBody = 'flex flex-1 flex-col gap-1 px-2.5 py-2.5'
+
+export const buyerFeedStoreName =
+  'line-clamp-2 font-display text-sm font-bold leading-tight text-brand-green'
+
+export const buyerFeedStoreMeta =
+  'line-clamp-1 text-[0.65rem] font-semibold text-brand-carmelita/80'
+
 export const buyerStorePageDeliveryBadge =
   'mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-brand-green/20 bg-brand-green/[0.08] px-2.5 py-1 text-[0.68rem] font-semibold text-brand-green'
 

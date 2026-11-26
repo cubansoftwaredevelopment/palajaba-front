@@ -4,6 +4,7 @@ import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 import { LOADING_MASCOT } from '../../shared/utils/branding.js'
 import { animateScrollLeft } from '../../shared/utils/smoothScroll.js'
 import BuyerProductCard from './BuyerProductCard.jsx'
+import BuyerCategoryStoreRow from './BuyerCategoryStoreRow.jsx'
 import StoreMark from './StoreMark.jsx'
 import {
   buyerCategorySectionTitle,
@@ -289,6 +290,8 @@ export default function BuyerCategoryProductRow({ section, loadMore, href, store
           </>
         ) : null}
       </div>
+
+      <BuyerCategoryStoreRow section={section} />
 
       {error ? (
         <div className="mt-2 flex items-center gap-3">
