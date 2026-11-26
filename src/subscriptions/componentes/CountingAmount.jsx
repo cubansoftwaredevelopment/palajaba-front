@@ -8,12 +8,13 @@ function formatAmount(value, digits) {
   })
 }
 
-export default function CountingAmount({ value, currency = '', fractionDigits = 0 }) {
+export default function CountingAmount({ value, currency = '', fractionDigits = 0, fromZero = false }) {
   const reduced = useReducedMotion()
   const target = Number(value)
-  const [shown, setShown] = useState(Number.isFinite(target) ? target : 0)
-  const shownRef = useRef(shown)
-  const readyRef = useRef(false)
+  const initial = fromZero || !Number.isFinite(target) ? 0 : target
+  const [shown, setShown] = useState(initial)
+  const shownRef = useRef(initial)
+  const readyRef = useRef(fromZero && !reduced && Number.isFinite(target) && target !== initial)
 
   useEffect(() => {
     if (!Number.isFinite(target)) return undefined

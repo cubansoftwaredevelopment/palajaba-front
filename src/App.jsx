@@ -28,6 +28,7 @@ import MensajeroSetup from './mensajeros/pages/MensajeroSetup.jsx'
 import MensajeroPanel from './mensajeros/pages/MensajeroPanel.jsx'
 import MensajeroRouteGuard from './mensajeros/componentes/MensajeroRouteGuard.jsx'
 import SellerProfile from './seller/pages/SellerProfile.jsx'
+import SellerPlanCustomize from './seller/pages/SellerPlanCustomize.jsx'
 import GestorRoute from './gestor/componentes/GestorRoute.jsx'
 import GestorLogin from './gestor/pages/GestorLogin.jsx'
 import GestorSetup from './gestor/pages/GestorSetup.jsx'
@@ -37,6 +38,7 @@ import RegisterEntry from './auth/pages/RegisterEntry'
 import RegisterForm from './auth/pages/RegisterForm'
 import RegisterOtp from './auth/pages/RegisterOtp'
 import RegisterPlan from './auth/pages/RegisterPlan'
+import RegisterCustomize from './auth/pages/RegisterCustomize'
 import RegisterPayment from './auth/pages/RegisterPayment'
 import RegisterSuccess from './auth/pages/RegisterSuccess'
 import AdminLogin from './admin/pages/AdminLogin.jsx'
@@ -188,27 +190,30 @@ const router = createBrowserRouter([
       { path: 'recuperar/nueva', element: <ForgotPasswordNew /> },
       {
         path: 'tienda',
-        element: (
-          <SellerRoute>
-            <SellerLayout />
-          </SellerRoute>
-        ),
+        element: <SellerRoute />,
         children: [
-          { index: true, element: <SellerGeneral /> },
-          { path: 'catalogo', element: <SellerCatalog /> },
-          { path: 'catalogo/vista-previa', element: <SellerCatalogPreview /> },
-          { path: 'gestores', element: <SellerGestores /> },
-          { path: 'mensajeros', element: <SellerMensajeros /> },
-          { path: 'pedidos', element: <SellerOrders /> },
-          { path: 'notificaciones', element: <SellerNotifications /> },
-          { path: 'clientes', element: <SellerCustomers /> },
-          { path: 'estadisticas', element: <SellerStats /> },
-          { path: 'perfil', element: <SellerProfile /> },
-          { path: 'completar-perfil', element: <SellerCompleteProfile /> },
+          {
+            element: <SellerLayout />,
+            children: [
+              { index: true, element: <SellerGeneral /> },
+              { path: 'catalogo', element: <SellerCatalog /> },
+              { path: 'catalogo/vista-previa', element: <SellerCatalogPreview /> },
+              { path: 'gestores', element: <SellerGestores /> },
+              { path: 'mensajeros', element: <SellerMensajeros /> },
+              { path: 'pedidos', element: <SellerOrders /> },
+              { path: 'notificaciones', element: <SellerNotifications /> },
+              { path: 'clientes', element: <SellerCustomers /> },
+              { path: 'estadisticas', element: <SellerStats /> },
+              { path: 'perfil', element: <SellerProfile /> },
+              { path: 'completar-perfil', element: <SellerCompleteProfile /> },
+            ],
+          },
+          { path: 'perfil/personalizacion', element: <SellerPlanCustomize /> },
         ],
       },
       { path: 'registro', element: <RegisterEntry /> },
       { path: 'registro/planes', element: <RegisterPlan /> },
+      { path: 'registro/planes/personalizar', element: <RegisterCustomize /> },
       { path: 'crear-cuenta', element: <CreateAccount /> },
       { path: 'registro/promo/datos', element: <Navigate to="/registro" replace /> },
       { path: 'registro/pago', element: <RegisterPayment /> },

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { guardPlugin } from '../../subscriptions/utils/planPluginGate.js'
 
 import { fetchCatalogCurrencies, fetchCategories } from '../api.js'
 import ProductSalesZonesField from './ProductSalesZonesField.jsx'
@@ -157,6 +159,7 @@ export default function CreateCatalogProductModal({
   onPersist,
 
 }) {
+  const navigate = useNavigate()
   const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
 
   const isEditing = Boolean(product)
@@ -597,14 +600,15 @@ export default function CreateCatalogProductModal({
 
     formData.append('base_price', String(parsedPrice))
 
-    if (allowProductDiscount) {
-      const parsedDiscount = Number.parseInt(String(discountPercent).trim(), 10)
-      if (String(discountPercent).trim() && (!Number.isInteger(parsedDiscount) || parsedDiscount < 0 || parsedDiscount >= 100)) {
-        showError('El descuento debe ser un porcentaje entre 1 y 99.')
-        return
-      }
-      formData.append('discount_percent', Number.isInteger(parsedDiscount) && parsedDiscount > 0 ? String(parsedDiscount) : '')
+    const parsedDiscount = Number.parseInt(String(discountPercent).trim(), 10)
+    if (String(discountPercent).trim() && (!Number.isInteger(parsedDiscount) || parsedDiscount < 0 || parsedDiscount >= 100)) {
+      showError('El descuento debe ser un porcentaje entre 1 y 99.')
+      return
     }
+    if (Number.isInteger(parsedDiscount) && parsedDiscount > 0 && guardPlugin(profile, 'discounts', navigate) && !allowProductDiscount) {
+      return
+    }
+    formData.append('discount_percent', Number.isInteger(parsedDiscount) && parsedDiscount > 0 ? String(parsedDiscount) : '')
 
     formData.append('base_currency', baseCurrency)
 
@@ -1048,7 +1052,7 @@ export default function CreateCatalogProductModal({
 
             </div>
 
-            <div className={`mt-4 grid gap-2 ${allowProductDiscount ? 'grid-cols-2' : 'grid-cols-1'}`}>
+            <div className="mt-4 grid grid-cols-2 gap-2">
               <div>
                 <label htmlFor="catalog-product-stock" className={sellerLabel}>
                   Stock
@@ -1065,8 +1069,7 @@ export default function CreateCatalogProductModal({
                   className={`mt-1.5 ${sellerModalInput}`}
                 />
               </div>
-              {allowProductDiscount ? (
-                <div>
+              <div>
                   <label htmlFor="catalog-product-discount" className={sellerLabel}>
                     Descuento en %
                   </label>
@@ -1083,7 +1086,6 @@ export default function CreateCatalogProductModal({
                     className={`mt-1.5 ${sellerModalInput}`}
                   />
                 </div>
-              ) : null}
             </div>
             <div className={`mt-4 grid gap-2 ${stockUnit === 'U' ? 'grid-cols-1' : 'grid-cols-2'}`}>
               {stockUnit !== 'U' ? (

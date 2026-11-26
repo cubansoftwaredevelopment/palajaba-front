@@ -7,6 +7,7 @@ import {
   getPlanYearlySavings,
   normalizePlanPrices,
 } from './constants.js'
+import { defaultPluginPrices } from './planPlugins.js'
 import { fetchPlanPrices } from '../api.js'
 import { areExchangeRatesAvailable, getCupPerUnit, loadExchangeRates } from '../../shared/utils/exchangeRates.js'
 
@@ -15,6 +16,7 @@ export function usePlanPricing() {
   const [ready, setReady] = useState(() => areExchangeRatesAvailable())
   const [planPrices, setPlanPrices] = useState(DEFAULT_PLAN_PRICES)
   const [qvapayPlanDiscountPercent, setQvapayPlanDiscountPercent] = useState(0)
+  const [pluginPrices, setPluginPrices] = useState(defaultPluginPrices)
 
   useEffect(() => {
     let mounted = true
@@ -31,6 +33,9 @@ export function usePlanPricing() {
       }
       const discount = Number(pricesPayload?.qvapay_plan_discount_percent)
       setQvapayPlanDiscountPercent(Number.isFinite(discount) ? discount : 0)
+      if (pricesPayload?.plugin_prices) {
+        setPluginPrices({ ...defaultPluginPrices(), ...pricesPayload.plugin_prices })
+      }
     })
 
     return () => {
@@ -43,6 +48,7 @@ export function usePlanPricing() {
     cupPerUnit,
     planPrices,
     qvapayPlanDiscountPercent,
+    pluginPrices,
     getPlanPrice: (tier, billing) => getPlanPrice(tier, billing, cupPerUnit, planPrices),
     getPlanYearlySavings: (tier) => getPlanYearlySavings(tier, cupPerUnit, planPrices),
     getPlanPeriodSavings: (tier, billing) =>

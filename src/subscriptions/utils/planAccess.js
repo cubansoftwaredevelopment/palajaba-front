@@ -4,10 +4,7 @@ export function sellerHasGestores(profile) {
   return Boolean(profile?.gestores_enabled)
 }
 
-export function getSellerNavItems(profile) {
-  if (!sellerHasGestores(profile)) {
-    return SELLER_NAV.filter((item) => item.id !== 'gestores')
-  }
+export function getSellerNavItems() {
   return SELLER_NAV
 }
 

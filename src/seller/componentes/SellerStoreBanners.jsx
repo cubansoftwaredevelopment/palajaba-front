@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { sellerAlertError, sellerBtnPrimary, sellerBtnSecondary, sellerHint, sellerLabel } from './sellerStyles.js'
 import { deleteSellerStoreBanner, updateSellerStoreBanner, uploadSellerStoreBanner } from '../../seller/api.js'
 import { BACKGROUND_UPLOAD_EVENT, consumeUploadResults, forgetUploadResult, startBackgroundFormUpload } from '../../products/utils/backgroundUpload.js'
@@ -9,6 +10,7 @@ import { getSellerToken, updateSellerProfileCache } from '../utils/sellerAuth.js
 import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
 import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import { sellerHasStoreBanners } from '../../subscriptions/utils/constants.js'
+import { guardPlugin, pluginCap } from '../../subscriptions/utils/planPluginGate.js'
 import BuyerStoreBannerCover, { storeBannerAspectClass, storeHasCoverPhoto, StoreLogoCover } from '../../buyer/componentes/BuyerStoreBannerCover.jsx'
 import SellerLocationPreview from './SellerLocationPreview.jsx'
 import { buyerStorePageHeader, buyerStorePageName } from '../../buyer/componentes/buyerStyles.js'
@@ -16,6 +18,7 @@ import { buyerStorePageHeader, buyerStorePageName } from '../../buyer/componente
 const PREVIEW_MIN_WIDTH = 320
 
 export default function SellerStoreBanners({ profile, onUpdated, readOnly = false }) {
+  const navigate = useNavigate()
   const fileInputRef = useRef(null)
   const [banners, setBanners] = useState(profile?.store_banners ?? [])
   const [uploading, setUploading] = useState(false)
@@ -150,8 +153,16 @@ export default function SellerStoreBanners({ profile, onUpdated, readOnly = fals
             </h3>
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={readOnly || uploading || !canManageBanners}
+              onClick={() => {
+                const cap = pluginCap(profile, 'banners')
+                if (guardPlugin(profile, 'banners', navigate)) return
+                if (cap != null && banners.length >= cap) {
+                  guardPlugin({ plugin_access: { banners: 0 } }, 'banners', navigate)
+                  return
+                }
+                fileInputRef.current?.click()
+              }}
+              disabled={readOnly || uploading}
               className={`${sellerBtnPrimary} !w-auto px-4`}
             >
               {uploading ? 'Subiendo…' : 'Agregar banner'}

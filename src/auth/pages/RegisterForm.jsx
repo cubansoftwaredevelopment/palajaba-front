@@ -67,9 +67,12 @@ export default function RegisterForm() {
   const kind = (() => {
     if (location.state?.kind === 'trial') return 'trial'
     if (location.state?.kind === 'paid') return 'paid'
+    if (location.state?.kind === 'custom') return 'custom'
     return 'account'
   })()
-  const hasSelectedAccountPlan = kind !== 'account' || ['standard', 'pro', 'premium'].includes(location.state?.planTier)
+  const hasSelectedAccountPlan = kind === 'custom'
+    ? Boolean(location.state?.qvapayPurchaseId)
+    : kind !== 'account' || ['standard', 'pro', 'premium'].includes(location.state?.planTier)
   const billing = normalizeBillingPeriod(location.state?.billing)
   const planTier = kind === 'trial' ? 'standard' : normalizePlanTier(location.state?.planTier)
   const discountCode = kind === 'trial' || kind === 'account' ? null : location.state?.discountCode ?? null
@@ -97,12 +100,12 @@ export default function RegisterForm() {
   }
 
   useEffect(() => {
-    if (kind === 'account' && !hasSelectedAccountPlan) {
+    if ((kind === 'account' || kind === 'custom') && !hasSelectedAccountPlan) {
       navigate('/registro/planes', { replace: true })
     }
   }, [hasSelectedAccountPlan, kind, navigate])
 
-  if (kind === 'account' && !hasSelectedAccountPlan) return null
+  if ((kind === 'account' || kind === 'custom') && !hasSelectedAccountPlan) return null
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -147,7 +150,7 @@ export default function RegisterForm() {
         accepted_terms: true,
         billing_period: billing,
         plan_tier: planTier,
-        ...(kind === 'account' ? { qvapay_purchase_id: location.state?.qvapayPurchaseId } : {}),
+        ...(kind === 'account' || kind === 'custom' ? { qvapay_purchase_id: location.state?.qvapayPurchaseId } : {}),
         ...(discountCode ? { discount_code: discountCode } : {}),
       })
 

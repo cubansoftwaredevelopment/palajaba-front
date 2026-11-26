@@ -14,6 +14,7 @@ import SellerAdvertisingPlans from '../componentes/SellerAdvertisingPlans.jsx'
 import SellerStoreBanners from '../componentes/SellerStoreBanners.jsx'
 import SellerStorePages from '../componentes/SellerStorePages.jsx'
 import SellerUpgradePlan from '../../subscriptions/componentes/SellerUpgradePlan.jsx'
+import SellerPluginAddons from '../../subscriptions/componentes/SellerPluginAddons.jsx'
 import SellerQvaPaySettings from '../componentes/SellerQvaPaySettings.jsx'
 import { useSellerReadOnly } from '../componentes/sellerReadOnly.js'
 import ConfirmModal from '../../shared/componentes/ConfirmModal.jsx'
@@ -258,7 +259,19 @@ export default function SellerProfile() {
 
   useEffect(() => {
     const requested = routeLocation?.state?.panel
-    if (!requested || !isProfileHubPanel(requested)) return
+    const planWarning = routeLocation?.state?.planWarning
+    if (planWarning) {
+      setErrorToast({
+        id: `${Date.now()}`,
+        tone: 'warning',
+        title: 'Función no incluida',
+        content: planWarning,
+      })
+    }
+    if (!requested || !isProfileHubPanel(requested)) {
+      if (planWarning) navigate('.', { replace: true, state: null })
+      return
+    }
     setActivePanel(openProfilePanel(null, requested))
     navigate('.', { replace: true, state: null })
   }, [routeLocation, navigate])
@@ -722,6 +735,10 @@ export default function SellerProfile() {
                 }}
                 onUpgradeClick={() => handleMenuSelect(PROFILE_PANEL_IDS.plan)}
               />
+
+              <div className="mt-5">
+                <SellerPluginAddons />
+              </div>
 
               <div className="mt-5">
                 <SellerProfileMenuList sections={menuSections} onSelect={handleMenuSelect} />

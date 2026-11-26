@@ -21,8 +21,10 @@ import {
   setSellerSession,
 } from '../utils/sellerAuth.js'
 import { clearSellerMarketplaceVisit } from '../utils/sellerMarketplaceNav.js'
-import { getSellerDefaultPath, getSellerNavItems, sellerHasGestores } from '../../subscriptions/utils/planAccess.js'
+import { getSellerDefaultPath, getSellerNavItems } from '../../subscriptions/utils/planAccess.js'
+import { openPlanPanel, pluginLocked } from '../../subscriptions/utils/planPluginGate.js'
 import { SellerReadOnlyContext } from './sellerReadOnly.js'
+import { BILLING_LABELS } from '../../admin/utils/admin.js'
 import { getSellerPlan } from '../../subscriptions/utils/constants.js'
 import { requestSellerOrdersRefresh } from '../utils/sellerOrdersRefresh.js'
 import { requestSellerProductsRefresh } from '../utils/sellerProductsRefresh.js'
@@ -246,15 +248,13 @@ export default function SellerLayout() {
     return <Navigate to={getSellerDefaultPath(profile)} replace />
   }
 
-  if (
-    profile?.profile_completed &&
-    location.pathname.startsWith('/tienda/gestores') &&
-    !sellerHasGestores(profile)
-  ) {
-    return <Navigate to={getSellerDefaultPath(profile)} replace />
-  }
-
   const sellerNavItems = getSellerNavItems(profile)
+  const lockedNavIds = [
+    ['gestores', 'gestores'],
+    ['mensajeros', 'mensajeros'],
+    ['clientes', 'customers'],
+    ['estadisticas', 'statistics'],
+  ].filter(([, key]) => pluginLocked(profile, key)).map(([id]) => id)
   const readOnly = profile?.subscription_active === false
 
   const fillPage = isCatalogPage || isCatalogPreview
@@ -266,6 +266,7 @@ export default function SellerLayout() {
         refreshing={sectionRefreshing}
         storeName={profile.store_name}
         planName={getSellerPlan(profile).name}
+        billingLabel={BILLING_LABELS[profile?.billing_period] ?? BILLING_LABELS.monthly}
         subscriptionActive={profile.subscription_active}
         onLogout={() => setShowLogoutConfirm(true)}
         onNotifications={openNotifications}
@@ -276,6 +277,8 @@ export default function SellerLayout() {
         catalogLayout={fillPage}
         hideChrome={isCatalogPreview}
         navItems={sellerNavItems}
+        lockedNavIds={lockedNavIds}
+        onLockedNav={() => openPlanPanel(navigate)}
         profilePhotoUrl={resolveMediaUrl(profile.profile_photo_url) || ''}
       >
         <SellerPageMotion

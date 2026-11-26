@@ -64,6 +64,19 @@ export function ruleAdminDispute(token, disputeId, payload) {
   })
 }
 
+export function fetchPendingPluginAddons(token) {
+  return request('/api/admin/plugin-addons/pending', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
+export function approvePluginAddon(token, purchaseId) {
+  return request(`/api/admin/plugin-addons/${encodeURIComponent(purchaseId)}/approve`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  })
+}
+
 export function fetchAdminSettings(token) {
   return request("/api/admin/settings", {
     headers: {

@@ -81,7 +81,13 @@ function NavGlyph({ id, profilePhotoUrl }) {
   return SELLER_NAV_ICONS[id]
 }
 
-export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0, profilePhotoUrl = '' }) {
+function guardClick(event, item, lockedIds, onLocked) {
+  if (!lockedIds?.includes(item.id)) return
+  event.preventDefault()
+  onLocked?.(item)
+}
+
+export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0, profilePhotoUrl = '', lockedIds = [], onLocked }) {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 w-full max-w-[100dvw] border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md lg:hidden"
@@ -90,7 +96,7 @@ export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0, pro
     >
       <div className="mx-auto flex w-full min-w-0 max-w-md snap-x items-stretch overflow-x-auto px-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-1 [&::-webkit-scrollbar]:hidden">
         {items.map((item) => (
-          <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => bottomLinkClass(isActive)}>
+          <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => bottomLinkClass(isActive)} onClick={(event) => guardClick(event, item, lockedIds, onLocked)}>
             {({ isActive }) => {
               const showStorePhoto = item.id === 'perfil' && Boolean(profilePhotoUrl)
               return (
@@ -116,13 +122,13 @@ export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0, pro
   )
 }
 
-export function SellerSidebarNav({ items = SELLER_NAV, pendingOrderCount = 0, profilePhotoUrl = '' }) {
+export function SellerSidebarNav({ items = SELLER_NAV, pendingOrderCount = 0, profilePhotoUrl = '', lockedIds = [], onLocked }) {
   return (
     <nav className="hidden lg:flex lg:flex-col lg:gap-1" aria-label="Secciones de tu tienda">
       {items.map((item) => {
         const showStorePhoto = item.id === 'perfil' && Boolean(profilePhotoUrl)
         return (
-        <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => sideLinkClass(isActive)}>
+        <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => sideLinkClass(isActive)} onClick={(event) => guardClick(event, item, lockedIds, onLocked)}>
           <span className={`relative flex h-9 w-9 shrink-0 items-center justify-center ${showStorePhoto ? 'overflow-hidden rounded-full ring-2 ring-brand-white/80' : 'rounded-lg bg-current/10'}`}>
             <NavGlyph id={item.id} profilePhotoUrl={profilePhotoUrl} />
             {item.id === 'pedidos' && pendingOrderCount > 0 ? <PendingOrderMark /> : null}

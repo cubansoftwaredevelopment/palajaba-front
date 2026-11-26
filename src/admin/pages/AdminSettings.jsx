@@ -12,7 +12,7 @@ import {
   adminSection,
   adminSubtle,
 } from '../componentes/adminStyles.js'
-import { fetchAdminSettings, sendAdminSmtpTest, updateAdminSettings } from '../api.js'
+import { approvePluginAddon, fetchAdminSettings, fetchPendingPluginAddons, sendAdminSmtpTest, updateAdminSettings } from '../api.js'
 import { useFormErrorToast } from '../../shared/componentes/useFormErrorToast.jsx'
 import { getUserFacingMessage, isSessionError } from '../../shared/utils/userFacingError.js'
 import { clearAdminToken, getAdminToken } from '../utils/adminAuth.js'
@@ -33,6 +33,7 @@ import {
   ADVERTISING_PLAN_LABELS,
   DEFAULT_ADVERTISING_PRICES,
 } from '../../subscriptions/utils/advertisingPlans.js'
+import { PLAN_PLUGINS, defaultPluginPrices } from '../../subscriptions/utils/planPlugins.js'
 import { convertBetweenCurrencies } from '../../shared/utils/displayPrice.js'
 import { areExchangeRatesAvailable, getCupPerUnit, loadExchangeRates } from '../../shared/utils/exchangeRates.js'
 
@@ -150,6 +151,8 @@ export default function AdminSettings() {
     'ads-30': String(DEFAULT_ADVERTISING_PRICES['ads-30']),
   }))
   const [planPrices, setPlanPrices] = useState(() => pricesToForm(DEFAULT_PLAN_PRICES))
+  const [pluginPrices, setPluginPrices] = useState(() => defaultPluginPrices())
+  const [pendingAddons, setPendingAddons] = useState([])
   const [transactionFeePercent, setTransactionFeePercent] = useState('0')
   const [qvapayPlanDiscountPercent, setQvapayPlanDiscountPercent] = useState('0')
   const [cupPerUnit, setCupPerUnit] = useState(() => getCupPerUnit())
@@ -160,6 +163,16 @@ export default function AdminSettings() {
   const [smtpTestEmail, setSmtpTestEmail] = useState('')
   const [smtpTesting, setSmtpTesting] = useState(false)
   const { showError, toastNode } = useFormErrorToast({ variant: 'admin' })
+
+  async function approveAddon(purchaseId) {
+    try {
+      await approvePluginAddon(getAdminToken(), purchaseId)
+      setPendingAddons((current) => current.filter((item) => item.purchase_id !== purchaseId))
+      setSuccess('Complemento confirmado.')
+    } catch (err) {
+      showError(getUserFacingMessage(err, 'No pudimos confirmar el complemento.'))
+    }
+  }
 
   const loadSettings = useCallback(async () => {
     setError('')
@@ -191,6 +204,9 @@ export default function AdminSettings() {
         ),
       })
       setPlanPrices(pricesToForm(data.plan_prices ?? DEFAULT_PLAN_PRICES))
+      setPluginPrices({ ...defaultPluginPrices(), ...(data.plugin_prices || {}) })
+      const pending = await fetchPendingPluginAddons(token).catch(() => [])
+      setPendingAddons(Array.isArray(pending) ? pending : [])
       setTransactionFeePercent(String(data.transaction_fee_percent ?? 0))
       setQvapayPlanDiscountPercent(String(data.qvapay_plan_discount_percent ?? 0))
       setCupPerUnit(getCupPerUnit())
@@ -270,6 +286,16 @@ export default function AdminSettings() {
       return
     }
 
+    const parsedPlugins = {}
+    for (const plugin of PLAN_PLUGINS) {
+      const amount = parseAmount(pluginPrices[plugin.id])
+      if (amount == null) {
+        showError('Cada precio de función debe ser un número en USD mayor o igual a 0.')
+        return
+      }
+      parsedPlugins[plugin.id] = amount
+    }
+
     const parsedPrices = {}
     for (const tier of PLAN_TIER_ORDER) {
       parsedPrices[tier] = {}
@@ -294,6 +320,7 @@ export default function AdminSettings() {
         transaction_fee_percent: parsedFee,
         qvapay_plan_discount_percent: parsedPlanDiscount,
         plan_prices: parsedPrices,
+        plugin_prices: parsedPlugins,
         advertising_prices: parsedAds,
         admins: parsedAdmins,
       })
@@ -305,6 +332,7 @@ export default function AdminSettings() {
         'ads-30': String(updated.advertising_prices?.['ads-30']?.amount ?? parsedAds['ads-30'].amount),
       })
       setPlanPrices(pricesToForm(updated.plan_prices ?? parsedPrices))
+      setPluginPrices({ ...defaultPluginPrices(), ...(updated.plugin_prices || parsedPlugins) })
       setTransactionFeePercent(String(updated.transaction_fee_percent ?? parsedFee))
       setQvapayPlanDiscountPercent(String(updated.qvapay_plan_discount_percent ?? parsedPlanDiscount))
       setSuccess('Configuración guardada.')
@@ -633,6 +661,45 @@ export default function AdminSettings() {
             </section>
             </div>
           </div>
+
+          <section className={adminCard}>
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold text-zinc-100">Precios</h2>
+              <p className={`mt-1.5 text-sm leading-relaxed ${adminSubtle}`}>
+                Precio mensual en USD de cada función. El trimestral vale por 3 y el anual por 12. Las cantidades se cobran por unidad.
+              </p>
+            </div>
+            {pendingAddons.length ? (
+              <ul className="mb-4 flex flex-col gap-2">
+                {pendingAddons.map((item) => (
+                  <li key={item.purchase_id} className="flex items-center justify-between gap-3 rounded-xl border border-zinc-800 px-3 py-2 text-sm text-zinc-200">
+                    <span>{item.store_name || 'Tienda'} · {item.amount_cup ?? '—'} CUP · {item.transfer_id || item.purchase_id}</span>
+                    <AdminButton type="button" onClick={() => approveAddon(item.purchase_id)}>Confirmar</AdminButton>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {PLAN_PLUGINS.map((plugin) => (
+                <label key={plugin.id} className="rounded-xl border border-zinc-800/70 bg-zinc-950/25 p-3.5">
+                  <span className="text-sm font-medium text-zinc-200">{plugin.label}</span>
+                  <span className={`${fieldShell} mt-2.5`}>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={pluginPrices[plugin.id] ?? ''}
+                      onChange={(event) => setPluginPrices((current) => ({ ...current, [plugin.id]: event.target.value }))}
+                      className={amountInputClass}
+                      aria-label={`Precio USD de ${plugin.label}`}
+                    />
+                    <span className="px-3 text-sm font-semibold text-zinc-400">USD</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </section>
 
           <section className={adminCard}>
             <div className="mb-4">

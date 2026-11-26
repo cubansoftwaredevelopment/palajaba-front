@@ -109,6 +109,14 @@ export function getPlanTier(tierId) {
 
 export function getSellerPlan(profile) {
   if (isTrialSeller(profile)) return TRIAL_PLAN
+  if (profile?.plan_tier === 'custom') {
+    return {
+      id: 'custom',
+      name: 'Personalizado',
+      description: 'Las funciones que elegiste para tu tienda.',
+      features: [],
+    }
+  }
   return getPlanTier(profile?.plan_tier)
 }
 

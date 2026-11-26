@@ -42,6 +42,25 @@ export function createInitialSubscriptionQvaPayCheckout({ planTier, billingPerio
   })
 }
 
+export function createCustomPlanCheckout(payload) {
+  return request('/api/register/custom', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
+export function fetchCustomPlanCheckout(purchaseId) {
+  return request(`/api/register/custom/${encodeURIComponent(purchaseId)}`)
+}
+
+export function createPluginAddonCheckout(token, payload) {
+  return request('/api/auth/me/plugins', {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  })
+}
+
 export function fetchInitialSubscriptionQvaPayCheckout(purchaseId) {
   return request(`/api/register/qvapay/${encodeURIComponent(purchaseId)}`)
 }

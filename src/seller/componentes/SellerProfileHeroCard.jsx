@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { BILLING_LABELS } from '../../admin/utils/admin.js'
-import { canUpgradePlan, getSellerPlan } from '../../subscriptions/utils/constants.js'
+import { canUpgradePlan } from '../../subscriptions/utils/constants.js'
+import { parseApiDateTime } from '../../shared/utils/dates.js'
 import { getProfileHubSubtitle } from '../utils/sellerProfileHub.js'
 import { sellerFocusRing } from './sellerStyles.js'
 import PhotoLightbox from '../../shared/componentes/PhotoLightbox.jsx'
@@ -31,9 +31,11 @@ export default function SellerProfileHeroCard({
   onEditClick,
   onUpgradeClick,
 }) {
-  const plan = getSellerPlan(profile)
   const subtitle = getProfileHubSubtitle(profile)
-  const isTrial = plan.id === 'trial'
+  const endsAt = parseApiDateTime(profile?.subscription_ends_at)
+  const endsLabel = endsAt
+    ? `Vence el ${endsAt.toLocaleDateString('es', { day: 'numeric', month: 'long', year: 'numeric' })}`
+    : ''
   const handleEdit = onEditClick ?? onPhotoClick
   const [photoOpen, setPhotoOpen] = useState(false)
   const showUpgrade = canUpgradePlan(profile) && typeof onUpgradeClick === 'function'
@@ -55,11 +57,9 @@ export default function SellerProfileHeroCard({
             {profile.store_name}
           </h3>
           <p className="mt-0.5 truncate text-xs text-brand-carmelita/80 sm:text-sm">{subtitle}</p>
-          <p className="mt-1.5 text-[0.7rem] font-semibold text-brand-green/85">
-            {isTrial
-              ? 'Plan Prueba'
-              : `Plan ${plan.name} · ${BILLING_LABELS[profile?.billing_period] ?? BILLING_LABELS.monthly}`}
-          </p>
+          {endsLabel ? (
+            <p className="mt-1.5 text-[0.7rem] font-semibold text-brand-green/85">{endsLabel}</p>
+          ) : null}
           {showUpgrade ? (
             <button
               type="button"

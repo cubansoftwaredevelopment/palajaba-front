@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
+import { openPlanPanel, pluginCap } from '../../subscriptions/utils/planPluginGate.js'
 import ConfirmModal from '../../shared/componentes/ConfirmModal.jsx'
 import SellerPageHeader from '../componentes/SellerPageHeader.jsx'
 import SellerSuccessAlert from '../componentes/SellerSuccessAlert.jsx'
@@ -78,6 +79,7 @@ const PeopleIcon = (
 export default function SellerGestores() {
   const readOnly = useSellerReadOnly()
   const { profile } = useOutletContext()
+  const navigate = useNavigate()
   const storeSlug = resolveStoreSlug(profile)
   const loginUrl = storeSlug
     ? `${getPublicSiteOrigin()}${gestorLoginPath(storeSlug)}`
@@ -205,20 +207,19 @@ export default function SellerGestores() {
 
   const planTier = featurePlanTier(profile)
   const planName = getSellerPlan(profile).name
-  const gestorLimit = maxGestoresForPlan(planTier)
+  const gestorCap = pluginCap(profile, 'gestores')
+  const gestorLimit = gestorCap == null ? maxGestoresForPlan(planTier) : gestorCap
   const activeGestorCount = gestores.filter(isGestorActive).length
-  const atGestorLimit = !canAddGestor(planTier, activeGestorCount)
+  const atGestorLimit = gestorCap == null ? !canAddGestor(planTier, activeGestorCount) : activeGestorCount >= gestorCap
   const gestorUsageLabel = formatGestorUsage(planTier, activeGestorCount)
 
   async function handleCreate(e) {
     e.preventDefault()
     setCreateError('')
     if (atGestorLimit) {
-      setCreateError(
-        gestorLimit == null
-          ? 'No pudimos crear el gestor.'
-          : `El plan ${planName} permite hasta ${gestorLimit} gestores. Pasa a Premium para gestores ilimitados.`,
-      )
+      openPlanPanel(navigate, gestorLimit
+        ? `Ya alcanzaste el máximo de ${gestorLimit} gestores de tu plan.`
+        : undefined)
       return
     }
     const validated = validateGestorUsername(newUsername)
@@ -466,7 +467,7 @@ export default function SellerGestores() {
                 setNewUsername(e.target.value)
               }}
               className={sellerInput}
-              disabled={readOnly || creating || atGestorLimit}
+              disabled={readOnly || creating}
             />
             {createError ? (
               <p className="mt-1.5 text-xs text-brand-carmelita" role="alert">
@@ -478,7 +479,7 @@ export default function SellerGestores() {
           </div>
           <button
             type="submit"
-            disabled={readOnly || creating || atGestorLimit || !newUsername.trim()}
+            disabled={readOnly || creating || !newUsername.trim()}
             className={sellerBtnPrimaryCompact}
           >
             {creating ? 'Creando…' : 'Agregar'}

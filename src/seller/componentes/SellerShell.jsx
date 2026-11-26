@@ -74,6 +74,7 @@ function LogoutButton({ onClick }) {
 
 export default function SellerShell({
   planName,
+  billingLabel = '',
   subscriptionActive = true,
   onLogout,
   onNotifications,
@@ -84,6 +85,8 @@ export default function SellerShell({
   catalogLayout = false,
   hideChrome = false,
   navItems,
+  lockedNavIds = [],
+  onLockedNav,
   profilePhotoUrl = '',
   refreshing = false,
   children,
@@ -113,7 +116,7 @@ export default function SellerShell({
             <div className={sellerSidebarLogoWrap}>
               <Logo className="h-20 w-20 shrink-0 xl:h-24 xl:w-24" priority />
             </div>
-            <SellerSidebarNav items={navItems} pendingOrderCount={pendingOrderCount} profilePhotoUrl={profilePhotoUrl} />
+            <SellerSidebarNav items={navItems} pendingOrderCount={pendingOrderCount} profilePhotoUrl={profilePhotoUrl} lockedIds={lockedNavIds} onLocked={onLockedNav} />
           </aside>
         )}
 
@@ -131,7 +134,7 @@ export default function SellerShell({
                     {subscriptionActive ? 'Activa' : 'Inactiva'}
                   </span>
                   <span className="whitespace-nowrap text-[0.55rem] font-semibold leading-tight text-brand-carmelita/85 sm:text-[0.62rem]">
-                    Plan {planName}
+                    Plan {planName}{billingLabel ? ` · ${billingLabel}` : ''}
                   </span>
                 </div>
               </div>
@@ -165,7 +168,7 @@ export default function SellerShell({
         </div>
       </div>
 
-      {showBottomNav && <SellerBottomNav items={navItems} pendingOrderCount={pendingOrderCount} profilePhotoUrl={profilePhotoUrl} />}
+      {showBottomNav && <SellerBottomNav items={navItems} pendingOrderCount={pendingOrderCount} profilePhotoUrl={profilePhotoUrl} lockedIds={lockedNavIds} onLocked={onLockedNav} />}
     </>
   )
 }

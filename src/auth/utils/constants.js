@@ -28,5 +28,6 @@ export const REGISTER_STEPS = ACCOUNT_REGISTER_STEPS
 export function getRegisterSteps(kind) {
   if (kind === 'trial') return TRIAL_REGISTER_STEPS
   if (kind === 'paid') return PAID_REGISTER_STEPS
+  if (kind === 'custom') return ACCOUNT_REGISTER_STEPS
   return ACCOUNT_REGISTER_STEPS
 }

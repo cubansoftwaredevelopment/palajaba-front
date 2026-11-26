@@ -17,6 +17,7 @@ import { sellerBtnPrimary, sellerFocusRing, sellerHint } from '../../seller/comp
 import { getSellerToken } from '../../seller/utils/sellerAuth.js'
 import { createSubscriptionQvaPayCheckout, fetchSubscriptionQvaPayCheckout } from '../api.js'
 import { isSubscriptionCheckoutClosed, isSubscriptionCheckoutPaid, subscriptionCheckoutStatusMessage } from '../qvapay.js'
+import SellerPluginAddons from './SellerPluginAddons.jsx'
 
 const planActionButtonClass = `${sellerBtnPrimary} h-12 min-h-12 w-full min-w-0 justify-center px-2 text-center text-sm leading-tight ${sellerFocusRing}`
 
@@ -131,6 +132,8 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
                   : 'Ya tienes el plan más completo; puedes renovarlo con QvaPay.'
             }`}
       </p>
+
+      <SellerPluginAddons profile={profile} onUpdated={onUpdated} />
 
       {planOptions.length > 0 ? (
         <BillingPeriodTabs value={billing} onChange={setBilling} />

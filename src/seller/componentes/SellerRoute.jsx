@@ -1,12 +1,12 @@
-import { Navigate, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { isSellerAuthenticated } from '../utils/sellerAuth.js'
 
-export default function SellerRoute({ children }) {
+export default function SellerRoute() {
   const location = useLocation()
 
   if (!isSellerAuthenticated()) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />
   }
 
-  return children
+  return <Outlet />
 }

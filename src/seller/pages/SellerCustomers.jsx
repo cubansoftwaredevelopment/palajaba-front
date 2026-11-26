@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import SearchBar from '../../buyer/componentes/SearchBar.jsx'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
+import { guardPlugin } from '../../subscriptions/utils/planPluginGate.js'
 import { fetchStoreCustomerNotices, fetchStoreCustomers, sendStoreCustomerNotice, suggestStoreCustomers } from '../../auth/api'
 import { getSellerToken } from '../utils/sellerAuth.js'
 import { beginSectionRefresh, endSectionRefresh } from '../../session/sectionStore'
@@ -335,6 +336,7 @@ function CustomerNoticeModal({ onClose, onSent }) {
 
 export default function SellerCustomers() {
   const navigate = useNavigate()
+  const { profile } = useOutletContext()
   const readOnly = useSellerReadOnly()
   const reducedMotion = useReducedMotion()
   const { snapshot, commit, skipInitialRef } = useSectionSnapshot('seller', 'customers')
@@ -623,7 +625,7 @@ export default function SellerCustomers() {
           </div>
           <button
             type="button"
-            onClick={() => setNoticeOpen(true)}
+            onClick={() => { if (!guardPlugin(profile, 'customer_notices', navigate)) setNoticeOpen(true) }}
             disabled={readOnly}
             className="shrink-0 rounded-xl bg-brand-green px-4 py-2 text-sm font-bold text-brand-white disabled:opacity-50"
           >

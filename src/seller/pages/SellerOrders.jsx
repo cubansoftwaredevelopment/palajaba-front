@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { useOutletContext, useSearchParams } from 'react-router-dom'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import SearchBar from '../../buyer/componentes/SearchBar.jsx'
 import { monthPageShift } from '../../motion/presets'
 import SellerEmptyState from '../componentes/SellerEmptyState.jsx'
@@ -33,6 +33,7 @@ import { acceptSellerQvaPayOrder, refundSellerQvaPayOrder, rejectSellerQvaPayOrd
 import FilterModal from '../../shared/componentes/FilterModal.jsx'
 import AssignCourierModal from '../../mensajeros/componentes/AssignCourierModal.jsx'
 import { sellerHasMensajeros } from '../../subscriptions/utils/constants.js'
+import { guardPlugin } from '../../subscriptions/utils/planPluginGate.js'
 import { clearedDateFilter, countActiveFilters } from '../../shared/componentes/filterState.js'
 
 const SELLER_ORDERS_PAGE_SIZE = 15
@@ -106,6 +107,7 @@ const EmptyOrdersIcon = (
 
 export default function SellerOrders() {
   const { profile } = useOutletContext()
+  const navigate = useNavigate()
   const canAssignCouriers = sellerHasMensajeros(profile)
   const readOnly = useSellerReadOnly()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -471,7 +473,7 @@ export default function SellerOrders() {
           <button
             type="button"
             className={sellerBtnPrimaryCompact}
-            onClick={() => setManualOrderOpen(true)}
+            onClick={() => { if (!guardPlugin(profile, 'manual_orders', navigate)) setManualOrderOpen(true) }}
           >
             Registrar venta
           </button>
@@ -558,7 +560,7 @@ export default function SellerOrders() {
             </div>
           ) : null}
 
-          {activeTab === 'pending' && canAssignCouriers ? (
+          {activeTab === 'pending' ? (
             <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
               {selectingOrders ? (
                 <button type="button" className="min-h-10 rounded-full border border-brand-green/20 px-4 text-sm font-semibold text-brand-green" onClick={() => { setSelectingOrders(false); setSelectedOrderIds([]); setAssignNotice('') }}>Cancelar</button>
@@ -568,6 +570,7 @@ export default function SellerOrders() {
                 className={`${sellerBtnPrimaryCompact} !w-auto !min-w-0`}
                 disabled={readOnly || !visibleOrders.some(isAssignableOrder)}
                 onClick={() => {
+                  if (!canAssignCouriers || guardPlugin(profile, 'mensajeros', navigate)) return
                   const selected = orders.filter((order) => selectedOrderIds.includes(order.id))
                   if (selected.length === 0) {
                     setSelectingOrders(true)
@@ -620,7 +623,10 @@ export default function SellerOrders() {
                 selecting={selectingOrders && activeTab === 'pending'}
                 selected={selectedOrderIds.includes(order.id)}
                 onLongPress={(item) => {
-                  if (!canAssignCouriers) return
+                  if (!canAssignCouriers) {
+                    guardPlugin(profile, 'mensajeros', navigate)
+                    return
+                  }
                   if (item.payment_method === 'qvapay' && item.qvapay?.payment_status !== 'paid') {
                     setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
                     return
@@ -631,7 +637,10 @@ export default function SellerOrders() {
                   setSelectedOrderIds((current) => current.includes(item.id) ? current : [...current, item.id])
                 }}
                 onToggle={(item) => {
-                  if (!canAssignCouriers) return
+                  if (!canAssignCouriers) {
+                    guardPlugin(profile, 'mensajeros', navigate)
+                    return
+                  }
                   if (item.payment_method === 'qvapay' && item.qvapay?.payment_status !== 'paid') {
                     setAssignNotice('El cliente todavía no pagó este pedido por QvaPay.')
                     return

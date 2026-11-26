@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Link, useOutletContext } from 'react-router-dom'
+import { Link, useNavigate, useOutletContext } from 'react-router-dom'
 
 import CatalogThemePickerModal from '../componentes/CatalogThemePickerModal.jsx'
 import CatalogThemeScope from '../componentes/CatalogThemeScope.jsx'
@@ -26,6 +26,7 @@ import {
   normalizeCatalogTheme,
 } from '../utils/constants.js'
 import { sellerHasFullStoreCustomization } from '../../subscriptions/utils/constants.js'
+import { guardPlugin } from '../../subscriptions/utils/planPluginGate.js'
 import { resolveStoreSlug } from '../../seller/utils/storeShare.js'
 import { getSellerToken } from '../../seller/utils/sellerAuth.js'
 import { runSectionRefresh } from '../../session/sectionStore'
@@ -69,6 +70,7 @@ export default function SellerCatalogPreview() {
 
 function SellerCatalogPreviewContent() {
   const { profile, refreshProfile } = useOutletContext()
+  const navigate = useNavigate()
   const readOnly = useSellerReadOnly()
   const { currencies } = useBuyerDisplayCurrency()
   const storeSlug = resolveStoreSlug(profile)
@@ -254,7 +256,7 @@ function SellerCatalogPreviewContent() {
   const headerEnd = (
     <div className="flex items-center gap-2">
       <BuyerLoginButton />
-      {readOnly ? null : <CatalogPreviewThemeButton onClick={() => setShowThemePicker(true)} />}
+      {readOnly ? null : <CatalogPreviewThemeButton onClick={() => { if (!guardPlugin(profile, 'catalog_palette', navigate)) setShowThemePicker(true) }} />}
     </div>
   )
 
@@ -287,7 +289,7 @@ function SellerCatalogPreviewContent() {
           Ir al perfil
         </Link>
       </StatePanel>,
-      { header: readOnly ? null : <CatalogPreviewThemeButton onClick={() => setShowThemePicker(true)} /> },
+      { header: readOnly ? null : <CatalogPreviewThemeButton onClick={() => { if (!guardPlugin(profile, 'catalog_palette', navigate)) setShowThemePicker(true) }} /> },
     )
   }
 
