@@ -4,9 +4,14 @@ import {
   buyerProductImageSpinner,
 } from './buyerStyles.js'
 
-export default function BuyerProductImage({ src, alt = '' }) {
+export default function BuyerProductImage({ src, alt = '', eager = false }) {
   const imgRef = useRef(null)
   const [status, setStatus] = useState(() => (src ? 'loading' : 'empty'))
+  const [attempt, setAttempt] = useState(0)
+
+  useEffect(() => {
+    setAttempt(0)
+  }, [src])
 
   useEffect(() => {
     if (!src) {
@@ -19,7 +24,7 @@ export default function BuyerProductImage({ src, alt = '' }) {
     if (img?.complete && img.naturalWidth > 0) {
       setStatus('loaded')
     }
-  }, [src])
+  }, [src, attempt])
 
   if (!src) {
     return (
@@ -41,13 +46,21 @@ export default function BuyerProductImage({ src, alt = '' }) {
       ) : null}
 
       <img
+        key={attempt}
         ref={imgRef}
         src={src}
         alt={alt}
-        loading="lazy"
+        loading={eager ? 'eager' : 'lazy'}
         decoding="async"
         onLoad={() => setStatus('loaded')}
-        onError={() => setStatus('error')}
+        onError={() => {
+          if (attempt < 1) {
+            setAttempt(1)
+            setStatus('loading')
+            return
+          }
+          setStatus('error')
+        }}
         className={`h-full w-full object-cover transition-opacity duration-200 ${
           status === 'loaded' ? 'opacity-100' : 'opacity-0'
         }`}

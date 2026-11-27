@@ -59,7 +59,7 @@ function JabaBagIcon() {
   )
 }
 
-export default function BuyerProductCard({ product, compact = false, onFavoriteChange, buyWarning = '', allowBuyAfterWarning = false, enterIndex = null }) {
+export default function BuyerProductCard({ product, compact = false, eager = false, onFavoriteChange, buyWarning = '', allowBuyAfterWarning = false, enterIndex = null }) {
   const navigate = useNavigate()
   const route = useLocation()
   const { currencies: displayCurrencies, cupPerUnit } = useBuyerDisplayCurrency()
@@ -192,7 +192,7 @@ export default function BuyerProductCard({ product, compact = false, onFavoriteC
         >
           <div className={buyerProductImageWrap}>
             <button type="button" onClick={openDetail} className="absolute inset-0 h-full w-full touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-green/25" aria-label={`Ver detalles de ${product.name}${soldOut ? ' (agotado)' : ''}`}>
-              <BuyerProductImage src={imageSrc} />
+              <BuyerProductImage src={imageSrc} eager={eager} />
               {discountPercent ? (
                 <span className={buyerProductDiscountBadge}>-{discountPercent}%</span>
               ) : null}

@@ -18,7 +18,11 @@ export function resolveMediaUrl(path, options = {}) {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return optimizeCloudinaryUrl(path, options)
   }
-  // En dev, /uploads pasa por el proxy de Vite. En prod, apunta al backend.
+  // Las fotos del sitio (/images, logos) salen del propio front.
+  // /uploads y /api, en prod, salen del backend.
+  if (path.startsWith('/images/') || path.startsWith('/logo') || path.startsWith('/favicon') || path.startsWith('/icons')) {
+    return path
+  }
   if (path.startsWith('/')) {
     return import.meta.env.DEV ? path : `${API_URL}${path}`
   }

@@ -62,7 +62,7 @@ const PLAN_ON_NOW = ['mensajeros', 'gestores']
 const PRODUCT = {
   id: 'pitch-malanga',
   name: 'Malanga',
-  image_url: '/images/pitch/malanga-corte.png',
+  image_url: '/images/pitch/malanga-corte.png?v=2',
   base_price: 250,
   base_currency: 'CUP',
   accepted_currencies: ['CUP'],
@@ -411,7 +411,7 @@ function jabaBlocks() {
           <p className="min-w-0 flex-1 text-lg leading-relaxed text-brand-carmelita/90">Tu gente abre la tienda y ve el producto con su <PitchMark>foto</PitchMark>, el <PitchStrong>precio</PitchStrong> y lo que queda.</p>
           <div inert className="pointer-events-none w-[46%] max-w-[12.5rem] shrink-0">
             <PitchDrift>
-              <BuyerProductCard product={PRODUCT} compact />
+              <BuyerProductCard product={PRODUCT} compact eager />
             </PitchDrift>
           </div>
         </div>
