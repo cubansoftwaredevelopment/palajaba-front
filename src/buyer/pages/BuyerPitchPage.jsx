@@ -62,7 +62,7 @@ const PLAN_ON_NOW = ['mensajeros', 'gestores']
 const PRODUCT = {
   id: 'pitch-malanga',
   name: 'Malanga',
-  image_url: '/images/pitch/malanga.png',
+  image_url: '/images/pitch/malanga-corte.png',
   base_price: 250,
   base_currency: 'CUP',
   accepted_currencies: ['CUP'],
