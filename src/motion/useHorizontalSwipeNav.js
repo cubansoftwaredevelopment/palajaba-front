@@ -51,6 +51,7 @@ function ignoredTarget(node) {
 }
 
 const BUYER_GUEST = [
+  { path: '/inicio', end: true },
   { path: '/comprar', end: true },
   { path: '/login', end: true },
 ]

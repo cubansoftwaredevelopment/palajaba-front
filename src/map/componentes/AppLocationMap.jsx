@@ -29,10 +29,10 @@ function courierPin(profileUrl, vehicleUrl) {
   const profile = escapeHtml(resolveMediaUrl(profileUrl) || '')
   const vehicle = escapeHtml(resolveMediaUrl(vehicleUrl) || '')
   const face = profile
-    ? `<img src="${profile}" alt="" style="width:50%;height:100%;object-fit:cover">`
+    ? `<img src="${profile}" alt="" style="width:50%;height:100%;object-fit:cover;object-position:center;background:#fdfbf2">`
     : '<span style="width:50%;height:100%;background:#7b4c38"></span>'
   const ride = vehicle
-    ? `<img src="${vehicle}" alt="" style="width:50%;height:100%;object-fit:cover">`
+    ? `<img src="${vehicle}" alt="" style="width:50%;height:100%;object-fit:cover;object-position:center;background:#fdfbf2">`
     : '<span style="width:50%;height:100%;background:#59802c"></span>'
   return L.divIcon({
     className: 'route-map-pin',

@@ -59,6 +59,7 @@ import BuyerCartPage from './buyer/componentes/BuyerJabaPanel.jsx'
 import { BuyerDisplayCurrencyProvider, BuyerJabaProvider } from './buyer/context/context.js'
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './buyer/pages/BuyerHome'
+import BuyerPitchPage from './buyer/pages/BuyerPitchPage.jsx'
 import BuyerCategoryPage from './buyer/pages/BuyerCategoryPage'
 import BuyerBusinessesPage from './buyer/pages/BuyerBusinessesPage'
 import { BUYER_BUSINESSES_SECTION_ENABLED } from './buyer/utils/constants.js'
@@ -228,6 +229,11 @@ const router = createBrowserRouter([
       { path: 'registro/otp', element: <RegisterOtp /> },
       { path: 'registro/exito', element: <RegisterSuccess /> },
       { path: 'aplicacion', element: <DownloadAppPage /> },
+      {
+        path: 'inicio',
+        element: <BuyerJabaLayout />,
+        children: [{ index: true, element: <BuyerPitchPage /> }],
+      },
       { path: 'terminos', element: <PlatformTerms /> },
       { path: 'privacidad', element: <PlatformPrivacy /> },
       { path: 'preguntas', element: <PlatformFaq /> },

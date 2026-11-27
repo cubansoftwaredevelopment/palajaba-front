@@ -13,6 +13,8 @@ import {
   storePagePublicPath,
 } from '../../seller/utils/storePages.js'
 import { storePublicPath } from '../../seller/utils/storeSlug.js'
+import { isSellerBrowsingMarketplace } from '../../seller/utils/sellerMarketplaceNav.js'
+import { useBuyerMarketplaceHub } from '../utils/buyerMarketplaceHub.js'
 import StoreMark from './StoreMark.jsx'
 
 const SUPPORT_MESSAGE = 'Hola, necesito ayuda con Pa\' La Jaba.'
@@ -51,6 +53,7 @@ export default function BuyerStoreServiceFooter({
   clearFab = false,
 }) {
   const route = useLocation()
+  const aboveMarketplaceNav = useBuyerMarketplaceHub() && !isSellerBrowsingMarketplace()
   const [supportPhone, setSupportPhone] = useState('')
   const serviceLinks = STORE_PAGES.filter((page) => isStorePagePublished(pages, page.key))
   const home = homeTo || storePublicPath(storeSlug)
@@ -75,7 +78,11 @@ export default function BuyerStoreServiceFooter({
   return (
     <footer
       className={`store-service-footer relative -mx-5 mt-auto px-5 pt-6 text-brand-carmelita sm:-mx-6 sm:px-8 lg:-mx-10 lg:px-10 ${
-        clearFab ? 'pb-[max(0.75rem,var(--safe-bottom))]' : 'pb-6'
+        aboveMarketplaceNav
+          ? 'pb-[calc(4.0625rem+max(0.375rem,var(--safe-bottom))+4px)]'
+          : clearFab
+            ? 'pb-[max(0.75rem,var(--safe-bottom))]'
+            : 'pb-6'
       }`}
       aria-label="Servicio al cliente"
     >

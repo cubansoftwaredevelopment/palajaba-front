@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Carro">
+  <rect width="64" height="64" fill="#fdfbf2"/>
+  <path fill="#59802c" d="M22 20h16l6 9H16l6-9z"/>
+  <path fill="#fdfbf2" d="M25 23h12l3 5H22l3-5z"/>
+  <rect x="14" y="29" width="36" height="13" rx="4" fill="#59802c"/>
+  <circle cx="24" cy="44" r="5" fill="#3d2b1f"/>
+  <circle cx="42" cy="44" r="5" fill="#3d2b1f"/>
+  <circle cx="24" cy="44" r="2" fill="#fdfbf2"/>
+  <circle cx="42" cy="44" r="2" fill="#fdfbf2"/>
+</svg>

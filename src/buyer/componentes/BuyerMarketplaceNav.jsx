@@ -12,6 +12,7 @@ import { storeGestorPublicPath, storePublicPath } from '../../seller/utils/store
 import { getSellerProfile, isSellerAuthenticated, SELLER_AUTH_CHANGE_EVENT } from '../../seller/utils/sellerAuth.js'
 import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerProfile, getCustomerToken, isCustomerAuthenticated } from '../../customer/utils/customerAuth.js'
 import { resolveMediaUrl } from '../../shared/utils/media.js'
+import Logo from '../../shared/componentes/Logo.jsx'
 import StoreMark from './StoreMark.jsx'
 import { buyerProductDetailBody, buyerProductDetailModal, buyerProductDetailOverlay } from './buyerStyles.js'
 import BuyerMotionFrame from '../../motion/BuyerMotionFrame'
@@ -67,14 +68,24 @@ function barItemClass(active) {
   return `flex flex-col items-center justify-center gap-0.5 py-1.5 text-center text-[0.625rem] font-semibold touch-manipulation ${active ? 'text-brand-green' : 'text-brand-carmelita/65'}`
 }
 
-function barIconClass(active) {
+function barIconClass(active, logo = false) {
+  if (logo) {
+    return `relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl ${active ? 'ring-2 ring-brand-green' : ''}`
+  }
   return `relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl ${active ? 'bg-brand-green text-white' : ''}`
 }
 
-function BarItem({ active, label, icon, to, state, disabled, onClick }) {
+const HOUSE_ICON = (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M4 10.5 12 4l8 6.5" />
+    <path d="M6 10v9h12v-9" />
+  </svg>
+)
+
+function BarItem({ active, label, icon, to, state, disabled, onClick, logo = false }) {
   const body = (
     <span className={barItemClass(active)}>
-      <span className={barIconClass(active)}>{icon}</span>
+      <span className={barIconClass(active, logo)}>{icon}</span>
       <span className="w-full truncate px-0.5">{label}</span>
     </span>
   )
@@ -416,16 +427,20 @@ export default function BuyerMarketplaceNav({
         aria-label="Secciones de compra"
       >
         <div className="mx-auto flex w-full max-w-md items-stretch px-1">
+          {customerSignedIn || sellerSignedIn ? null : (
+            <BarItem
+              to="/inicio"
+              active={route.pathname === '/inicio'}
+              label="Inicio"
+              icon={HOUSE_ICON}
+            />
+          )}
           <BarItem
             to="/comprar"
             active={route.pathname === '/comprar'}
-            label="Inicio"
-            icon={
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M4 10.5 12 4l8 6.5" />
-                <path d="M6 10v9h12v-9" />
-              </svg>
-            }
+            label="Marketplace"
+            logo
+            icon={<Logo className="h-8 w-8" priority />}
           />
           {customerSignedIn ? FEED_ACCOUNT_LINKS.map((item) => (
             <BarItem

@@ -40,6 +40,7 @@ export default function SellerSeriesChart({
   valueLabel = '',
   color = STROKE,
   chartId = 'series',
+  fill = false,
 }) {
   const points = chart?.points ?? []
   const empty = !points.some((point) => Number(point.value) > 0)
@@ -52,12 +53,13 @@ export default function SellerSeriesChart({
       error={error}
       empty={empty}
       emptyMessage={emptyMessage}
+      fill={fill}
     >
-      <p className="mb-2 font-display text-xl font-bold tabular-nums text-brand-green">
+      <p className="mb-2 shrink-0 font-display text-xl font-bold tabular-nums text-brand-green">
         {formatCount(chart?.total)}
         {valueLabel ? <span className="ml-1 text-sm font-semibold text-brand-carmelita/80">{valueLabel}</span> : null}
       </p>
-      <div className="h-52 w-full min-w-0 sm:h-60">
+      <div className={fill ? 'min-h-0 w-full min-w-0 flex-1' : 'h-52 w-full min-w-0 sm:h-60'}>
         <ResponsiveContainer width="100%" height="100%">
           {kind === 'bar' ? (
             <BarChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>

@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Usuario mensajero">
+  <rect width="64" height="64" fill="#fdfbf2"/>
+  <circle cx="32" cy="24" r="13" fill="#7b4c38"/>
+  <path fill="#7b4c38" d="M12 58c1.6-16 7.2-24 20-24s18.4 8 20 24v6H12z"/>
+</svg>

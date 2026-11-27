@@ -37,15 +37,11 @@ export default function BuyerShell({
   const sellerBrowsing = isSellerBrowsingMarketplace() && !isSellerPreview
   const { handlers: pullHandlers } = usePullToRefresh(onPullRefresh)
   const pageFooter = Boolean(footer)
-  const scrollPaddingClass = pageFooter
+  const scrollPaddingClass = pageFooter || (flushBottom && !sellerBrowsing)
     ? ''
-    : marketplaceHub
-      ? sellerBrowsing
-        ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'
-        : buyerMarketplaceScrollPadding
-      : flushBottom
-        ? ''
-        : buyerMarketplaceScrollPadding
+    : sellerBrowsing
+      ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'
+      : buyerMarketplaceScrollPadding
   const footerPaddingClass = marketplaceHub
     ? sellerBrowsing
       ? 'pb-[calc(9rem+var(--safe-bottom))] lg:pb-[calc(6.25rem+var(--safe-bottom))]'

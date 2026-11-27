@@ -23,6 +23,35 @@
   --buyer-nav-space: calc(4.5rem + var(--safe-bottom));
 }
 
+@property --buyer-nav-space {
+  syntax: '<length>';
+  inherits: true;
+  initial-value: 0px;
+}
+
+html {
+  transition: --buyer-nav-space 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.pitch-cover {
+  --buyer-nav-space: max(var(--safe-bottom), 3.5rem);
+}
+
+nav[aria-label='Secciones de compra'] {
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0s;
+}
+
+html.pitch-cover nav[aria-label='Secciones de compra'] {
+  transform: translateY(110%);
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    visibility 0s linear 0.45s;
+}
+
 html.native-app .app-modal-panel {
   padding-bottom: max(1rem, var(--safe-bottom));
 }
@@ -960,6 +989,112 @@ html.native-app .app-modal-panel {
   animation: step-focus 0.38s ease;
 }
 
+@keyframes pitch-logo-flip {
+  0%, 8% {
+    transform: translateY(0) rotateX(0deg) rotateZ(0deg) scale(1, 1);
+  }
+  13% {
+    transform: translateY(12px) rotateX(18deg) rotateZ(-4deg) scale(1.08, 0.86);
+  }
+  24% {
+    transform: translateY(-52px) rotateX(-62deg) rotateZ(5deg) scale(0.98, 1.05);
+  }
+  36% {
+    transform: translateY(-104px) rotateX(-150deg) rotateZ(-3deg) scale(0.94, 0.95);
+  }
+  48% {
+    transform: translateY(-112px) rotateX(-200deg) rotateZ(3deg) scale(0.92, 0.9);
+  }
+  60% {
+    transform: translateY(-64px) rotateX(-265deg) rotateZ(-2deg) scale(0.97, 1.02);
+  }
+  72% {
+    transform: translateY(2px) rotateX(-330deg) rotateZ(2deg) scale(1.02, 1);
+  }
+  80% {
+    transform: translateY(14px) rotateX(-352deg) rotateZ(-1deg) scale(1.12, 0.82);
+  }
+  88% {
+    transform: translateY(-5px) rotateX(-360deg) rotateZ(0deg) scale(0.98, 1.05);
+  }
+  94%, 100% {
+    transform: translateY(0) rotateX(-360deg) rotateZ(0deg) scale(1, 1);
+  }
+}
+
+.pitch-logo-flip {
+  transform-origin: center center;
+  transform-style: preserve-3d;
+  animation: pitch-logo-flip 2.8s linear infinite;
+}
+
+@keyframes pitch-fall {
+  from {
+    opacity: 0.14;
+    filter: blur(18px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+.pitch-hold {
+  opacity: 0.14;
+  filter: blur(18px);
+}
+
+.pitch-fall {
+  animation: pitch-fall 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes pitch-drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  25% { transform: translate3d(var(--drift-x), calc(var(--drift-y) * -0.65), 0); }
+  50% { transform: translate3d(calc(var(--drift-x) * -0.7), var(--drift-y), 0); }
+  75% { transform: translate3d(calc(var(--drift-x) * 0.45), calc(var(--drift-y) * 0.55), 0); }
+}
+
+.pitch-drift {
+  animation: pitch-drift 8s ease-in-out infinite;
+}
+
+.pitch-mark {
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  background-color: var(--color-brand-yellow);
+  color: var(--color-brand-carmelita);
+}
+
+.pitch-thought-field {
+  container-type: size;
+  position: relative;
+  height: calc(100dvh - var(--buyer-nav-space) - 15.5rem);
+  min-height: 12rem;
+  overflow: hidden;
+}
+
+@keyframes pitch-thought-rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(calc(-100cqb - 10rem));
+    opacity: 0;
+  }
+}
+
+.pitch-thought-rise {
+  animation: pitch-thought-rise 8s linear both;
+}
+
 button:active:not(:disabled) {
   transform: scale(0.96);
 }
@@ -1002,8 +1137,22 @@ button.jaba-remove-btn:active:not(:disabled) {
 @media (prefers-reduced-motion: reduce) {
   .screen-step,
   .seller-map-pin__bounce.is-hopping,
-  .route-pin__float {
+  .route-pin__float,
+  .pitch-logo-flip,
+  .pitch-fall,
+  .pitch-thought,
+  .pitch-drift {
     animation: none;
+  }
+
+  .pitch-hold {
+    opacity: 1;
+    filter: none;
+  }
+
+  html,
+  nav[aria-label='Secciones de compra'] {
+    transition: none;
   }
 
   button:active:not(:disabled),
