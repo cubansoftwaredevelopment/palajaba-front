@@ -7,7 +7,7 @@ import PillTabs from '../../shared/componentes/PillTabs.jsx'
 import { formatOrderDateTime } from '../../shared/utils/dates.js'
 import NoticeDateFilter from '../../shared/componentes/NoticeDateFilter.jsx'
 import AppVersionBadge from '../../appReleases/componentes/AppVersionBadge.jsx'
-import Logo from '../../shared/componentes/Logo.jsx'
+import Logo, { TIGHT_HEADER_LOGO } from '../../shared/componentes/Logo.jsx'
 import SellerLogoutModal from '../../seller/componentes/SellerLogoutModal.jsx'
 import SellerNotificationToast from '../../seller/componentes/SellerNotificationToast.jsx'
 import { sellerBtnPrimary, sellerBtnSecondary, sellerFocusRing, sellerHeader, sellerHeaderInner, sellerPageWrap } from '../../seller/componentes/sellerStyles.js'
@@ -274,8 +274,8 @@ export default function MensajeroPanel() {
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-brand-white">
       <header className={sellerHeader}>
         <div className={`${sellerHeaderInner} relative`}>
-          <div className="flex shrink-0 flex-col items-center gap-1">
-            <Logo className="h-9 w-9 sm:h-10 sm:w-10" priority />
+          <div className="flex shrink-0 flex-col items-center gap-px">
+            <Logo tight priority className={TIGHT_HEADER_LOGO} />
             <AppVersionBadge />
           </div>
           <div className="ml-auto flex shrink-0 items-center">

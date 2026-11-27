@@ -9,7 +9,7 @@ import CustomerOrderDetailModal from '../componentes/CustomerOrderDetailModal.js
 import { CUSTOMER_NAV } from '../componentes/customerNav.jsx'
 import { CUSTOMER_PURCHASE_REVOKED_MESSAGE } from '../utils/customerAuth.js'
 import AppVersionBadge from '../../appReleases/componentes/AppVersionBadge.jsx'
-import Logo from '../../shared/componentes/Logo.jsx'
+import Logo, { TIGHT_HEADER_LOGO } from '../../shared/componentes/Logo.jsx'
 import LoadingState from '../../shared/componentes/LoadingState.jsx'
 import { CustomerAccountProvider, useCustomerAccount } from '../context/CustomerAccountContext.jsx'
 
@@ -52,8 +52,8 @@ function CustomerAccountFrame() {
                 <path d="M15 18l-6-6 6-6" />
               </svg>
             </Link>
-            <div className="flex shrink-0 flex-col items-center gap-1">
-              <Logo className="h-9 w-9 sm:h-10 sm:w-10" />
+            <div className="flex shrink-0 flex-col items-center gap-px">
+              <Logo tight className={TIGHT_HEADER_LOGO} />
               <AppVersionBadge />
             </div>
             <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">

@@ -1,6 +1,6 @@
 import AppVersionBadge from '../../appReleases/componentes/AppVersionBadge.jsx'
 import SectionRefreshMascot from '../../shared/componentes/SectionRefreshMascot.jsx'
-import Logo from '../../shared/componentes/Logo.jsx'
+import Logo, { TIGHT_HEADER_LOGO, TIGHT_SIDEBAR_LOGO } from '../../shared/componentes/Logo.jsx'
 import { SellerBottomNav, SellerSidebarNav } from './SellerNav.jsx'
 import {
   sellerContent,
@@ -115,8 +115,8 @@ export default function SellerShell({
 
         {showBottomNav && (
           <aside className={sellerSidebar}>
-            <div className={`${sellerSidebarLogoWrap} flex-col items-center gap-2`}>
-              <Logo className="h-20 w-20 shrink-0 xl:h-24 xl:w-24" priority />
+            <div className={`${sellerSidebarLogoWrap} flex-col items-center gap-px`}>
+              <Logo tight priority className={TIGHT_SIDEBAR_LOGO} />
               <AppVersionBadge />
             </div>
             <SellerSidebarNav items={navItems} pendingOrderCount={pendingOrderCount} profilePhotoUrl={profilePhotoUrl} lockedIds={lockedNavIds} onLocked={onLockedNav} />
@@ -127,8 +127,8 @@ export default function SellerShell({
           {hideChrome ? null : (
           <header className={`${sellerHeader} shrink-0 shadow-[0_1px_0_rgba(89,128,44,0.06)]`}>
             <div className={`${sellerHeaderInner} relative`}>
-              <div className={`flex shrink-0 flex-col items-center gap-1 ${showBottomNav ? 'lg:hidden' : ''}`}>
-                <Logo className="h-9 w-9 sm:h-10 sm:w-10" priority />
+              <div className={`flex shrink-0 flex-col items-center gap-px ${showBottomNav ? 'lg:hidden' : ''}`}>
+                <Logo tight priority className={TIGHT_HEADER_LOGO} />
                 <AppVersionBadge />
               </div>
               <div className="pointer-events-none absolute inset-x-0 flex justify-center">
