@@ -89,6 +89,10 @@ function markerIcon(marker) {
   return icon
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 function markerLabel(marker) {
   const role = marker.session_kind === 'seller'
     ? 'Vendedor'
@@ -100,7 +104,7 @@ function markerLabel(marker) {
     : marker.platform === 'ios'
       ? 'iPhone'
       : 'Navegador'
-  return `${role} · ${place}${marker.active ? ' · Activo' : ''}`
+  return escapeHtml(`${role} · ${place}${marker.active ? ' · Activo' : ''}`)
 }
 
 function DeviceMapCanvas({ markers, frameKey, interactive }) {

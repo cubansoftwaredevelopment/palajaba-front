@@ -33,7 +33,6 @@ import {
 } from '../componentes/buyerStyles.js'
 
 const INSTAGRAM_URL = 'https://instagram.com/palajabaaa'
-const FALL_STEP_MS = 420
 const COVER_LOGO = '/images/pitch/logo-cover.png'
 const NEXT_BUTTON = 'flex min-h-11 w-full items-center justify-center rounded-full bg-brand-green px-5 text-sm font-semibold text-brand-white shadow-[0_6px_20px_rgba(89,128,44,0.3)] touch-manipulation'
 
@@ -105,14 +104,14 @@ const VIEWS_BY_ZONE = {
 }
 const QUIET_PRODUCTS = {
   items: [
-    { product_id: 'cafe', name: 'Café', views: 64, purchases: 4, conversion_rate: 6.3, image_url: PINAR?.imageUrl },
-    { product_id: 'malanga', name: 'Malanga', views: 41, purchases: 3, conversion_rate: 7.3, image_url: HOLGUIN?.imageUrl },
+    { product_id: 'cafe', name: 'Café', views: 64, purchases: 4, conversion_rate: 6.3, image_url: '/images/pitch/cafe.png' },
+    { product_id: 'malanga', name: 'Malanga', views: 41, purchases: 3, conversion_rate: 7.3, image_url: '/images/pitch/malanga-corte.png?v=2' },
   ],
 }
 const TOP_SOLD = {
   items: [
-    { product_id: 'malanga', name: 'Malanga', units_sold: 18, image_url: HOLGUIN?.imageUrl },
-    { product_id: 'cafe', name: 'Café', units_sold: 11, image_url: PINAR?.imageUrl },
+    { product_id: 'malanga', name: 'Malanga', units_sold: 18, image_url: '/images/pitch/malanga-corte.png?v=2' },
+    { product_id: 'cafe', name: 'Café', units_sold: 11, image_url: '/images/pitch/cafe.png' },
   ],
 }
 
@@ -134,27 +133,12 @@ function pitchOrder(overrides) {
 
 function Story({ title, active, reduced, blocks }) {
   const scrollerRef = useRef(null)
-  const itemRefs = useRef([])
 
   useLayoutEffect(() => {
     if (!active) return undefined
     scrollerRef.current?.scrollTo({ top: 0 })
     return undefined
   }, [active])
-
-  useEffect(() => {
-    if (!active || reduced) return undefined
-    const timers = blocks.map((_, index) => window.setTimeout(() => {
-      const root = scrollerRef.current
-      const node = itemRefs.current[index]
-      if (!root || !node) return
-      const rootBox = root.getBoundingClientRect()
-      const nodeBox = node.getBoundingClientRect()
-      if (nodeBox.top < rootBox.bottom - 168) return
-      root.scrollTo({ top: root.scrollTop + (nodeBox.top - rootBox.top) - 12, behavior: 'smooth' })
-    }, index * FALL_STEP_MS))
-    return () => timers.forEach((id) => window.clearTimeout(id))
-  }, [active, reduced])
 
   const falling = active && !reduced
 
@@ -168,7 +152,6 @@ function Story({ title, active, reduced, blocks }) {
         {blocks.map((block, index) => (
           <div
             key={block.key}
-            ref={(node) => { itemRefs.current[index] = node }}
             className={falling ? 'pitch-fall' : reduced ? undefined : 'pitch-hold'}
             style={falling ? { animationDelay: `${index * 0.42}s` } : undefined}
           >

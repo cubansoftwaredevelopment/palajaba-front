@@ -275,11 +275,11 @@ export default function AppLocationMap({
         disabled={locating}
         aria-label={locating ? 'Buscando ubicación' : 'Usar mi ubicación'}
         title={locating ? 'Buscando ubicación…' : 'Usar mi ubicación'}
-        className={`${controlClass} right-3 bottom-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))]`}
+        className={`${controlClass} right-3 ${expanded ? 'bottom-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))]' : 'bottom-3'}`}
       >
         <svg viewBox="0 0 24 24" className={`h-5 w-5 ${locating ? 'animate-pulse' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="3" /><path d="M12 2v3m0 14v3M2 12h3m14 0h3" /><circle cx="12" cy="12" r="8" /></svg>
       </button>
-      {locateError ? <p role="alert" className="absolute left-3 z-[1000] max-w-[70%] rounded-lg bg-white/95 px-3 py-2 text-xs text-red-700 shadow bottom-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))]">{locateError}</p> : null}
+      {locateError ? <p role="alert" className={`absolute left-3 z-[1000] max-w-[70%] rounded-lg bg-white/95 px-3 py-2 text-xs text-red-700 shadow ${expanded ? 'bottom-[max(4.5rem,calc(3.25rem+var(--safe-bottom)))]' : 'bottom-3'}`}>{locateError}</p> : null}
     </motion.div>
   )
 

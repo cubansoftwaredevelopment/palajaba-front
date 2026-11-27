@@ -19,9 +19,13 @@ function formatCount(value) {
   return Math.round(Number(value) || 0).toLocaleString('es')
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
 function pinLabel(pin) {
   const place = pin.address ? pin.address : 'Sin dirección escrita'
-  return `${pin.store_name} · ${place}`
+  return `${escapeHtml(pin.store_name)} · ${escapeHtml(place)}`
 }
 
 function OrderPinsCanvas({ pins, frameKey, interactive }) {
