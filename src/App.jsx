@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider, useLocation } from 'react-router-dom'
 import RouteMotion, { isBuyerMotionPath } from './motion/RouteMotion'
+import { useHorizontalSwipeNav } from './motion/useHorizontalSwipeNav.js'
 import BootSplash from './shared/componentes/BootSplash.jsx'
 import ScrollToTopButton from './shared/componentes/ScrollToTopButton.jsx'
 import CustomerNoticeToasts from './buyer/componentes/CustomerNoticeToasts.jsx'
@@ -85,6 +86,11 @@ import { NativeDeepLinkBridge } from './appReleases/utils/nativeDeepLinks.js'
 import { disableBuyerLocationPersistence } from './buyer/utils/buyerLocation.js'
 import { markFrontendReady } from './shared/utils/frontendReady.js'
 import { startAnonymousNativePush } from './live/utils'
+import { isInNativeApp } from './appReleases/utils/releases.js'
+
+if (typeof window !== 'undefined' && isInNativeApp()) {
+  document.documentElement.classList.add('native-app')
+}
 
 if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('vista') === 'preview') {
   disableBuyerLocationPersistence()
@@ -94,6 +100,7 @@ if (typeof window !== 'undefined' && new URLSearchParams(window.location.search)
 function RootLayout() {
   const location = useLocation()
   const motionPath = isBuyerMotionPath(location.pathname)
+  useHorizontalSwipeNav()
 
   useEffect(() => {
     const waitsForOffers =

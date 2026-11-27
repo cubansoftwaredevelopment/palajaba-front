@@ -87,7 +87,7 @@ export default function BuyerShareSheet({ title, message, url, onClose: requestC
         }}
         panelProps={{ role: 'dialog', 'aria-modal': true, 'aria-labelledby': 'buyer-share-title' }}
       >
-          <div className="px-5 pt-3 pb-[max(1.25rem,var(--safe-bottom))] sm:pb-5">
+          <div className="px-5 pt-3 pb-5">
             <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-brand-green/15 sm:hidden" aria-hidden="true" />
             <div className="flex items-start justify-between gap-3">
               <div>

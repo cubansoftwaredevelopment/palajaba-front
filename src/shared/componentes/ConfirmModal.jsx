@@ -34,7 +34,7 @@ export default function ConfirmModal({
       sheetProps={sheetProps}
       variant="dialog"
       labelledBy="confirm-modal-title"
-      overlayClassName="fixed inset-0 z-[100] flex items-end justify-center bg-brand-green/25 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:items-center sm:pb-4"
+      overlayClassName="fixed inset-0 z-[100] flex items-end justify-center bg-brand-green/25 p-4 backdrop-blur-sm sm:items-center"
       panelClassName="relative w-full max-w-sm overflow-hidden rounded-3xl border border-brand-green/15 bg-brand-white p-6 shadow-[0_24px_60px_rgba(89,128,44,0.22)]"
     >
         <div

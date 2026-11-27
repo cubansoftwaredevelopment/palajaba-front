@@ -60,7 +60,7 @@ export default function BuyerMotionFrame({
     <Panel
       {...pointer}
       {...panelProps}
-      className={`${panelClassName} ${closed}`}
+      className={`app-modal-panel ${panelClassName} ${closed}`}
       style={STILL}
       initial={reduced ? false : spec.hidden}
       animate={panelAnimate}

@@ -155,7 +155,7 @@ export default function CatalogProductDetailModal({
         </div>
 
         {onEdit || onDelete ? (
-        <div className="shrink-0 grid grid-cols-2 gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
+        <div className="shrink-0 grid grid-cols-2 gap-2 border-t border-brand-green/8 px-5 py-4">
           {onDelete ? (
           <button
             type="button"

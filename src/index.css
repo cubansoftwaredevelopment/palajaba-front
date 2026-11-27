@@ -23,6 +23,10 @@
   --buyer-nav-space: calc(4.5rem + var(--safe-bottom));
 }
 
+html.native-app .app-modal-panel {
+  padding-bottom: max(1rem, var(--safe-bottom));
+}
+
 @theme {
   --font-sans: 'Shree Devanagari 714', Georgia, 'Times New Roman', serif;
   --font-display: 'Shree Devanagari 714', Georgia, 'Times New Roman', serif;

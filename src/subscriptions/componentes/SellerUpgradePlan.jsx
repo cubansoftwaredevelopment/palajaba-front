@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 
-import BillingPeriodTabs from './BillingPeriodTabs.jsx'
+import PillTabs from '../../shared/componentes/PillTabs.jsx'
 import CountingAmount from './CountingAmount.jsx'
 import PlanPriceBlock from './PlanPriceBlock.jsx'
 import { BILLING_LABELS } from '../../admin/utils/admin.js'
 import {
+  BILLING_PERIOD_OPTIONS,
   canUpgradePlan,
   getSellerPlan,
   normalizeBillingPeriod,
@@ -136,7 +137,13 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
       <SellerPluginAddons profile={profile} onUpdated={onUpdated} />
 
       {planOptions.length > 0 ? (
-        <BillingPeriodTabs value={billing} onChange={setBilling} />
+        <PillTabs
+          ariaLabel="Periodo de facturación"
+          selectionRole="radio"
+          value={billing}
+          onChange={setBilling}
+          options={BILLING_PERIOD_OPTIONS}
+        />
       ) : null}
 
       {planOptions.length === 0 ? (

@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { monthPageShift } from '../../motion/presets'
-import MethodTabs from '../../auth/componentes/MethodTabs.jsx'
+import { useMessengerSwipe } from '../../motion/useHorizontalSwipeNav.js'
+import PillTabs from '../../shared/componentes/PillTabs.jsx'
+import { formatOrderDateTime } from '../../shared/utils/dates.js'
 import NoticeDateFilter from '../../shared/componentes/NoticeDateFilter.jsx'
 import Logo from '../../shared/componentes/Logo.jsx'
 import SellerLogoutModal from '../../seller/componentes/SellerLogoutModal.jsx'
@@ -195,6 +197,28 @@ export default function MensajeroPanel() {
     setSection(next)
   }
 
+  const sectionRef = useRef(section)
+  const batchRef = useRef(batch)
+  sectionRef.current = section
+  batchRef.current = batch
+  useMessengerSwipe((swipeDirection) => {
+    const openRoute = batchRef.current && batchRef.current.status !== 'completed'
+    if (openRoute) {
+      if (swipeDirection < 0) closeBatch()
+      else selectSection('profile')
+      return true
+    }
+    if (sectionRef.current === 'notices') {
+      selectSection(swipeDirection < 0 ? 'work' : 'profile')
+      return true
+    }
+    const index = sectionRef.current === 'profile' ? 1 : 0
+    const next = index + swipeDirection
+    if (next < 0 || next > 1) return false
+    selectSection(next === 0 ? 'work' : 'profile')
+    return true
+  })
+
   function replaceBatch(next) {
     if (!data) return
     const updated = {
@@ -321,7 +345,7 @@ export default function MensajeroPanel() {
             ) : (
               <>
                 <h1 className="mb-5 text-center font-script text-7xl leading-[1.05] text-brand-carmelita sm:text-8xl">Rutas</h1>
-                <MethodTabs ariaLabel="Mensajerías" value={tab} onChange={selectTab} options={PANEL_TABS} />
+                <PillTabs ariaLabel="Mensajerías" value={tab} onChange={selectTab} options={PANEL_TABS} />
                 <NoticeDateFilter from={from} to={to} onChange={(nextFrom, nextTo) => { setFrom(nextFrom || ''); setTo(nextTo || '') }} />
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div key={tab} className={stepClass} {...shift}>
@@ -331,14 +355,26 @@ export default function MensajeroPanel() {
                       <p className="mt-3 text-sm font-semibold text-brand-carmelita">{data?.done_count || 0} pedidos · {moneyLine(data?.done_amounts)} · {data?.km || 0} km</p>
                     )}
                     <ul className="mt-4 space-y-2">
-                      {batches.map((item) => (
+                      {batches.map((item) => {
+                        const names = tab === 'done'
+                          ? (item.orders || []).map((order) => order.buyer_name).filter(Boolean).join(', ')
+                          : ''
+                        return (
                         <li key={item.id}>
                           <button type="button" className="w-full rounded-2xl border border-brand-green/12 bg-brand-white px-3 py-3 text-left" onClick={() => openBatch(item)}>
                             <span className="font-bold text-brand-carmelita">{item.orders?.length || 0} pedidos</span>
-                            <span className="mt-1 block text-sm text-brand-carmelita/80">{item.status === 'in_progress' ? 'En ruta' : item.status === 'completed' ? 'Realizada' : 'Asignada'}</span>
+                            {tab === 'done' ? (
+                              <>
+                                {names ? <span className="mt-1 block text-sm text-brand-carmelita/80">{names}</span> : null}
+                                <span className="mt-1 block text-sm text-brand-carmelita/70">{formatOrderDateTime(item.closed_at || item.created_at)}</span>
+                              </>
+                            ) : (
+                              <span className="mt-1 block text-sm text-brand-carmelita/80">{item.status === 'in_progress' ? 'En ruta' : 'Asignada'}</span>
+                            )}
                           </button>
                         </li>
-                      ))}
+                        )
+                      })}
                     </ul>
                   </motion.div>
                 </AnimatePresence>

@@ -9,7 +9,7 @@ import SellerManualOrderModal from '../componentes/SellerManualOrderModal.jsx'
 import SellerOrderDetailModal from '../componentes/SellerOrderDetailModal.jsx'
 import SellerOrderItem from '../componentes/SellerOrderItem.jsx'
 import SellerOrdersGroup from '../componentes/SellerOrdersGroup.jsx'
-import SellerOrdersTabs from '../componentes/SellerOrdersTabs.jsx'
+import PillTabs from '../../shared/componentes/PillTabs.jsx'
 import SellerNotificationToast from '../componentes/SellerNotificationToast.jsx'
 import SellerPageHeader from '../componentes/SellerPageHeader.jsx'
 import { useSellerReadOnly } from '../componentes/sellerReadOnly.js'
@@ -512,11 +512,24 @@ export default function SellerOrders() {
 
       {!loading && !error && orders.length > 0 ? (
         <>
-          <SellerOrdersTabs
-            activeTab={activeTab}
-            onTabChange={selectTab}
-            pendingCount={orderStatusCounts.pending}
-            completedCount={orderStatusCounts.completed}
+          <PillTabs
+            ariaLabel="Tipo de pedidos"
+            value={activeTab}
+            onChange={selectTab}
+            className="mb-4 shadow-[0_2px_10px_rgba(89,128,44,0.05)]"
+            options={[
+              {
+                id: 'pending',
+                label: 'Por procesar',
+                badge: orderStatusCounts.pending,
+                badgeClassName: (selected) => (
+                  selected
+                    ? 'bg-brand-yellow/30 text-brand-carmelita'
+                    : 'bg-brand-yellow/15 text-brand-carmelita/80'
+                ),
+              },
+              { id: 'completed', label: 'Realizadas', badge: orderStatusCounts.completed },
+            ]}
           />
 
           <div className="mb-3">

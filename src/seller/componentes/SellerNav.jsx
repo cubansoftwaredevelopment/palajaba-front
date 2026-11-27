@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { useLayoutEffect, useRef } from 'react'
+import { NavLink, useLocation } from 'react-router-dom'
 import { SELLER_NAV } from '../utils/sellerNav.js'
 import { sellerFocusRing } from './sellerStyles.js'
 
@@ -87,14 +88,36 @@ function guardClick(event, item, lockedIds, onLocked) {
   onLocked?.(item)
 }
 
+function revealActiveSection(scroller) {
+  const active = scroller.querySelector('[aria-current="page"]')
+  if (!(active instanceof HTMLElement)) return
+  const scrollerRect = scroller.getBoundingClientRect()
+  const itemRect = active.getBoundingClientRect()
+  const padding = 8
+  if (itemRect.left >= scrollerRect.left + padding && itemRect.right <= scrollerRect.right - padding) return
+  const delta = itemRect.left - scrollerRect.left - (scrollerRect.width - itemRect.width) / 2
+  scroller.scrollTo({ left: Math.max(0, scroller.scrollLeft + delta), behavior: 'smooth' })
+}
+
 export function SellerBottomNav({ items = SELLER_NAV, pendingOrderCount = 0, profilePhotoUrl = '', lockedIds = [], onLocked }) {
+  const scrollerRef = useRef(null)
+  const { pathname } = useLocation()
+
+  useLayoutEffect(() => {
+    const scroller = scrollerRef.current
+    if (!scroller) return undefined
+    revealActiveSection(scroller)
+    const frame = window.requestAnimationFrame(() => revealActiveSection(scroller))
+    return () => window.cancelAnimationFrame(frame)
+  }, [pathname, items])
+
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-30 w-full max-w-[100dvw] border-t border-brand-green/10 bg-brand-white/95 shadow-[0_-4px_24px_rgba(89,128,44,0.08)] backdrop-blur-md lg:hidden"
       style={{ paddingBottom: 'max(0.375rem, var(--safe-bottom))' }}
       aria-label="Secciones de tu tienda"
     >
-      <div className="mx-auto flex w-full min-w-0 max-w-md snap-x items-stretch overflow-x-auto px-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-1 [&::-webkit-scrollbar]:hidden">
+      <div ref={scrollerRef} className="mx-auto flex w-full min-w-0 max-w-md snap-x items-stretch overflow-x-auto px-0.5 [-ms-overflow-style:none] [scrollbar-width:none] sm:px-1 [&::-webkit-scrollbar]:hidden">
         {items.map((item) => (
           <NavLink key={item.id} to={item.path} end={item.end} className={({ isActive }) => bottomLinkClass(isActive)} onClick={(event) => guardClick(event, item, lockedIds, onLocked)}>
             {({ isActive }) => {

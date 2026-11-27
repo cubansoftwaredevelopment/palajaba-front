@@ -64,7 +64,7 @@ function SlideToStart({ disabled, onStart }) {
   const fill = offset + 52
 
   return (
-    <div ref={trackRef} className="relative mt-4 h-14 touch-none overflow-hidden rounded-full bg-brand-green/10 [container-type:inline-size]">
+    <div ref={trackRef} data-swipe-ignore="" className="relative mt-4 h-14 touch-none overflow-hidden rounded-full bg-brand-green/10 [container-type:inline-size]">
       <div
         className="absolute inset-y-0 left-0 bg-brand-green"
         style={{ width: fill, transition: dragging ? 'none' : 'width 0.25s ease' }}

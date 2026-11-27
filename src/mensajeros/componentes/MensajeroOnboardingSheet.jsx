@@ -242,7 +242,7 @@ export default function MensajeroOnboardingSheet({ profile, onChange, onDone }) 
           )}
           {error ? <p className="mt-3 text-sm font-semibold text-red-700">{error}</p> : null}
         </div>
-        <div className="shrink-0 flex gap-2 border-t border-brand-green/10 px-5 py-3 pb-[max(0.85rem,var(--safe-bottom))]">
+        <div className="shrink-0 flex gap-2 border-t border-brand-green/10 px-5 py-3 pb-[0.85rem]">
           {step === 2 ? (
             <button type="button" className={sellerBtnSecondary} disabled={saving} onClick={() => { setError(''); setStep(1) }}>Atrás</button>
           ) : null}

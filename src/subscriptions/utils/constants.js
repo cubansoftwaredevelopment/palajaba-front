@@ -1,3 +1,4 @@
+import { BILLING_LABELS } from '../../admin/utils/admin.js'
 import { convertBetweenCurrencies } from '../../shared/utils/displayPrice.js'
 import { areExchangeRatesAvailable, getCupPerUnit } from '../../shared/utils/exchangeRates.js'
 import { PLAN_GESTOR_FEATURES } from '../../gestor/utils/gestorPlanLimits.js'
@@ -6,6 +7,11 @@ export const PLAN_SOURCE_CURRENCY = 'USD'
 export const PLAN_DISPLAY_CURRENCY = 'CUP'
 
 export const BILLING_PERIOD_ORDER = ['monthly', 'quarterly', 'yearly']
+
+export const BILLING_PERIOD_OPTIONS = BILLING_PERIOD_ORDER.map((id) => ({
+  id,
+  label: BILLING_LABELS[id],
+}))
 
 export const BILLING_UNIT_LABELS = {
   monthly: 'mes',

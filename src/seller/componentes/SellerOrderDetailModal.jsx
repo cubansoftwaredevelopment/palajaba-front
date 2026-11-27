@@ -937,7 +937,7 @@ export default function SellerOrderDetailModal({
           ) : null}
         </div>
 
-        <div className="shrink-0 flex gap-2 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]">
+        <div className="shrink-0 flex gap-2 border-t border-brand-green/8 px-5 py-4">
           {!qvaAwaitingStore || readOnly ? (
             <button
               type="button"
@@ -1053,7 +1053,7 @@ export default function SellerOrderDetailModal({
               Cerrar
             </button>
           </div>
-          <div className="flex min-h-0 flex-1 flex-col p-3 pb-[max(0.75rem,var(--safe-bottom))]">
+          <div className="flex min-h-0 flex-1 flex-col p-3">
             <SellerLocationPreview
               viewOnly
               location={{

@@ -150,7 +150,7 @@ export default function FilterModal({
               </div>
             ) : null}
           </div>
-          <footer className="flex justify-between gap-3 border-t border-brand-green/10 px-4 pt-4 pb-[max(1rem,var(--safe-bottom))] sm:pb-4">
+          <footer className="flex justify-between gap-3 border-t border-brand-green/10 px-4 pt-4 pb-4">
             <button type="button" onClick={clear} className="min-h-10 rounded-xl border border-brand-green/15 px-4 text-sm font-semibold text-brand-green">Limpiar filtros</button>
             <button type="button" onClick={apply} className="min-h-10 rounded-xl bg-brand-green px-5 text-sm font-semibold text-white">{applyLabel}</button>
           </footer>

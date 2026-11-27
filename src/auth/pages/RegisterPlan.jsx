@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import Button from '../../shared/componentes/Button.jsx'
-import BillingPeriodTabs from '../../subscriptions/componentes/BillingPeriodTabs.jsx'
+import PillTabs from '../../shared/componentes/PillTabs.jsx'
 import PlanPriceBlock from '../../subscriptions/componentes/PlanPriceBlock.jsx'
 import { usePlanPricing } from '../../subscriptions/utils/usePlanPricing.js'
 import {
+  BILLING_PERIOD_OPTIONS,
   PLAN_TIERS,
   TRIAL_PLAN,
 } from '../../subscriptions/utils/constants.js'
@@ -80,7 +81,13 @@ export default function RegisterPlan() {
         </div>
 
         <div className="mt-2 grid gap-3 sm:grid-cols-[1.2fr_1fr] sm:items-center lg:max-w-4xl">
-          <BillingPeriodTabs value={billing} onChange={setBilling} />
+          <PillTabs
+            ariaLabel="Periodo de facturación"
+            selectionRole="radio"
+            value={billing}
+            onChange={setBilling}
+            options={BILLING_PERIOD_OPTIONS}
+          />
           <div className="flex flex-col items-center gap-1">
             <Button type="button" className="w-full" disabled={!planTier && !trialSelected} onClick={continueToRegistration}>
               {trialSelected ? 'Continuar con la prueba' : 'Continuar al pago'}

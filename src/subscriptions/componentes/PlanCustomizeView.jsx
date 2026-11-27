@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import AuthHeader from '../../auth/componentes/AuthHeader.jsx'
 import AuthShell from '../../auth/componentes/AuthShell.jsx'
 import Button from '../../shared/componentes/Button.jsx'
-import { formatPlanAmount } from '../utils/constants.js'
+import { BILLING_PERIOD_OPTIONS, formatPlanAmount } from '../utils/constants.js'
 import { PLAN_PLUGINS, pluginPeriodUsd, pluginUnitUsd } from '../utils/planPlugins.js'
 import { usePlanPricing } from '../utils/usePlanPricing.js'
 import { isSubscriptionCheckoutPaid, subscriptionCheckoutStatusMessage } from '../qvapay.js'
 import { PAYMENT_CARD_NUMBER, PAYMENT_PHONE, PAYMENT_QR_IMAGE } from '../utils/payment.js'
-import BillingPeriodTabs from './BillingPeriodTabs.jsx'
+import PillTabs from '../../shared/componentes/PillTabs.jsx'
 import CountingAmount from './CountingAmount.jsx'
 
 function moneyUsd(value) {
@@ -203,13 +203,16 @@ export default function PlanCustomizeView({
           {progress}
         </div>
         <div className="mt-2 max-w-md">
-          <BillingPeriodTabs
+          <PillTabs
+            ariaLabel="Periodo de facturación"
+            selectionRole="radio"
             value={billing}
             onChange={(period) => {
               if (billingLocked) return
               setBilling(period)
               setCheckout(null)
             }}
+            options={BILLING_PERIOD_OPTIONS}
           />
         </div>
         <div className="mt-5 grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.8fr)]">

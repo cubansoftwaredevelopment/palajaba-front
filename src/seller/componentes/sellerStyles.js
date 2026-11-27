@@ -234,7 +234,7 @@ export const sellerModalBody =
   'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4'
 
 export const sellerModalFooter =
-  'shrink-0 border-t border-brand-green/8 px-5 py-4 pb-[max(1rem,var(--safe-bottom))]'
+  'shrink-0 border-t border-brand-green/8 px-5 py-4'
 
 export const sellerNoticeToastShell =
   'pointer-events-none fixed inset-x-0 z-[85] flex justify-center px-4'

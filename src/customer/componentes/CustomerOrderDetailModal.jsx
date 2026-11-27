@@ -124,7 +124,7 @@ export default function CustomerOrderDetailModal({ order, onClose, onUpdated }) 
         sheetProps={sheetProps}
         panelAs="section"
         overlayClassName="fixed inset-0 z-[120] flex items-end justify-center bg-brand-green/25 p-0 backdrop-blur-[3px] sm:items-center sm:p-4"
-        panelClassName="relative flex max-h-[min(92dvh,44rem)] min-h-0 w-full max-w-2xl flex-col overflow-y-auto rounded-t-3xl border border-brand-green/12 bg-brand-white px-5 pt-5 pb-[max(1.25rem,calc(1.25rem+var(--safe-bottom)))] shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:rounded-3xl sm:p-6"
+        panelClassName="relative flex max-h-[min(92dvh,44rem)] min-h-0 w-full max-w-2xl flex-col overflow-y-auto rounded-t-3xl border border-brand-green/12 bg-brand-white px-5 pt-5 pb-5 shadow-[0_24px_60px_rgba(89,128,44,0.22)] sm:rounded-3xl sm:p-6"
         overlayProps={{
           role: 'presentation',
           onMouseDown: (event) => {

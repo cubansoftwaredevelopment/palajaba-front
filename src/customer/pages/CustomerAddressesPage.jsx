@@ -128,7 +128,7 @@ export default function CustomerAddressesPage() {
           sheetProps={addressSheetProps}
           panelAs="section"
           overlayClassName="fixed inset-0 z-[110] flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-3"
-          panelClassName="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-y-auto rounded-t-3xl bg-brand-white px-5 pt-5 pb-[max(1.25rem,calc(1.25rem+var(--safe-bottom)))] shadow-xl sm:rounded-3xl sm:p-6"
+          panelClassName="flex max-h-[94dvh] w-full max-w-3xl flex-col overflow-y-auto rounded-t-3xl bg-brand-white px-5 pt-5 pb-5 shadow-xl sm:rounded-3xl sm:p-6"
           overlayProps={{
             role: 'presentation',
             onMouseDown: (event) => {

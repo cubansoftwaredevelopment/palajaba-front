@@ -173,7 +173,7 @@ export default function SellerOrderEvidenceEditor({ orderId, submitting, onSubmi
                 />
                 {error ? <p role="alert" className="shrink-0 rounded-xl border border-brand-carmelita/20 bg-brand-carmelita/10 px-3 py-2 text-sm text-brand-carmelita">{error}</p> : null}
               </main>
-              <footer className="flex shrink-0 justify-end border-t border-brand-green/10 bg-brand-white px-5 py-3 pb-[max(0.75rem,var(--safe-bottom))]">
+              <footer className="flex shrink-0 justify-end border-t border-brand-green/10 bg-brand-white px-5 py-3">
                 <button type="button" onClick={submit} disabled={submitting} className="min-h-11 w-full rounded-xl bg-brand-green px-5 font-bold text-brand-white shadow-[0_8px_20px_rgba(89,128,44,0.2)] transition hover:bg-brand-green/90 disabled:opacity-50">
                   {submitting ? 'Enviando evidencia…' : 'Enviar evidencia al cliente'}
                 </button>

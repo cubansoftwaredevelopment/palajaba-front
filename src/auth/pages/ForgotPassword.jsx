@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import AuthCard from '../componentes/AuthCard.jsx'
 import AuthHeader from '../componentes/AuthHeader.jsx'
 import AuthShell from '../componentes/AuthShell.jsx'
-import MethodTabs from '../componentes/MethodTabs.jsx'
+import PillTabs from '../../shared/componentes/PillTabs.jsx'
 import PhoneField from '../componentes/PhoneField.jsx'
 import Button from '../../shared/componentes/Button.jsx'
 import { inputClass, labelClass } from '../componentes/formStyles.js'
@@ -91,7 +91,7 @@ export default function ForgotPassword() {
 
         <AuthCard>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
-            <MethodTabs
+            <PillTabs
               options={METHODS}
               value={method}
               onChange={setMethod}

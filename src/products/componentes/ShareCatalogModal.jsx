@@ -182,7 +182,7 @@ export default function ShareCatalogModal({ profile, onClose: requestClose }) {
             </button>
           </div>
 
-          <div className="px-5 pt-4 pb-[max(1rem,var(--safe-bottom))] sm:pb-4">
+          <div className="px-5 pt-4 pb-4">
             {view === 'options' ? (
               <>
                 <p className={`break-all ${sellerHint}`}>{catalogUrl}</p>

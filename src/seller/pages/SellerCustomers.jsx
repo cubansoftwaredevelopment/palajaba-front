@@ -25,7 +25,7 @@ import {
 } from '../componentes/sellerStyles.js'
 import SellerMotionSheet, { useSellerSheet } from '../../motion/SellerMotionSheet'
 import { monthPageShift } from '../../motion/presets'
-import MethodTabs from '../../auth/componentes/MethodTabs.jsx'
+import PillTabs from '../../shared/componentes/PillTabs.jsx'
 
 import { isCustomerPaidOrder } from '../../orders/utils/orderStatus.js'
 
@@ -255,7 +255,7 @@ function CustomerNoticeModal({ onClose, onSent }) {
           <button type="button" onClick={dismiss} aria-label="Cerrar aviso" className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-2xl leading-none text-brand-carmelita/65 hover:bg-brand-green/8">×</button>
         </header>
         <div className={sellerModalBody}>
-          <MethodTabs
+          <PillTabs
             ariaLabel="Destinatarios del aviso"
             value={allCustomers ? 'all' : 'selected'}
             onChange={(next) => setAllCustomers(next === 'all')}
@@ -579,7 +579,7 @@ export default function SellerCustomers() {
         <h1 className="font-script text-7xl leading-[1.05] text-brand-carmelita sm:text-8xl">Clientes</h1>
         <p className="mt-1 text-sm text-brand-carmelita/70">Clientes que han realizado pedidos en tu tienda.</p>
       </header>
-      <MethodTabs
+      <PillTabs
         ariaLabel="Sección de clientes"
         value={sectionTab}
         onChange={selectSection}

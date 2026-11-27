@@ -1,4 +1,4 @@
-import MethodTabs from '../../auth/componentes/MethodTabs.jsx'
+import PillTabs from '../../shared/componentes/PillTabs.jsx'
 
 export const CHART_GRANULARITY_OPTIONS = [
   { id: 'daily', label: 'Diario' },
@@ -20,7 +20,7 @@ export default function SellerChartGranularity({
     : visibleOptions[0].id
 
   return (
-    <MethodTabs
+    <PillTabs
       options={visibleOptions}
       value={value}
       onChange={onGranularityChange}

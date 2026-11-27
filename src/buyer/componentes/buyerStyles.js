@@ -364,7 +364,7 @@ export const buyerProductDetailSpecValue =
   'mt-1 text-sm font-semibold leading-snug text-brand-green'
 
 export const buyerProductDetailStickyBar =
-  'shrink-0 border-t border-brand-green/10 bg-brand-white/95 px-5 py-3 pb-[max(0.85rem,var(--safe-bottom))] shadow-[0_-8px_24px_rgba(89,128,44,0.08)] backdrop-blur-md'
+  'shrink-0 border-t border-brand-green/10 bg-brand-white/95 px-5 py-3 pb-[0.85rem] shadow-[0_-8px_24px_rgba(89,128,44,0.08)] backdrop-blur-md'
 
 export const buyerMarketplaceNavShell =
   'fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-md rounded-t-[1.75rem] bg-brand-white pt-2 shadow-[0_-8px_28px_rgba(28,33,24,0.08)] pb-[max(0.7rem,var(--safe-bottom))] sm:max-w-lg'
