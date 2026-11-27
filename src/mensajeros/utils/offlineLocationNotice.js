@@ -33,6 +33,7 @@ export async function showOfflineLocationNotice() {
           title: TITLE,
           body: BODY,
           channelId: CHANNEL_ID,
+          smallIcon: 'ic_stat_notify',
         },
       ],
     })
