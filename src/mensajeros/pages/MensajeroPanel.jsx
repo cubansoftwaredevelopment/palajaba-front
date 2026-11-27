@@ -6,6 +6,7 @@ import { useMessengerSwipe } from '../../motion/useHorizontalSwipeNav.js'
 import PillTabs from '../../shared/componentes/PillTabs.jsx'
 import { formatOrderDateTime } from '../../shared/utils/dates.js'
 import NoticeDateFilter from '../../shared/componentes/NoticeDateFilter.jsx'
+import AppVersionBadge from '../../appReleases/componentes/AppVersionBadge.jsx'
 import Logo from '../../shared/componentes/Logo.jsx'
 import SellerLogoutModal from '../../seller/componentes/SellerLogoutModal.jsx'
 import SellerNotificationToast from '../../seller/componentes/SellerNotificationToast.jsx'
@@ -273,7 +274,10 @@ export default function MensajeroPanel() {
     <div className="flex h-dvh min-h-0 flex-col overflow-hidden bg-brand-white">
       <header className={sellerHeader}>
         <div className={`${sellerHeaderInner} relative`}>
-          <Logo className="h-9 w-9 shrink-0 sm:h-10 sm:w-10" priority />
+          <div className="flex shrink-0 flex-col items-center gap-1">
+            <Logo className="h-9 w-9 sm:h-10 sm:w-10" priority />
+            <AppVersionBadge />
+          </div>
           <div className="ml-auto flex shrink-0 items-center">
             <HeaderIconButton ariaLabel="Avisos" badge={unreadNotices.length} active={section === 'notices' && !batch} onClick={() => selectSection('notices')}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden="true">

@@ -1,3 +1,4 @@
+import AppVersionBadge from '../../appReleases/componentes/AppVersionBadge.jsx'
 import SectionRefreshMascot from '../../shared/componentes/SectionRefreshMascot.jsx'
 import Logo from '../../shared/componentes/Logo.jsx'
 import { SellerBottomNav, SellerSidebarNav } from './SellerNav.jsx'
@@ -114,8 +115,9 @@ export default function SellerShell({
 
         {showBottomNav && (
           <aside className={sellerSidebar}>
-            <div className={sellerSidebarLogoWrap}>
+            <div className={`${sellerSidebarLogoWrap} flex-col items-center gap-2`}>
               <Logo className="h-20 w-20 shrink-0 xl:h-24 xl:w-24" priority />
+              <AppVersionBadge />
             </div>
             <SellerSidebarNav items={navItems} pendingOrderCount={pendingOrderCount} profilePhotoUrl={profilePhotoUrl} lockedIds={lockedNavIds} onLocked={onLockedNav} />
           </aside>
@@ -125,10 +127,10 @@ export default function SellerShell({
           {hideChrome ? null : (
           <header className={`${sellerHeader} shrink-0 shadow-[0_1px_0_rgba(89,128,44,0.06)]`}>
             <div className={`${sellerHeaderInner} relative`}>
-              <Logo
-                className={`h-9 w-9 shrink-0 sm:h-10 sm:w-10 ${showBottomNav ? 'lg:hidden' : ''}`}
-                priority
-              />
+              <div className={`flex shrink-0 flex-col items-center gap-1 ${showBottomNav ? 'lg:hidden' : ''}`}>
+                <Logo className="h-9 w-9 sm:h-10 sm:w-10" priority />
+                <AppVersionBadge />
+              </div>
               <div className="pointer-events-none absolute inset-x-0 flex justify-center">
                 <div className="pointer-events-auto flex flex-col items-center gap-0.5">
                   <span className={`rounded-full px-2 py-1 text-[0.55rem] font-extrabold uppercase tracking-wide sm:px-2.5 sm:text-[0.65rem] ${subscriptionActive ? 'bg-brand-green/10 text-brand-green' : 'bg-amber-100 text-amber-800'}`} role="status">

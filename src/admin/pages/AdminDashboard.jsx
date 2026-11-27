@@ -48,6 +48,8 @@ const EMPTY_FILTERS = {
   plan: 'all',
   billing: 'all',
   gestores: '',
+  transportistas: '',
+  viajes: '',
   app: '',
 }
 
@@ -256,6 +258,8 @@ export default function AdminDashboard() {
         if (filters.plan !== 'all' && getSellerPlan(item).id !== filters.plan) return false
         if (filters.billing !== 'all' && item.billing_period !== filters.billing) return false
         if (!includesText(String(item.gestor_count ?? 0), filters.gestores)) return false
+        if (!includesText(String(item.mensajero_count ?? 0), filters.transportistas)) return false
+        if (!includesText(String(item.trip_count ?? 0), filters.viajes)) return false
         if (!includesText(formatAppDownloadsText(item.app_downloads), filters.app)) return false
         return true
       }),
@@ -353,6 +357,8 @@ export default function AdminDashboard() {
                   <th className="px-3 py-2">Tiempo de suscripción</th>
                   <th className="px-3 py-2">Pedidos pendientes / confirmados</th>
                   <th className="px-3 py-2">Gestores</th>
+                  <th className="px-3 py-2">Transportistas</th>
+                  <th className="px-3 py-2">Viajes</th>
                   <th className="px-3 py-2">Dispositivo</th>
                   <th className="px-3 py-2">Acciones</th>
                 </tr>
@@ -458,6 +464,26 @@ export default function AdminDashboard() {
                   </th>
                   <th className="px-2 py-2">
                     <input
+                      value={filters.transportistas}
+                      onChange={(event) => updateFilter('transportistas', event.target.value)}
+                      className={filterInput}
+                      placeholder="Cantidad"
+                      aria-label="Filtrar por cantidad de transportistas"
+                      inputMode="numeric"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
+                      value={filters.viajes}
+                      onChange={(event) => updateFilter('viajes', event.target.value)}
+                      className={filterInput}
+                      placeholder="Cantidad"
+                      aria-label="Filtrar por cantidad de viajes"
+                      inputMode="numeric"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
                       value={filters.app}
                       onChange={(event) => updateFilter('app', event.target.value)}
                       className={filterInput}
@@ -471,7 +497,7 @@ export default function AdminDashboard() {
               <tbody>
                 {pageItems.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
+                    <td colSpan={15} className={`px-3 py-8 text-center text-sm ${adminSubtle}`}>
                       Ningún negocio coincide con estos filtros.
                     </td>
                   </tr>
@@ -534,6 +560,12 @@ export default function AdminDashboard() {
                       </td>
                       <td className="px-3 py-3 tabular-nums text-zinc-100">
                         {item.gestor_count ?? 0}
+                      </td>
+                      <td className="px-3 py-3 tabular-nums text-zinc-100">
+                        {item.mensajero_count ?? 0}
+                      </td>
+                      <td className="px-3 py-3 tabular-nums text-zinc-100">
+                        {item.trip_count ?? 0}
                       </td>
                       <td className="px-3 py-3">
                         <AdminAppDownloadsCell downloads={item.app_downloads} />
