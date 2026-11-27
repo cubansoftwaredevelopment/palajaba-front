@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { createReadStream, createWriteStream } from 'node:fs'
+import { createReadStream, createWriteStream, existsSync } from 'node:fs'
 import { chmod, mkdir, rename, rm } from 'node:fs/promises'
 import path from 'node:path'
 import { Readable } from 'node:stream'
@@ -139,9 +139,22 @@ async function cachedBinary() {
   return dest
 }
 
-function lockfileFlag(relativePath) {
-  const absolute = path.resolve(repoRoot, relativePath).replaceAll('\\', '/')
-  return `--lockfile=:${absolute}`
+function lockfileFlag(absolutePath) {
+  return `--lockfile=:${absolutePath.replaceAll('\\', '/')}`
+}
+
+const configPath = path.join(frontRoot, 'osv-scanner.toml')
+if (!existsSync(configPath)) {
+  fail(`No está ${configPath}.`)
+}
+
+const lockfiles = [
+  path.join(frontRoot, 'package-lock.json'),
+  path.join(repoRoot, 'palajaba-back', 'requirements.txt'),
+].filter((lockfile) => existsSync(lockfile))
+
+if (lockfiles.length === 0) {
+  fail('No hay lockfiles para auditar.')
 }
 
 const binary = await cachedBinary()
@@ -151,10 +164,9 @@ const result = spawnSync(
     'scan',
     'source',
     '--config=osv-scanner.toml',
-    lockfileFlag('palajaba-front/package-lock.json'),
-    lockfileFlag('palajaba-back/requirements.txt'),
+    ...lockfiles.map(lockfileFlag),
   ],
-  { cwd: repoRoot, stdio: 'inherit' },
+  { cwd: frontRoot, stdio: 'inherit' },
 )
 
 if (result.error) fail(`No se pudo ejecutar osv-scanner: ${result.error.message}`)

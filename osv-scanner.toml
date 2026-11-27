@@ -1,0 +1,3 @@
+[[IgnoredVulns]]
+id = "CVE-2025-69993"
+reason = "Leaflet renderiza HTML en los tooltips a proposito. Los textos de tienda y dispositivo se escapan antes de bindTooltip."
