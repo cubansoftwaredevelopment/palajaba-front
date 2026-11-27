@@ -34,7 +34,7 @@ import {
 
 const INSTAGRAM_URL = 'https://instagram.com/palajabaaa'
 const FALL_STEP_MS = 420
-const COVER_LOGO = '/android-chrome-512x512.png'
+const COVER_LOGO = '/images/pitch/logo-cover.png'
 const NEXT_BUTTON = 'flex min-h-11 w-full items-center justify-center rounded-full bg-brand-green px-5 text-sm font-semibold text-brand-white shadow-[0_6px_20px_rgba(89,128,44,0.3)] touch-manipulation'
 
 const BEATS = [
@@ -286,7 +286,7 @@ const CUBA_THOUGHTS = [
   ['Con el cuidado debido', 'Pa\' que llegue el pedido'],
   ['Si hay lío, viene el repaso', 'Y se resuelve el caso'],
 ]
-const THOUGHT_MARKS = ['cubana', 'el que vende', 'un lío', 'la estafa', 'desde lejos', 'el pedido', 'el caso']
+const THOUGHT_MARKS = ['cubana', 'vende', 'un lío', 'la estafa', 'lejos', 'el pedido', 'el caso']
 
 function highlightLine(line) {
   const phrase = THOUGHT_MARKS.find((item) => line.includes(item))
@@ -1017,12 +1017,13 @@ function storeBlocks() {
 }
 
 function CoverLogo({ reduced }) {
-  if (reduced) {
-    return <img src={COVER_LOGO} alt="Pa' La Jaba" className="h-64 w-64 object-contain sm:h-80 sm:w-80" />
-  }
   return (
-    <div className="[perspective:880px]">
-      <img src={COVER_LOGO} alt="Pa' La Jaba" className="pitch-logo-flip h-64 w-64 object-contain sm:h-80 sm:w-80" />
+    <div className="flex h-64 w-64 items-center justify-center [perspective:880px] sm:h-80 sm:w-80">
+      <img
+        src={COVER_LOGO}
+        alt="Pa' La Jaba"
+        className={`h-[70.7%] w-auto ${reduced ? '' : 'pitch-logo-flip'}`}
+      />
     </div>
   )
 }
