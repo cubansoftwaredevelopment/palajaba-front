@@ -14,6 +14,10 @@ export default defineConfig(({ command, mode }) => {
   return {
     plugins: [react(), tailwindcss()],
     server: {
+      // Windows reserva 5174-5273. El 5173 lo usa otro proyecto en localhost.
+      host: '127.0.0.1',
+      port: 5274,
+      strictPort: true,
       proxy: {
         '/api': {
           target: apiTarget,

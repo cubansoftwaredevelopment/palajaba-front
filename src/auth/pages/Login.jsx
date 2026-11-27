@@ -24,10 +24,20 @@ const ACCOUNT_TYPES = [
   { id: 'customer', label: 'Cliente' },
 ]
 
+function guestCanOpen(path) {
+  const pathname = path.split(/[?#]/)[0]
+  if (pathname === '/cliente/registro' || pathname.startsWith('/cliente/registro/')) return true
+  if (pathname === '/cliente/recuperar' || pathname.startsWith('/cliente/recuperar/')) return true
+  return pathname !== '/cliente' && !pathname.startsWith('/cliente/')
+}
+
 export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const canGoBack = location.key !== 'default'
+  const backTo = typeof location.state?.backTo === 'string' ? location.state.backTo : ''
+  const previousRouteMissing = backTo.startsWith('/') && !guestCanOpen(backTo)
+  const backToHome = previousRouteMissing || (location.state?.accountType === 'customer' && !backTo && !canGoBack)
   const [accountType, setAccountType] = useState(location.state?.accountType === 'customer' ? 'customer' : 'store')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -91,10 +101,18 @@ export default function Login() {
     <>
     <AuthShell
       onBack={() => {
+        if (backToHome) {
+          navigate('/inicio', { replace: true })
+          return
+        }
+        if (backTo.startsWith('/')) {
+          navigate(backTo, { replace: true })
+          return
+        }
         if (canGoBack) navigate(-1)
         else navigate('/')
       }}
-      backLabel={canGoBack ? 'Volver' : 'Inicio'}
+      backLabel={backToHome ? 'Inicio' : backTo.startsWith('/') || canGoBack ? 'Volver' : 'Inicio'}
       contentWidth="narrow"
     >
       <section className={`animate-fade-in lg:mx-auto ${authLoginContainer}`} aria-labelledby="login-title">

@@ -110,7 +110,10 @@ function persistBuyerLocation(province, municipality = null) {
 }
 
 export function getBuyerLocation() {
-  return normalizeStoredLocation(memoryLocation)
+  if (persistBuyerPrefs) {
+    memoryLocation = normalizeStoredLocation(readStoredJson(STORAGE_KEY))
+  }
+  return memoryLocation
 }
 
 export function setBuyerProvince(province) {

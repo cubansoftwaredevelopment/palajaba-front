@@ -27,6 +27,7 @@ import {
   getMarketplaceCategoryFilter,
   setMarketplaceCategoryFilter,
   applySharedZoneFromSearch,
+  resolveBuyerEntryPath,
 } from "../utils/buyerLocation.js";
 import {
   getMunicipalityById,
@@ -72,7 +73,7 @@ export default function BuyerHome() {
     applySharedZoneFromSearch(window.location.search);
   }
   if (!preview && !hasCompleteBuyerLocation()) {
-    return <Navigate to="/comprar/provincia" replace />;
+    return <Navigate to={resolveBuyerEntryPath()} replace />;
   }
 
   return <BuyerHomeContent preview={preview} />;

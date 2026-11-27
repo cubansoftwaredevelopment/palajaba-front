@@ -6,7 +6,7 @@ import { readSection } from '../../session/sectionStore'
 import { readMatchingSnapshot } from '../../session/useSectionSnapshot'
 import { isAdminAuthenticated } from '../../admin/utils/adminAuth.js'
 import { useBuyerDisplayCurrency } from '../context/context.js'
-import { getAdditionalMunicipalities, getBuyerLocation, setMarketplaceCategoryFilter } from '../utils/buyerLocation.js'
+import { getAdditionalMunicipalities, getBuyerLocation, resolveBuyerEntryPath, setMarketplaceCategoryFilter } from '../utils/buyerLocation.js'
 import { marketplaceCategoryPath, resolveMarketplaceCategory, storeCategoryPath } from '../utils/marketplaceCategory.js'
 import { storeGestorPublicPath, storePublicPath } from '../../seller/utils/storeSlug.js'
 import { getSellerProfile, isSellerAuthenticated, SELLER_AUTH_CHANGE_EVENT } from '../../seller/utils/sellerAuth.js'
@@ -436,7 +436,7 @@ export default function BuyerMarketplaceNav({
             />
           )}
           <BarItem
-            to="/comprar"
+            to={resolveBuyerEntryPath()}
             active={route.pathname === '/comprar'}
             label="Marketplace"
             logo
