@@ -14,11 +14,12 @@ import {
 } from '../../seller/componentes/sellerStyles.js'
 import { assignMensajeroBatch, fetchSellerMensajeros } from '../api'
 import { FEE_CURRENCIES, vehicleLabel } from '../utils/constants.js'
+import {
+  buildCourierBatchPayload,
+  courierAssignmentError,
+  courierPayChoices,
+} from '../utils/courierQvaPay.js'
 import { getSellerToken } from '../../seller/utils/sellerAuth.js'
-
-function canPayQvapay(order, messenger) {
-  return order.payment_method === 'qvapay' && order.delivery_price != null && messenger?.qvapay_verified
-}
 
 export default function AssignCourierModal({ orders, onClose: requestClose, onDone }) {
   const { dismiss: onClose, closing, sheetProps } = useSellerSheet(requestClose)
@@ -57,29 +58,14 @@ export default function AssignCourierModal({ orders, onClose: requestClose, onDo
   async function confirm(event) {
     event.preventDefault()
     setError('')
-    if (!messengerId) {
-      setError('Elige un mensajero.')
-      return
-    }
-    if (orders.some((order) => order.payment_method === 'qvapay' && order.qvapay?.payment_status !== 'paid')) {
-      setError('El cliente todavía no pagó este pedido por QvaPay.')
-      return
-    }
-    if (orders.some((order) => !fees[order.id]?.pay_via || fees[order.id].fee_amount === '' || !fees[order.id]?.fee_currency)) {
-      setError('Completa el pago de cada pedido.')
+    const assignmentError = courierAssignmentError(orders, fees, messenger)
+    if (assignmentError) {
+      setError(assignmentError)
       return
     }
     setSaving(true)
     try {
-      await assignMensajeroBatch(getSellerToken(), {
-        mensajero_id: messengerId,
-        orders: orders.map((order) => ({
-          order_id: order.id,
-          pay_via: fees[order.id].pay_via,
-          fee_amount: Number(fees[order.id].fee_amount),
-          fee_currency: fees[order.id].fee_currency,
-        })),
-      })
+      await assignMensajeroBatch(getSellerToken(), buildCourierBatchPayload(messenger.id, orders, fees))
       onDone()
     } catch (err) {
       setError(err.message)
@@ -137,17 +123,13 @@ export default function AssignCourierModal({ orders, onClose: requestClose, onDo
               />
               {orders.map((order) => {
                 const fee = fees[order.id]
-                const qvapay = canPayQvapay(order, messenger)
                 return (
                   <fieldset key={order.id} className="space-y-2 rounded-2xl border border-brand-green/12 p-3">
                     <legend className="px-1 text-sm font-semibold text-brand-carmelita">#{order.id.slice(-6).toUpperCase()}</legend>
                     <SellerFilterDropdown
                       label="Pago"
                       placeholder="Elige cómo se paga"
-                      options={[
-                        { value: 'other', label: 'Otra moneda' },
-                        ...(qvapay ? [{ value: 'qvapay', label: 'QvaPay' }] : []),
-                      ]}
+                      options={courierPayChoices(order, messenger)}
                       value={fee.pay_via}
                       onChange={(value) => updateFee(order.id, {
                         pay_via: value || 'other',

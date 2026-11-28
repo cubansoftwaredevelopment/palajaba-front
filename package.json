@@ -26,6 +26,7 @@
     "test:plan-gestor-limits": "node scripts/tests/planGestorLimits.unit.test.mjs && node scripts/tests/planGestorLimits.integration.test.mjs",
     "test:admin-subscription": "node scripts/tests/adminSubscriptionReplace.unit.test.mjs && node scripts/tests/adminSubscriptionReplace.integration.test.mjs",
     "test:subscription-qvapay": "node scripts/tests/subscriptionQvaPay.unit.test.mjs",
+    "test:qvapay-messenger": "node scripts/tests/qvapayMessengerCheckout.e2e.test.mjs",
     "test:buyer-product-card": "node scripts/tests/buyerProductCard.unit.test.mjs && node scripts/tests/buyerProductCard.integration.test.mjs",
     "test:account-deletion": "node scripts/tests/accountDeletion.unit.test.mjs && node scripts/tests/accountDeletion.integration.test.mjs",
     "test:app-releases": "node scripts/tests/appReleases.unit.test.mjs",
