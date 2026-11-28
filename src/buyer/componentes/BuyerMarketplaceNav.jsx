@@ -21,7 +21,7 @@ import { buildWhatsAppUrl } from '../../orders/utils/whatsappOrder.js'
 import { openExternalUrl } from '../../appReleases/utils/nativeApp.js'
 import { useDismissibleModal } from './useOrderModalPresence.js'
 import { setHelpFabPresent, setOptionsFabPresent } from '../../shared/utils/optionsFabVisibility.js'
-import { fetchCustomerOrders } from '../../customer/api.js'
+import { accountIdFromToken, readAccount } from '../../accountSync/store.js'
 import { CUSTOMER_NAV } from '../../customer/componentes/customerNav.jsx'
 import { CUSTOMER_ORDERS_CHANGED_EVENT, isBuyerOrderProcessing } from '../../customer/utils/constants.js'
 
@@ -234,12 +234,14 @@ export default function BuyerMarketplaceNav({
     let cancelled = false
     async function loadProcessing() {
       try {
-        const page = await fetchCustomerOrders(getCustomerToken(), { offset: 0, limit: 20 })
+        const token = getCustomerToken()
+        const record = await readAccount('customer', accountIdFromToken(token))
         if (cancelled) return
+        const page = record?.sections?.pedidos?.data
         const flagged = typeof page?.has_processing === 'boolean'
           ? page.has_processing
           : (page?.items || []).some(isBuyerOrderProcessing)
-        setPaymentWarning(flagged)
+        setPaymentWarning(Boolean(flagged))
       } catch {
         if (!cancelled) setPaymentWarning(false)
       }

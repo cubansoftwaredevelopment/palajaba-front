@@ -10,6 +10,7 @@ import {
   TRIAL_PLAN,
 } from '../../subscriptions/utils/constants.js'
 import { LOGO } from '../../shared/utils/branding.js'
+import WebsiteGestionOfferCard from '../../subscriptions/componentes/WebsiteGestionOfferCard.jsx'
 import AuthHeader from '../componentes/AuthHeader.jsx'
 import AuthShell from '../componentes/AuthShell.jsx'
 import RegisterProgress from '../componentes/RegisterProgress.jsx'
@@ -129,6 +130,7 @@ export default function RegisterPlan() {
             <span className="mt-3 block font-display text-2xl font-bold text-brand-green">Personalización de plan</span>
             <span className="mt-2 block text-sm leading-relaxed text-brand-carmelita/85">Arma tu plan eligiendo solo lo que tu tienda va a usar.</span>
           </Link>
+          <WebsiteGestionOfferCard />
           {Object.values(PLAN_TIERS).map((plan) => {
             const selected = planTier === plan.id
             const price = getPlanPrice(plan.id, billing)

@@ -3,10 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import SellerNotificationToast from '../../seller/componentes/SellerNotificationToast.jsx'
 import { BRAND_NAME } from '../../shared/utils/branding.js'
 import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerToken, isCustomerAuthenticated } from '../../customer/utils/customerAuth.js'
-import { connectCustomerEvents } from '../../live/utils'
 import { isBuyerMotionPath } from '../../motion/RouteMotion'
-import { CUSTOMER_ORDERS_CHANGED_EVENT } from '../../customer/utils/constants.js'
-import { CUSTOMER_NOTICES_EVENT, ensureCustomerNotices, upsertCustomerNotice } from './BuyerHeaderTools.jsx'
+import { accountIdFromToken, readAccount } from '../../accountSync/store.js'
 
 function asToast(notification) {
   const fromAdmin = Boolean(notification.from_admin) || notification.kind === 'admin'
@@ -29,56 +27,23 @@ export default function CustomerNoticeToasts() {
 
   useEffect(() => {
     let cancelled = false
-    let generation = 0
-    let stopEvents = () => {}
-    let activeToken = ''
-    const toastedIds = new Set()
-
-    function push(list) {
-      const incoming = (Array.isArray(list) ? list : [])
-        .filter((item) => item?.id && !toastedIds.has(item.id))
-        .map(asToast)
-      if (!incoming.length) return
-      incoming.forEach((item) => toastedIds.add(item.id))
-      setToasts((current) => {
-        const seen = new Set(current.map((item) => item.id))
-        const next = incoming.filter((item) => !seen.has(item.id))
-        return next.length ? [...next, ...current] : current
-      })
-    }
-
-    function sync() {
+    async function load() {
       const token = isCustomerAuthenticated() ? getCustomerToken() || '' : ''
-      if (token === activeToken) return
-      activeToken = token
-      const current = ++generation
-      stopEvents()
-      stopEvents = () => {}
-      toastedIds.clear()
-      setToasts([])
-      if (!token) return
-      ensureCustomerNotices(token)
-        .then((list) => {
-          if (cancelled || current !== generation) return
-          push((Array.isArray(list) ? list : []).filter((item) => !item.read_at))
-        })
-        .catch(() => {})
-      stopEvents = connectCustomerEvents(token, (notification) => {
-        if (cancelled || current !== generation || !notification || notification.read_at) return
-        upsertCustomerNotice(notification)
-        push([notification])
-        window.dispatchEvent(new Event(CUSTOMER_NOTICES_EVENT))
-      }, () => {
-        window.dispatchEvent(new Event(CUSTOMER_ORDERS_CHANGED_EVENT))
-      })
+      if (!token) {
+        setToasts([])
+        return
+      }
+      const record = await readAccount('customer', accountIdFromToken(token))
+      if (cancelled) return
+      const notices = record?.sections?.avisos?.data
+      const unread = (Array.isArray(notices) ? notices : []).filter((item) => item?.id && !item.read_at).map(asToast)
+      setToasts(unread)
     }
-
-    sync()
-    window.addEventListener(CUSTOMER_AUTH_CHANGE_EVENT, sync)
+    load()
+    window.addEventListener(CUSTOMER_AUTH_CHANGE_EVENT, load)
     return () => {
       cancelled = true
-      stopEvents()
-      window.removeEventListener(CUSTOMER_AUTH_CHANGE_EVENT, sync)
+      window.removeEventListener(CUSTOMER_AUTH_CHANGE_EVENT, load)
     }
   }, [])
 

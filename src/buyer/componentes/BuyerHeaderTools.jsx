@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import AppDownloadPrompt from '../../appReleases/componentes/AppDownloadPrompt.jsx'
 import { fetchCustomerPaymentNotifications } from '../../customer/api.js'
+import { accountIdFromToken, readAccount } from '../../accountSync/store.js'
 import { CUSTOMER_AUTH_CHANGE_EVENT, getCustomerToken, isCustomerAuthenticated } from '../../customer/utils/customerAuth.js'
 import BuyerJabaButton from './BuyerJabaButton.jsx'
 
@@ -80,7 +81,11 @@ function BuyerCustomerNotices() {
 
     const cached = readCustomerNotices()
     if (cached) apply(cached)
-    else ensureCustomerNotices(token).then(apply).catch(() => apply([]))
+    else {
+      readAccount('customer', accountIdFromToken(token))
+        .then((record) => apply(record?.sections?.avisos?.data || []))
+        .catch(() => apply([]))
+    }
 
     const unsubscribe = subscribeCustomerNotices(apply)
     function onChange() {

@@ -130,6 +130,9 @@ export async function dropSend(id) {
 
 let draining = false
 let heldId = null
+let accountSyncRunner = null
+
+const ACCOUNT_SYNC_RETRY_MS = 60_000
 
 export function holdSend(id) {
   heldId = id
@@ -139,27 +142,72 @@ export function releaseHold() {
   heldId = null
 }
 
+export function setAccountSyncRunner(runner) {
+  accountSyncRunner = runner
+}
+
+function accountSyncId(role, accountId) {
+  return `account-sync:${role}:${accountId}`
+}
+
+export async function enqueueAccountSync({ role, accountId }) {
+  if (!role || !accountId) return
+  const id = accountSyncId(role, accountId)
+  const rows = await listOutbox()
+  const existing = rows.find((row) => row.id === id)
+  if (existing) {
+    if (existing.retryAt) await putOutbox({ ...existing, retryAt: 0 })
+    return
+  }
+  await putOutbox({
+    id,
+    kind: 'account-sync',
+    role,
+    accountId,
+    createdAt: Date.now(),
+  })
+}
+
+function isReady(row, now) {
+  return row.id !== heldId && !(row.retryAt && row.retryAt > now)
+}
+
+async function sendQueued(row) {
+  const headers = { ...(row.headers || {}) }
+  const body = await restoreBody(row.body)
+  if (body instanceof FormData) delete headers['Content-Type']
+  let response
+  try {
+    response = await fetch(`${apiBase()}${row.path}`, { method: row.method, headers, body })
+  } catch {
+    return
+  }
+  await removeFiles(row.body)
+  await deleteOutbox(row.id)
+  if (response.ok) {
+    const data = response.status === 204 ? null : await response.json().catch(() => null)
+    if (data && row.method === 'GET') await putRead(row.path, data)
+  }
+}
+
 export async function drainOutbox() {
   if (draining || (typeof navigator !== 'undefined' && navigator.onLine === false)) return
   draining = true
   try {
     const rows = await listOutbox()
-    const next = rows.find((row) => row.id !== heldId)
-    if (!next) return
-    const headers = { ...(next.headers || {}) }
-    const body = await restoreBody(next.body)
-    if (body instanceof FormData) delete headers['Content-Type']
-    let response
-    try {
-      response = await fetch(`${apiBase()}${next.path}`, { method: next.method, headers, body })
-    } catch {
+    const now = Date.now()
+    for (const row of rows) {
+      if (!isReady(row, now)) continue
+      if (row.kind === 'account-sync') {
+        if (!accountSyncRunner) continue
+        const outcome = await accountSyncRunner(row)
+        if (outcome === 'wait') continue
+        if (outcome === 'done') await deleteOutbox(row.id)
+        if (outcome === 'retry') await putOutbox({ ...row, retryAt: Date.now() + ACCOUNT_SYNC_RETRY_MS })
+        return
+      }
+      await sendQueued(row)
       return
-    }
-    await removeFiles(next.body)
-    await deleteOutbox(next.id)
-    if (response.ok) {
-      const data = response.status === 204 ? null : await response.json().catch(() => null)
-      if (data && next.method === 'GET') await putRead(next.path, data)
     }
   } finally {
     draining = false

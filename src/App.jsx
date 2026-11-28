@@ -60,6 +60,7 @@ import { BuyerDisplayCurrencyProvider, BuyerJabaProvider } from './buyer/context
 import BuyerMarketplaceLayout from './layouts/BuyerMarketplaceLayout'
 import BuyerHome from './buyer/pages/BuyerHome'
 import BuyerPitchPage from './buyer/pages/BuyerPitchPage.jsx'
+import OfertaEspecialPage from './buyer/pages/OfertaEspecialPage.jsx'
 import BuyerCategoryPage from './buyer/pages/BuyerCategoryPage'
 import BuyerBusinessesPage from './buyer/pages/BuyerBusinessesPage'
 import { BUYER_BUSINESSES_SECTION_ENABLED } from './buyer/utils/constants.js'
@@ -83,6 +84,7 @@ import PlatformTerms from './platform/pages/PlatformTerms.jsx'
 import QvaPayReturn from './subscriptions/pages/QvaPayReturn.jsx'
 import AppReleasePromptGate from './appReleases/componentes/AppReleasePromptGate.jsx'
 import AppDevicePresence from './appReleases/componentes/AppDevicePresence.jsx'
+import SyncNoticeHost from './accountSync/SyncNoticeHost.jsx'
 import { NativeDeepLinkBridge } from './appReleases/utils/nativeDeepLinks.js'
 import { disableBuyerLocationPersistence } from './buyer/utils/buyerLocation.js'
 import { markFrontendReady } from './shared/utils/frontendReady.js'
@@ -234,6 +236,11 @@ const router = createBrowserRouter([
         element: <BuyerJabaLayout />,
         children: [{ index: true, element: <BuyerPitchPage /> }],
       },
+      {
+        path: 'oferta-especial',
+        element: <BuyerJabaLayout />,
+        children: [{ index: true, element: <OfertaEspecialPage /> }],
+      },
       { path: 'terminos', element: <PlatformTerms /> },
       { path: 'privacidad', element: <PlatformPrivacy /> },
       { path: 'preguntas', element: <PlatformFaq /> },
@@ -302,6 +309,7 @@ function App() {
   return (
     <>
       <AppDevicePresence />
+      <SyncNoticeHost />
       <RouterProvider router={router} />
     </>
   )

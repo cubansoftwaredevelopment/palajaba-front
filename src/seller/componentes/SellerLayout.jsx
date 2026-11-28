@@ -35,7 +35,7 @@ import {
   startSellerPush,
   stopSellerPush,
 } from '../../live/utils'
-import { isSessionError, resolveUserFacingError } from '../../shared/utils/userFacingError.js'
+import { startAccountSync } from '../../accountSync/run.js'
 
 function sellerSectionKey(pathname) {
   if (pathname === '/tienda') return 'general'
@@ -132,37 +132,36 @@ export default function SellerLayout() {
   }, [navigate, refreshUnreadCount])
 
   useEffect(() => {
-    if (profile) return undefined
+    const token = getSellerToken()
+    if (!token) return undefined
     let cancelled = false
-
-    async function load() {
-      setLoadError(null)
-      setLoading(true)
-      try {
-        const data = await refreshProfile()
-        if (!cancelled) setProfile(data)
-      } catch (err) {
-        if (!cancelled) {
-          if (isSessionError(err)) {
-            clearSellerSession()
-          }
-          setLoadError(
-            resolveUserFacingError(err, {
-              contextTitle: 'No se pudo cargar tu tienda',
-              fallbackMessage: 'No pudimos conectar con tu cuenta. Inténtalo de nuevo.',
-            }),
-          )
+    if (!profile) setLoading(true)
+    startAccountSync({
+      role: 'seller',
+      token,
+      onAccount: (record) => {
+        if (cancelled) return
+        const next = record?.sections?.perfil?.data
+        if (next) {
+          setSellerSession(token, next)
+          setProfile(next)
         }
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    load()
-    return () => {
-      cancelled = true
-    }
-  }, [profile, refreshProfile])
+        setLoading(false)
+      },
+      onError: () => {
+        if (cancelled) return
+        setLoading(false)
+        if (!profile) {
+          setLoadError({
+            title: 'No se pudo cargar tu tienda',
+            message: 'No pudimos sincronizar tu cuenta. Lo reintentaremos en un minuto.',
+            canRetry: true,
+          })
+        }
+      },
+    })
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     if (!profile) return

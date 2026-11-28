@@ -2,6 +2,8 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { useLocation, useNavigate } from 'react-router-dom'
 import { fetchCustomerOrders, fetchCustomerProfile, fetchCustomerPaymentNotifications, markCustomerPaymentNotificationRead, markAllCustomerPaymentNotificationsRead } from '../api.js'
 import { getCustomerToken, updateCustomerProfile } from '../utils/customerAuth.js'
+import { startAccountSync } from '../../accountSync/run.js'
+import { accountIdFromToken, readAccount } from '../../accountSync/store.js'
 import { fetchMarketplaceProduct } from '../../buyer/api.js'
 import { CUSTOMER_NOTICES_EVENT } from '../../buyer/componentes/BuyerHeaderTools.jsx'
 import { needsBuyerOrderAttention } from '../utils/constants.js'
@@ -28,7 +30,7 @@ export function CustomerAccountProvider({ children }) {
   const location = useLocation()
   const section = customerAccountSection(location.pathname)
   const token = getCustomerToken()
-  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('customer', 'account')
+  const { snapshot, commit } = useSectionSnapshot('customer', 'account')
   const cachedAccount = snapshot?.data
   const cachedProfile = cachedAccount?.profile ?? null
   const savedNoticeQuery = snapshot?.query ?? {}
@@ -141,10 +143,28 @@ export function CustomerAccountProvider({ children }) {
 
   useEffect(() => {
     if (!token) return undefined
-    if (skipInitialRef.current) return undefined
-    void loadPaymentNotifications()
-    return undefined
-  }, [loadPaymentNotifications, token])
+    let cancel = false
+    const accountId = accountIdFromToken(token)
+    function applyRecord(record) {
+      if (cancel || !record) return
+      const nextProfile = record.sections?.perfil?.data
+      if (nextProfile) {
+        setProfile(nextProfile)
+        updateCustomerProfile(nextProfile)
+        accountReadyRef.current = true
+      }
+      if (record.sections?.pedidos?.data) applyCustomerOrders(record.sections.pedidos.data)
+      const notices = record.sections?.avisos?.data
+      if (Array.isArray(notices)) setPaymentNotifications(notices)
+      const favorites = record.sections?.favoritos?.data?.favorites
+      if (Array.isArray(favorites)) setFavoriteProducts(favorites)
+      setLoading(false)
+      setNotificationsLoading(false)
+    }
+    readAccount('customer', accountId).then(applyRecord)
+    startAccountSync({ role: 'customer', token, onAccount: applyRecord, onError: () => { if (!cancel) setLoading(false) } })
+    return () => { cancel = true }
+  }, [applyCustomerOrders, token])
 
   const accountReadyRef = useRef(cachedProfile != null)
   useEffect(() => {

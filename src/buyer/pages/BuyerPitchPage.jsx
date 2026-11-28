@@ -17,6 +17,7 @@ import SellerHighViewsLowSales from '../../SellerStatistics/componentes/SellerHi
 import AppLocationMap from '../../map/componentes/AppLocationMap.jsx'
 import { sellerNoticeToastCard } from '../../seller/componentes/sellerStyles.js'
 import { ADVERTISING_PLANS } from '../../subscriptions/utils/advertisingPlans.js'
+import WebsiteGestionOfferCard from '../../subscriptions/componentes/WebsiteGestionOfferCard.jsx'
 import { PLAN_PLUGINS } from '../../subscriptions/utils/planPlugins.js'
 import { resolveMediaUrl } from '../../shared/utils/media.js'
 import {
@@ -831,6 +832,8 @@ function planBlocks() {
     { key: 'now', node: <PitchVisual><PluginPills ids={PLAN_ON_NOW} /></PitchVisual> },
     { key: 'later-text', node: <PitchText>Lo demás también se pide en el plan, <PitchMark>cuando la tienda lo necesite</PitchMark>.</PitchText> },
     { key: 'later', node: <PitchVisual><PluginPills ids={later} /></PitchVisual> },
+    { key: 'offer-text', node: <PitchText>O un sistema propio: <PitchStrong>website y gestión</PitchStrong>.</PitchText> },
+    { key: 'offer', node: <PitchVisual live><WebsiteGestionOfferCard layout="pitch" /></PitchVisual> },
   ]
 }
 

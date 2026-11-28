@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import WebsiteGestionOfferCard from './WebsiteGestionOfferCard.jsx'
 
 import PillTabs from '../../shared/componentes/PillTabs.jsx'
 import CountingAmount from './CountingAmount.jsx'
@@ -243,6 +244,8 @@ export default function SellerUpgradePlan({ profile, onUpdated }) {
           })}
         </ul>
       )}
+
+      <WebsiteGestionOfferCard layout="row" />
     </div>
   )
 }

@@ -31,6 +31,8 @@ import { formatPrice } from '../../shared/utils/money.js'
 import { usePlanPricing } from '../../subscriptions/utils/usePlanPricing.js'
 import { getUserFacingMessage, isSessionError } from '../../shared/utils/userFacingError.js'
 import { clearAdminToken, getAdminToken } from '../utils/adminAuth.js'
+import { startAccountSync } from '../../accountSync/run.js'
+import { accountIdFromToken, readAccount } from '../../accountSync/store.js'
 import LoadingState from '../../shared/componentes/LoadingState.jsx'
 
 const PAGE_SIZES = [10, 15, 20]
@@ -156,8 +158,29 @@ export default function AdminDashboard() {
   )
 
   useEffect(() => {
-    loadRegistrations()
-  }, [loadRegistrations])
+    const token = getAdminToken()
+    if (!token) return undefined
+    let cancelled = false
+    readAccount('admin', accountIdFromToken(token)).then((cached) => {
+      const rows = cached?.sections?.cuentas?.data
+      if (!cancelled && Array.isArray(rows)) {
+        setRegistrations(rows)
+        setLoading(false)
+      }
+    })
+    startAccountSync({
+      role: 'admin',
+      token,
+      onAccount: (record) => {
+        if (cancelled) return
+        const rows = record?.sections?.cuentas?.data
+        if (Array.isArray(rows)) setRegistrations(rows)
+        setLoading(false)
+      },
+      onError: () => { if (!cancelled) setLoading(false) },
+    })
+    return () => { cancelled = true }
+  }, [])
 
   function handleMutationSuccess(message) {
     setToast({ message, type: 'success' })

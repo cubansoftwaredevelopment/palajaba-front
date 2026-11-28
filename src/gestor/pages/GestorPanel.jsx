@@ -33,6 +33,8 @@ import {
   updateGestorProductMargin,
 } from '../utils/gestorCatalog.js'
 import { getUserFacingMessage } from '../../shared/utils/userFacingError.js'
+import { startAccountSync } from '../../accountSync/run.js'
+import { accountIdFromToken, readAccount } from '../../accountSync/store.js'
 import { runSectionRefresh } from '../../session/sectionStore'
 import { useSectionSnapshot } from '../../session/useSectionSnapshot'
 import {
@@ -51,7 +53,7 @@ export default function GestorPanel() {
   const slug = String(storeSlug ?? '').trim()
   const context = getGestorContext()
   const cachedProfile = getGestorProfile()
-  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('gestor', 'panel')
+  const { snapshot, commit } = useSectionSnapshot('gestor', 'panel')
   const cachedPanel = snapshot?.data
 
   const [gestor, setGestor] = useState(cachedPanel?.gestor ?? cachedProfile)
@@ -103,9 +105,36 @@ export default function GestorPanel() {
   )
 
   useEffect(() => {
-    if (skipInitialRef.current) return
-    loadPanel()
-  }, [loadPanel])
+    const token = getGestorToken()
+    if (!token) return undefined
+    let cancelled = false
+    readAccount('gestor', accountIdFromToken(token)).then((cached) => {
+      if (cancelled || !cached) return
+      const me = cached.sections?.perfil?.data
+      const products = cached.sections?.permitidos?.data
+      if (me) setGestor(me)
+      if (Array.isArray(products)) setDrafts(createGestorProductDrafts(products))
+      if (me || products) setLoading(false)
+    })
+    startAccountSync({
+      role: 'gestor',
+      token,
+      onAccount: (record) => {
+        if (cancelled) return
+        const me = record?.sections?.perfil?.data
+        const products = record?.sections?.permitidos?.data
+        if (me) {
+          setGestor(me)
+          updateGestorProfileCache(me)
+        }
+        if (Array.isArray(products)) setDrafts(createGestorProductDrafts(products))
+        setLoading(false)
+        setError('')
+      },
+      onError: () => { if (!cancelled) setLoading(false) },
+    })
+    return () => { cancelled = true }
+  }, [])
 
   useEffect(() => {
     if (!successMessage) return undefined

@@ -18,13 +18,15 @@ import OrderCourierCost from '../componentes/OrderCourierCost.jsx'
 import MensajeroProfile from '../componentes/MensajeroProfile.jsx'
 import MensajeroRouteView from '../componentes/MensajeroRouteView.jsx'
 import MensajeroOnboardingSheet from '../componentes/MensajeroOnboardingSheet.jsx'
-import { clearMensajeroOnboarding, clearMensajeroSession, getMensajeroProfile, needsMensajeroOnboarding, updateMensajeroProfile } from '../utils/session.js'
+import { clearMensajeroOnboarding, clearMensajeroSession, getMensajeroProfile, getMensajeroToken, needsMensajeroOnboarding, updateMensajeroProfile } from '../utils/session.js'
 import { useRouteTelemetry } from '../utils/useRouteTelemetry.js'
 import { startMensajeroPush } from '../../live/utils'
 import SectionRefreshMascot from '../../shared/componentes/SectionRefreshMascot.jsx'
 import { usePullToRefresh } from '../../shared/componentes/usePullToRefresh.js'
 import { runSectionRefresh } from '../../session/sectionStore'
 import { useSectionRefreshing, useSectionSnapshot } from '../../session/useSectionSnapshot'
+import { startAccountSync } from '../../accountSync/run.js'
+import { accountIdFromToken, readAccount } from '../../accountSync/store.js'
 
 const PANEL_TABS = [
   { id: 'pending', label: 'Por hacer' },
@@ -88,7 +90,7 @@ export default function MensajeroPanel() {
   const [section, setSection] = useState('work')
   const [direction, setDirection] = useState(1)
   const [motionOn, setMotionOn] = useState(false)
-  const { snapshot, commit, skipInitialRef } = useSectionSnapshot('mensajero', 'summary')
+  const { snapshot, commit } = useSectionSnapshot('mensajero', 'summary')
   const [from, setFrom] = useState(snapshot?.query?.from ?? '')
   const [to, setTo] = useState(snapshot?.query?.to ?? '')
   const [data, setData] = useState(snapshot?.data ?? null)
@@ -115,21 +117,40 @@ export default function MensajeroPanel() {
   }, [from, to, commit])
 
   useEffect(() => {
-    if (skipInitialRef.current) return undefined
+    const token = getMensajeroToken()
+    if (!token) return undefined
     let cancelled = false
-    fetchMensajeroSummary({
-      start: from ? `${from}T00:00:00` : undefined,
-      end: to ? `${to}T23:59:59` : undefined,
-    }).then((summary) => {
-      if (cancelled) return
-      setData(summary)
-      commit(summary, { from, to })
-      setError('')
-    }).catch((err) => {
-      if (!cancelled) setError(err.message)
+    readAccount('mensajero', accountIdFromToken(token)).then((cached) => {
+      if (cancelled || !cached) return
+      if (cached.sections?.perfil?.data) setProfile(cached.sections.perfil.data)
+      if (cached.sections?.rutas?.data) setData(cached.sections.rutas.data)
+    })
+    startAccountSync({
+      role: 'mensajero',
+      token,
+      onAccount: (record) => {
+        if (cancelled) return
+        const nextProfile = record?.sections?.perfil?.data
+        const summary = record?.sections?.rutas?.data
+        if (nextProfile) {
+          setProfile(nextProfile)
+          updateMensajeroProfile(nextProfile)
+        }
+        if (summary) {
+          setData(summary)
+          commit(summary, { from, to })
+        }
+        setError('')
+      },
     })
     return () => { cancelled = true }
-  }, [from, to, commit])
+  }, [commit])
+
+  useEffect(() => {
+    if (!from && !to) return undefined
+    void load()
+    return undefined
+  }, [from, to, load])
 
   const refreshSummary = useCallback(
     () => runSectionRefresh('mensajero', 'summary', () => load()),
